@@ -1,9 +1,0 @@
-<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classgs_1_1AppFactoryBase.html" title=" " alt="" coords="5,132,155,159"/>
-<area shape="rect" id="node2" href="$classgs_1_1AdhocReadAppFactory.html" title=" " alt="" coords="222,5,413,32"/>
-<area shape="rect" id="node3" href="$classgs_1_1CountVerticesFactory.html" title=" " alt="" coords="226,56,409,83"/>
-<area shape="rect" id="node4" href="$classgs_1_1HQPSAdhocReadAppFactory.html" title=" " alt="" coords="204,107,431,133"/>
-<area shape="rect" id="node5" href="$classgs_1_1HQPSAdhocWriteAppFactory.html" title=" " alt="" coords="203,157,432,184"/>
-<area shape="rect" id="node6" href="$classgs_1_1ServerAppFactory.html" title=" " alt="" coords="238,208,397,235"/>
-<area shape="rect" id="node7" href="$classgs_1_1SharedLibraryAppFactory.html" title=" " alt="" coords="214,259,421,285"/>
-</map>

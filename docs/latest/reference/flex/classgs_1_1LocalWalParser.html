@@ -92,9 +92,8 @@ Collaboration diagram for gs::LocalWalParser:</div>
 <div class="dyncontent">
 <div class="center"><img src="classgs_1_1LocalWalParser__coll__graph.png" border="0" usemap="#gs_1_1LocalWalParser_coll__map" alt="Collaboration graph"/></div>
 <map name="gs_1_1LocalWalParser_coll__map" id="gs_1_1LocalWalParser_coll__map">
-<area shape="rect" title=" " alt="" coords="68,95,211,121"/>
-<area shape="rect" href="classgs_1_1IWalParser.html" title=" " alt="" coords="5,5,119,32"/>
-<area shape="rect" href="structgs_1_1WalContentUnit.html" title=" " alt="" coords="143,5,290,32"/>
+<area shape="rect" title=" " alt="" coords="5,80,148,107"/>
+<area shape="rect" href="classgs_1_1IWalParser.html" title=" " alt="" coords="20,5,133,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -131,10 +130,8 @@ Private Attributes</h2></td></tr>
 <tr class="separator:a0f92973cf1a9652aba4236cf1f67fba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a22c68e57c0bf529acef23d6b85722bf8"><td class="memItemLeft" align="right" valign="top">std::vector&lt; size_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#a22c68e57c0bf529acef23d6b85722bf8">mmapped_size_</a></td></tr>
 <tr class="separator:a22c68e57c0bf529acef23d6b85722bf8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac4d483764cc95129439376a7a348e992"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#ac4d483764cc95129439376a7a348e992">insert_wal_list_</a></td></tr>
-<tr class="separator:ac4d483764cc95129439376a7a348e992"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea3438073d444442602bca91ce96c8e2"><td class="memItemLeft" align="right" valign="top">size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#aea3438073d444442602bca91ce96c8e2">insert_wal_list_size_</a></td></tr>
-<tr class="separator:aea3438073d444442602bca91ce96c8e2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2bb957bc1020c7a1cc12975eddc62d62"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#a2bb957bc1020c7a1cc12975eddc62d62">insert_wal_list_</a></td></tr>
+<tr class="separator:a2bb957bc1020c7a1cc12975eddc62d62"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a549b7327f3fbd8738c4fe62d6f0e93ea"><td class="memItemLeft" align="right" valign="top">uint32_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#a549b7327f3fbd8738c4fe62d6f0e93ea">last_ts_</a> {0}</td></tr>
 <tr class="separator:a549b7327f3fbd8738c4fe62d6f0e93ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6790de60102425bab5a99c41443f03eb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="structgs_1_1UpdateWalUnit.html">UpdateWalUnit</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1LocalWalParser.html#a6790de60102425bab5a99c41443f03eb">update_wal_list_</a></td></tr>
@@ -378,8 +375,8 @@ Static Private Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="ac4d483764cc95129439376a7a348e992"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac4d483764cc95129439376a7a348e992">&#9670;&nbsp;</a></span>insert_wal_list_</h2>
+<a id="a2bb957bc1020c7a1cc12975eddc62d62"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2bb957bc1020c7a1cc12975eddc62d62">&#9670;&nbsp;</a></span>insert_wal_list_</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -388,29 +385,7 @@ Static Private Attributes</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a>* gs::LocalWalParser::insert_wal_list_</td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">private</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-</div>
-</div>
-<a id="aea3438073d444442602bca91ce96c8e2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aea3438073d444442602bca91ce96c8e2">&#9670;&nbsp;</a></span>insert_wal_list_size_</h2>
-
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">size_t gs::LocalWalParser::insert_wal_list_size_</td>
+          <td class="memname">std::vector&lt;<a class="el" href="structgs_1_1WalContentUnit.html">WalContentUnit</a>&gt; gs::LocalWalParser::insert_wal_list_</td>
         </tr>
       </table>
   </td>
@@ -541,7 +516,7 @@ Static Private Attributes</h2></td></tr>
 </ul>
 </div><!-- contents -->
 <div class="ttc" id="aclassgs_1_1LocalWalParser_html_a4b62f1d23cad23a2e22ede3711a9515d"><div class="ttname"><a href="classgs_1_1LocalWalParser.html#a4b62f1d23cad23a2e22ede3711a9515d">gs::LocalWalParser::Make</a></div><div class="ttdeci">static std::unique_ptr&lt; IWalParser &gt; Make(const std::string &amp;wal_dir)</div><div class="ttdef"><b>Definition:</b> local_wal_parser.h:26</div></div>
-<div class="ttc" id="aclassgs_1_1WalParserFactory_html_aa86e462e38b601404221c54a0a08c653"><div class="ttname"><a href="classgs_1_1WalParserFactory.html#aa86e462e38b601404221c54a0a08c653">gs::WalParserFactory::wal_parser_initializer_t</a></div><div class="ttdeci">std::unique_ptr&lt; IWalParser &gt;(*)(const std::string &amp;wal_dir) wal_parser_initializer_t</div><div class="ttdef"><b>Definition:</b> wal.h:131</div></div>
+<div class="ttc" id="aclassgs_1_1WalParserFactory_html_aa86e462e38b601404221c54a0a08c653"><div class="ttname"><a href="classgs_1_1WalParserFactory.html#aa86e462e38b601404221c54a0a08c653">gs::WalParserFactory::wal_parser_initializer_t</a></div><div class="ttdeci">std::unique_ptr&lt; IWalParser &gt;(*)(const std::string &amp;wal_dir) wal_parser_initializer_t</div><div class="ttdef"><b>Definition:</b> wal.h:130</div></div>
 <div class="ttc" id="aclassgs_1_1WalParserFactory_html_a07d88603f1848cc30ccdbc12bcfc3fa7"><div class="ttname"><a href="classgs_1_1WalParserFactory.html#a07d88603f1848cc30ccdbc12bcfc3fa7">gs::WalParserFactory::RegisterWalParser</a></div><div class="ttdeci">static bool RegisterWalParser(const std::string &amp;wal_parser_type, wal_parser_initializer_t initializer)</div><div class="ttdef"><b>Definition:</b> wal.cc:101</div></div>
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
