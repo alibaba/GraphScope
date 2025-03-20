@@ -32,12 +32,13 @@ struct OSSConf {
   static constexpr const char* kOSSAccessKeySecret = "OSS_ACCESS_KEY_SECRET";
   static constexpr const char* kOSSEndpoint = "OSS_ENDPOINT";
   static constexpr const char* kOSSBucketName = "OSS_BUCKET_NAME";
+  static constexpr const char* kOSSConcurrency = "OSS_CONCURRENCY";
   // Avoid storing or printing the accesskey_id and accesskey_secret
   std::string accesskey_id_;
   std::string accesskey_secret_;
   std::string endpoint_;
   std::string bucket_name_;
-  int32_t uploading_concurrency_ = 4;
+  int32_t concurrency_ = 4;
   uint64_t partition_size_ = 1024 * 1024 * 128;
   AlibabaCloud::OSS::ClientConfiguration client_conf_;
 

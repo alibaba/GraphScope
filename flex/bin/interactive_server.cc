@@ -23,6 +23,9 @@
 #include "flex/otel/otel.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/utils/service_utils.h"
+#ifdef BUILD_WITH_OSS
+#include "flex/utils/remote/oss_storage.h"
+#endif
 
 #include <yaml-cpp/yaml.h>
 #include <boost/program_options.hpp>
@@ -103,6 +106,67 @@ void config_log_level(int log_level, int verbose_level) {
     }
   }
 }
+
+#ifdef BUILD_WITH_OSS
+
+Status unzip(const std::string& zip_file, const std::string& dest_dir) {
+  std::string cmd = "unzip -o " + zip_file + " -d " + dest_dir;
+  boost::process::child process(cmd);
+  process.wait();
+  if (process.exit_code() != 0) {
+    return Status(StatusCode::IO_ERROR,
+                  "Fail to unzip file: " + zip_file +
+                      ", error code: " + std::to_string(process.exit_code()));
+  }
+  return Status::OK();
+}
+
+std::string download_data_from_oss(const std::string& graph_name,
+                                   const std::string& data_path) {
+  auto data_dir = "/tmp/" + graph_name + "/data";
+  if (std::filesystem::exists(data_dir)) {
+    LOG(INFO) << "Data directory exists";
+  } else {
+    LOG(INFO) << "Data directory not exists, create directory";
+    std::filesystem::create_directories(data_dir);
+  }
+  gs::OSSConf conf;
+  conf.load_conf_from_env();
+  gs::OSSRemoteStorageDownloader downloader(conf);
+  auto open_res = downloader.Open();
+  if (!open_res.ok()) {
+    LOG(FATAL) << "Fail to open oss client: " << open_res.error_message();
+  }
+
+  auto data_dir_zip_path = data_dir + "/data.zip";
+  // if data_path start with conf.bucket_name_, remove it
+  std::string data_path_no_bucket = data_path;
+  if (data_path.find(conf.bucket_name_) == 0) {
+    data_path_no_bucket = data_path.substr(conf.bucket_name_.size() + 1);
+  }
+  LOG(INFO) << "Download data from oss: " << data_path_no_bucket << " to "
+            << data_dir_zip_path;
+
+  auto download_res = downloader.Get(data_path_no_bucket, data_dir_zip_path);
+  if (!download_res.ok()) {
+    LOG(FATAL) << "Fail to download data from oss: "
+               << download_res.error_message();
+  }
+  if (std::filesystem::exists(data_dir_zip_path)) {
+    LOG(INFO) << "Data zip file exists, start to unzip";
+    auto unzip_res = gs::unzip(data_dir_zip_path, data_dir);
+    if (!unzip_res.ok()) {
+      LOG(FATAL) << "Fail to unzip data file: " << unzip_res.error_message();
+    }
+    // remove zip file
+    std::filesystem::remove(data_dir_zip_path);
+  } else {
+    LOG(FATAL) << "Data zip file not exists: " << data_dir_zip_path;
+  }
+  return data_dir;
+}
+#endif
+
 }  // namespace gs
 
 /**
@@ -138,7 +202,12 @@ int main(int argc, char** argv) {
       "memory-level,m", bpo::value<unsigned>()->default_value(1),
       "memory allocation strategy")("enable-adhoc-handler",
                                     bpo::value<bool>()->default_value(false),
-                                    "whether to enable adhoc handler");
+                                    "whether to enable adhoc handler")(
+      "open-graph-id", bpo::value<std::string>(),
+      "Open the graph service from the graph id");
+  // Note: When open-graph-id is specified, graph-config and data-path should
+  // NOT be specified. We will fetch the graph schema, data path and plugins
+  // from the metadata store.
 
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
@@ -214,16 +283,34 @@ int main(int argc, char** argv) {
       return -1;
     }
     graph_schema_path = vm["graph-config"].as<std::string>();
-    if (!vm.count("data-path")) {
-      LOG(ERROR) << "data-path is required";
-      return -1;
-    }
-    data_path = vm["data-path"].as<std::string>();
-
     auto schema_res = gs::Schema::LoadFromYaml(graph_schema_path);
     if (!schema_res.ok()) {
       LOG(FATAL) << "Fail to load graph schema from yaml file: "
                  << graph_schema_path;
+    }
+
+    if (vm.count("data-path")) {
+      data_path = vm["data-path"].as<std::string>();
+    } else {
+      // If data path is not specified, we will check whether remote_
+      auto remote_path = schema_res.value().GetRemotePath();
+      if (!remote_path.empty()) {
+        data_path = remote_path;
+      } else {
+        LOG(FATAL) << "data-path is required";
+      }
+    }
+    LOG(INFO) << "Data path: " << data_path;
+
+    // If data_path starts with oss, download the data from oss
+    if (data_path.find("oss://") == 0) {
+#ifdef BUILD_WITH_OSS
+      data_path =
+          gs::download_data_from_oss("default_graph", data_path.substr(6));
+      LOG(INFO) << "Download data from oss to local path: " << data_path;
+#else
+      LOG(FATAL) << "OSS is not supported in this build";
+#endif
     }
 
     // The schema is loaded just to get the plugin dir and plugin list

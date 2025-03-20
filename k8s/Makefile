@@ -174,7 +174,18 @@ flex-interactive:
 		--build-arg ARCH=${ARCH} \
 		--build-arg OPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} \
 		-t graphscope/interactive:${VERSION}  \
-		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile .
+		-f ${DOCKERFILES_DIR}/flex-interactive.Dockerfile --no-cache .
+
+flex-interactive-master:
+	cd $(WORKING_DIR)/.. && \
+	docker build \
+		--target master \
+		--build-arg REGISTRY=$(REGISTRY) \
+		--build-arg VINEYARD_VERSION=$(VINEYARD_VERSION) \
+		--build-arg PLATFORM=${PLATFORM} \
+		--build-arg ARCH=${ARCH} \
+		-t graphscope/interactive-master:${VERSION}  \
+		-f ${DOCKERFILES_DIR}/flex-interactive-master.Dockerfile --no-cache .
 
 learning:
 	cd $(WORKING_DIR)/.. && \

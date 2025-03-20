@@ -45,7 +45,7 @@ ServiceConfig::ServiceConfig()
       start_compiler(false),
       enable_gremlin(false),
       enable_bolt(false),
-      metadata_store_type_(gs::MetadataStoreType::kLocalFile),
+      metadata_store_uri(DEFAULT_METADATA_STORE_URI),
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
       sharding_mode(DEFAULT_SHARDING_MODE),
@@ -127,13 +127,29 @@ void GraphDBService::init(const ServiceConfig& config) {
         config.admin_port, config.get_exclusive_shard_id(),
         config.admin_svc_max_content_length);
   }
+#ifdef ENABLE_SERVICE_REGISTER
+  LOG(INFO) << "Service registry endpoint: "
+            << config.service_registry_endpoint;
+  if (!config.service_registry_endpoint.empty()) {
+    service_register_ = std::make_unique<ServiceRegister>(
+        config.service_registry_endpoint, config.namespace_,
+        config.master_instance_name, [this]() { return get_service_info(); },
+        config.service_registry_ttl);
+  }
+#endif
 
   initialized_.store(true);
   service_config_ = config;
   gs::init_cpu_usage_watch();
   if (config.start_admin_service) {
-    metadata_store_ = gs::MetadataStoreFactory::Create(
-        config.metadata_store_type_, WorkDirManipulator::GetWorkspace());
+    // instantiate the placeholder {WOKRSPACE} in metadata store uri.
+    auto metadata_store_uri = config.metadata_store_uri;
+    if (metadata_store_uri.find("{WORKSPACE}") != std::string::npos) {
+      metadata_store_uri =
+          std::regex_replace(metadata_store_uri, std::regex("\\{WORKSPACE\\}"),
+                             WorkDirManipulator::GetWorkspace());
+    }
+    metadata_store_ = gs::MetadataStoreFactory::Create(metadata_store_uri);
 
     auto res = metadata_store_->Open();
     if (!res.ok()) {
@@ -207,6 +223,11 @@ GraphDBService::~GraphDBService() {
   if (metadata_store_) {
     metadata_store_->Close();
   }
+#ifdef ENABLE_SERVICE_REGISTER
+  if (service_register_) {
+    service_register_->Stop();
+  }
+#endif
 }
 
 const ServiceConfig& GraphDBService::get_service_config() const {
@@ -264,6 +285,14 @@ void GraphDBService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->start();
   }
+#ifdef ENABLE_SERVICE_REGISTER
+  if (service_register_) {
+    LOG(INFO) << "Start service register thread";
+    service_register_->Start();
+  } else {
+    LOG(INFO) << "Service register is not started!";
+  }
+#endif
   if (service_config_.start_compiler) {
     if (!start_compiler_subprocess()) {
       LOG(FATAL) << "Failed to start compiler subprocess! exiting...";
@@ -278,6 +307,11 @@ void GraphDBService::run_and_wait_for_exit() {
   if (admin_hdl_) {
     admin_hdl_->stop();
   }
+#ifdef ENABLE_SERVICE_REGISTER
+  if (service_register_) {
+    service_register_->Stop();
+  }
+#endif
   actor_sys_->terminate();
 }
 
@@ -332,6 +366,43 @@ bool GraphDBService::check_compiler_ready() const {
   }
   return true;
 }
+
+#ifdef ENABLE_SERVICE_REGISTER
+std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
+  auto ip = gs::get_local_ip();
+  AllServiceRegisterPayload payload;
+  if (!is_running()) {
+    return std::make_pair(false, payload);
+  }
+
+  if (metadata_store_) {
+    auto cur_running_graph = metadata_store_->GetRunningGraph();
+    if (!cur_running_graph.ok()) {
+      LOG(ERROR) << "Failed to get running graph: "
+                 << cur_running_graph.status().error_message();
+      return std::make_pair(false, payload);
+    }
+    payload.graph_id = cur_running_graph.value();
+
+  } else {
+    // Try to get from current graph_db
+    auto& db = gs::GraphDB::get();
+    payload.graph_id = db.schema().GetGraphName();
+  }
+
+  auto procedure_endpoint =
+      ip + ":" + std::to_string(service_config_.query_port);
+  auto cypher_endpoint = ip + ":" + std::to_string(service_config_.bolt_port);
+  ServiceMetrics procedure_metrics("0");  // TODO: get snapshot id
+  payload.services.emplace(std::make_pair(
+      "procedure",
+      ServiceRegisterPayload(procedure_endpoint, procedure_metrics)));
+  payload.services.emplace(std::make_pair(
+      "cypher", ServiceRegisterPayload(cypher_endpoint, procedure_metrics)));
+
+  return std::make_pair(true, payload);
+}
+#endif
 
 bool GraphDBService::start_compiler_subprocess(
     const std::string& graph_schema_path) {

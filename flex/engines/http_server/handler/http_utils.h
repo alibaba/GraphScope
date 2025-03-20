@@ -16,6 +16,7 @@
 #include "flex/utils/result.h"
 #include "seastar/http/common.hh"
 #include "seastar/http/reply.hh"
+#include "flex/utils/service_utils.h"
 
 #ifndef ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_
 #define ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_
