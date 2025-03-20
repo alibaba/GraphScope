@@ -1,0 +1,27 @@
+{
+    "operation": {
+        "personIdQ12": 10995116278647,
+        "tagClassName": "Chancellor",
+        "limit": 20
+    },
+    "result": [
+        {
+            "personId": 1274,
+            "personFirstName": "Roberto",
+            "personLastName": "Fernandez",
+            "tagNames": [
+                "Joseph_Goebbels"
+            ],
+            "replyCount": 1
+        },
+        {
+            "personId": 1490,
+            "personFirstName": "John",
+            "personLastName": "Wilson",
+            "tagNames": [
+                "Joseph_Goebbels"
+            ],
+            "replyCount": 1
+        }
+    ]
+}

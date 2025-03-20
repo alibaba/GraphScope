@@ -1,0 +1,55 @@
+{
+    "operation": {
+        "personIdSQ3": 19791209300143
+    },
+    "result": [
+        {
+            "personId": 30786325578747,
+            "firstName": "Zhang",
+            "lastName": "Huang",
+            "friendshipCreationDate": 1339581665762
+        },
+        {
+            "personId": 26388279066936,
+            "firstName": "Chen",
+            "lastName": "Zhang",
+            "friendshipCreationDate": 1331069267421
+        },
+        {
+            "personId": 24189255811566,
+            "firstName": "The",
+            "lastName": "Kunda",
+            "friendshipCreationDate": 1323839118471
+        },
+        {
+            "personId": 13194139533618,
+            "firstName": "Yang",
+            "lastName": "Zhang",
+            "friendshipCreationDate": 1317135003853
+        },
+        {
+            "personId": 10995116278184,
+            "firstName": "Arjun",
+            "lastName": "Kumar",
+            "friendshipCreationDate": 1316930133404
+        },
+        {
+            "personId": 4398046511596,
+            "firstName": "Ge",
+            "lastName": "Wei",
+            "friendshipCreationDate": 1316373131406
+        },
+        {
+            "personId": 13194139533535,
+            "firstName": "Shweta",
+            "lastName": "Singh",
+            "friendshipCreationDate": 1315772324838
+        },
+        {
+            "personId": 8796093023000,
+            "firstName": "Peng",
+            "lastName": "Zhang",
+            "friendshipCreationDate": 1315244181901
+        }
+    ]
+}

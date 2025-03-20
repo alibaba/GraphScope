@@ -180,7 +180,7 @@ impl Accumulator<DynEntry, DynEntry> for EntryAccumulator {
                         warn!("cnt value is 0 in accum avg");
                         Ok(DynEntry::new(Object::None))
                     } else {
-                        let cnt_primitive = Primitives::Float(cnt as f64);
+                        let cnt_primitive = Primitives::Double(cnt as f64);
                         let result = sum_primitive.div(cnt_primitive);
                         Ok(DynEntry::new(object!(result)))
                     }

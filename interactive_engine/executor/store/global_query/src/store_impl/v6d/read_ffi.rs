@@ -325,14 +325,14 @@ impl NativeProperty {
                 let mut v: f32 = 0.0;
                 let res = unsafe { v6d_get_property_as_float(property, &mut v as *mut f32) };
                 if res == STATE_SUCCESS {
-                    return Some(Object::Primitive(Primitives::Float(v as f64)));
+                    return Some(Object::Primitive(Primitives::Float(v)));
                 }
             }
             PropertyType::Double => {
                 let mut v: f64 = 0.0;
                 let res = unsafe { v6d_get_property_as_double(property, &mut v as *mut f64) };
                 if res == STATE_SUCCESS {
-                    return Some(Object::Primitive(Primitives::Float(v)));
+                    return Some(Object::Primitive(Primitives::Double(v)));
                 }
             }
             PropertyType::String => {
@@ -836,6 +836,10 @@ impl WriteNativeProperty {
                     (PropertyType::Long, vec![], unsafe { u.l })
                 }
                 Object::Primitive(Primitives::Float(v)) => {
+                    let u = PropertyUnion { f: v };
+                    (PropertyType::Double, vec![], unsafe { u.l })
+                }
+                Object::Primitive(Primitives::Double(v)) => {
                     let u = PropertyUnion { d: v };
                     (PropertyType::Double, vec![], unsafe { u.l })
                 }

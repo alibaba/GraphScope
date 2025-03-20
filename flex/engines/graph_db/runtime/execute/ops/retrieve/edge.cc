@@ -552,25 +552,27 @@ bl::result<ReadOpBuildResultT> EdgeExpandOprBuilder::Build(
   eep.is_optional = is_optional;
   if (opr.expand_opt() == physical::EdgeExpand_ExpandOpt_VERTEX) {
     if (query_params.has_predicate()) {
-      if (parse_sp_pred(query_params.predicate()) ==
-          SPPredicateType::kPropertyGT) {
-        std::string param_name =
-            query_params.predicate().operators(2).param().name();
-        return std::make_pair(std::make_unique<EdgeExpandVWithEPGTOpr>(
-                                  eep, param_name, query_params.predicate()),
-                              meta);
-      } else if (parse_sp_pred(query_params.predicate()) ==
-                 SPPredicateType::kPropertyLT) {
-        std::string param_name =
-            query_params.predicate().operators(2).param().name();
-        return std::make_pair(std::make_unique<EdgeExpandVWithEPLTOpr>(
-                                  eep, param_name, query_params.predicate()),
-                              meta);
-      } else {
-        return std::make_pair(std::make_unique<EdgeExpandVWithEdgePredOpr>(
-                                  eep, query_params.predicate()),
-                              meta);
+      auto tp = parse_sp_pred(query_params.predicate());
+      const auto& op2 = query_params.predicate().operators(2);
+      if (op2.has_param()) {
+        if (tp == SPPredicateType::kPropertyGT) {
+          std::string param_name =
+              query_params.predicate().operators(2).param().name();
+          return std::make_pair(std::make_unique<EdgeExpandVWithEPGTOpr>(
+                                    eep, param_name, query_params.predicate()),
+                                meta);
+        } else if (tp == SPPredicateType::kPropertyLT) {
+          std::string param_name =
+              query_params.predicate().operators(2).param().name();
+          return std::make_pair(std::make_unique<EdgeExpandVWithEPLTOpr>(
+                                    eep, param_name, query_params.predicate()),
+                                meta);
+        }
       }
+      return std::make_pair(std::make_unique<EdgeExpandVWithEdgePredOpr>(
+                                eep, query_params.predicate()),
+                            meta);
+
     } else {
       return std::make_pair(std::make_unique<EdgeExpandVWithoutPredOpr>(eep),
                             meta);

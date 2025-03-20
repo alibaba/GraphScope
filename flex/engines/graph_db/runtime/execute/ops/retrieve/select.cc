@@ -133,7 +133,8 @@ bl::result<ReadOpBuildResultT> SelectOprBuilder::Build(
     const physical::PhysicalPlan& plan, int op_idx) {
   auto opr = plan.plan(op_idx).opr().select();
   auto type = parse_sp_pred(opr.predicate());
-  if (type == SPPredicateType::kPropertyNE) {
+  const auto& op2 = opr.predicate().operators(2);
+  if (type == SPPredicateType::kPropertyNE && op2.has_param()) {
     auto var = opr.predicate().operators(0).var();
     if (var.has_property()) {
       auto name = var.property().key().name();
