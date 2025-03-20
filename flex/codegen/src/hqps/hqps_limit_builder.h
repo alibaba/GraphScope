@@ -35,11 +35,11 @@ class LimitOpBuilder {
   }
 
   std::string Build() const {
-    boost::format formater(LIMIT_OP_TEMPLATE_STR);
+    boost::format formatter(LIMIT_OP_TEMPLATE_STR);
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = context_.GetPrevAndNextCtxName();
-    formater % next_ctx_name % prev_ctx_name % range_.lower() % range_.upper();
-    return formater.str();
+    formatter % next_ctx_name % prev_ctx_name % range_.lower() % range_.upper();
+    return formatter.str();
   }
 
  private:

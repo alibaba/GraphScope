@@ -338,19 +338,19 @@ class PathExpandOpBuilder {
 
     auto append_opt = res_alias_to_append_opt(out_tag_id_);
     auto input_col_str = format_input_col(in_tag_id_);
-    boost::format formater("");
+    boost::format formatter("");
     if (output_to_vertices_) {
-      formater = boost::format(PATH_EXPAND_V_OP_TEMPLATE_STR);
+      formatter = boost::format(PATH_EXPAND_V_OP_TEMPLATE_STR);
     } else {
-      formater = boost::format(PATH_EXPAND_PATH_OP_TEMPLATE_STR);
+      formatter = boost::format(PATH_EXPAND_PATH_OP_TEMPLATE_STR);
     }
 
-    formater % edge_expand_opt_ % getv_opt_code_ % path_expand_opt_var %
+    formatter % edge_expand_opt_ % getv_opt_code_ % path_expand_opt_var %
         edge_expand_opt_name_ % getv_opt_name_ % range_lower_value %
         range_upper_value % next_ctx_name % append_opt % input_col_str %
         ctx_.GraphVar() % prev_ctx_name % path_expand_opt_var;
 
-    return formater.str();
+    return formatter.str();
   }
 
  private:

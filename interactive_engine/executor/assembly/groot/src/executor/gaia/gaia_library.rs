@@ -88,9 +88,9 @@ pub extern "C" fn updatePeerView(engine_handle: EngineHandle, peer_view_string_r
             let mut fields = item.split("#");
             let id = fields.next().unwrap().parse::<u64>().unwrap();
             let addr_str = fields.next().unwrap();
-            let mut fileds = addr_str.split(":");
-            let hostname = fileds.next().unwrap();
-            let port = fileds.next().unwrap().parse::<u16>().unwrap();
+            let mut fields = addr_str.split(":");
+            let hostname = fields.next().unwrap();
+            let port = fields.next().unwrap().parse::<u16>().unwrap();
             (id, ServerAddr::new(String::from(hostname), port))
         })
         .collect::<Vec<(u64, ServerAddr)>>();
