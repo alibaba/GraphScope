@@ -138,7 +138,11 @@ impl Property {
                     Ok(Property::Long(*v as i64))
                 }
             }
-            Primitives::Float(v) => Ok(Property::Double(*v)),
+            Primitives::Float(v) => Ok(Property::Float(*v)),
+            Primitives::Double(v) => Ok(Property::Double(*v)),
+            // todo: will support unsigned integer in groot soon
+            Primitives::UInteger(v) => Ok(Property::Int(*v as i32)),
+            Primitives::ULong(v) => Ok(Property::Long(*v as i64)),
         }
     }
 
