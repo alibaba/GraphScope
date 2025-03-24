@@ -55,7 +55,7 @@ serviceAccount:
   annotations: {}
   # The name of the service account to use.
   # If not set and create is true, a name is generated using the fullname template
-  name: ""
+  name: "interactive-service-account"
 
 ## Name of existing ConfigMap with GraphScope configuration.
 ## NOTE: When it's set the 'configuration' parameter is ignored
@@ -82,7 +82,7 @@ master:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
     tag: "master-debug"
-    pullPolicy: IfNotPresent
+    pullPolicy: Always
     pullSecrets: []
 
   instance_name: ""
@@ -162,7 +162,7 @@ master:
   podLabels: {}
 
   entrypointMountPath: /etc/interactive/master_entrypoint.sh
-  configFileMountPath: /etc/interactive/interactive_config.yaml
+  configFileMountPath: /opt/flex/share/interactive_config.yaml
 
 ## GraphScope Interactive parameters
 ##
@@ -171,12 +171,12 @@ engine:
     registry: registry.cn-hongkong.aliyuncs.com
     repository: graphscope/interactive
     # Overrides the image tag whose default is the chart appVersion.
-    tag: "latest"
+    tag: "debug"
     ## Specify a imagePullPolicy
     ## Defaults to 'Always' if image tag is 'latest', else set to 'IfNotPresent'
     ## ref: http://kubernetes.io/docs/user-guide/images/#pre-pulling-images
     ##
-    pullPolicy: IfNotPresent
+    pullPolicy: "Always"
     ## Optionally specify an array of imagePullSecrets (secrets must be manually created in the namespace)
     ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
     ## Example:
@@ -185,7 +185,7 @@ engine:
     ##
     pullSecrets: []
 
-  metdadataStoreUri: "file://{WORKSPACE}/METADATA"
+  metdadataStoreUri: ""
   walUri: "file://{GRAPH_DATA_DIR}/wal"
 
   replicaCount: 1
@@ -394,10 +394,10 @@ engine:
     meta:
       reader:
         schema:
-          uri: http://localhost:7777/v1/service/status
+          uri: ""
           interval: 1000
         statistics:
-          uri: http://localhost:7777/v1/graph/%s/statistics
+          uri: ""
           interval: 86400000
         timeout: 1000
     endpoint:
@@ -410,7 +410,7 @@ engine:
         port: 8182
     queryTimeout: 40000
 
-  configFileMountPath: /etc/interactive/interactive_config.yaml
+  configFileMountPath: /opt/flex/share/interactive_config.yaml
   entrypointMountPath: /etc/interactive/engine_entrypoint.sh
 
 ## Kafka Config

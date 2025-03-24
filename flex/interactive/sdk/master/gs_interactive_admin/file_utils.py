@@ -36,6 +36,8 @@ def parse_file_metadata(location: str) -> dict:
 
 def upload_file_impl(filestorage) -> str:
     filepath = os.path.join(INTERACTIVE_WORKSPACE, filestorage.filename)
+    if not os.path.exists(INTERACTIVE_WORKSPACE):
+        os.makedirs(INTERACTIVE_WORKSPACE)
     filestorage.save(filepath)
     metadata = parse_file_metadata(filepath)
     return UploadFileResponse.from_dict(

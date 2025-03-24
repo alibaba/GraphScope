@@ -20,6 +20,7 @@ from abc import ABCMeta
 import os
 from abc import abstractmethod
 import logging
+import json
 
 import random
 import string
@@ -55,7 +56,8 @@ class InteractiveK8sCluster(InteractiveCluster):
         self._namespace = config.master.k8s_launcher_config.namespace
         self._instance_prefix = config.master.k8s_launcher_config.instance_prefix
         # The instance name of the master 
-        self._instance_id = config.master.instance_name
+        self._instance_id =  f"{self._instance_prefix}-graph-{self._graph_id}"
+        self._master_instance_id = config.master.instance_name
         logger.info(f"instance id {self._instance_id}")
         self._config_file = config.master.k8s_launcher_config.config_file
         self._default_replicas = config.master.k8s_launcher_config.default_replicas
@@ -114,11 +116,24 @@ class InteractiveK8sCluster(InteractiveCluster):
     @property
     def instance_id(self):
         # Full name
-        return self._instance_id or f"{self._instance_prefix}-graph-{self._graph_id}"
+        return self._instance_id
+    
+    @property
+    def master_instance_id(self):
+        return self._master_instance_id
+    
+    @property
+    def master_config_map_name(self):
+        """
+        The master_instance_id is like {deployment_name}-{master}. We need to remote the master
+        """
+        deployment_name_list=self.master_instance_id.split("-")[:-1]
+        deployment_name = "-".join(deployment_name_list)
+        return f"{deployment_name}-config"
     
     @property
     def config_map_name(self):
-        return f"{self.instance_id}"
+        return f"{self.instance_id}-config"
 
     @property
     def engine_stateful_set_name(self):
@@ -196,24 +211,23 @@ class InteractiveK8sCluster(InteractiveCluster):
 
     @property
     def engine_envs(self):
-        envs = {
-            # TODO: Add more envs
-            "INTERACTIVE_WORKSPACE": self._workspace,
-        }
+        envs = os.environ.copy()
         return [kube_client.V1EnvVar(name=k, value=v) for k, v in envs.items()]
 
-    def start(self):
+    def start(self, custom_graph_schema_mount_path, additional_config_map = None):
         """
         Start the cluster.
+        
+        full_config_map: A key value pair, which will be added to the configmap. The key should be a string, and the value should be a string or a dict.
         """
         # self.stop()
         
         logger.info(
             f"Creating the interactive cluster with image {self.image_full_name}"
         )
-        self._create_service_account()
-        self._create_config_map()
-        self._create_interactive_server_sts()
+        # self._create_service_account()
+        self._create_config_map(additional_config_map)
+        self._create_interactive_server_sts(custom_graph_schema_mount_path, additional_config_map)
         self._create_interactive_service()
 
         # We just need to create the stateful set. No load balancer is needed.
@@ -243,18 +257,18 @@ class InteractiveK8sCluster(InteractiveCluster):
         )
         
         self._core_api.delete_namespaced_config_map(
-            name=self.instance_id,
+            name=self.config_map_name,
             namespace=self.namespace,
             body=kube_client.V1DeleteOptions(grace_period_seconds=0),
         )
         
-        if self._service_account_create:
-            self._core_api.delete_namespaced_service_account(
-                name=self.service_account_name,
-                namespace=self.namespace,
-                body=kube_client.V1DeleteOptions(grace_period_seconds=0),
-            )
-        self._started = False
+        # if self._service_account_create:
+        #     self._core_api.delete_namespaced_service_account(
+        #         name=self.service_account_name,
+        #         namespace=self.namespace,
+        #         body=kube_client.V1DeleteOptions(grace_period_seconds=0),
+        #     )
+        # self._started = False
 
     def is_ready(self):
         """
@@ -310,8 +324,30 @@ class InteractiveK8sCluster(InteractiveCluster):
             )
             logger.info(f"Service account created. resp = {resp}")
             
-    def _create_config_map(self):
+    def _create_config_map(self, additional_config_map : list[tuple]):
         logger.info(f"Creating config map for the interactive servers")
+        full_config_map = {}
+        full_config_map["interactive_config.yaml"] = yaml.dump(self._config.to_dict())
+        # full_config_map["engine_entrypoint.sh"] = f"""
+        #             #!/bin/bash
+        #              # This should be the entrypoint of the engine instance
+        #             echo "Starting engine instance..."
+        #             echo "using configfile: {self.engine_config_file_mount_path}"
+        #             echo "Workspace: {self._workspace} "
+        #             mkdir -p  {self._workspace}/conf
+        #             # /opt/flex/bin/entrypoint.sh -w {self._workspace} 
+        #             sleep infinity
+        #             """,
+        full_config_map["engine_entrypoint.sh"] = "echo 'Starting engine instance...'; echo 'using configfile: /tmp/interactive/workspace/interactive_config.yaml'; echo 'Workspace: /tmp/interactive/workspace'; mkdir -p /tmp/interactive/workspace/conf; sleep infinity"
+        if additional_config_map is not None:
+            # additional_config_map is a list of tuple, each tuple contains the key(configName), file_path, and the content
+            for key, file_path, content in additional_config_map:
+                full_config_map[key] = content
+        logger.info(f"full config map {full_config_map}")
+        json_str = json.dumps(full_config_map)
+        logger.info(f"json str {json_str}")
+        
+
         config_map = kube_client.V1ConfigMap(
             api_version="v1",
             kind="ConfigMap",
@@ -320,20 +356,7 @@ class InteractiveK8sCluster(InteractiveCluster):
                 namespace=self.namespace,
                 labels=self.statefulset_labels,
             ),
-            data={
-                "interactive_config.yaml":  yaml.dump(self._config.to_dict(), default_flow_style=False),
-                "engine_entrypoint.sh":
-                    f"""
-                    #!/bin/bash
-                     # This should be the entrypoint of the engine instance
-                    echo "Starting engine instance..."
-                    echo "using configfile: {self.engine_config_file_mount_path}"
-                    echo "Workspace: {self._workspace} "
-                    mkdir -p  {self._workspace}/conf
-                    # /opt/flex/bin/entrypoint.sh -w {self._workspace} 
-                    sleep infinity
-                    """
-            },
+            data=full_config_map,
         )
         logger.info(f"config map {config_map}")
         resp = self._core_api.create_namespaced_config_map(
@@ -385,8 +408,8 @@ class InteractiveK8sCluster(InteractiveCluster):
         )
         logger.info(f"Service created. resp={resp}")
 
-    def _create_interactive_server_sts(self):
-        stateful_set = self._generate_engine_stateful_set()
+    def _create_interactive_server_sts(self, custom_graph_file_mount_path,  additional_config_map : list[tuple]):
+        stateful_set = self._generate_engine_stateful_set(custom_graph_file_mount_path, additional_config_map=additional_config_map)
         logger.info(f"Succeed to create stateful set {stateful_set.metadata}")
 
         logger.info(f"Creating namespaced stateful set {self.namespace}")
@@ -395,11 +418,11 @@ class InteractiveK8sCluster(InteractiveCluster):
         )
         logger.info(f"Stateful set created. resp={resp}")
 
-    def _generate_engine_stateful_set(self):
+    def _generate_engine_stateful_set(self,custom_graph_file_mount_path: str, additional_config_map : list[tuple]):
         stateful_set_name = self.engine_stateful_set_name
         volume_claim_template = self._get_volume_claim_template()
-        volumes,volumes_mounts = self._get_volumes()
-        stateful_set_template_spec = self._get_engine_template_spec(volumes, volumes_mounts)
+        volumes,volumes_mounts = self._get_volumes(additional_config_map=additional_config_map)
+        stateful_set_template_spec = self._get_engine_template_spec(custom_graph_file_mount_path, volumes, volumes_mounts)
         replicas = self._default_replicas
         service_name = self.engine_service_name
         logger.info(
@@ -428,11 +451,11 @@ class InteractiveK8sCluster(InteractiveCluster):
             spec=spec,
         )
 
-    def _get_engine_template_spec(self, volumes : list, volume_mounts: list):
+    def _get_engine_template_spec(self, custom_graph_mount_path: str, volumes : list, volume_mounts: list):
         """
         Get the template spec for the engine.
         """
-        container = self._get_container_spec(volume_mounts)
+        container = self._get_container_spec(custom_graph_mount_path, volume_mounts)
         pod_spec = kube_client.V1PodTemplateSpec(
             metadata=kube_client.V1ObjectMeta(
                 annotations=self.engine_pod_annotations,
@@ -450,7 +473,7 @@ class InteractiveK8sCluster(InteractiveCluster):
             pod_spec.node_selector = self.node_selectors
         return pod_spec
 
-    def _get_container_spec(self, volume_mounts: list):
+    def _get_container_spec(self, custom_graph_file_mount_path: str, volume_mounts: list):
         return kube_client.V1Container(
             name=self._default_container_name,
             image=self.image_full_name,
@@ -458,23 +481,15 @@ class InteractiveK8sCluster(InteractiveCluster):
             volume_mounts=volume_mounts,
             env=self.engine_envs,
             command=["bash", "-c", self.engine_entrypoint_mount_path],
-            args=["-w", "/tmp/interactive/workspace"],
+            args=[custom_graph_file_mount_path],
             resources=kube_client.V1ResourceRequirements(
                 requests={"cpu": self._cpu_request, "memory": self._memory_request},
                 limits={"cpu": self._cpu_limit, "memory": self._memory_limit},
             ),
             readiness_probe=kube_client.V1Probe(
                 http_get=kube_client.V1HTTPGetAction(
-                    path="/v1/service/status",  # TODO: Implement on the server side
-                    port=self.admin_port,
-                ),
-                initial_delay_seconds=5,
-                period_seconds=10,
-            ),
-            liveness_probe=kube_client.V1Probe(
-                http_get=kube_client.V1HTTPGetAction(
-                    path="/v1/service/status",
-                    port=self.admin_port,
+                    path="/v1/service/ready",
+                    port=self.query_port,
                 ),
                 initial_delay_seconds=5,
                 period_seconds=10,
@@ -521,7 +536,7 @@ class InteractiveK8sCluster(InteractiveCluster):
         # )
         return pvc
     
-    def _get_volumes(self):
+    def _get_volumes(self, additional_config_map : list[tuple]):
         """
         Get the volumes and volume mounts for engine pod and container.
         Volumes: Config and engine-entrypoint
@@ -529,14 +544,14 @@ class InteractiveK8sCluster(InteractiveCluster):
         config_volume = kube_client.V1Volume(
             name="config-volume",
             config_map=kube_client.V1ConfigMapVolumeSource(
-                name=self.config_map_name,
+                name=self.master_config_map_name,
                 default_mode=0o755,
             ),
         )
         engine_entrypoint_volume = kube_client.V1Volume(
             name="engine-entrypoint",
             config_map=kube_client.V1ConfigMapVolumeSource(
-                name=self.config_map_name,
+                name=self.master_config_map_name,
                 default_mode=0o755,
             ),
         )
@@ -552,6 +567,21 @@ class InteractiveK8sCluster(InteractiveCluster):
             sub_path="engine_entrypoint.sh",
         )
         volume_mounts = [config_volume_mount, engine_entrypoint_volume_mount]
+        for key,file_path, value in additional_config_map:
+            config_volume = kube_client.V1Volume(
+                name=key,
+                config_map=kube_client.V1ConfigMapVolumeSource(
+                    name=self.config_map_name,
+                    default_mode=0o755,
+                ),
+            )
+            config_volume_mount = kube_client.V1VolumeMount(
+                name=key,
+                mount_path=file_path,
+                sub_path=key,
+            )
+            volumes.append(config_volume)
+            volume_mounts.append(config_volume_mount)
         return volumes, volume_mounts
         
 
@@ -582,12 +612,16 @@ class K8sLauncher(ILauncher):
         self,
         graph_id: str,
         config: Config,
+        custom_graph_schema_mount_path : str,
         wait_service_ready=False,
         wait_service_ready_timeout=30,
+        additional_config=list[tuple]
     ) -> InteractiveCluster:
         """
         Launch a new interactive cluster, which contains a master pod and some standby pod.
         The started pods will serve for graph with the given graph_id.
+        
+        full_config_map: A key value pair, which will be added to the configmap. The key should be a string, and the value should be a string or a dict.
         """
         # First check whether there is already a cluster for the graph.
         self._check_whether_cluster_exists(graph_id)
@@ -603,7 +637,7 @@ class K8sLauncher(ILauncher):
         cluster = InteractiveK8sCluster(graph_id, cur_config)
 
         # Start the cluster
-        cluster.start()
+        cluster.start(custom_graph_schema_mount_path=custom_graph_schema_mount_path, additional_config_map=additional_config)
 
         # Wait for the cluster to be ready
         if wait_service_ready:

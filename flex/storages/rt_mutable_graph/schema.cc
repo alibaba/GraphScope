@@ -1206,7 +1206,10 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
   }
 
   if (graph_node["id"]) {
+    LOG(INFO) << "Got id: " << graph_node["id"].as<std::string>();
     schema.SetGraphId(graph_node["id"].as<std::string>());
+  } else {
+    LOG(INFO) << "id is not set";
   }
 
   if (graph_node["description"]) {

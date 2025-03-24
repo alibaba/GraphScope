@@ -59,6 +59,18 @@ spec:
           env:
             - name: INTERACTIVE_WORKSPACE
               value: {{ .Values.workspace | quote }}
+            - name: OSS_ACCESS_KEY_ID
+              value: {{ include "graphscope-interactive.ossAccessKeyId" .  }}
+            - name: OSS_ACCESS_KEY_SECRET
+              value: {{ include "graphscope-interactive.ossAccessKeySecret" . }}
+            - name: OSS_ENDPOINT
+              value: {{ include "graphscope-interactive.ossEndpoint" . }}
+            - name: OSS_BUCKET_NAME
+              value: {{ include "graphscope-interactive.ossBucketName" .  }}
+            - name: FLEX_INTERACTIVE_ENGINE_IP  
+              valueFrom:  
+                fieldRef:  
+                  fieldPath: status.podIP 
           ports:
             - name: admin-port
               containerPort: {{ .Values.engine.service.adminPort }}
@@ -91,7 +103,7 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ .Values.engine.readinessProbe.path }}
-              port: {{ .Values.engine.service.adminPort }}
+              port: {{ .Values.engine.service.queryPort }}
             initialDelaySeconds: {{ .Values.engine.readinessProbe.initialDelaySeconds }}
             periodSeconds: {{ .Values.engine.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.engine.readinessProbe.timeoutSeconds }}

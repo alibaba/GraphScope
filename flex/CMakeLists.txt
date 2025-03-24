@@ -20,6 +20,7 @@ option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether 
 option(BUILD_ETCD_METASTORE "Whether to build with etcd metastore" OFF) # Whether to build with etcd metastore, default is OFF
 option(ENABLE_SERVICE_REGISTER "Whether to enable service register" OFF) # Whether to enable service register, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
+option(BUILD_BULKLOADER_ONLY "Only to build bulkloader" OFF)
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -145,7 +146,9 @@ add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 #find hiactor----------------------------------------------------------------------
-find_package(Hiactor)
+if (NOT BUILD_BULKLOADER_ONLY)
+    find_package(Hiactor)
+endif()
 if (NOT Hiactor_FOUND)
     message(STATUS "hiactor not found, please install the hiactor library")
 else ()
@@ -262,9 +265,11 @@ if (ENABLE_SERVICE_REGISTER)
 endif()
 
 add_subdirectory(utils)
-add_subdirectory(codegen)
 add_subdirectory(storages)
-add_subdirectory(engines)
+if (NOT BUILD_BULKLOADER_ONLY)
+    add_subdirectory(codegen)
+    add_subdirectory(engines)
+endif()
 add_subdirectory(bin)
 if (OPENTELEMETRY_CPP_FOUND)
    add_subdirectory(otel)

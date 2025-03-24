@@ -20,9 +20,13 @@
 {{- end -}}
 {{- end -}}
 
+{{- define "graphscope-interacitve.engine.defaultGraphSchemaPath" -}}
+{{- "/opt/flex/share/gs_interactive_default_graph/graph.yaml" }}
+{{- end -}}
 
-{{- define "graphscope-interactive.ossAccessKeyId "-}}
-{{- if .Values.oss.accessKeyId -}}
+
+{{- define "graphscope-interactive.ossAccessKeyId" -}}
+{{- if .Values.oss.accessKeyId }}
 {{- .Values.oss.accessKeyId | quote }}
 {{- else }}
 {{- "" }}
@@ -30,7 +34,7 @@
 {{- end -}}
 
 {{- define "graphscope-interactive.ossAccessKeySecret" -}}
-{{- if .Values.oss.accessKeySecret -}}
+{{- if .Values.oss.accessKeySecret }}
 {{- .Values.oss.accessKeySecret | quote }}
 {{- else }}
 {{- "" }}
@@ -38,7 +42,7 @@
 {{- end -}}
 
 {{- define "graphscope-interactive.ossEndpoint" -}}
-{{- if .Values.oss.endpoint -}}
+{{- if .Values.oss.endpoint }}
 {{- .Values.oss.endpoint | quote }}
 {{- else }}
 {{- "" }}
@@ -46,7 +50,7 @@
 {{- end -}}
 
 {{- define "graphscope-interactive.ossBucketName" -}}
-{{- if .Values.oss.bucketName -}}
+{{- if .Values.oss.bucketName }}
 {{- .Values.oss.bucketName | quote }}
 {{- else }}
 {{- "" }}
@@ -60,8 +64,24 @@
 
 
 {{- define "graphscope-interactive.master.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "master" | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "master" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.serviceName" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.master.fullname" .) "headless" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.servicePort" -}}
+{{- if .Values.master.service.adminPort }}
+{{- .Values.master.service.adminPort }}
+{{- else }}
+{{- 7776 }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.endpoint" -}}
+{{- printf "%s-0.%s.%s.svc.cluster.local:%s" (include "graphscope-interactive.master.fullname" .) (include "graphscope-interactive.master.serviceName" . ) .Release.Namespace (include "graphscope-interactive.master.servicePort" .) | trimSuffix "-" }}
+{{- end -}}
 
 {{- define "graphscope-interactive.master.entrypointMountPath" -}}
 {{- if .Values.master.entrypointMountPath }}
@@ -99,10 +119,26 @@
 
 
 {{- define "graphscope-interactive.engine.metadataStoreUri" -}}
-{{- if .Values.engine.metdadataStoreUri -}}
-{{- .Values.engine.metdadataStoreUri }}
+{{- if .Values.engine.metadataStoreUri -}}
+{{- .Values.engine.metadataStoreUri }}
 {{- else }}
-{{- "file://{WORKSPACE}/METADATA" }}
+{{- include "graphscope-interactive.etcd.endpoint" . }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.compiler.metaReaderSchemaUri" -}}
+{{- if .Values.engine.compiler.meta.reader.schema.uri -}}
+{{- .Values.engine.compiler.meta.reader.schema.uri }}
+{{- else }}
+{{- printf "http://%s/v1/graph/%s" (include "graphscope-interactive.master.endpoint" . ) "1"  | trimSuffix "-" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.compiler.metaStatisticsUri" -}}
+{{- if .Values.engine.compiler.meta.reader.statistics.uri -}}
+{{- .Values.engine.compiler.meta.reader.statistics.uri }}
+{{- else }}
+{{- printf "http://%s/v1/graph/%s/statistics" (include "graphscope-interactive.master.endpoint" . )  "1" | trimSuffix "-" }}
 {{- end -}}
 {{- end -}}
 
@@ -128,7 +164,7 @@
 {{- if .Values.master.configFileMountPath }}
 {{- .Values.master.configFileMountPath }}
 {{- else }}
-{{- "/etc/interactive/interactive_config.yaml" }}
+{{- "/opt/flex/share/interactive_config.yaml" }}
 {{- end -}}
 {{- end -}}
 
@@ -136,7 +172,7 @@
 {{- if .Values.engine.configFileMountPath }}
 {{- .Values.engine.configFileMountPath }}
 {{- else }}
-{{- "/etc/interactive/interactive_config.yaml" }}
+{{- "/opt/flex/share/interactive_config.yaml" }}
 {{- end -}}
 {{- end -}}
 

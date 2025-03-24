@@ -166,7 +166,7 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         """
         full_key = self._get_full_key([self.inc_id_dir, prefix])
         self._client.put_if_not_exists(
-            full_key, "0"
+            full_key, "1"
         )  # initialize the key if it does not exist.
         # compare_and swap
         max_retry = 10
@@ -244,7 +244,7 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         """
         Add a watch on the keys with a prefix.
         """
-        logger.info("Adding watch on prefix: " + self._get_full_key(prefix))
+        logger.info("Adding watch on prefix: " + prefix)
         return self._client.add_watch_prefix_callback(prefix, callback)
 
     def cancel_watch(self, watch_id):

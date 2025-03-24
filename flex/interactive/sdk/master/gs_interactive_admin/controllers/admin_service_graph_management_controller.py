@@ -84,6 +84,7 @@ def delete_graph(graph_id):  # noqa: E501
     """delete_graph
 
     Delete a graph by id # noqa: E501
+    TODO: Should we stop the service before we delete the graph?
 
     :param graph_id: The id of graph to delete
     :type graph_id: str
@@ -116,7 +117,7 @@ def get_graph_statistic(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphStatisticsResponse, Tuple[GetGraphStatisticsResponse, int], Tuple[GetGraphStatisticsResponse, int, Dict[str, str]]
     """
-    raise RuntimeError("Not supported")
+    raise get_metadata_store().get_graph_statistics(graph_id)
 
 
 def get_schema(graph_id):  # noqa: E501

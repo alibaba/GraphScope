@@ -29,7 +29,7 @@ setup(
     keywords=["OpenAPI", "GraphScope Interactive API v0.3"],
     install_requires=parsed_reqs(),
     packages=find_packages(exclude=["test", "tests"]),
-    package_data={"": ["openapi/openapi.yaml"]},
+    package_data={"": ["openapi/openapi.yaml", "VERSION"]},
     include_package_data=True,
     license="Apache 2.0",
     entry_points={

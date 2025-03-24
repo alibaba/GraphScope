@@ -372,6 +372,7 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
   auto ip = gs::get_local_ip();
   AllServiceRegisterPayload payload;
   if (!is_running()) {
+    LOG(INFO) << "Service is not running, skip service register.";
     return std::make_pair(false, payload);
   }
 
@@ -387,8 +388,11 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
   } else {
     // Try to get from current graph_db
     auto& db = gs::GraphDB::get();
-    payload.graph_id = db.schema().GetGraphName();
+    LOG(INFO) << "Get service info from current graph db: "
+              << db.schema().GetGraphId();
+    payload.graph_id = db.schema().GetGraphId();
   }
+  LOG(INFO) << "Get service info for graph: " << payload.graph_id;
 
   auto procedure_endpoint =
       ip + ":" + std::to_string(service_config_.query_port);

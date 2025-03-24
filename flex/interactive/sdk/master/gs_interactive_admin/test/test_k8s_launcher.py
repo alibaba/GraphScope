@@ -42,6 +42,7 @@ class TestLaunchK8sCluster(unittest.TestCase):
         logger.info("Cluster is ready")
 
         instance_id = self._cluster.instance_id
+        logger.info(f"instance_id {instance_id}")
 
         # Now stop the cluster
         self._cluster.stop()

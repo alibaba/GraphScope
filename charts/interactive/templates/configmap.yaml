@@ -35,14 +35,14 @@ data:
           - FilterIntoJoinRule
           - FilterMatchRule
           - NotMatchToAntiJoinRule
-        meta:
-          reader:
-            schema:
-              uri: {{ .Values.engine.compiler.meta.reader.schema.uri }}
-              interval: {{ .Values.engine.compiler.meta.reader.schema.interval }}
+      meta:
+        reader:
+          schema:
+            uri: {{ include "graphscope-interactive.engine.compiler.metaReaderSchemaUri" . }}
+            interval: {{ printf "%d" ( int .Values.engine.compiler.meta.reader.schema.interval) }}
           statistics:
-            uri: {{ .Values.engine.compiler.meta.reader.statistics.uri }}
-            interval: {{ .Values.engine.compiler.meta.reader.statistics.interval }}
+            uri: {{ include "graphscope-interactive.engine.compiler.metaStatisticsUri" . }}
+            interval: {{ printf "%d" (int .Values.engine.compiler.meta.reader.statistics.interval) }}
           timeout: {{ .Values.engine.compiler.meta.reader.timeout }}
       endpoint:
         default_listen_address: localhost
@@ -72,22 +72,34 @@ data:
         config_file: {{ .Values.master.k8sLauncherConfig.configFile }}
         image_pull_policy: {{ .Values.master.k8sLauncherConfig.imagePullPolicy }}
         default_replicas: {{ .Values.master.k8sLauncherConfig.defaultReplicas }}
+        service_account_create: false
+        service_account_name: {{ include "graphscope-interactive.serviceAccountName" . }}
 
   master_entrypoint.sh: |-
     #!/bin/bash
     # This should be the entrypoint of the master instance
     echo "Starting master instance..."
     echo "using configfile: {{ include "graphscope-interactive.master.configFileMountPath" . }}"
-    # python3 -m gs_interactive_admin --config-file {{ include "graphscope-interactive.master.configFileMountPath" . }}
-    sleep infinity
+    python3 -m gs_interactive_admin --config-file {{ include "graphscope-interactive.master.configFileMountPath" . }}
+    #sleep infinity
 
 
   engine_entrypoint.sh: |-
     #!/bin/bash
     # This should be the entrypoint of the engine instance
+    if [ $# -gt 1 ]; then
+      echo "Expect one optional argument [GraphSchemaPath], bot got $#"
+      exit
+    fi
+    if [ $# -eq 1 ]; then
+      graph_file=$1
+    else
+      graph_file="{{ include "graphscope-interacitve.engine.defaultGraphSchemaPath" . }}"
+    fi
     echo "Starting engine instance..."
     echo "using configfile: {{ include "graphscope-interactive.engine.configFileMountPath" . }}"
     echo "Workspace: {{ .Values.workspace }} "
     mkdir -p  {{ .Values.workspace }}/conf
-    # /opt/flex/bin/entrypoint.sh -w {{ .Values.workspace }} 
-    sleep infinity
+    echo "config file ${graph_file}"
+    /opt/flex/bin/entrypoint.sh -w {{ .Values.workspace }} -g $graph_file
+    #sleep infinity

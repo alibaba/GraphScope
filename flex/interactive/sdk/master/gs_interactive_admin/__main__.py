@@ -75,6 +75,7 @@ def initialize_global_variables(config):
     """
     initialize_service_registry(config)
     init_metadata_store(config)
+    # Should be placed after init_metadata_store
     init_service_manager(config)
     init_job_manager(config, get_metadata_store())
 

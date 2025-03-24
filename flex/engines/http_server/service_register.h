@@ -40,7 +40,9 @@ struct ServiceMetrics {
   ServiceMetrics() = default;
   ServiceMetrics(const std::string& snapshot_id) : snapshot_id(snapshot_id) {}
 
-  inline std::string to_string() const { return "\"snapshot_id\": \"" + snapshot_id + "\""; }
+  inline std::string to_string() const {
+    return "\"snapshot_id\": \"" + snapshot_id + "\"";
+  }
 };
 
 struct ServiceRegisterPayload {
@@ -48,11 +50,13 @@ struct ServiceRegisterPayload {
   ServiceMetrics metrics;  // service metrics
 
   ServiceRegisterPayload() = default;
-  ServiceRegisterPayload(const std::string& endpoint, const ServiceMetrics& metrics)
+  ServiceRegisterPayload(const std::string& endpoint,
+                         const ServiceMetrics& metrics)
       : endpoint(endpoint), metrics(metrics) {}
 
   std::string to_string() const {
-    return "{\"endpoint\": \"" + endpoint + "\", \"metrics\": {" + metrics.to_string() + "}}";
+    return "{\"endpoint\": \"" + endpoint + "\", \"metrics\": {" +
+           metrics.to_string() + "}}";
   }
 };
 
@@ -74,34 +78,36 @@ struct AllServiceRegisterPayload {
   }
 };
 
-#define INSERT_OR_UPDATE_ETCD_KEY_VALUE(client, key, value, lease_id, retry)                     \
-  {                                                                                              \
-    int _retry = retry;                                                                          \
-    while (_retry-- > 0) {                                                                       \
-      auto _resp = client->put(key, value, lease_id);                                            \
-      if (_resp.is_ok()) {                                                                       \
-        return gs::Status::OK();                                                                 \
-      } else {                                                                                   \
-        continue;                                                                                \
-      }                                                                                          \
-    }                                                                                            \
-    LOG(ERROR) << "Failed to insert or update key: " << key;                                     \
-    return gs::Status(gs::StatusCode::INTERNAL_ERROR, "Failed to insert or update key: " + key); \
+#define INSERT_OR_UPDATE_ETCD_KEY_VALUE(client, key, value, lease_id, retry) \
+  {                                                                          \
+    int _retry = retry;                                                      \
+    while (_retry-- > 0) {                                                   \
+      auto _resp = client->put(key, value, lease_id);                        \
+      if (_resp.is_ok()) {                                                   \
+        return gs::Status::OK();                                             \
+      } else {                                                               \
+        continue;                                                            \
+      }                                                                      \
+    }                                                                        \
+    LOG(ERROR) << "Failed to insert or update key: " << key;                 \
+    return gs::Status(gs::StatusCode::INTERNAL_ERROR,                        \
+                      "Failed to insert or update key: " + key);             \
   }
 
-#define INSERT_IF_ETCD_KEY_VALUE(client, key, value, lease_id, retry)                  \
-  {                                                                                    \
-    int _retry = retry;                                                                \
-    while (_retry-- > 0) {                                                             \
-      auto _resp = client->add(key, value, lease_id);                                  \
-      if (_resp.is_ok()) {                                                             \
-        return gs::Status::OK();                                                       \
-      } else {                                                                         \
-        continue;                                                                      \
-      }                                                                                \
-    }                                                                                  \
-    LOG(ERROR) << "Failed to insert key: " << key;                                     \
-    return gs::Status(gs::StatusCode::INTERNAL_ERROR, "Failed to insert key: " + key); \
+#define INSERT_IF_ETCD_KEY_VALUE(client, key, value, lease_id, retry) \
+  {                                                                   \
+    int _retry = retry;                                               \
+    while (_retry-- > 0) {                                            \
+      auto _resp = client->add(key, value, lease_id);                 \
+      if (_resp.is_ok()) {                                            \
+        return gs::Status::OK();                                      \
+      } else {                                                        \
+        continue;                                                     \
+      }                                                               \
+    }                                                                 \
+    LOG(ERROR) << "Failed to insert key: " << key;                    \
+    return gs::Status(gs::StatusCode::INTERNAL_ERROR,                 \
+                      "Failed to insert key: " + key);                \
   }
 
 /**
@@ -110,11 +116,14 @@ struct AllServiceRegisterPayload {
 class ServiceRegister {
  public:
   static constexpr const char* PRIMARY_SUFFIX = "primary";
+  static constexpr const char* INSTANCE_LIST = "instance_list";
   static constexpr const char* SERVICE_NAME = "service";
   static constexpr const int32_t MAX_RETRY = 5;
-  ServiceRegister(const std::string& etcd_endpoint, const std::string& namespace_,
+  ServiceRegister(const std::string& etcd_endpoint,
+                  const std::string& namespace_,
                   const std::string& instance_name,
-                  std::function<std::pair<bool, AllServiceRegisterPayload>()> get_service_info,
+                  std::function<std::pair<bool, AllServiceRegisterPayload>()>
+                      get_service_info,
                   int interval_seconds = 10)
       : etcd_endpoint_(etcd_endpoint),
         namespace_(namespace_),
@@ -137,22 +146,26 @@ class ServiceRegister {
   void register_service();
 
   // Should align with service_registry.py
-  inline std::string get_service_instance_list_key(const std::string& service_name,
-                                                   const std::string& endpoint,
-                                                   const std::string& graph_id) {
-    return "/" + namespace_ + "/" + instance_name_ + "/" + std::string(SERVICE_NAME) + "/" +
-           graph_id + "/" + service_name + "/" + endpoint;
+  inline std::string get_service_instance_list_key(
+      const std::string& service_name, const std::string& endpoint,
+      const std::string& graph_id) {
+    return "/" + namespace_ + "/" + instance_name_ + "/" +
+           std::string(SERVICE_NAME) + "/" + graph_id + "/" + service_name +
+           "/" + INSTANCE_LIST + "/" + endpoint;
   }
 
   inline std::string get_service_primary_key(const std::string& service_name,
                                              const std::string& graph_id) {
-    return "/" + namespace_ + "/" + instance_name_ + "/" + std::string(SERVICE_NAME) + "/" +
-           graph_id + "/" + service_name + "/" + PRIMARY_SUFFIX;
+    return "/" + namespace_ + "/" + instance_name_ + "/" +
+           std::string(SERVICE_NAME) + "/" + graph_id + "/" + service_name +
+           "/" + PRIMARY_SUFFIX;
   }
 
-  gs::Status insert_to_instance_list(const std::string& key, const std::string& value);
+  gs::Status insert_to_instance_list(const std::string& key,
+                                     const std::string& value);
 
-  gs::Status insert_to_primary(const std::string& key, const std::string& value);
+  gs::Status insert_to_primary(const std::string& key,
+                               const std::string& value);
 
   std::string etcd_endpoint_;
   std::string namespace_;

@@ -62,6 +62,13 @@ class IMetadataStore(metaclass=ABCMeta):
         Get the metadata for a graph.
         """
         pass
+    
+    @abstractmethod
+    def get_graph_statistics(self, graph_id : str):
+        """
+        Get the statistics for a graph.
+        """
+        pass
 
     @abstractmethod
     def get_all_graph_meta(self):
@@ -212,6 +219,9 @@ class DefaultMetadataStore(IMetadataStore):
             "Created graph meta prefix %s, key_id : %s"
             % (self._meta_key_helper.graph_meta_prefix(), key_id)
         )
+        # add id field back into the graph meta
+        graph_meta["id"] = key_id
+        self.update_graph_meta(key_id, str(graph_meta))
         return key_id
 
     def get_graph_meta(self, graph_id: str) -> dict:
@@ -222,6 +232,9 @@ class DefaultMetadataStore(IMetadataStore):
         meta_str =  self._kv_store_handle.get(
             "/".join([self._meta_key_helper.graph_meta_prefix(), graph_id])
         )
+        if meta_str is None:
+            logger.info("Graph meta not found for graph id %s" % graph_id)
+            return None
         # convert the string to dict
         res = yaml.safe_load(meta_str)
         if "_schema" in res:
@@ -231,7 +244,16 @@ class DefaultMetadataStore(IMetadataStore):
         res = remove_nones(res)
         logger.info("Remove none values from graph meta: %s" % res)
         return res
-
+    
+    def get_graph_statistics(self, graph_id : str) -> dict:
+        """
+        Get the statistic info for a graph.
+        Args:
+            graph_id (str): The unique identifier of the graph
+        """
+        logger.info(f"Getting graph statistics fo {graph_id}")
+        return self._kv_store_handle.get(self._meta_key_helper.graph_statistics_key(graph_id))
+        
     def get_graph_schema(self, graph_id: str) -> dict:
         meta = self.get_graph_meta(graph_id)
         return meta.get("schema", {})
@@ -380,6 +402,61 @@ def get_metadata_store():
     global metadata_store
     return metadata_store
 
+test_graph_def = {
+    "name": "modern_graph",
+    "description": "This is a test graph",
+    "schema": {
+        "vertex_types": [
+            {
+                "type_name": "person",
+                "properties": [
+                    {
+                        "property_name": "id",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT64"},
+                    },
+                    {
+                        "property_name": "name",
+                        "property_type": {"string": {"var_char": {"max_length": 16}}},
+                    },
+                    {
+                        "property_name": "age",
+                        "property_type": {"primitive_type": "DT_SIGNED_INT32"},
+                    },
+                ],
+                "primary_keys": ["id"],
+            }
+        ],
+        "edge_types": [
+            {
+                "type_name": "knows",
+                "vertex_type_pair_relations": [
+                    {
+                        "source_vertex": "person",
+                        "destination_vertex": "person",
+                        "relation": "MANY_TO_MANY",
+                    }
+                ],
+                "properties": [
+                    {
+                        "property_name": "weight",
+                        "property_type": {"primitive_type": "DT_DOUBLE"},
+                    }
+                ],
+                "primary_keys": [],
+            }
+        ],
+    },
+}
+
+
+def __make_default_graph_meta(metadata_store: IMetadataStore):
+    if metadata_store.get_graph_meta("1") is None:
+        key_id = metadata_store.create_graph_meta(test_graph_def)
+        # Expect the key_id is 1
+        if key_id != "1":
+            raise ValueError("The key_id is not 1: %s" % key_id)
+        logger.info("Created graph meta with key_id 1")
+        #NOTE: The bulk_loading process will be automatically triggered when the engine pod are launched.
 
 def init_metadata_store(config: Config):
     global metadata_store
@@ -392,6 +469,9 @@ def init_metadata_store(config: Config):
         )
         metadata_store = DefaultMetadataStore(etcd_metadata_store)
         metadata_store.open()
+        
+        # Check whether default graph's metadata exists, if not, create it.
+        __make_default_graph_meta(metadata_store)
     else:
         raise ValueError(
             "Unsupported metadata store URI: %s"

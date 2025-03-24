@@ -14,10 +14,10 @@ if (Hiactor_FOUND)
   add_dependencies(flex_server flex_utils) # Make sure flex_utils is built before flex_server
   add_dependencies(flex_server server_actor_autogen)
   if (BUILD_WITH_OSS)
-    add_dependencies(flex_server cpp-sdk)
+    add_dependencies(server_actor_autogen cpp-sdk)
   endif()
   if (ENABLE_SERVICE_REGISTER)
-    add_dependencies(flex_server ${ETCD_CPP_LIBRARIES})
+    add_dependencies(server_actor_autogen ${ETCD_CPP_LIBRARIES} ${CPPREST_LIB})
   endif()
   target_compile_options (flex_server
         PUBLIC

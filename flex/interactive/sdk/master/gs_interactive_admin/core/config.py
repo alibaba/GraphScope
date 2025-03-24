@@ -38,7 +38,7 @@ class MetadataStore:
     Stores configurations for the metadata store.
     """
 
-    uri: str = f"file://{{WORKSPACE}}/METADATA"
+    uri: str = ""
 
 
 @dataclass
@@ -57,7 +57,7 @@ class ComputeEngine:
     metadata_store: MetadataStore = field(default_factory=MetadataStore)
     wal_uri: str = f"file://{{GRAPH_DATA_DIR}}/wal"
     
-    config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+    config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
     entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
 
 
@@ -101,7 +101,7 @@ class K8sLauncherConfig:
 
     image_pull_policy: str = "Always"
     image_registry: str = "registry.cn-hongkong.aliyuncs.com"
-    image_tag: str = "latest"
+    image_tag: str = "debug"
     repository: str = "graphscope"
     image_name: str = "interactive"
 
@@ -124,10 +124,10 @@ class K8sLauncherConfig:
     )
     update_strategy: str = "RollingUpdate"
     engine_pod_annotations: dict = field(default_factory=dict)
-    service_account_create: bool = True
+    service_account_create: bool = False
     service_account_name: str = None
     
-    engine_config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+    engine_config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
     engine_entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
 
 
@@ -140,7 +140,7 @@ class Master:
     k8s_launcher_config: K8sLauncherConfig = field(default_factory=K8sLauncherConfig)
     launcher_type: str = "k8s"
     entrypoint_mount_path: str = "/etc/interactive/master_entrypoint.sh"
-    config_file_mount_path: str = "/etc/interactive/interactive_config.yaml"
+    config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
 
 
 @dataclass

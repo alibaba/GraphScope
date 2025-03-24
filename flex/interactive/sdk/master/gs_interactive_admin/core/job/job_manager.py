@@ -60,6 +60,10 @@ class JobProcessCallback(object):
             return res
 
         self.metadata_store.update_graph_meta_with_func(self.graph_id, _update_remote_storage_path_of_graph)        
+    
+    def _update_graph_statistics(self):
+        #TODO: Implement the method to update the graph statistics. The graph statistics should be reported by the bulk_loader process.
+        pass
         
     def __call__(self, process: subprocess.CompletedProcess):
         logger.info(f"Job process {self.process_id} finished with code {process.returncode}")
@@ -82,6 +86,7 @@ class JobProcessCallback(object):
         # We should also update graph meta to update the remote storage path of the graph.
         if status == "SUCCESS":
             self._update_remote_storage_path()
+            self._update_graph_statistics()
         
 
 class JobManager(metaclass=ABCMeta):
@@ -137,22 +142,11 @@ class DefaultJobManager(JobManager):
         """
         Create a dataloading job which running in a child process.
         """
+        
         bulk_loader = self._get_bulk_loader()
-        # dump the schema_mapping to a temp file
-        schema_mapping = remove_nones(schema_mapping)
-        logger.info("schema mapping: %s", schema_mapping)
-        os.makedirs(os.path.join("/tmp", graph_id), exist_ok=True)
-        temp_mapping_file = os.path.join("/tmp", graph_id, "schema_mapping.yaml")
-        with open(temp_mapping_file, "w") as f:
-            # write the dict in yaml format
-            yaml.dump(schema_mapping, f)
-            
-        # Get the metadata of the graph, and dump the graph to a temp file
-        graph_metadata = self.metadata_store.get_graph_meta(graph_id)
-        logger.info("graph metadata: %s", graph_metadata)
-        temp_graph_file = os.path.join("/tmp", graph_id, "graph.yaml")
-        with open(temp_graph_file, "w") as f:
-            yaml.dump(graph_metadata, f, default_flow_style=False)
+        temp_mapping_file, schema_mapping = self._dump_schema_mapping(graph_id, schema_mapping)
+        temp_graph_file = self._dump_graph_schema(graph_id)
+
         # Create a log file for the process
         log_path = os.path.join("/tmp", graph_id, "bulk_loader.log")
         if "loading_config" in schema_mapping and "destination" in schema_mapping["loading_config"]:
@@ -179,9 +173,15 @@ class DefaultJobManager(JobManager):
             type="BULK_LOADING",
             status="RUNNING",
         )
+        # Check whether a bulk loading process is already running, if so, return failed
+        for job_id, process in self._data_loading_processes.items():
+            if process.is_alive():
+                if process.graph_id == graph_id:
+                    logger.info(f"Job {job_id} is already running for graph {graph_id}")
+                    raise Exception(f"Job {job_id} is already running for graph {graph_id}")
         job_id = self.metadata_store.create_job_meta(str(job_meta))
         logger.info(f"Data loading job created with {job_meta}")
-        runner = SubProcessRunner(cmds, JobProcessCallback(self.metadata_store, graph_id, 0, log_path, job_id, oss_graph_path), log_path)
+        runner = SubProcessRunner(graph_id, cmds, JobProcessCallback(self.metadata_store, graph_id, 0, log_path, job_id, oss_graph_path), log_path)
         self._data_loading_processes[job_id] = runner
         
         runner.start()
@@ -212,6 +212,25 @@ class DefaultJobManager(JobManager):
         if os.path.exists(relative_path) and os.access(relative_path, os.X_OK):
             return relative_path
         raise RuntimeError("Cannot find bulk_loader in the current environment.")
+    
+    def _dump_schema_mapping(self, graph_id, schema_mapping):
+        # dump the schema_mapping to a temp file
+        schema_mapping = remove_nones(schema_mapping)
+        logger.info("schema mapping: %s", schema_mapping)
+        os.makedirs(os.path.join("/tmp", graph_id), exist_ok=True)
+        temp_mapping_file = os.path.join("/tmp", graph_id, "schema_mapping.yaml")
+        with open(temp_mapping_file, "w") as f:
+            # write the dict in yaml format
+            yaml.dump(schema_mapping, f)
+        return (temp_mapping_file, schema_mapping)
+    
+    def _dump_graph_schema(self, graph_id):
+        graph_metadata = self.metadata_store.get_graph_meta(graph_id)
+        logger.info("graph metadata: %s", graph_metadata)
+        temp_graph_file = os.path.join("/tmp", graph_id, "graph.yaml")
+        with open(temp_graph_file, "w") as f:
+            yaml.dump(graph_metadata, f, default_flow_style=False)
+        return temp_graph_file
 
     def _new_job_meta(self, graph_id, process_id, log_path, type, status):
         return {

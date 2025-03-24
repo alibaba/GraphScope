@@ -122,13 +122,13 @@ Status unzip(const std::string& zip_file, const std::string& dest_dir) {
 }
 
 std::string download_data_from_oss(const std::string& graph_name,
-                                   const std::string& data_path) {
-  auto data_dir = "/tmp/" + graph_name + "/data";
-  if (std::filesystem::exists(data_dir)) {
+                                   const std::string& remote_data_path,
+                                   const std::string& local_data_dir) {
+  if (std::filesystem::exists(local_data_dir)) {
     LOG(INFO) << "Data directory exists";
   } else {
     LOG(INFO) << "Data directory not exists, create directory";
-    std::filesystem::create_directories(data_dir);
+    std::filesystem::create_directories(local_data_dir);
   }
   gs::OSSConf conf;
   conf.load_conf_from_env();
@@ -138,11 +138,12 @@ std::string download_data_from_oss(const std::string& graph_name,
     LOG(FATAL) << "Fail to open oss client: " << open_res.error_message();
   }
 
-  auto data_dir_zip_path = data_dir + "/data.zip";
+  auto data_dir_zip_path = local_data_dir + "/data.zip";
   // if data_path start with conf.bucket_name_, remove it
-  std::string data_path_no_bucket = data_path;
-  if (data_path.find(conf.bucket_name_) == 0) {
-    data_path_no_bucket = data_path.substr(conf.bucket_name_.size() + 1);
+  std::string data_path_no_bucket = remote_data_path;
+  if (data_path_no_bucket.find(conf.bucket_name_) == 0) {
+    data_path_no_bucket =
+        data_path_no_bucket.substr(conf.bucket_name_.size() + 1);
   }
   LOG(INFO) << "Download data from oss: " << data_path_no_bucket << " to "
             << data_dir_zip_path;
@@ -154,7 +155,7 @@ std::string download_data_from_oss(const std::string& graph_name,
   }
   if (std::filesystem::exists(data_dir_zip_path)) {
     LOG(INFO) << "Data zip file exists, start to unzip";
-    auto unzip_res = gs::unzip(data_dir_zip_path, data_dir);
+    auto unzip_res = gs::unzip(data_dir_zip_path, local_data_dir);
     if (!unzip_res.ok()) {
       LOG(FATAL) << "Fail to unzip data file: " << unzip_res.error_message();
     }
@@ -163,7 +164,7 @@ std::string download_data_from_oss(const std::string& graph_name,
   } else {
     LOG(FATAL) << "Data zip file not exists: " << data_dir_zip_path;
   }
-  return data_dir;
+  return local_data_dir;
 }
 #endif
 
@@ -289,25 +290,21 @@ int main(int argc, char** argv) {
                  << graph_schema_path;
     }
 
-    if (vm.count("data-path")) {
-      data_path = vm["data-path"].as<std::string>();
-    } else {
-      // If data path is not specified, we will check whether remote_
-      auto remote_path = schema_res.value().GetRemotePath();
-      if (!remote_path.empty()) {
-        data_path = remote_path;
-      } else {
-        LOG(FATAL) << "data-path is required";
-      }
+    if (!vm.count("data-path")) {
+      LOG(FATAL) << "data-path is required";
     }
-    LOG(INFO) << "Data path: " << data_path;
+    data_path = vm["data-path"].as<std::string>();
+
+    auto remote_path = schema_res.value().GetRemotePath();
 
     // If data_path starts with oss, download the data from oss
-    if (data_path.find("oss://") == 0) {
+    if (!remote_path.empty() && remote_path.find("oss://") == 0) {
 #ifdef BUILD_WITH_OSS
-      data_path =
-          gs::download_data_from_oss("default_graph", data_path.substr(6));
-      LOG(INFO) << "Download data from oss to local path: " << data_path;
+      auto down_dir = gs::download_data_from_oss(
+          "default_graph", remote_path.substr(6), data_path);
+      LOG(INFO) << "Download data from oss to local path: " << remote_path
+                << ", " << data_path;
+      CHECK(down_dir == data_path);
 #else
       LOG(FATAL) << "OSS is not supported in this build";
 #endif

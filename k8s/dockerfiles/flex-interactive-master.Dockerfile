@@ -21,7 +21,8 @@ RUN cd ${HOME}/GraphScope && \
 
 # install flex
 RUN cd ${HOME}/GraphScope/flex && \
-    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON -DBUILD_WITH_OSS=ON -DENABLE_SERVICE_REGISTER=ON && \
+    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DBUILD_BULKLOADER_ONLY=ON \
+    -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON -DBUILD_WITH_OSS=ON -DENABLE_SERVICE_REGISTER=ON && \
     make -j ${PARALLEL} && make install
 
 # strip all .so in /opt/flex/lib
@@ -32,7 +33,7 @@ RUN sudo strip /opt/flex/bin/bulk_loader
 
 ########################### RUNTIME IMAGE ###########################
 
-FROM ubuntu:22.04 as master
+FROM ubuntu:22.04 AS master
 ARG PLATFORM=x86_64
 
 ENV DEBIAN_FRONTEND=noninteractive
@@ -43,7 +44,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN apt-get update && apt-get -y install sudo locales tzdata python3 python3-pip && \
+RUN apt-get update && apt-get -y install sudo locales tzdata python3 python3-pip zip unzip curl && \
     locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 

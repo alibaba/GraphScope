@@ -46,14 +46,12 @@ function prepare_workspace() {
         workspace="/tmp/interactive_workspace"
     fi
     #if workspace is not exist, create it
-    if [ ! -d "${workspace}" ]; then
-        mkdir -p ${workspace}
-        mkdir -p ${workspace}/conf/
-    else 
-        if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
-            echo "Workspace ${workspace} already exists"
-            return 0
-        fi
+    mkdir -p ${workspace}/conf/
+    mkdir -p ${workspace}/METADATA
+    mkdir -p ${workspace}/log
+    if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
+        echo "Workspace ${workspace} already exists"
+        return 0
     fi
     # prepare interactive_config.yaml
     engine_config_path="${workspace}/conf/interactive_config.yaml"
@@ -77,34 +75,67 @@ function prepare_workspace() {
     echo "Successfully loaded builtin graph: ${DEFAULT_GRAPH_NAME}"
 }
 
-function start_query_service() {
-    #expect 1 arg
-    if [ $# -ne 1 ]; then
-        echo "Usage: start_query_service <graph_yaml>"
+function prepare_workspace_with_custom_graph() {
+    #receive args
+    if [ $# -ne 2 ]; then
+        echo "Usage: launch_with_custom_graph <workspace> <graph_yaml>"
         exit 1
     fi
-    local graph_yaml=$1
-    engine_config_path="${WORKSPACE}/conf/interactive_config.yaml"
-    # start the service
-    start_cmd="${INTERACTIVE_SERVER_BIN} -c ${DEFAULT_INTERACTIVE_CONFIG_FILE}"
-    start_cmd="${start_cmd} -g ${graph_yaml}"
-    echo "Starting the service with command: $start_cmd"
-    eval $start_cmd
+    local workspace=$1
+    local graph_yaml=$2
+    #if workspace is not exist, create it
+    mkdir -p ${workspace}/conf/
+    mkdir -p ${workspace}/METADATA
+    mkdir -p ${workspace}/log
+    if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
+        echo "Workspace ${workspace} already exists"
+        return 0
+    fi
+    # prepare interactive_config.yaml
+    engine_config_path="${workspace}/conf/interactive_config.yaml"
+    cp ${DEFAULT_INTERACTIVE_CONFIG_FILE} $engine_config_path
+    #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
+    sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
+    # echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
+    
+    # # copy the builtin graph
+    # builtin_graph_dir="${workspace}/data/${DEFAULT_GRAPH_NAME}"
+    # mkdir -p $builtin_graph_dir
+    # builtin_graph_schema_path="${builtin_graph_dir}/graph.yaml"
+    # builtin_graph_data_path="${builtin_graph_dir}/indices"
+    # cp ${graph_yaml} ${builtin_graph_schema_path}
+
+    # engine_config_path="${workspace}/conf/interactive_config.yaml"
+    # # start the service
+    # start_cmd="${INTERACTIVE_SERVER_BIN} -c ${engine_config_path}"
+    # start_cmd="${start_cmd} -g ${graph_yaml} --data-path ${builtin_graph_data_path}"
+    # start_cmd="${start_cmd} --start-compiler true -w ${workspace}"
+
+    # echo "Starting the service with command: $start_cmd"
+    # eval $start_cmd
 }
 
 function launch_service() {
     #expect 1 arg
-    if [ $# -ne 1 ]; then
-        echo "Usage: launch_service <workspace>"
+    if [ $# -lt 1  || $# -gt 2 ]; then
+        echo "Usage: launch_service <workspace> [graph_yaml]"
         exit 1
     fi
     local workspace=$1
+    if [ $# -eq 2 ]; then
+        local graph_yaml=$2
+    fi
     engine_config_path="${workspace}/conf/interactive_config.yaml"
     # start the service
     start_cmd="${INTERACTIVE_SERVER_BIN} -c ${engine_config_path}"
     start_cmd="${start_cmd} -w ${workspace}"
-    start_cmd="${start_cmd} --enable-admin-service true"
     start_cmd="${start_cmd} --start-compiler true"
+    if [ -n "${graph_yaml}" ]; then
+        start_cmd="${start_cmd} -g ${graph_yaml}"
+        start_cmd="${start_cmd} --data-path ${workspace}/data/${DEFAULT_GRAPH_NAME}/indices"
+    else
+        start_cmd="${start_cmd} --enable-admin-service true"
+    fi
     echo "Starting the service with command: $start_cmd"
     if $ENABLE_COORDINATOR; then start_cmd="${start_cmd} &"; fi
     eval $start_cmd
@@ -221,6 +252,8 @@ if [ -z "${DEFAULT_GRAPH_YAML}" ]; then
   launch_coordinator $PORT_MAPPING
 else
   echo "Got graph yaml: ${DEFAULT_GRAPH_YAML}, will start query service only on it."
-  start_query_service $DEFAULT_GRAPH_YAML
+  # Create workspace with custom graph, 
+  prepare_workspace_with_custom_graph $WORKSPACE $DEFAULT_GRAPH_YAML
+  launch_service $WORKSPACE $DEFAULT_GRAPH_YAML
 fi
 

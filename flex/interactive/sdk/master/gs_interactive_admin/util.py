@@ -10,12 +10,17 @@ import logging
 logger = logging.getLogger("interactive")
 
 class SubProcessRunner(object):
-    def __init__(self, command, callback, log_file):
+    def __init__(self, graph_id, command, callback, log_file):
+        self._graph_id = graph_id
         self.command = command
         self.callback = callback
         self.log_file = log_file
         self.process_id = None
         self.thread = None
+        
+    @property
+    def graph_id(self):
+        return self._graph_id
         
     def start(self):
         def target():
@@ -30,6 +35,9 @@ class SubProcessRunner(object):
         self.thread = threading.Thread(target=target)
         self.thread.start()
         return self.thread, self.process_id
+    
+    def is_alive(self):
+        return self.thread.is_alive()
 
 
 def remove_nones(data: dict):
@@ -196,6 +204,7 @@ GRAPH_META_KEY = "graph_meta"
 JOB_META_KEY = "job_meta"
 PLUGIN_META_KEY = "plugin_meta"
 STATUS_META_KEY = "status"
+STATISTICS_KEY = "statistics"
 
 
 class MetaKeyHelper(object):
@@ -227,6 +236,9 @@ class MetaKeyHelper(object):
 
     def graph_status_key(self, graph_id):
         return "/".join([self._meta_root, STATUS_META_KEY, graph_id])
+    
+    def graph_statistics_key(self, graph_id):
+        return "/".join([self._meta_root, STATISTICS_KEY, graph_id])
 
     def decode_service_key(self, key):
         """
@@ -235,10 +247,11 @@ class MetaKeyHelper(object):
         /namespace/instance_name/service/graph_id/service_name/primary
         return graph_id, service_name, endpoint, <ip:port>
         """
-        keys = key.split("/")
-        if len(keys) < 7:
-            raise ValueError("Invalid key: %s" % key)
-        graph_id, service_name, key_type = keys[4:7]
+        keys = key.split("/") 
+        keys = list(filter(None, keys))
+        if len(keys) > 7 or len(keys) < 6:
+            raise ValueError(f"Invalid key: {keys}")
+        graph_id, service_name, key_type = keys[3:6]
         if key_type == INSTANCE_LIST_KEY:
             return graph_id, service_name, keys[-1]
         elif key_type == META_PRIMARY_KEY:
