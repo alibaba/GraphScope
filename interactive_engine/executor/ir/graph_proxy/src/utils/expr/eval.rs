@@ -20,7 +20,6 @@ use std::convert::{TryFrom, TryInto};
 
 use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
-use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
@@ -296,9 +295,7 @@ pub(crate) fn apply_logical<'a>(
         if b_opt.is_some() {
             let b = b_opt.unwrap();
             // process null values
-            // "a.eq(&Object::None)" has a potential bug, that if a is empty string "", it will be treated as None.
-            // Fix it by using raw_type() == RawType::None
-            if a.raw_type() == RawType::None || b.raw_type() == RawType::None {
+            if a.eq(&Object::None) || b.eq(&Object::None) {
                 match logical {
                     And => {
                         if (a != Object::None && !a.eval_bool::<(), NoneContext>(None)?)
@@ -681,7 +678,7 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     Ok(Self::VarMap(vec))
                 }
                 Map(key_vals) => Operand::try_from(key_vals),
-                _ => Err(ParsePbError::ParseError(format!("invalid operators for an Operand {:?}", item))),
+                _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
             }
         } else {
             Err(ParsePbError::from("empty value provided"))
