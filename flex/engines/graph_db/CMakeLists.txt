@@ -4,9 +4,9 @@ file(GLOB_RECURSE GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/app/*.cc"
                                      "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/*.cc"
                                      "${CMAKE_CURRENT_SOURCE_DIR}/app/builtin/*.cc")
 
-if (BUILD_KAFKA_WAL_WRITER_PARSER)
-        list(APPEND GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/kafka_wal_writer.cc"
-                                       "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/kafka_wal_parser.cc")   
+if (NOT BUILD_KAFKA_WAL_WRITER_PARSER)
+        list(REMOVE_ITEM GRAPH_DB_SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/kafka_wal_writer.cc"
+                                            "${CMAKE_CURRENT_SOURCE_DIR}/database/wal/kafka_wal_parser.cc")   
 endif()
 
 add_library(flex_graph_db SHARED ${GRAPH_DB_SRC_FILES})
@@ -17,7 +17,6 @@ target_link_libraries(flex_graph_db runtime_execute)
 if (BUILD_KAFKA_WAL_WRITER_PARSER)
         target_link_libraries(flex_graph_db ${CppKafka_LIBRARIES})
 endif()
-add_dependencies(flex_graph_db apply_patch)
 install_flex_target(flex_graph_db)
 
 install(FILES ${CMAKE_CURRENT_SOURCE_DIR}/database/graph_db.h

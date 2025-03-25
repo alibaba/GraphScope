@@ -122,6 +122,21 @@ if (NOT yaml-cpp_FOUND)
     message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
 endif ()
 
+#find CppKafka-------------------------------------------------------------------
+if (BUILD_KAFKA_WAL_WRITER_PARSER)
+    find_package(CppKafka)
+    if (NOT CppKafka_FOUND)
+        message(FATAL_ERROR "cppkafka not found, please install cppkafka library")
+    else()
+        include_directories(SYSTEM ${CppKafka_INCLUDE_DIRS})
+        message(STATUS "cpp kafka include dir: ${CppKafka_INCLUDE_DIRS}")
+        set(CppKafka_LIBRARIES CppKafka::cppkafka)
+        add_definitions(-DBUILD_KAFKA_WAL_WRITER_PARSER)
+        message(STATUS "cppkafka found")
+    endif ()
+endif()
+
+
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem
              # required by folly
@@ -165,38 +180,6 @@ endif ()
 #find protobuf-------------------------------------------------------------------
 find_package(Protobuf REQUIRED)
 include_directories(${Protobuf_INCLUDE_DIRS})
-
-#find CppKafka-------------------------------------------------------------------
-if (BUILD_KAFKA_WAL_WRITER_PARSER)
-    find_package(CppKafka)
-    if (NOT CppKafka_FOUND)
-        message(STATUS "cppkafka not found, try to build with third_party/cppkafka")
-        set(CPPKAFKA_BOOST_STATIC_LIBS OFF)
-        add_subdirectory(third_party/cppkafka)
-        if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/CMakeLists.txt)
-            message(FATAL_ERROR "cppkafka not found, please run git submodule update --init --recursive")
-        endif ()
-        # Apply third_party/cppkafka_without_boost.patch 
-        # to remove the dependency of boost in cppkafka
-        # run git apply ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka_without_boost.patch
-        add_custom_target(apply_patch
-            COMMAND git apply ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka_without_boost.patch || true
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka
-            COMMENT "Applying patch to cppkafka"
-            VERBATIM)
-
-        include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/include)
-        set (CppKafka_INSTALL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/cppkafka/build)
-        list (APPEND CMAKE_PREFIX_PATH ${CppKafka_INSTALL_DIR})
-        set(CppKafka_LIBRARIES cppkafka)
-    else()
-        include_directories(SYSTEM ${CppKafka_INCLUDE_DIRS})
-        message(STATUS "cpp kafka include dir: ${CppKafka_INCLUDE_DIRS}")
-        set(CppKafka_LIBRARIES CppKafka::cppkafka)
-    endif ()
-    add_definitions(-DBUILD_KAFKA_WAL_WRITER_PARSER)
-    message(STATUS "cppkafka found")
-endif()
 
 if (BUILD_WITH_OTEL)
     find_package(opentelemetry-cpp CONFIG)

@@ -102,6 +102,8 @@ UpdateTransaction::~UpdateTransaction() { release(); }
 
 timestamp_t UpdateTransaction::timestamp() const { return timestamp_; }
 
+Allocator& UpdateTransaction::allocator() { return alloc_; }
+
 bool UpdateTransaction::Commit() {
   if (timestamp_ == std::numeric_limits<timestamp_t>::max()) {
     return true;

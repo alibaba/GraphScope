@@ -881,6 +881,7 @@ install_interactive_dependencies() {
     # hiactor is only supported on ubuntu
     install_hiactor
     install_mimalloc
+    install_cppkafka
     ${SUDO} sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
     ${SUDO} sysctl -p /etc/sysctl.conf
   else
@@ -888,6 +889,7 @@ install_interactive_dependencies() {
     install_arrow
     install_boost
     install_mimalloc
+    install_cppkafka
   fi
   # libgrape-lite
   install_libgrape_lite "v0.3.2"

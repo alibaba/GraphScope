@@ -28,6 +28,10 @@
 #include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/utils/yaml_utils.h"
 
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+#include "flex/engines/graph_db/app/kafka_wal_ingester_app.h"
+#endif
+
 #include "flex/third_party/httplib.h"
 
 namespace gs {
@@ -273,6 +277,38 @@ void GraphDB::Close() {
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
+
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+bool GraphDB::kafka_wal_ingester_state() const {
+  return kafka_wal_ingester_thread_running_.load();
+}
+
+void GraphDB::start_kafka_wal_ingester(const std::string& kafka_brokers,
+                                       const std::string& brokers,
+                                       const std::string& topic_name,
+                                       const std::string& group_id,
+                                       const std::string& engine_endpoint) {
+  if (kafka_wal_ingester_thread_running_) {
+    kafka_wal_ingester_thread_running_ = false;
+    kafka_wal_ingester_thread_.join();
+  }
+  std::vector<char> buffer;
+  gs::Encoder encoder(buffer);
+  encoder.put_string(kafka_brokers);
+  encoder.put_string(brokers);
+  encoder.put_string(topic_name);
+  encoder.put_string(group_id);
+  encoder.put_string(engine_endpoint);
+  gs::Decoder decoder(buffer.data(), buffer.size());
+  KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
+}
+
+void GraphDB::stop_kafka_wal_ingester() {
+  kafka_wal_ingester_thread_running_ = false;
+  kafka_wal_ingester_thread_.join();
+}
+
+#endif
 
 ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
   return contexts_[thread_id].session.GetReadTransaction();

@@ -15,11 +15,12 @@
 
 #include <iostream>
 
-#include <flex/engines/graph_db/database/wal/kafka_wal_parser.h>
-#include <flex/engines/graph_db/database/wal/kafka_wal_writer.h>
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
-
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+#include <flex/engines/graph_db/database/wal/kafka_wal_parser.h>
+#include <flex/engines/graph_db/database/wal/kafka_wal_writer.h>
+#endif
 #include <glog/logging.h>
 
 int main(int argc, char** argv) {
@@ -28,6 +29,7 @@ int main(int argc, char** argv) {
               << std::endl;
     return -1;
   }
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
 
   std::string kafka_brokers = argv[1];
   std::string kafka_topic = argv[2];
@@ -82,6 +84,7 @@ int main(int argc, char** argv) {
       LOG(ERROR) << "No message for timestamp " << last_ts + i;
     }
   }
+#endif
 
   return 0;
 }

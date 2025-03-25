@@ -169,6 +169,18 @@ class GraphDB {
 
   inline const GraphDBConfig& config() const { return config_; }
 
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+  bool kafka_wal_ingester_state() const;
+
+  void start_kafka_wal_ingester(const std::string& kafka_brokers,
+                                const std::string& brokers,
+                                const std::string& topic_name,
+                                const std::string& group_id,
+                                const std::string& engine_endpoint);
+
+  void stop_kafka_wal_ingester();
+#endif
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -203,6 +215,9 @@ class GraphDB {
 
   std::thread monitor_thread_;
   bool monitor_thread_running_;
+
+  std::thread kafka_wal_ingester_thread_;
+  std::atomic<bool> kafka_wal_ingester_thread_running_;
 
   timestamp_t last_compaction_ts_;
   bool compact_thread_running_ = false;

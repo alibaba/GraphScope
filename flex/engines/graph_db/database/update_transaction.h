@@ -153,6 +153,8 @@ class UpdateTransaction {
 
   const GraphDBSession& GetSession() const;
 
+  Allocator& allocator();
+
  private:
   friend class GraphDBSession;
   bool batch_commit(UpdateBatch& batch);
