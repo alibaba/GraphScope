@@ -682,7 +682,7 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
             Primitives::UInteger(i) => Property::UInt(i),
             Primitives::Long(i) => Property::Long(i),
             Primitives::ULong(i) => Property::ULong(i),
-            Primitives::ULLong(i) => Property::ULong(i),
+            Primitives::ULLong(i) => Property::ULong(i as u64),
             Primitives::Float(f) => Property::Float(f),
             Primitives::Double(f) => Property::Double(f),
         },

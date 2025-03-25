@@ -74,65 +74,11 @@ public class PropertyValue {
                 case STRING:
                     return valString;
                 case DATE:
-                {
-                    try {
-                        return Integer.valueOf(valString);
-                    } catch (Exception e) {
-                       try {
-                        LocalDate date = LocalDate.parse(valString, DateTimeFormatter.ISO_LOCAL_DATE);
-                        long epochDays = date.toEpochDay();
-                        return Integer.valueOf((int) epochDays);
-                       } catch (Exception e1) {
-                           throw new InvalidArgumentException("unable to parse date string to date. DataType ["
-                                   + dataType
-                                   + "], Object ["
-                                   + valString
-                                   + "], class ["
-                                   + valString.getClass()
-                                   + "]", e1);
-                       }
-                    }
-                }
+                    return parseDate(valString);
                 case TIME32:
-                    {
-                        try {
-                            return Integer.valueOf(valString);
-                        } catch (Exception e) {
-                            try {
-                                LocalTime time = LocalTime.parse(valString, DateTimeFormatter.ISO_LOCAL_TIME);
-                                int seconds = time.toSecondOfDay();
-                                return Integer.valueOf(seconds);
-                            } catch (Exception e1) {
-                                throw new InvalidArgumentException("unable to parse time32 string to int. DataType ["
-                                        + dataType
-                                        + "], Object ["
-                                        + valString
-                                        + "], class ["
-                                        + valString.getClass()
-                                        + "]", e1);
-                            }
-                        }
-                    }
+                    return parseTime32(valString);
                 case TIMESTAMP:
-                    {
-                        try {
-                            return Long.valueOf(valString);
-                        } catch (Exception e) {
-                            try {
-                                LocalDateTime dateTime = LocalDateTime.parse(valString, DateTimeFormatter.ISO_DATE_TIME);
-                                long millis = dateTime.toEpochSecond(ZoneOffset.UTC) * 1000;
-                                return Long.valueOf(millis);
-                            } catch (Exception e1) {
-                                throw new InvalidArgumentException("unable to parse timestamp string to long. DataType ["
-                                        + dataType
-                                        + "], Object ["
-                                        + valString
-                                        + "], class ["
-                                        + valString.getClass()
-                                        + "]", e1);
-                            }
-                        }
-                    }
+                    return parseTimestamp(valString);
                 default:
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }
@@ -146,6 +92,65 @@ public class PropertyValue {
                             + valString.getClass()
                             + "]",
                     e);
+        }
+    }
+
+    private static Integer parseDate(String valString) {
+        try {
+            return Integer.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalDate date = LocalDate.parse(valString, DateTimeFormatter.ISO_LOCAL_DATE);
+                long epochDays = date.toEpochDay();
+                return (int) epochDays;
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse date string to date. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
+        }
+    }
+
+    private static Integer parseTime32(String valString) {
+        try {
+            return Integer.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalTime time = LocalTime.parse(valString, DateTimeFormatter.ISO_LOCAL_TIME);
+                return time.toSecondOfDay();
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse time32 string to int. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
+        }
+    }
+
+    private static Long parseTimestamp(String valString) {
+        try {
+            return Long.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalDateTime dateTime =
+                        LocalDateTime.parse(valString, DateTimeFormatter.ISO_DATE_TIME);
+                return dateTime.toEpochSecond(ZoneOffset.UTC) * 1000;
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse timestamp string to long. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
         }
     }
 
