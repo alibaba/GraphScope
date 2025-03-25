@@ -111,7 +111,7 @@ public class PlanUtils {
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
                                             schemaYaml.getBytes(StandardCharsets.UTF_8)),
-                                    SchemaSpec.Type.IR_CORE_IN_JSON));
+                                    SchemaSpec.Type.FLEX_IN_YAML));
             return new IrMeta(
                     graphSchema,
                     new GraphStoredProcedures(
