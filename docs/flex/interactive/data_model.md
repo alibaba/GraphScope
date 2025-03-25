@@ -108,7 +108,7 @@ Temporal types can be defined in the following ways:
 ```yaml
 temporal:
   date:
-    # optional value: DF_YYYY_MM_DD, means ISO fomat: 2019-01-01
+    # optional value: DF_YYYY_MM_DD, means ISO format: 2019-01-01
     date_format: <string> 
   time:
     # optional value: TF_HH_MM_SS_SSS, means ISO format: 00:00:00.000

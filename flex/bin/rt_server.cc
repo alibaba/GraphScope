@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-#include "grape/util.h"
-
 #include "flex/engines/graph_db/database/graph_db.h"
 #include "flex/engines/http_server/graph_db_service.h"
 #include "flex/engines/http_server/options.h"
+#include "flex/utils/service_utils.h"
+#include "grape/util.h"
 
 #include <boost/program_options.hpp>
 #include <seastar/core/alien.hh>
@@ -77,6 +77,9 @@ int main(int argc, char** argv) {
   setenv("TZ", "Asia/Shanghai", 1);
   tzset();
 
+  gs::blockSignal(SIGINT);
+  gs::blockSignal(SIGTERM);
+
   double t0 = -grape::GetCurrentTime();
   auto& db = gs::GraphDB::get();
   std::string graph_schema_path = data_path + "/graph.yaml";
@@ -107,6 +110,7 @@ int main(int argc, char** argv) {
   service_config.start_compiler = false;
   service_config.set_sharding_mode(vm["sharding-mode"].as<std::string>());
   server::GraphDBService::get().init(service_config);
+
   server::GraphDBService::get().run_and_wait_for_exit();
 
   return 0;

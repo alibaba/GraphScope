@@ -1,10 +1,10 @@
 log_level: INFO
-default_graph: ldbc
+default_graph: modern_graph
 compute_engine:
   type: hiactor
   workers:
     - localhost:10000
-  thread_num_per_worker: 1
+  thread_num_per_worker: 4
   store:
     type: cpp-mcsr
 compiler:
@@ -20,9 +20,14 @@ compiler:
       - NotMatchToAntiJoinRule
       - ExtendIntersectRule
       - ExpandGetVFusionRule
+      - FlatJoinToExpandRule
+      - FlatJoinToCommonRule
+      - FieldTrimRule
       - ScanExpandFusionRule
       - TopKPushDownRule
       - ScanEarlyStopRule # This rule must be placed after TopKPushDownRule and ScanExpandFusionRule
+    trim_class_names: GraphLogicalExpand
+    join_min_pattern_size: 15
   meta:
     reader:
       schema:
@@ -31,6 +36,7 @@ compiler:
       statistics:
         uri: http://localhost:7777/v1/graph/%s/statistics
         interval: 86400000 # ms
+  query_max_iterations: 2147483647
   endpoint:
     default_listen_address: localhost
     bolt_connector:

@@ -63,7 +63,7 @@
      // get lock failed
      LOCK_FAILED = 101;
      // too many data of old versions in graph store, maybe something error with garbage collection
-     // usuage trigger when modifing the schema
+     // usage trigger when modifying the schema
      TOO_MANY_VERSIONS = 102;
      // some fatal bug in graph store
      // GraphStoreBug = 103;

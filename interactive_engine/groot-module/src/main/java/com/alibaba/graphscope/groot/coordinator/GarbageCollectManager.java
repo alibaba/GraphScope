@@ -47,7 +47,7 @@ public class GarbageCollectManager {
                             for (int i = 0; i < CommonConfig.STORE_NODE_COUNT.get(configs); i++) {
                                 CoordinatorSnapshotClient client = clients.getClient(i);
                                 client.synchronizeSnapshot(offlineVersion);
-                                if (i == 0 && offlineVersion % 1000 == 0) {
+                                if (i == 0) {
                                     logger.info("Offline version updated to {}", offlineVersion);
                                 }
                             }
@@ -63,6 +63,7 @@ public class GarbageCollectManager {
                 interval,
                 interval,
                 TimeUnit.MILLISECONDS);
+        logger.info("GarbageCollectManaget started");
     }
 
     public void stop() {

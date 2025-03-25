@@ -66,8 +66,6 @@ class GeneralPathColumn : public IPathColumn {
     return nullptr;
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override;
-
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
   }
@@ -80,14 +78,15 @@ class GeneralPathColumn : public IPathColumn {
     }
   }
 
-  void set_path_impls(std::vector<std::shared_ptr<PathImpl>>&& path_impls) {
-    path_impls_.swap(path_impls);
+  std::shared_ptr<Arena> get_arena() const override { return arena_; }
+  void set_arena(const std::shared_ptr<Arena>& arena) override {
+    arena_ = arena;
   }
 
  private:
   friend class GeneralPathColumnBuilder;
   std::vector<Path> data_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
+  std::shared_ptr<Arena> arena_;
 };
 
 class GeneralPathColumnBuilder : public IContextColumnBuilder {
@@ -99,21 +98,16 @@ class GeneralPathColumnBuilder : public IContextColumnBuilder {
     data_.push_back(val.as_path());
   }
   void reserve(size_t size) override { data_.reserve(size); }
-  void set_path_impls(
-      const std::vector<std::shared_ptr<PathImpl>>& path_impls) {
-    path_impls_ = path_impls;
-  }
-  std::shared_ptr<IContextColumn> finish() override {
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>& arena) override {
     auto col = std::make_shared<GeneralPathColumn>();
     col->data_.swap(data_);
-    col->set_path_impls(std::move(path_impls_));
-    path_impls_.clear();
+    col->arena_ = arena;
     return col;
   }
 
  private:
   std::vector<Path> data_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 class OptionalGeneralPathColumn : public IPathColumn {
@@ -144,8 +138,6 @@ class OptionalGeneralPathColumn : public IPathColumn {
     return nullptr;
   }
 
-  std::shared_ptr<IContextColumnBuilder> builder() const override;
-
   void generate_dedup_offset(std::vector<size_t>& offsets) const override {
     ColumnsUtils::generate_dedup_offset(data_, data_.size(), offsets);
   }
@@ -158,15 +150,17 @@ class OptionalGeneralPathColumn : public IPathColumn {
     }
   }
 
-  void set_path_impls(std::vector<std::shared_ptr<PathImpl>>&& path_impls) {
-    path_impls_.swap(path_impls);
+  std::shared_ptr<Arena> get_arena() const override { return arena_; }
+
+  void set_arena(const std::shared_ptr<Arena>& arena) override {
+    arena_ = arena;
   }
 
  private:
   friend class OptionalGeneralPathColumnBuilder;
   std::vector<Path> data_;
   std::vector<bool> valids_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
+  std::shared_ptr<Arena> arena_;
 };
 
 class OptionalGeneralPathColumnBuilder : public IContextColumnBuilder {
@@ -189,23 +183,18 @@ class OptionalGeneralPathColumnBuilder : public IContextColumnBuilder {
     data_.reserve(size);
     valids_.reserve(size);
   }
-  void set_path_impls(
-      const std::vector<std::shared_ptr<PathImpl>>& path_impls) {
-    path_impls_ = path_impls;
-  }
-  std::shared_ptr<IContextColumn> finish() override {
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>& arena) override {
     auto col = std::make_shared<OptionalGeneralPathColumn>();
     col->data_.swap(data_);
     col->valids_.swap(valids_);
-    col->set_path_impls(std::move(path_impls_));
-    path_impls_.clear();
+    col->arena_ = arena;
     return col;
   }
 
  private:
   std::vector<Path> data_;
   std::vector<bool> valids_;
-  std::vector<std::shared_ptr<PathImpl>> path_impls_;
 };
 
 }  // namespace runtime

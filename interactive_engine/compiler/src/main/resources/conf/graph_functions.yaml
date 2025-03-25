@@ -19,4 +19,4 @@ graph_functions:
     returns:
       - name: float
         type:
-          primitive_type: DT_FLOAT
+          primitive_type: DT_DOUBLE

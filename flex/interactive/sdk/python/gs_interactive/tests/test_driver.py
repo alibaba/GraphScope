@@ -649,7 +649,7 @@ class TestDriver(unittest.TestCase):
         delete_res = self._sess.delete_graph(new_graph_id)
         assert not delete_res.is_ok()
         delete_failure_msg = delete_res.get_status_message()
-        # expect "Graph is runnning" in the error message
+        # expect "Graph is running" in the error message
         print("delete graph failed: ", delete_failure_msg)
         assert "Graph is running" in delete_failure_msg
 

@@ -54,15 +54,6 @@ std::string parse_codegen_dir(const bpo::variables_map& vm) {
   return codegen_dir;
 }
 
-void blockSignal(int sig) {
-  sigset_t set;
-  sigemptyset(&set);
-  sigaddset(&set, sig);
-  if (pthread_sigmask(SIG_BLOCK, &set, NULL) != 0) {
-    perror("pthread_sigmask");
-  }
-}
-
 // When graph_schema is not specified, codegen proxy will use the running graph
 // schema in graph_db_service
 void init_codegen_proxy(const bpo::variables_map& vm,

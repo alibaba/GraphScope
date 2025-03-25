@@ -141,8 +141,8 @@ jobs:
         # download dataset
         git clone -b master --single-branch --depth=1 https://github.com/GraphScope/gstest.git ${GS_TEST_DIR}
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/ldbc
-        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema.yaml
-        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load.yaml
+        GRAPH_SCHEMA_YAML=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_graph_schema_creationDate.yaml
+        BUILD_LOAD_FILE=${GS_TEST_DIR}/flex/ldbc-sf01-long-date/audit_bulk_load_creationDate.yaml
         cp ${GRAPH_SCHEMA_YAML} ${INTERACTIVE_WORKSPACE}/data/ldbc/graph.yaml
         cp ${BUILD_LOAD_FILE} ${INTERACTIVE_WORKSPACE}/data/ldbc/import.yaml
         mkdir -p ${INTERACTIVE_WORKSPACE}/data/movies
@@ -295,14 +295,12 @@ jobs:
         # plus_one: (num: int64) -> (num: int64), CppEncoder
         # sample_app: (num: int64) -> (num: int64), kCypherJson
 
-        sed -i 's/default_graph: ldbc/default_graph: modern_graph/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
         bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
            ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
            ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
         sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
-        sed -i 's/default_graph: modern_graph/default_graph: movies/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
       
     - name: Let compiler use latest interactive java sdk
       env:
@@ -346,10 +344,8 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./interactive_config_test.yaml to ldbc
-        sed -i 's/default_graph: movies/default_graph: ldbc/g' ./interactive_config_test.yaml
-        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc \
-              ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc CBO
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} ldbc RBO
 
     - name: Run End-to-End cypher adhoc movie query test
       env:
@@ -359,10 +355,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ./interactive_config_test.yaml to movies
-        sed -i 's/default_graph: ldbc/default_graph: movies/g' ./interactive_config_test.yaml
-        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} movies RBO
 
     - name: Run End-to-End cypher adhoc graph_algo query test
       env:
@@ -372,10 +365,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        # change the default_graph config in ${GS_TEST_DIR}/flex/ldbc-sf01-long-date/interactive_config.yaml to graph_algo
-        sed -i 's/default_graph: movies/default_graph: graph_algo/g' ./interactive_config_test.yaml
-        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} graph_algo RBO
 
     - name: Run kafka wal test
       env:
@@ -402,9 +392,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps/
         export ENGINE_TYPE=hiactor
-        sed -i 's/default_graph: graph_algo/default_graph: modern_graph/g' ./interactive_config_test.yaml
-        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph \
-          ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml gremlin
+        bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph RBO gremlin
 
   test-build-flex:
     runs-on: ubuntu-22.04

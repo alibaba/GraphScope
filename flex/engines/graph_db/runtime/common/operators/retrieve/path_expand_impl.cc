@@ -24,10 +24,10 @@ iterative_expand_vertex(const GraphReadInterface& graph,
                         const SLVertexColumn& input, label_t edge_label,
                         Direction dir, int lower, int upper) {
   int input_label = input.label();
-  SLVertexColumnBuilder builder(input_label);
+  auto builder = SLVertexColumnBuilder::builder(input_label);
   std::vector<size_t> offsets;
   if (upper == lower) {
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
   if (upper == 1) {
     CHECK_EQ(lower, 0);
@@ -36,7 +36,7 @@ iterative_expand_vertex(const GraphReadInterface& graph,
       builder.push_back_opt(v);
       offsets.push_back(idx++);
     }
-    return std::make_pair(builder.finish(), std::move(offsets));
+    return std::make_pair(builder.finish(nullptr), std::move(offsets));
   }
 
   std::vector<std::pair<vid_t, vid_t>> input_list;
@@ -169,7 +169,7 @@ iterative_expand_vertex(const GraphReadInterface& graph,
     }
   }
 
-  return std::make_pair(builder.finish(), std::move(offsets));
+  return std::make_pair(builder.finish(nullptr), std::move(offsets));
 }
 
 std::pair<std::shared_ptr<IContextColumn>, std::vector<size_t>>

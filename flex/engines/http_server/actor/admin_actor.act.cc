@@ -449,7 +449,7 @@ seastar::future<admin_query_result> admin_actor::run_list_graphs(
         gs::Result<seastar::sstring>(all_graph_meta_res.status()));
   } else {
     VLOG(10) << "Successfully list graphs";
-    // collect all 'schema' field into a json stirng
+    // collect all 'schema' field into a json string
     return seastar::make_ready_future<admin_query_result>(
         gs::Result<seastar::sstring>(merge_graph_and_plugin_meta(
             metadata_store_, all_graph_meta_res.value())));
@@ -1123,6 +1123,17 @@ seastar::future<admin_query_result> admin_actor::stop_service(
               to_message_json("Successfully stop service")));
     }
   });
+}
+
+seastar::future<admin_query_result> admin_actor::service_ready(
+    query_param&& query_param) {
+  auto& graph_db_service = GraphDBService::get();
+  return graph_db_service.is_actors_running()
+             ? seastar::make_ready_future<admin_query_result>(
+                   gs::Result<seastar::sstring>("true"))
+             : seastar::make_exception_future<admin_query_result>(
+                   gs::Status(gs::StatusCode::SERVICE_UNAVAILABLE,
+                              "Service is not ready"));
 }
 
 // get service status

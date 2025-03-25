@@ -37,7 +37,7 @@ impl fmt::Display for CastError {
             RawType::Integer => write!(f, "can't cast i32 into {}", self.target),
             RawType::Long => write!(f, "can't cast i64 into {}", self.target),
             RawType::ULLong => write!(f, "can't cast u128 into {}", self.target),
-            RawType::Float => write!(f, "can't cast f64 into {}", self.target),
+            RawType::Float => write!(f, "can't cast f32 into {}", self.target),
             RawType::Blob(len) => write!(f, "can't cast Blob({}) into {}", len, self.target),
             RawType::String => write!(f, "can't cast String into {}", self.target),
             RawType::Vector => write!(f, "can't cast Vector into {}", self.target),
@@ -48,6 +48,9 @@ impl fmt::Display for CastError {
             RawType::Time => write!(f, "can't cast time into {}", self.target),
             RawType::DateTime => write!(f, "can't cast datetime into {}", self.target),
             RawType::DateTimeWithTz => write!(f, "can't cast datetime with tz into {}", self.target),
+            RawType::UInt => write!(f, "can't cast u32 into {}", self.target),
+            RawType::ULong => write!(f, "can't cast u64 into {}", self.target),
+            RawType::Double => write!(f, "can't cast f64 into {}", self.target),
         }
     }
 }

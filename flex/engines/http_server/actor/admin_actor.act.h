@@ -52,6 +52,8 @@ class ANNOTATION(actor:impl) admin_actor : public hiactor::actor {
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) service_status(query_param&& param);
 
+  seastar::future<admin_query_result> ANNOTATION(actor:method) service_ready(query_param&& param);
+
   seastar::future<admin_query_result> ANNOTATION(actor:method) get_procedure_by_procedure_name(procedure_query_param&& param);
 
   seastar::future<admin_query_result> ANNOTATION(actor:method) get_procedures_by_graph_name(query_param&& param);

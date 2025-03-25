@@ -8,7 +8,7 @@ In most cases, the performance gap is below *2x*, moreover, when running pageran
 
 ## Evaluation Settings
 
-The evaluation is conducted on a cluster of 4 instances, each of them is equiped with following hardwares.
+The evaluation is conducted on a cluster of 4 instances, each of them is equipped with following hardwares.
 
 - CPU: Intel(R) Xeon(R) Platinum 8163 CPU @ 2.50GHz, 96 cores
 - Memory: 400GB
@@ -21,7 +21,7 @@ As for the dataset, we use 3 XL-size LDBC datasets.
 |   graph500-26  	|    32,804,978   	| 1,051,922,853 	|     32.1    	|
 | com-friendster 	|    65,608,366   	| 1,806,067,135 	|     27.5    	|
 
-## Refered algorithm implementation
+## Referred algorithm implementation
 
 - SSSP
     - [Java]()

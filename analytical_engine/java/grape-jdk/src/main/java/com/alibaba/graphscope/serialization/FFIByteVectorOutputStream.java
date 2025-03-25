@@ -63,7 +63,7 @@ public class FFIByteVectorOutputStream extends OutputStream implements DataOutpu
      *
      * @return
      */
-    public long bytesWriten() {
+    public long bytesWritten() {
         return offset;
     }
 

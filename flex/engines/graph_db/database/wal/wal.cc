@@ -29,8 +29,8 @@ std::string get_wal_uri_scheme(const std::string& uri) {
     scheme = uri.substr(0, pos);
   }
   if (scheme.empty()) {
-    LOG(INFO) << "No scheme found in wal uri: " << uri
-              << ", using default scheme: file";
+    VLOG(1) << "No scheme found in wal uri: " << uri
+            << ", using default scheme: file";
     scheme = "file";
   }
   return scheme;

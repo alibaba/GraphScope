@@ -182,7 +182,11 @@ data:
 
     while true
     do
+      {{- if .Values.distributed.enabled }}
       export HOST="${INSTANCE_NAME}-graphscope-store-frontend-0.${INSTANCE_NAME}-graphscope-store-frontend-headless"
+      {{- else }}
+      export HOST="localhost"
+      {{- end }}
       export GRPC_PORT=${GROOT_GRPC_PORT}
       export GREMLIN_PORT=${GROOT_GREMLIN_PORT}
       echo "${HOST} ${GRPC_PORT} ${GREMLIN_PORT}"

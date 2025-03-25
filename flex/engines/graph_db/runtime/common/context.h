@@ -29,6 +29,7 @@ namespace runtime {
 class Context {
  public:
   Context();
+
   ~Context() = default;
 
   void clear();

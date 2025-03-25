@@ -22,7 +22,7 @@ Furthermore, GraphScope has the added advantages of supporting a range of SDKs a
   [migrate the existing code](../java_tutorials.md) (without changing a line) to GraphScope, enabling them to enjoy automatic performance improvements.
 
 ## Compare with Graph Databases
-Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/) and [Nebula](https://www.nebula-graph.com.cn/),
+Graph databases, such as [Neo4j](https://neo4j.com/), [JanusGraph](http://www.janusgraph.cn/), [Nebula](https://www.nebula-graph.com.cn/), and [Kuzu](https://kuzudb.com/),
 allow users to query and manipulate the graph data using a declarative query language, e.g.
 [Gremlin](https://tinkerpop.apache.org/gremlin.html), [Cypher](https://neo4j.com/developer/cypher/), and [GQL](https://www.gqlstandards.org/).
 Like graph databases, GraphScope supports graph queries via the interactive computing engine, or [GIE](./graphscope_for_graph_queries.md),
