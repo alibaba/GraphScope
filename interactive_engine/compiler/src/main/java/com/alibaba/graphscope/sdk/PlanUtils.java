@@ -22,8 +22,6 @@ import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.GraphId;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
 import com.alibaba.graphscope.common.ir.meta.procedure.GraphStoredProcedures;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
 import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
@@ -36,9 +34,7 @@ import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.proto.frontend.Code;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,11 +61,13 @@ public class PlanUtils {
             long startTime = System.currentTimeMillis();
             Configs configs = Configs.Factory.create(configPath);
             GraphPlanner graphPlanner = GraphPlanerInstance.getInstance(configs);
-            IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson, configs);
-            IrMetaFetcher metaFetcher =
-                    new StaticIrMetaFetcher(reader, ImmutableList.of(graphPlanner.getOptimizer()));
+//            IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson, configs);
+//            IrMetaFetcher metaFetcher =
+//                    new StaticIrMetaFetcher(reader, ImmutableList.of(graphPlanner.getOptimizer()));
+//            IrMeta irMeta = metaFetcher.fetch().get();
+            IrMeta irMeta = GraphPlanerInstance.getIrMeta(schemaYaml, statsJson, configs, graphPlanner);
             GraphPlanner.PlannerInstance plannerInstance =
-                    graphPlanner.instance(query, metaFetcher.fetch().get());
+                    graphPlanner.instance(query, irMeta);
             GraphPlanner.Summary summary = plannerInstance.plan();
             LogicalPlan logicalPlan = summary.getLogicalPlan();
             PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();
@@ -113,7 +111,7 @@ public class PlanUtils {
                             new SchemaInputStream(
                                     new ByteArrayInputStream(
                                             schemaYaml.getBytes(StandardCharsets.UTF_8)),
-                                    SchemaSpec.Type.FLEX_IN_YAML));
+                                    SchemaSpec.Type.IR_CORE_IN_JSON));
             return new IrMeta(
                     graphSchema,
                     new GraphStoredProcedures(
