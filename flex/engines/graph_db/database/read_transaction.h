@@ -491,6 +491,12 @@ class ReadTransaction {
                                   label_t neighbor_label,
                                   label_t edge_label) const;
 
+  size_t GetOutDegree(label_t label, vid_t u, label_t neighbor_label,
+                      label_t edge_label) const;
+
+  size_t GetInDegree(label_t label, vid_t u, label_t neighbor_label,
+                     label_t edge_label) const;
+
   template <typename EDATA_T>
   AdjListView<EDATA_T> GetOutgoingEdges(label_t v_label, vid_t v,
                                         label_t neighbor_label,

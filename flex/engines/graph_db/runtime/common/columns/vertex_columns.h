@@ -59,22 +59,14 @@ class IVertexColumnBuilder : public IContextColumnBuilder {
   void push_back_elem(const RTAny& val) override {
     this->push_back_vertex(val.as_vertex());
   }
-};
 
-class IOptionalVertexColumnBuilder : public IOptionalContextColumnBuilder {
- public:
-  IOptionalVertexColumnBuilder() = default;
-  virtual ~IOptionalVertexColumnBuilder() = default;
-
-  virtual void push_back_vertex(VertexRecord v) = 0;
-
-  void push_back_elem(const RTAny& val) override {
-    this->push_back_vertex(val.as_vertex());
+  virtual void push_back_null() {
+    this->push_back_vertex({std::numeric_limits<label_t>::max(),
+                            std::numeric_limits<vid_t>::max()});
   }
 };
 
 class SLVertexColumnBuilder;
-class OptionalSLVertexColumnBuilder;
 
 class SLVertexColumnBase : public IVertexColumn {};
 
@@ -100,17 +92,6 @@ class SLVertexColumn : public SLVertexColumnBase {
 
   std::shared_ptr<IContextColumn> optional_shuffle(
       const std::vector<size_t>& offset) const override;
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<SLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
-
-  std::shared_ptr<IOptionalContextColumnBuilder> optional_builder()
-      const override {
-    auto ptr = std::make_shared<OptionalSLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IOptionalContextColumnBuilder>(ptr);
-  }
 
   inline VertexRecord get_vertex(size_t idx) const override {
     return {label_, vertices_[idx]};
@@ -152,10 +133,23 @@ class SLVertexColumn : public SLVertexColumnBase {
 
 class SLVertexColumnBuilder : public IVertexColumnBuilder {
  public:
-  SLVertexColumnBuilder(label_t label) : label_(label) {}
-  SLVertexColumnBuilder(const std::set<label_t>& labels)
-      : label_(*labels.begin()) {
-    assert(labels.size() == 1);
+  static SLVertexColumnBuilder builder(label_t label) {
+    return SLVertexColumnBuilder(label);
+  }
+  static SLVertexColumnBuilder builder(const std::set<label_t>& labels) {
+    return SLVertexColumnBuilder(labels);
+  }
+
+  static SLVertexColumnBuilder optional_builder(label_t label) {
+    SLVertexColumnBuilder builder(label);
+    builder.is_optional_ = true;
+    return builder;
+  }
+  static SLVertexColumnBuilder optional_builder(
+      const std::set<label_t>& labels) {
+    SLVertexColumnBuilder builder(labels);
+    builder.is_optional_ = true;
+    return builder;
   }
   ~SLVertexColumnBuilder() = default;
 
@@ -167,11 +161,24 @@ class SLVertexColumnBuilder : public IVertexColumnBuilder {
   }
   inline void push_back_opt(vid_t v) { vertices_.push_back(v); }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  inline void push_back_null() override {
+    assert(is_optional_);
+    vertices_.emplace_back(std::numeric_limits<vid_t>::max());
+  }
+
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  SLVertexColumnBuilder(label_t label) : label_(label), is_optional_(false) {}
+  SLVertexColumnBuilder(const std::set<label_t>& labels)
+      : label_(*labels.begin()), is_optional_(false) {
+    assert(labels.size() == 1);
+  }
+
   std::vector<vid_t> vertices_;
   label_t label_;
+  bool is_optional_ = false;
 };
 
 class OptionalSLVertexColumn : public SLVertexColumnBase {
@@ -180,11 +187,6 @@ class OptionalSLVertexColumn : public SLVertexColumnBase {
   ~OptionalSLVertexColumn() = default;
 
   inline size_t size() const override { return vertices_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<OptionalSLVertexColumnBuilder>(label_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
 
   std::string column_info() const override {
     return "OptionalSLVertex[" + std::to_string(size()) + "]";
@@ -224,31 +226,7 @@ class OptionalSLVertexColumn : public SLVertexColumnBase {
   ISigColumn* generate_signature() const override;
 
  private:
-  friend class OptionalSLVertexColumnBuilder;
-  label_t label_;
-  std::vector<vid_t> vertices_;
-};
-
-class OptionalSLVertexColumnBuilder : public IOptionalVertexColumnBuilder {
- public:
-  OptionalSLVertexColumnBuilder(label_t label) : label_(label) {}
-  ~OptionalSLVertexColumnBuilder() = default;
-
-  void reserve(size_t size) override { vertices_.reserve(size); }
-
-  inline void push_back_vertex(VertexRecord v) override {
-    vertices_.push_back(v.vid_);
-  }
-
-  inline void push_back_opt(vid_t v) { vertices_.push_back(v); }
-
-  inline void push_back_null() override {
-    vertices_.emplace_back(std::numeric_limits<vid_t>::max());
-  }
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
+  friend class SLVertexColumnBuilder;
   label_t label_;
   std::vector<vid_t> vertices_;
 };
@@ -265,11 +243,6 @@ class MSVertexColumn : public IVertexColumn {
       ret += pair.second.size();
     }
     return ret;
-  }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<MSVertexColumnBuilder>();
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
   }
 
   std::string column_info() const override {
@@ -334,34 +307,10 @@ class MSVertexColumn : public IVertexColumn {
   std::set<label_t> labels_;
 };
 
-#if 0
 class MSVertexColumnBuilder : public IVertexColumnBuilder {
  public:
-  MSVertexColumnBuilder() = default;
+  static MSVertexColumnBuilder builder() { return MSVertexColumnBuilder(); }
   ~MSVertexColumnBuilder() = default;
-
-  void reserve(size_t size) override;
-
-  void push_back_vertex(const std::pair<label_t, vid_t>& v) override;
-
-  void start_label(label_t label);
-
-  void push_back_opt(vid_t v);
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
-  label_t cur_label_;
-  std::vector<vid_t> cur_list_;
-
-  std::vector<std::pair<label_t, std::vector<vid_t>>> vertices_;
-};
-#else
-class MSVertexColumnBuilder : public IVertexColumnBuilder {
- public:
-  MSVertexColumnBuilder() = default;
-  ~MSVertexColumnBuilder() = default;
-
   void reserve(size_t size) override {}
 
   inline void push_back_vertex(VertexRecord v) override {
@@ -387,30 +336,30 @@ class MSVertexColumnBuilder : public IVertexColumnBuilder {
 
   inline void push_back_opt(vid_t v) { cur_list_.push_back(v); }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  inline void push_back_null() override {
+    LOG(FATAL) << "MSVertexColumnBuilder does not support null value.";
+  }
+
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  MSVertexColumnBuilder() = default;
+
   label_t cur_label_;
   std::vector<vid_t> cur_list_;
 
   std::vector<std::pair<label_t, std::vector<vid_t>>> vertices_;
 };
-#endif
 
 class MLVertexColumnBuilder;
 
-class OptionalMLVertexColumnBuilder;
 class MLVertexColumn : public MLVertexColumnBase {
  public:
   MLVertexColumn() = default;
   ~MLVertexColumn() = default;
 
   inline size_t size() const override { return vertices_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<MLVertexColumnBuilder>(labels_);
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
 
   std::string column_info() const override {
     std::string labels;
@@ -459,22 +408,45 @@ class MLVertexColumn : public MLVertexColumnBase {
 
 class MLVertexColumnBuilder : public IVertexColumnBuilder {
  public:
-  MLVertexColumnBuilder() = default;
-  MLVertexColumnBuilder(const std::set<label_t>& labels) : labels_(labels) {}
+  static MLVertexColumnBuilder builder() { return MLVertexColumnBuilder(); }
+  static MLVertexColumnBuilder optional_builder() {
+    MLVertexColumnBuilder builder;
+    builder.is_optional_ = true;
+    return builder;
+  }
+  static MLVertexColumnBuilder builder(const std::set<label_t>& labels) {
+    return MLVertexColumnBuilder(labels);
+  }
+  static MLVertexColumnBuilder optional_builder(
+      const std::set<label_t>& labels) {
+    MLVertexColumnBuilder builder(labels);
+    builder.is_optional_ = true;
+    return builder;
+  }
   ~MLVertexColumnBuilder() = default;
 
   void reserve(size_t size) override { vertices_.reserve(size); }
+  inline void push_back_opt(VertexRecord v) {
+    labels_.insert(v.label_);
+    vertices_.push_back(v);
+  }
 
   inline void push_back_vertex(VertexRecord v) override {
     labels_.insert(v.label_);
     vertices_.push_back(v);
   }
 
-  std::shared_ptr<IContextColumn> finish() override;
+  std::shared_ptr<IContextColumn> finish(
+      const std::shared_ptr<Arena>&) override;
 
  private:
+  MLVertexColumnBuilder() : is_optional_(false) {}
+  MLVertexColumnBuilder(const std::set<label_t>& labels)
+      : labels_(labels), is_optional_(false) {}
+
   std::vector<VertexRecord> vertices_;
   std::set<label_t> labels_;
+  bool is_optional_;
 };
 
 class OptionalMLVertexColumn : public MLVertexColumnBase {
@@ -483,11 +455,6 @@ class OptionalMLVertexColumn : public MLVertexColumnBase {
   ~OptionalMLVertexColumn() = default;
 
   inline size_t size() const override { return vertices_.size(); }
-
-  std::shared_ptr<IContextColumnBuilder> builder() const override {
-    auto ptr = std::make_shared<OptionalMLVertexColumnBuilder>();
-    return std::dynamic_pointer_cast<IContextColumnBuilder>(ptr);
-  }
 
   std::string column_info() const override {
     std::string labels;
@@ -533,40 +500,7 @@ class OptionalMLVertexColumn : public MLVertexColumnBase {
   std::set<label_t> get_labels_set() const override { return labels_; }
 
  private:
-  friend class OptionalMLVertexColumnBuilder;
-  std::vector<VertexRecord> vertices_;
-  std::set<label_t> labels_;
-};
-
-class OptionalMLVertexColumnBuilder : public IOptionalVertexColumnBuilder {
- public:
-  OptionalMLVertexColumnBuilder() = default;
-  ~OptionalMLVertexColumnBuilder() = default;
-
-  void reserve(size_t size) override { vertices_.reserve(size); }
-
-  inline void push_back_opt(VertexRecord v) {
-    labels_.insert(v.label_);
-    vertices_.push_back(v);
-  }
-
-  inline void push_back_vertex(VertexRecord v) override {
-    labels_.insert(v.label_);
-    vertices_.push_back(v);
-  }
-
-  inline void push_back_null() override {
-    vertices_.emplace_back(VertexRecord{std::numeric_limits<label_t>::max(),
-                                        std::numeric_limits<vid_t>::max()});
-  }
-
-  inline void push_back_elem(const RTAny& val) override {
-    this->push_back_opt(val.as_vertex());
-  }
-
-  std::shared_ptr<IContextColumn> finish() override;
-
- private:
+  friend class MLVertexColumnBuilder;
   std::vector<VertexRecord> vertices_;
   std::set<label_t> labels_;
 };

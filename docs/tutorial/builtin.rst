@@ -24,7 +24,7 @@ during the re-binding process and results a new bound application, which can be 
 graphs of the new data type.
 
 Take the built-in algorithm :code:`SSSP` (aka. single source shortest path algorithm) as
-an example. We frist create a session to connects to the *GRAPE* engine:
+an example. We first create a session to connects to the *GRAPE* engine:
 
 .. code:: python
 

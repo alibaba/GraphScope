@@ -28,8 +28,8 @@ from sphinx.environment.adapters.toctree import TocTree
 
 from furo.navigation import get_navigation_tree
 
-# set maximum_recent_versions to 3 to avoid creating too many files, which may cause failure when uploading to cloudflare
-def resolve_git_tags(maximum_recent_versions=3): 
+# set maximum_recent_versions to 1 to avoid creating too many files, which may cause failure when uploading to cloudflare
+def resolve_git_tags(maximum_recent_versions=1): 
     git = shutil.which("git")
     if git is None:
         return "latest", []

@@ -74,7 +74,7 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalBDSLEdgeColumnBuilder builder(triplet, pt);
+      auto builder = BDSLEdgeColumnBuilder::optional_builder(triplet, pt);
       foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
                                             vid_t v) {
         bool has_edge = false;
@@ -105,7 +105,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
           shuffle_offset.push_back(index);
         }
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
@@ -125,7 +126,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalSDSLEdgeColumnBuilder builder(Direction::kOut, triplet, pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::optional_builder(Direction::kOut, triplet, pt);
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
                        if (label == triplet.src_label) {
@@ -149,7 +151,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kIn) {
       auto& input_vertex_list =
@@ -169,7 +172,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
       if (props.size() > 1) {
         pt = PropertyType::kRecordView;
       }
-      OptionalSDSLEdgeColumnBuilder builder(Direction::kIn, triplet, pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::optional_builder(Direction::kIn, triplet, pt);
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
                        if (label == triplet.dst_label) {
@@ -193,7 +197,8 @@ static bl::result<Context> expand_edge_without_predicate_optional_impl(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
   }
@@ -235,7 +240,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         pt = props[0];
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::builder(Direction::kIn, params.labels[0], pt);
 
       label_t dst_label = params.labels[0].dst_label;
       foreach_vertex(input_vertex_list,
@@ -254,7 +260,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else if (params.dir == Direction::kOut) {
       auto& input_vertex_list =
@@ -274,7 +281,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         pt = PropertyType::kRecordView;
       }
 
-      SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+      auto builder =
+          SDSLEdgeColumnBuilder::builder(Direction::kOut, params.labels[0], pt);
       label_t src_label = params.labels[0].src_label;
       foreach_vertex(input_vertex_list,
                      [&](size_t index, label_t label, vid_t v) {
@@ -293,7 +301,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                        }
                      });
 
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     } else {
       auto& input_vertex_list =
@@ -305,7 +314,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
       if (!props.empty()) {
         pt = props[0];
       }
-      BDSLEdgeColumnBuilder builder(params.labels[0], pt);
+      auto builder = BDSLEdgeColumnBuilder::builder(params.labels[0], pt);
       foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
                                             vid_t v) {
         if (label == params.labels[0].src_label) {
@@ -331,7 +340,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
           }
         }
       });
-      ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+      ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                             shuffle_offset);
       return ctx;
     }
   } else {
@@ -342,9 +352,14 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         get_expand_label_set(graph, label_set, params.labels, params.dir);
     std::vector<std::pair<LabelTriplet, PropertyType>> label_props;
     std::vector<std::vector<PropertyType>> props_vec;
-    for (auto& triplet : labels) {
+    std::vector<std::vector<LabelTriplet>> in_labels_map(
+        graph.schema().vertex_label_num()),
+        out_labels_map(graph.schema().vertex_label_num());
+    for (const auto& triplet : labels) {
       auto& props = graph.schema().get_edge_properties(
           triplet.src_label, triplet.dst_label, triplet.edge_label);
+      in_labels_map[triplet.dst_label].emplace_back(triplet);
+      out_labels_map[triplet.src_label].emplace_back(triplet);
       PropertyType pt = PropertyType::kEmpty;
       if (!props.empty()) {
         pt = props[0];
@@ -361,8 +376,8 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         if (params.dir == Direction::kOut) {
           auto& triplet = labels[0];
-          SDSLEdgeColumnBuilder builder(Direction::kOut, triplet,
-                                        label_props[0].second);
+          auto builder = SDSLEdgeColumnBuilder::builder(
+              Direction::kOut, triplet, label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.src_label) {
@@ -376,13 +391,13 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         } else if (params.dir == Direction::kIn) {
           auto& triplet = labels[0];
-          SDSLEdgeColumnBuilder builder(Direction::kIn, triplet,
-                                        label_props[0].second);
+          auto builder = SDSLEdgeColumnBuilder::builder(Direction::kIn, triplet,
+                                                        label_props[0].second);
           foreach_vertex(
               input_vertex_list, [&](size_t index, label_t label, vid_t v) {
                 if (label == triplet.dst_label) {
@@ -396,7 +411,7 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                   }
                 }
               });
-          ctx.set_with_reshuffle(params.alias, builder.finish(),
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                  shuffle_offset);
           return ctx;
         }
@@ -404,13 +419,11 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
 
-        SDMLEdgeColumnBuilder builder(params.dir, label_props);
+        auto builder = SDMLEdgeColumnBuilder::builder(params.dir, label_props);
         if (params.dir == Direction::kOut) {
-          foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
-                                                vid_t v) {
-            for (auto& triplet : labels) {
-              if (triplet.src_label == label) {
-                if (params.dir == Direction::kOut) {
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                for (const auto& triplet : out_labels_map[label]) {
                   auto oe_iter = graph.GetOutEdgeIterator(
                       label, v, triplet.dst_label, triplet.edge_label);
                   while (oe_iter.IsValid()) {
@@ -420,15 +433,11 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                     oe_iter.Next();
                   }
                 }
-              }
-            }
-          });
+              });
         } else {
-          foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
-                                                vid_t v) {
-            for (auto& triplet : labels) {
-              if (triplet.dst_label == label) {
-                if (params.dir == Direction::kIn) {
+          foreach_vertex(
+              input_vertex_list, [&](size_t index, label_t label, vid_t v) {
+                for (const auto& triplet : in_labels_map[label]) {
                   auto ie_iter = graph.GetInEdgeIterator(
                       label, v, triplet.src_label, triplet.edge_label);
                   while (ie_iter.IsValid()) {
@@ -438,17 +447,17 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
                     ie_iter.Next();
                   }
                 }
-              }
-            }
-          });
+              });
         }
 
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     } else if (params.dir == Direction::kBoth) {
       if (labels.size() == 1) {
-        BDSLEdgeColumnBuilder builder(labels[0], label_props[0].second);
+        auto builder =
+            BDSLEdgeColumnBuilder::builder(labels[0], label_props[0].second);
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         foreach_vertex(input_vertex_list, [&](size_t index, label_t label,
@@ -474,40 +483,40 @@ bl::result<Context> EdgeExpand::expand_edge_without_predicate(
             }
           }
         });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else {
-        BDMLEdgeColumnBuilder builder(label_props);
+        auto builder = BDMLEdgeColumnBuilder::builder(label_props);
         auto& input_vertex_list =
             *std::dynamic_pointer_cast<IVertexColumn>(ctx.get(params.v_tag));
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
-              for (auto& triplet : labels) {
-                if (triplet.src_label == label) {
-                  auto oe_iter = graph.GetOutEdgeIterator(
-                      label, v, triplet.dst_label, triplet.edge_label);
-                  while (oe_iter.IsValid()) {
-                    auto nbr = oe_iter.GetNeighbor();
-                    builder.push_back_opt(triplet, v, nbr, oe_iter.GetData(),
-                                          Direction::kOut);
-                    shuffle_offset.push_back(index);
-                    oe_iter.Next();
-                  }
+              for (const auto& triplet : out_labels_map[label]) {
+                auto oe_iter = graph.GetOutEdgeIterator(
+                    label, v, triplet.dst_label, triplet.edge_label);
+                while (oe_iter.IsValid()) {
+                  auto nbr = oe_iter.GetNeighbor();
+                  builder.push_back_opt(triplet, v, nbr, oe_iter.GetData(),
+                                        Direction::kOut);
+                  shuffle_offset.push_back(index);
+                  oe_iter.Next();
                 }
-                if (triplet.dst_label == label) {
-                  auto ie_iter = graph.GetInEdgeIterator(
-                      label, v, triplet.src_label, triplet.edge_label);
-                  while (ie_iter.IsValid()) {
-                    auto nbr = ie_iter.GetNeighbor();
-                    builder.push_back_opt(triplet, nbr, v, ie_iter.GetData(),
-                                          Direction::kIn);
-                    shuffle_offset.push_back(index);
-                    ie_iter.Next();
-                  }
+              }
+              for (const auto& triplet : in_labels_map[label]) {
+                auto ie_iter = graph.GetInEdgeIterator(
+                    label, v, triplet.src_label, triplet.edge_label);
+                while (ie_iter.IsValid()) {
+                  auto nbr = ie_iter.GetNeighbor();
+                  builder.push_back_opt(triplet, nbr, v, ie_iter.GetData(),
+                                        Direction::kIn);
+                  shuffle_offset.push_back(index);
+                  ie_iter.Next();
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     }
@@ -681,7 +690,7 @@ Context expand_vertex_ep_lt_ml_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  MSVertexColumnBuilder builder;
+  auto builder = MSVertexColumnBuilder::builder();
   size_t csr_idx = 0;
   std::vector<size_t> offsets;
   for (auto& csr : views) {
@@ -697,7 +706,7 @@ Context expand_vertex_ep_lt_ml_impl(
     }
     ++csr_idx;
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }
@@ -814,7 +823,7 @@ Context expand_vertex_ep_gt_sl_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  SLVertexColumnBuilder builder(std::get<0>(label_dirs[0]));
+  auto builder = SLVertexColumnBuilder::builder(std::get<0>(label_dirs[0]));
   std::vector<size_t> offsets;
   for (auto& csr : views) {
     size_t idx = 0;
@@ -826,7 +835,7 @@ Context expand_vertex_ep_gt_sl_impl(
       ++idx;
     }
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }
@@ -853,7 +862,7 @@ Context expand_vertex_ep_gt_ml_impl(
           graph.GetIncomingGraphView<T>(input_label, nbr_label, edge_label));
     }
   }
-  MSVertexColumnBuilder builder;
+  auto builder = MSVertexColumnBuilder::builder();
   size_t csr_idx = 0;
   std::vector<size_t> offsets;
   for (auto& csr : views) {
@@ -870,7 +879,7 @@ Context expand_vertex_ep_gt_ml_impl(
     }
     ++csr_idx;
   }
-  std::shared_ptr<IContextColumn> col = builder.finish();
+  std::shared_ptr<IContextColumn> col = builder.finish(nullptr);
   ctx.set_with_reshuffle(alias, col, offsets);
   return ctx;
 }

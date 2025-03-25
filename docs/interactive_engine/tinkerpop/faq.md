@@ -177,7 +177,7 @@ g.V().outE().limit(10).subgraph('sub_graph').count()
 
 Please refer to [Subgraph](https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#subgraph) for more usage.
 
-## Suggestions About Parallism Settings for Queries
+## Suggestions About Parallelism Settings for Queries
 
 We support per-query settings for query parallelism, using the syntax `g.with('pegasus.worker.num', $worker_num)`. The maximum parallelism is bound by the number of machine cores. In our engine’s scheduling, we employ a first-come, first-served strategy.
 

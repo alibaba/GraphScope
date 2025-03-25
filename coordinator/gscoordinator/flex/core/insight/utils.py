@@ -37,7 +37,7 @@ def convert_to_configini(graph, ds_manager, config):
     project = None
     # output table, deprecated
     output_table = f"{graph.name}_tmp"
-    # odps volumn part spec,  0-31, A-Z, a-z, 0-9 and "_"
+    # odps volume part spec,  0-31, A-Z, a-z, 0-9 and "_"
     odpsVolumePartspec = graph.name
     # traverse vertices
     for v in config["vertices"]:

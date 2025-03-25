@@ -222,7 +222,7 @@ fn apply_arith<'a>(
         }
         Sub => {
             // catch overflow error, as the result may overflow, e.g., i32::MIN - 1
-            let res = panic::catch_unwind(|| primitive_a - primitive_b).map_err(|_| {
+            let res = panic::catch_unwind(|| primitive_a - primitive_b).map_err(|e| {
                 ExprEvalError::OtherErr(
                     format!("overflow error: {:?} - {:?}", primitive_a, primitive_b).to_string(),
                 )

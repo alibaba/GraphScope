@@ -84,8 +84,14 @@ public class ParserUtils {
                 return value.getBoolean();
             case I32:
                 return value.getI32();
+            case U32:
+                return value.getU32();
             case I64:
                 return value.getI64();
+            case U64:
+                return value.getU64();
+            case F32:
+                return value.getF32();
             case F64:
                 return value.getF64();
             case STR:

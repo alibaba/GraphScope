@@ -79,7 +79,8 @@ class EdgeExpand {
           pt = PropertyType::kRecordView;
         }
 
-        SDSLEdgeColumnBuilder builder(Direction::kIn, params.labels[0], pt);
+        auto builder = SDSLEdgeColumnBuilder::builder(Direction::kIn,
+                                                      params.labels[0], pt);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -97,7 +98,8 @@ class EdgeExpand {
                          }
                        });
 
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else if (params.dir == Direction::kOut) {
         auto& input_vertex_list =
@@ -117,7 +119,8 @@ class EdgeExpand {
           pt = PropertyType::kRecordView;
         }
 
-        SDSLEdgeColumnBuilder builder(Direction::kOut, params.labels[0], pt);
+        auto builder = SDSLEdgeColumnBuilder::builder(Direction::kOut,
+                                                      params.labels[0], pt);
 
         foreach_vertex(input_vertex_list,
                        [&](size_t index, label_t label, vid_t v) {
@@ -138,7 +141,8 @@ class EdgeExpand {
                          }
                        });
 
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else {
         auto& input_vertex_list = *input_vertex_list_ptr;
@@ -155,7 +159,7 @@ class EdgeExpand {
         if (props.size() > 1) {
           pt = PropertyType::kRecordView;
         }
-        BDSLEdgeColumnBuilder builder(params.labels[0], pt);
+        auto builder = BDSLEdgeColumnBuilder::builder(params.labels[0], pt);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -190,7 +194,8 @@ class EdgeExpand {
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     } else {
@@ -208,7 +213,7 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        BDMLEdgeColumnBuilder builder(label_props);
+        auto builder = BDMLEdgeColumnBuilder::builder(label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -246,7 +251,8 @@ class EdgeExpand {
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else if (params.dir == Direction::kOut) {
         auto& input_vertex_list =
@@ -261,7 +267,8 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        SDMLEdgeColumnBuilder builder(Direction::kOut, label_props);
+        auto builder =
+            SDMLEdgeColumnBuilder::builder(Direction::kOut, label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -283,7 +290,8 @@ class EdgeExpand {
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       } else if (params.dir == Direction::kIn) {
         auto& input_vertex_list =
@@ -298,7 +306,8 @@ class EdgeExpand {
           }
           label_props.emplace_back(triplet, pt);
         }
-        SDMLEdgeColumnBuilder builder(Direction::kIn, label_props);
+        auto builder =
+            SDMLEdgeColumnBuilder::builder(Direction::kIn, label_props);
 
         foreach_vertex(
             input_vertex_list, [&](size_t index, label_t label, vid_t v) {
@@ -320,7 +329,8 @@ class EdgeExpand {
                 }
               }
             });
-        ctx.set_with_reshuffle(params.alias, builder.finish(), shuffle_offset);
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
         return ctx;
       }
     }
@@ -453,8 +463,8 @@ class EdgeExpand {
 
     T1 param = TypedConverter<T1>::typed_from_string(val);
 
-    SLVertexColumnBuilder builder1(d1_nbr_label);
-    SLVertexColumnBuilder builder2(d2_nbr_label);
+    auto builder1 = SLVertexColumnBuilder::builder(d1_nbr_label);
+    auto builder2 = SLVertexColumnBuilder::builder(d2_nbr_label);
     std::vector<size_t> offsets;
 
     size_t idx = 0;
@@ -492,8 +502,8 @@ class EdgeExpand {
       ++idx;
     }
 
-    std::shared_ptr<IContextColumn> col1 = builder1.finish();
-    std::shared_ptr<IContextColumn> col2 = builder2.finish();
+    std::shared_ptr<IContextColumn> col1 = builder1.finish(nullptr);
+    std::shared_ptr<IContextColumn> col2 = builder2.finish(nullptr);
     ctx.set_with_reshuffle(alias1, col1, offsets);
     ctx.set(alias2, col2);
     return ctx;

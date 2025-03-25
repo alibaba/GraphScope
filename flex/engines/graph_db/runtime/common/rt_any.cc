@@ -20,6 +20,10 @@ namespace gs {
 namespace runtime {
 RTAny List::get(size_t idx) const { return impl_->get(idx); }
 
+RTAnyType Set::elem_type() const { return impl_->type(); }
+
+RTAnyType List::elem_type() const { return impl_->type(); }
+
 RTAny Tuple::get(size_t idx) const { return impl_->get(idx); }
 PropertyType rt_type_to_property_type(RTAnyType type) {
   switch (type) {
@@ -267,13 +271,6 @@ RTAny RTAny::from_string(const std::string_view& str) {
   return ret;
 }
 
-RTAny RTAny::from_string_set(const std::set<std::string>& str_set) {
-  RTAny ret;
-  ret.type_ = RTAnyType::kStringSetValue;
-  ret.value_.str_set = &str_set;
-  return ret;
-}
-
 RTAny RTAny::from_date32(Day v) {
   RTAny ret;
   ret.type_ = RTAnyType::kDate32;
@@ -372,10 +369,6 @@ const EdgeRecord& RTAny::as_edge() const {
   assert(type_ == RTAnyType::kEdge);
   return value_.edge;
 }
-const std::set<std::string>& RTAny::as_string_set() const {
-  assert(type_ == RTAnyType::kStringSetValue);
-  return *value_.str_set;
-}
 
 Set RTAny::as_set() const {
   assert(type_ == RTAnyType::kSet);
@@ -416,6 +409,11 @@ Map RTAny::as_map() const {
 Relation RTAny::as_relation() const {
   assert(type_ == RTAnyType::kRelation);
   return value_.relation;
+}
+
+RTAny TupleImpl<RTAny>::get(size_t idx) const {
+  CHECK(idx < values.size());
+  return values[idx];
 }
 
 int RTAny::numerical_cmp(const RTAny& other) const {
@@ -679,8 +677,6 @@ void RTAny::sink_impl(common::Value* value) const {
     value->set_str(value_.str_val.data(), value_.str_val.size());
   } else if (type_ == RTAnyType::kI32Value) {
     value->set_i32(value_.i32_val);
-  } else if (type_ == RTAnyType::kStringSetValue) {
-    LOG(FATAL) << "not support string set sink";
   } else if (type_ == RTAnyType::kDate32) {
     value->set_i64(value_.day.to_timestamp());
   } else if (type_ == RTAnyType::kTimestamp) {
@@ -787,10 +783,10 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
       value_.list.get(i).sink_impl(
           collection->add_collection()->mutable_object());
     }
-  } else if (type_ == RTAnyType::kStringSetValue) {
+  } else if (type_ == RTAnyType::kSet) {
     auto collection = col->mutable_entry()->mutable_collection();
-    for (auto& s : *value_.str_set) {
-      collection->add_collection()->mutable_object()->set_str(s);
+    for (auto& val : value_.set.values()) {
+      val.sink_impl(collection->add_collection()->mutable_object());
     }
   } else if (type_ == RTAnyType::kTuple) {
     auto collection = col->mutable_entry()->mutable_collection();
@@ -804,14 +800,14 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
   } else if (type_ == RTAnyType::kMap) {
     auto mp = col->mutable_entry()->mutable_map();
     auto [keys_ptr, vals_ptr] = value_.map.key_vals();
-    auto& keys = *keys_ptr;
-    auto& vals = *vals_ptr;
+    auto& keys = keys_ptr;
+    auto& vals = vals_ptr;
     for (size_t i = 0; i < keys.size(); ++i) {
       if (vals[i].is_null()) {
         continue;
       }
       auto ret = mp->add_key_values();
-      ret->mutable_key()->set_str(keys[i]);
+      keys[i].sink_impl(ret->mutable_key());
       if (vals[i].type_ == RTAnyType::kVertex) {
         auto v = ret->mutable_value()->mutable_element()->mutable_vertex();
         sink_vertex(graph, vals[i].as_vertex(), v);
@@ -850,8 +846,43 @@ void RTAny::sink(const GraphReadInterface& graph, int id,
       }
     }
   } else if (type_ == RTAnyType::kPath) {
-    LOG(FATAL) << "not support path sink";
+    auto mutable_path =
+        col->mutable_entry()->mutable_element()->mutable_graph_path();
+    auto path_nodes = this->as_path().nodes();
+    auto edge_labels = this->as_path().edge_labels();
+    // same label for all edges
+    if (edge_labels.size() == 1) {
+      for (size_t i = 0; i + 2 < path_nodes.size(); ++i) {
+        edge_labels.emplace_back(edge_labels[0]);
+      }
+    }
+    assert(edge_labels.size() + 1 == path_nodes.size());
+    size_t len = path_nodes.size();
+    for (size_t i = 0; i + 1 < len; ++i) {
+      auto vertex_in_path = mutable_path->add_path();
 
+      auto node = vertex_in_path->mutable_vertex();
+      node->mutable_label()->set_id(path_nodes[i].label());
+      node->set_id(
+          encode_unique_vertex_id(path_nodes[i].label(), path_nodes[i].vid()));
+      auto edge_in_path = mutable_path->add_path();
+
+      auto edge = edge_in_path->mutable_edge();
+      edge->mutable_src_label()->set_id(path_nodes[i].label());
+      edge->mutable_dst_label()->set_id(path_nodes[i + 1].label());
+      edge->mutable_label()->set_id(edge_labels[i]);
+      edge->set_id(encode_unique_edge_id(edge_labels[i], path_nodes[i].vid(),
+                                         path_nodes[i + 1].vid()));
+      edge->set_src_id(
+          encode_unique_vertex_id(path_nodes[i].label(), path_nodes[i].vid()));
+      edge->set_dst_id(encode_unique_vertex_id(path_nodes[i + 1].label(),
+                                               path_nodes[i + 1].vid()));
+    }
+    auto vertex_in_path = mutable_path->add_path();
+    auto node = vertex_in_path->mutable_vertex();
+    node->mutable_label()->set_id(path_nodes[len - 1].label());
+    node->set_id(encode_unique_vertex_id(path_nodes[len - 1].label(),
+                                         path_nodes[len - 1].vid()));
   } else {
     sink_impl(col->mutable_entry()->mutable_element()->mutable_object());
   }
@@ -934,10 +965,10 @@ std::string RTAny::to_string() const {
 #else
     return std::to_string(value_.vertex.vid_);
 #endif
-  } else if (type_ == RTAnyType::kStringSetValue) {
+  } else if (type_ == RTAnyType::kSet) {
     std::string ret = "{";
-    for (auto& str : *value_.str_set) {
-      ret += str;
+    for (auto& val : value_.set.values()) {
+      ret += val.to_string();
       ret += ", ";
     }
     ret += "}";

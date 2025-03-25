@@ -17,139 +17,392 @@ use core::f64;
 
 use crate::object::Primitives;
 
-// if the results occur overflow, the function will panic.
+// If the results occur overflow, the function will panic.
+// You can catch the panic in the caller function.
 impl std::ops::Add for Primitives {
     type Output = Primitives;
 
     fn add(self, other: Primitives) -> Self::Output {
         use super::Primitives::*;
         match (self, other) {
-            (Double(_), _) | (_, Double(_)) => Double(self.as_f64().unwrap() + other.as_f64().unwrap()),
-            (Float(_), _) | (_, Float(_)) => Float(self.as_f32().unwrap() + other.as_f32().unwrap()),
-            (ULLong(_), _) | (_, ULLong(_)) => {
-                if self.is_negative() {
-                    ULLong(other.as_u128().unwrap() - self.as_i128().unwrap().abs() as u128)
-                } else if other.is_negative() {
-                    ULLong(self.as_u128().unwrap() - other.as_i128().unwrap().abs() as u128)
+            (Double(a), Double(b)) => Double(a + b),
+            (Double(a), Float(b)) => Double(a + b as f64),
+            (Double(a), ULLong(b)) => Double(a + b as f64),
+            (Double(a), ULong(b)) => Double(a + b as f64),
+            (Double(a), Long(b)) => Double(a + b as f64),
+            (Double(a), UInteger(b)) => Double(a + b as f64),
+            (Double(a), Integer(b)) => Double(a + b as f64),
+            (Double(a), Byte(b)) => Double(a + b as f64),
+            (Float(a), Double(b)) => Double(a as f64 + b),
+            (ULLong(a), Double(b)) => Double(a as f64 + b),
+            (ULong(a), Double(b)) => Double(a as f64 + b),
+            (Long(a), Double(b)) => Double(a as f64 + b),
+            (UInteger(a), Double(b)) => Double(a as f64 + b),
+            (Integer(a), Double(b)) => Double(a as f64 + b),
+            (Byte(a), Double(b)) => Double(a as f64 + b),
+            (Float(a), Float(b)) => Float(a + b),
+            (Float(a), ULLong(b)) => Float(a + b as f32),
+            (Float(a), ULong(b)) => Float(a + b as f32),
+            (Float(a), Long(b)) => Float(a + b as f32),
+            (Float(a), UInteger(b)) => Float(a + b as f32),
+            (Float(a), Integer(b)) => Float(a + b as f32),
+            (Float(a), Byte(b)) => Float(a + b as f32),
+            (ULLong(a), Float(b)) => Float(a as f32 + b),
+            (ULong(a), Float(b)) => Float(a as f32 + b),
+            (Long(a), Float(b)) => Float(a as f32 + b),
+            (UInteger(a), Float(b)) => Float(a as f32 + b),
+            (Integer(a), Float(b)) => Float(a as f32 + b),
+            (Byte(a), Float(b)) => Float(a as f32 + b),
+            (ULLong(a), ULLong(b)) => ULLong(a + b),
+            (ULLong(a), ULong(b)) => ULLong(a + b as u128),
+            (ULLong(a), Long(b)) => {
+                if b < 0 {
+                    ULLong(a - b.abs() as u128)
                 } else {
-                    ULLong(self.as_u128().unwrap() + other.as_u128().unwrap())
+                    ULLong(a + b as u128)
                 }
             }
-            (ULong(_), _) | (_, ULong(_)) => {
-                if self.is_negative() {
-                    ULong(other.as_u64().unwrap() - self.as_i64().unwrap().abs() as u64)
-                } else if other.is_negative() {
-                    ULong(self.as_u64().unwrap() - other.as_i64().unwrap().abs() as u64)
+            (ULLong(a), UInteger(b)) => ULLong(a + b as u128),
+            (ULLong(a), Integer(b)) => {
+                if b < 0 {
+                    ULLong(a - b.abs() as u128)
                 } else {
-                    ULong(self.as_u64().unwrap() + other.as_u64().unwrap())
+                    ULLong(a + b as u128)
                 }
             }
-            (Long(_), _) | (_, Long(_)) => Long(self.as_i64().unwrap() + other.as_i64().unwrap()),
-            (UInteger(_), _) | (_, UInteger(_)) => {
-                if self.is_negative() {
-                    UInteger(other.as_u32().unwrap() - self.as_i32().unwrap().abs() as u32)
-                } else if other.is_negative() {
-                    UInteger(self.as_u32().unwrap() - other.as_i32().unwrap().abs() as u32)
+            (ULLong(a), Byte(b)) => {
+                if b < 0 {
+                    ULLong(a - b.abs() as u128)
                 } else {
-                    UInteger(self.as_u32().unwrap() + other.as_u32().unwrap())
+                    ULLong(a + b as u128)
                 }
             }
-            (Integer(_), _) | (_, Integer(_)) => Integer(self.as_i32().unwrap() + other.as_i32().unwrap()),
-            (Byte(_), _) => Byte(self.as_i8().unwrap() + other.as_i8().unwrap()),
+            (ULong(a), ULLong(b)) => ULLong(a as u128 + b),
+            (Long(a), ULLong(b)) => {
+                if a < 0 {
+                    ULLong(b - a.abs() as u128)
+                } else {
+                    ULLong(a as u128 + b)
+                }
+            }
+            (UInteger(a), ULLong(b)) => ULLong(a as u128 + b),
+            (Integer(a), ULLong(b)) => {
+                if a < 0 {
+                    ULLong(b - a.abs() as u128)
+                } else {
+                    ULLong(a as u128 + b)
+                }
+            }
+            (Byte(a), ULLong(b)) => {
+                if a < 0 {
+                    ULLong(b - a.abs() as u128)
+                } else {
+                    ULLong(a as u128 + b)
+                }
+            }
+            (ULong(a), ULong(b)) => ULong(a + b),
+            (ULong(a), Long(b)) => {
+                if b < 0 {
+                    ULong(a - b.abs() as u64)
+                } else {
+                    ULong(a + b as u64)
+                }
+            }
+            (ULong(a), UInteger(b)) => ULong(a + b as u64),
+            (ULong(a), Integer(b)) => {
+                if b < 0 {
+                    ULong(a - b.abs() as u64)
+                } else {
+                    ULong(a + b as u64)
+                }
+            }
+            (ULong(a), Byte(b)) => {
+                if b < 0 {
+                    ULong(a - b.abs() as u64)
+                } else {
+                    ULong(a + b as u64)
+                }
+            }
+            (Long(a), ULong(b)) => {
+                if a < 0 {
+                    ULong(b - a.abs() as u64)
+                } else {
+                    ULong(a as u64 + b)
+                }
+            }
+            (UInteger(a), ULong(b)) => ULong(a as u64 + b),
+            (Integer(a), ULong(b)) => {
+                if a < 0 {
+                    ULong(b - a.abs() as u64)
+                } else {
+                    ULong(a as u64 + b)
+                }
+            }
+            (Byte(a), ULong(b)) => {
+                if a < 0 {
+                    ULong(b - a.abs() as u64)
+                } else {
+                    ULong(a as u64 + b)
+                }
+            }
+            (Long(a), Long(b)) => Long(a + b),
+            (Long(a), UInteger(b)) => Long(a + b as i64),
+            (Long(a), Integer(b)) => Long(a + b as i64),
+            (Long(a), Byte(b)) => Long(a + b as i64),
+            (UInteger(a), Long(b)) => Long(a as i64 + b),
+            (Integer(a), Long(b)) => Long(a as i64 + b),
+            (Byte(a), Long(b)) => Long(a as i64 + b),
+            (UInteger(a), UInteger(b)) => UInteger(a + b),
+            (UInteger(a), Integer(b)) => {
+                if b < 0 {
+                    UInteger(a - b.abs() as u32)
+                } else {
+                    UInteger(a + b as u32)
+                }
+            }
+            (UInteger(a), Byte(b)) => {
+                if b < 0 {
+                    UInteger(a - b.abs() as u32)
+                } else {
+                    UInteger(a + b as u32)
+                }
+            }
+            (Integer(a), UInteger(b)) => {
+                if a < 0 {
+                    UInteger(b - a.abs() as u32)
+                } else {
+                    UInteger(a as u32 + b)
+                }
+            }
+            (Byte(a), UInteger(b)) => {
+                if a < 0 {
+                    UInteger(b - a.abs() as u32)
+                } else {
+                    UInteger(a as u32 + b)
+                }
+            }
+            (Integer(a), Integer(b)) => Integer(a + b),
+            (Integer(a), Byte(b)) => Integer(a + b as i32),
+            (Byte(a), Integer(b)) => Integer(a as i32 + b),
+            (Byte(a), Byte(b)) => Byte(a + b),
         }
     }
 }
 
+// If the results occur overflow, the function will panic.
+// You can catch the panic in the caller function.
 impl std::ops::Sub for Primitives {
     type Output = Primitives;
 
     fn sub(self, other: Primitives) -> Self::Output {
         use super::Primitives::*;
         match (self, other) {
-            (Double(_), _) | (_, Double(_)) => Double(self.as_f64().unwrap() - other.as_f64().unwrap()),
-            (Float(_), _) | (_, Float(_)) => Float(self.as_f32().unwrap() - other.as_f32().unwrap()),
-            (ULLong(_), _) | (_, ULLong(_)) => {
-                if self.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else if other.is_negative() {
-                    ULLong(self.as_u128().unwrap() + other.as_i128().unwrap().abs() as u128)
+            (Double(a), Double(b)) => Double(a - b),
+            (Double(a), Float(b)) => Double(a - b as f64),
+            (Double(a), ULLong(b)) => Double(a - b as f64),
+            (Double(a), ULong(b)) => Double(a - b as f64),
+            (Double(a), Long(b)) => Double(a - b as f64),
+            (Double(a), UInteger(b)) => Double(a - b as f64),
+            (Double(a), Integer(b)) => Double(a - b as f64),
+            (Double(a), Byte(b)) => Double(a - b as f64),
+            (Float(a), Double(b)) => Double(a as f64 - b),
+            (ULLong(a), Double(b)) => Double(a as f64 - b),
+            (ULong(a), Double(b)) => Double(a as f64 - b),
+            (Long(a), Double(b)) => Double(a as f64 - b),
+            (UInteger(a), Double(b)) => Double(a as f64 - b),
+            (Integer(a), Double(b)) => Double(a as f64 - b),
+            (Byte(a), Double(b)) => Double(a as f64 - b),
+            (Float(a), Float(b)) => Float(a - b),
+            (Float(a), ULLong(b)) => Float(a - b as f32),
+            (Float(a), ULong(b)) => Float(a - b as f32),
+            (Float(a), Long(b)) => Float(a - b as f32),
+            (Float(a), UInteger(b)) => Float(a - b as f32),
+            (Float(a), Integer(b)) => Float(a - b as f32),
+            (Float(a), Byte(b)) => Float(a - b as f32),
+            (ULLong(a), Float(b)) => Float(a as f32 - b),
+            (ULong(a), Float(b)) => Float(a as f32 - b),
+            (Long(a), Float(b)) => Float(a as f32 - b),
+            (UInteger(a), Float(b)) => Float(a as f32 - b),
+            (Integer(a), Float(b)) => Float(a as f32 - b),
+            (Byte(a), Float(b)) => Float(a as f32 - b),
+            (ULLong(a), ULLong(b)) => ULLong(a - b),
+            (ULLong(a), ULong(b)) => ULLong(a - b as u128),
+            (ULLong(a), Long(b)) => {
+                if b < 0 {
+                    ULLong(a + b.abs() as u128)
                 } else {
-                    ULLong(self.as_u128().unwrap() - other.as_u128().unwrap())
+                    // if a < b, a - b will overflow
+                    ULLong(a - b as u128)
                 }
             }
-            (ULong(_), _) | (_, ULong(_)) => {
-                if self.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else if other.is_negative() {
-                    ULong(self.as_u64().unwrap() + other.as_i64().unwrap().abs() as u64)
+            (ULLong(a), UInteger(b)) => ULLong(a - b as u128),
+            (ULLong(a), Integer(b)) => {
+                if b < 0 {
+                    ULLong(a + b.abs() as u128)
                 } else {
-                    ULong(self.as_u64().unwrap() - other.as_u64().unwrap())
+                    ULLong(a - b as u128)
                 }
             }
-            (Long(_), _) | (_, Long(_)) => Long(self.as_i64().unwrap() - other.as_i64().unwrap()),
-            (UInteger(_), _) | (_, UInteger(_)) => {
-                if self.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else if other.is_negative() {
-                    UInteger(self.as_u32().unwrap() + other.as_i32().unwrap().abs() as u32)
+            (ULLong(a), Byte(b)) => {
+                if b < 0 {
+                    ULLong(a + b.abs() as u128)
                 } else {
-                    UInteger(self.as_u32().unwrap() - other.as_u32().unwrap())
+                    ULLong(a - b as u128)
                 }
             }
-            (Integer(_), _) | (_, Integer(_)) => Integer(self.as_i32().unwrap() - other.as_i32().unwrap()),
-            (Byte(_), _) => Byte(self.as_i8().unwrap() - other.as_i8().unwrap()),
+            (ULong(a), ULLong(b)) => ULLong(a as u128 - b),
+            // could be an unexpected result if a < 0, so as the follows when we do the subtraction between a signed negative number and an unsigned number
+            (Long(a), ULLong(b)) => ULLong(a as u128 - b),
+            (UInteger(a), ULLong(b)) => ULLong(a as u128 - b),
+            (Integer(a), ULLong(b)) => ULLong(a as u128 - b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 - b),
+            (ULong(a), ULong(b)) => ULong(a - b),
+            (ULong(a), Long(b)) => {
+                if b < 0 {
+                    ULong(a + b.abs() as u64)
+                } else {
+                    ULong(a - b as u64)
+                }
+            }
+            (ULong(a), UInteger(b)) => ULong(a - b as u64),
+            (ULong(a), Integer(b)) => {
+                if b < 0 {
+                    ULong(a + b.abs() as u64)
+                } else {
+                    ULong(a - b as u64)
+                }
+            }
+            (ULong(a), Byte(b)) => {
+                if b < 0 {
+                    ULong(a + b.abs() as u64)
+                } else {
+                    ULong(a - b as u64)
+                }
+            }
+            (Long(a), ULong(b)) => ULong(a as u64 - b),
+            (UInteger(a), ULong(b)) => ULong(a as u64 - b),
+            (Integer(a), ULong(b)) => ULong(a as u64 - b),
+            (Byte(a), ULong(b)) => ULong(a as u64 - b),
+            (Long(a), Long(b)) => Long(a - b),
+            (Long(a), UInteger(b)) => Long(a - b as i64),
+            (Long(a), Integer(b)) => Long(a - b as i64),
+            (Long(a), Byte(b)) => Long(a - b as i64),
+            (UInteger(a), Long(b)) => Long(a as i64 - b),
+            (Integer(a), Long(b)) => Long(a as i64 - b),
+            (Byte(a), Long(b)) => Long(a as i64 - b),
+            (UInteger(a), UInteger(b)) => UInteger(a - b),
+            (UInteger(a), Integer(b)) => {
+                if b < 0 {
+                    UInteger(a + b.abs() as u32)
+                } else {
+                    UInteger(a - b as u32)
+                }
+            }
+            (UInteger(a), Byte(b)) => {
+                if b < 0 {
+                    UInteger(a + b.abs() as u32)
+                } else {
+                    UInteger(a - b as u32)
+                }
+            }
+            (Integer(a), UInteger(b)) => UInteger(a as u32 - b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 - b),
+            (Integer(a), Integer(b)) => Integer(a - b),
+            (Integer(a), Byte(b)) => Integer(a - b as i32),
+            (Byte(a), Integer(b)) => Integer(a as i32 - b),
+            (Byte(a), Byte(b)) => Byte(a - b),
         }
     }
 }
 
+// If the results occur overflow, the function will panic.
+// You can catch the panic in the caller function.
 impl std::ops::Mul for Primitives {
     type Output = Primitives;
 
     fn mul(self, other: Primitives) -> Self::Output {
         use super::Primitives::*;
         match (self, other) {
-            (Double(_), _) | (_, Double(_)) => Double(self.as_f64().unwrap() * other.as_f64().unwrap()),
-            (Float(_), _) | (_, Float(_)) => Float(self.as_f32().unwrap() * other.as_f32().unwrap()),
-            (ULLong(_), _) | (_, ULLong(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULLong(self.as_u128().unwrap() * other.as_u128().unwrap())
-                }
-            }
-            (ULong(_), _) | (_, ULong(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULong(self.as_u64().unwrap() * other.as_u64().unwrap())
-                }
-            }
-
-            (Long(_), _) | (_, Long(_)) => Long(self.as_i64().unwrap() * other.as_i64().unwrap()),
-            (UInteger(_), _) | (_, UInteger(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    UInteger(self.as_u32().unwrap() * other.as_u32().unwrap())
-                }
-            }
-            (Integer(_), _) | (_, Integer(_)) => Integer(self.as_i32().unwrap() * other.as_i32().unwrap()),
-            (Byte(_), _) => Byte(self.as_i8().unwrap() * other.as_i8().unwrap()),
+            (Double(a), Double(b)) => Double(a * b),
+            (Double(a), Float(b)) => Double(a * b as f64),
+            (Double(a), ULLong(b)) => Double(a * b as f64),
+            (Double(a), ULong(b)) => Double(a * b as f64),
+            (Double(a), Long(b)) => Double(a * b as f64),
+            (Double(a), UInteger(b)) => Double(a * b as f64),
+            (Double(a), Integer(b)) => Double(a * b as f64),
+            (Double(a), Byte(b)) => Double(a * b as f64),
+            (Float(a), Double(b)) => Double(a as f64 * b),
+            (ULLong(a), Double(b)) => Double(a as f64 * b),
+            (ULong(a), Double(b)) => Double(a as f64 * b),
+            (Long(a), Double(b)) => Double(a as f64 * b),
+            (UInteger(a), Double(b)) => Double(a as f64 * b),
+            (Integer(a), Double(b)) => Double(a as f64 * b),
+            (Byte(a), Double(b)) => Double(a as f64 * b),
+            (Float(a), Float(b)) => Float(a * b),
+            (Float(a), ULLong(b)) => Float(a * b as f32),
+            (Float(a), ULong(b)) => Float(a * b as f32),
+            (Float(a), Long(b)) => Float(a * b as f32),
+            (Float(a), UInteger(b)) => Float(a * b as f32),
+            (Float(a), Integer(b)) => Float(a * b as f32),
+            (Float(a), Byte(b)) => Float(a * b as f32),
+            (ULLong(a), Float(b)) => Float(a as f32 * b),
+            (ULong(a), Float(b)) => Float(a as f32 * b),
+            (Long(a), Float(b)) => Float(a as f32 * b),
+            (UInteger(a), Float(b)) => Float(a as f32 * b),
+            (Integer(a), Float(b)) => Float(a as f32 * b),
+            (Byte(a), Float(b)) => Float(a as f32 * b),
+            (ULLong(a), ULLong(b)) => ULLong(a * b),
+            (ULLong(a), ULong(b)) => ULLong(a * b as u128),
+            // could be an unexpected result if b < 0, so as the follows when we do the multiplication between a signed negative number and an unsigned number
+            (ULLong(a), Long(b)) => ULLong(a * b as u128),
+            (ULLong(a), UInteger(b)) => ULLong(a * b as u128),
+            (ULLong(a), Integer(b)) => ULLong(a * b as u128),
+            (ULLong(a), Byte(b)) => ULLong(a * b as u128),
+            (ULong(a), ULLong(b)) => ULLong(a as u128 * b),
+            (Long(a), ULLong(b)) => ULLong(a as u128 * b),
+            (UInteger(a), ULLong(b)) => ULLong(a as u128 * b),
+            (Integer(a), ULLong(b)) => ULLong(a as u128 * b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 * b),
+            (ULong(a), ULong(b)) => ULong(a * b),
+            (ULong(a), Long(b)) => ULong(a * b as u64),
+            (ULong(a), UInteger(b)) => ULong(a * b as u64),
+            (ULong(a), Integer(b)) => ULong(a * b as u64),
+            (ULong(a), Byte(b)) => ULong(a * b as u64),
+            (Long(a), ULong(b)) => ULong(a as u64 * b),
+            (UInteger(a), ULong(b)) => ULong(a as u64 * b),
+            (Integer(a), ULong(b)) => ULong(a as u64 * b),
+            (Byte(a), ULong(b)) => ULong(a as u64 * b),
+            (Long(a), Long(b)) => Long(a * b),
+            (Long(a), UInteger(b)) => Long(a * b as i64),
+            (Long(a), Integer(b)) => Long(a * b as i64),
+            (Long(a), Byte(b)) => Long(a * b as i64),
+            (UInteger(a), Long(b)) => Long(a as i64 * b),
+            (Integer(a), Long(b)) => Long(a as i64 * b),
+            (Byte(a), Long(b)) => Long(a as i64 * b),
+            (UInteger(a), UInteger(b)) => UInteger(a * b),
+            (UInteger(a), Integer(b)) => UInteger(a * b as u32),
+            (UInteger(a), Byte(b)) => UInteger(a * b as u32),
+            (Integer(a), UInteger(b)) => UInteger(a as u32 * b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 * b),
+            (Integer(a), Integer(b)) => Integer(a * b),
+            (Integer(a), Byte(b)) => Integer(a * b as i32),
+            (Byte(a), Integer(b)) => Integer(a as i32 * b),
+            (Byte(a), Byte(b)) => Byte(a * b),
         }
     }
 }
 
+// If the results occur overflow, the function will panic.
+// You can catch the panic in the caller function.
 impl std::ops::Div for Primitives {
     type Output = Primitives;
 
     fn div(self, other: Primitives) -> Self::Output {
         use super::Primitives::*;
+        // when divide by zero,
+        // if it is a integer division, it should panic
+        // if it is a float division, it should return f64::INFINITY, f64::NEG_INFINITY, or f64::NAN, following IEEE 754 standard
+        // currently, we follow the IEEE 754 standard for all division
         if other == Byte(0)
             || other == Integer(0)
             || other == UInteger(0)
@@ -161,41 +414,86 @@ impl std::ops::Div for Primitives {
         {
             if self.is_negative() {
                 return Double(f64::NEG_INFINITY);
+            } else if self == Byte(0)
+                || self == Integer(0)
+                || self == UInteger(0)
+                || self == Long(0)
+                || self == ULong(0)
+                || self == ULLong(0)
+                || self == Double(0.0)
+                || self == Float(0.0)
+            {
+                return Double(f64::NAN);
             } else {
                 return Double(f64::INFINITY);
             }
         }
         match (self, other) {
-            (Double(_), _) | (_, Double(_)) => Double(self.as_f64().unwrap() / other.as_f64().unwrap()),
-            (Float(_), _) | (_, Float(_)) => Float(self.as_f32().unwrap() / other.as_f32().unwrap()),
-            (ULLong(_), _) | (_, ULLong(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULLong(self.as_u128().unwrap() / other.as_u128().unwrap())
-                }
-            }
-            (ULong(_), _) | (_, ULong(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    ULong(self.as_u64().unwrap() / other.as_u64().unwrap())
-                }
-            }
-
-            (Long(_), _) | (_, Long(_)) => Long(self.as_i64().unwrap() / other.as_i64().unwrap()),
-            (UInteger(_), _) | (_, UInteger(_)) => {
-                if self.is_negative() || other.is_negative() {
-                    // must be negative and will overflow
-                    panic!("overflow");
-                } else {
-                    UInteger(self.as_u32().unwrap() / other.as_u32().unwrap())
-                }
-            }
-            (Integer(_), _) | (_, Integer(_)) => Integer(self.as_i32().unwrap() / other.as_i32().unwrap()),
-            (Byte(_), _) => Byte(self.as_i8().unwrap() / other.as_i8().unwrap()),
+            (Double(a), Double(b)) => Double(a / b),
+            (Double(a), Float(b)) => Double(a / b as f64),
+            (Double(a), ULLong(b)) => Double(a / b as f64),
+            (Double(a), ULong(b)) => Double(a / b as f64),
+            (Double(a), Long(b)) => Double(a / b as f64),
+            (Double(a), UInteger(b)) => Double(a / b as f64),
+            (Double(a), Integer(b)) => Double(a / b as f64),
+            (Double(a), Byte(b)) => Double(a / b as f64),
+            (Float(a), Double(b)) => Double(a as f64 / b),
+            (ULLong(a), Double(b)) => Double(a as f64 / b),
+            (ULong(a), Double(b)) => Double(a as f64 / b),
+            (Long(a), Double(b)) => Double(a as f64 / b),
+            (UInteger(a), Double(b)) => Double(a as f64 / b),
+            (Integer(a), Double(b)) => Double(a as f64 / b),
+            (Byte(a), Double(b)) => Double(a as f64 / b),
+            (Float(a), Float(b)) => Float(a / b),
+            (Float(a), ULLong(b)) => Float(a / b as f32),
+            (Float(a), ULong(b)) => Float(a / b as f32),
+            (Float(a), Long(b)) => Float(a / b as f32),
+            (Float(a), UInteger(b)) => Float(a / b as f32),
+            (Float(a), Integer(b)) => Float(a / b as f32),
+            (Float(a), Byte(b)) => Float(a / b as f32),
+            (ULLong(a), Float(b)) => Float(a as f32 / b),
+            (ULong(a), Float(b)) => Float(a as f32 / b),
+            (Long(a), Float(b)) => Float(a as f32 / b),
+            (UInteger(a), Float(b)) => Float(a as f32 / b),
+            (Integer(a), Float(b)) => Float(a as f32 / b),
+            (Byte(a), Float(b)) => Float(a as f32 / b),
+            (ULLong(a), ULLong(b)) => ULLong(a / b),
+            (ULLong(a), ULong(b)) => ULLong(a / b as u128),
+            // could be an unexpected result if b < 0, so as the follows when we do the division between a signed negative number and an unsigned number
+            (ULLong(a), Long(b)) => ULLong(a / b as u128),
+            (ULLong(a), UInteger(b)) => ULLong(a / b as u128),
+            (ULLong(a), Integer(b)) => ULLong(a / b as u128),
+            (ULLong(a), Byte(b)) => ULLong(a / b as u128),
+            (ULong(a), ULLong(b)) => ULLong(a as u128 / b),
+            (Long(a), ULLong(b)) => ULLong(a as u128 / b),
+            (UInteger(a), ULLong(b)) => ULLong(a as u128 / b),
+            (Integer(a), ULLong(b)) => ULLong(a as u128 / b),
+            (Byte(a), ULLong(b)) => ULLong(a as u128 / b),
+            (ULong(a), ULong(b)) => ULong(a / b),
+            (ULong(a), Long(b)) => ULong(a / b as u64),
+            (ULong(a), UInteger(b)) => ULong(a / b as u64),
+            (ULong(a), Integer(b)) => ULong(a / b as u64),
+            (ULong(a), Byte(b)) => ULong(a / b as u64),
+            (Long(a), ULong(b)) => ULong(a as u64 / b),
+            (UInteger(a), ULong(b)) => ULong(a as u64 / b),
+            (Integer(a), ULong(b)) => ULong(a as u64 / b),
+            (Byte(a), ULong(b)) => ULong(a as u64 / b),
+            (Long(a), Long(b)) => Long(a / b),
+            (Long(a), UInteger(b)) => Long(a / b as i64),
+            (Long(a), Integer(b)) => Long(a / b as i64),
+            (Long(a), Byte(b)) => Long(a / b as i64),
+            (UInteger(a), Long(b)) => Long(a as i64 / b),
+            (Integer(a), Long(b)) => Long(a as i64 / b),
+            (Byte(a), Long(b)) => Long(a as i64 / b),
+            (UInteger(a), UInteger(b)) => UInteger(a / b),
+            (UInteger(a), Integer(b)) => UInteger(a / b as u32),
+            (UInteger(a), Byte(b)) => UInteger(a / b as u32),
+            (Integer(a), UInteger(b)) => UInteger(a as u32 / b),
+            (Byte(a), UInteger(b)) => UInteger(a as u32 / b),
+            (Integer(a), Integer(b)) => Integer(a / b),
+            (Integer(a), Byte(b)) => Integer(a / b as i32),
+            (Byte(a), Integer(b)) => Integer(a as i32 / b),
+            (Byte(a), Byte(b)) => Byte(a / b),
         }
     }
 }
@@ -460,7 +758,23 @@ impl BitOperand for Primitives {
 // test arithmetic operations
 mod tests {
     use super::*;
-    use std::panic;
+    use std::{panic, u32};
+
+    #[test]
+    fn test_simple() {
+        let a: f64 = -1.0;
+        let b: u32 = a as u32;
+        assert_eq!(b, 0);
+
+        let a: i64 = -1;
+        let b: u32 = a as u32;
+        assert_eq!(b, 4294967295);
+
+        // this will overflow and cannot pass the compilation
+        // let a: u128 = 1;
+        // let b: i64 = 2;
+        // let c: u128 = a - b as u128;
+    }
 
     #[test]
     fn test_add_signed_with_unsigned() {
@@ -567,12 +881,14 @@ mod tests {
 
     #[test]
     fn test_sub_signed_with_unsigned() {
-        // i32 - u32 or u32 - i32, -> u32
-        let x = Primitives::Integer(-10);
-        let y = Primitives::UInteger(20);
-        // -10 - 20
+        let x = Primitives::ULLong(1);
+        let y = Primitives::Long(2);
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
+
+        // u32 - i32, -> u32
+        let x = Primitives::Integer(-10);
+        let y = Primitives::UInteger(20);
         // 20 - (-10)
         if let Primitives::UInteger(result) = y - x {
             assert_eq!(result, 30);
@@ -580,13 +896,9 @@ mod tests {
             panic!("Expected UInteger result");
         }
 
-        // i32 - u64 or u64 - i32, -> u64
+        // u64 - i32, -> u64
         let x = Primitives::Integer(-20);
         let y = Primitives::ULong(30);
-
-        // -20 - 30
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
         // 30 - (-20)
         if let Primitives::ULong(result) = y - x {
             assert_eq!(result, 50);
@@ -611,18 +923,33 @@ mod tests {
             panic!("Expected Long result");
         }
 
-        // i64 - u64 or u64 - i64, -> u64
+        // u64 - i64, -> u64
         let x = Primitives::Long(-20);
         let y = Primitives::ULong(30);
-        // -20 - 30
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
         // 30 - (-20)
         if let Primitives::ULong(result) = y - x {
             assert_eq!(result, 50);
         } else {
             panic!("Expected Long result");
         }
+
+        // i32 - u32 -> u32, when i32 is negative
+        let x = Primitives::Integer(-1);
+        let y = Primitives::UInteger(0);
+        // -1_i32 - 0_u32, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::UInteger(u32::MAX));
+
+        // i32 - u64 -> u64, when i32 is negative
+        let x = Primitives::Integer(-1);
+        let y = Primitives::ULong(0);
+        // -1_i32 - 0_u64, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::ULong(u64::MAX));
+
+        // i64 - u64 -> u64, when i64 is negative
+        let x = Primitives::Long(-1);
+        let y = Primitives::ULong(0);
+        // -1_i64 - 0_u64, won't overflow, but the result is not correct
+        assert_eq!(x - y, Primitives::ULong(u64::MAX));
     }
 
     #[test]
@@ -651,18 +978,6 @@ mod tests {
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
 
-        // i32 - u32 -> u32 overflow
-        let x = Primitives::Integer(-10);
-        let y = Primitives::UInteger(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
-
-        // i32 - u64 -> u64 overflow
-        let x = Primitives::Integer(-10);
-        let y = Primitives::ULong(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
-
         // i64 - u32 -> i64 not overflow
         let x = Primitives::Long(-10);
         let y = Primitives::UInteger(20);
@@ -678,12 +993,6 @@ mod tests {
         let y = Primitives::UInteger(20);
         let res = panic::catch_unwind(|| x - y);
         assert!(res.is_err());
-
-        // i64 - u64 -> u64 overflow
-        let x = Primitives::Long(-10);
-        let y = Primitives::ULong(20);
-        let res = panic::catch_unwind(|| x - y);
-        assert!(res.is_err());
     }
 
     #[test]
@@ -691,8 +1000,8 @@ mod tests {
         // divide_uint32_int32_overflow 4294967295/-1
         let x = Primitives::UInteger(u32::MAX);
         let y = Primitives::Integer(-1);
-        let res = panic::catch_unwind(|| x / y);
-        assert!(res.is_err());
+        // divide u32 by a negative number, won't panic, but the result is not correct
+        assert_eq!(x / y, Primitives::UInteger(1));
 
         // divide_int32_int32_overflow -2147483648/-1
         let x = Primitives::Integer(i32::MIN);

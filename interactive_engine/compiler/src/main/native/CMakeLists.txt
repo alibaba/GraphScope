@@ -18,6 +18,12 @@ project(COMPILER-JNI
 
 option(BUILD_TEST "Whether to build test" ON)
 
+include(GNUInstallDirs)
+set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-rpath,$ORIGIN")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+
 set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 set(CMAKE_CXX_STANDARD 17)
 find_package(JNI QUIET)
@@ -45,8 +51,6 @@ set(CODE_GEN_PROTOBUF_FILES
         ${GIE_COMPILER_PROTO_DIR}/basic_type.proto
 )
 
-#create directory first
-file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie)
 
 # proto gen for gie proto
 protobuf_generate(APPEND_PATH
@@ -55,21 +59,55 @@ protobuf_generate(APPEND_PATH
         OUT_VAR PROTO_SRCS_GIE
         PROTOS ${CODE_GEN_PROTOBUF_FILES}
         IMPORT_DIRS ${GIE_COMPILER_PROTO_DIR}
-        PROTOC_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/flex/proto_generated_gie
+        PROTOC_OUT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
 
-add_library(ir_proto SHARED ${PROTO_SRCS_GIE})
-
-target_link_libraries(ir_proto ${Protobuf_LIBRARIES})
-
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 file(GLOB_RECURSE PLANNER_SRC_FILES "graph_planner.cc")
-add_library(graph_planner SHARED ${PLANNER_SRC_FILES})
-target_link_libraries(graph_planner PUBLIC ir_proto ${CMAKE_JNI_LINKER_FLAGS} ${JAVA_JVM_LIBRARY} ${JNI_LIBRARIES} ${Protobuf_LIBRARIES})
+add_library(graph_planner SHARED ${PLANNER_SRC_FILES} ${PROTO_SRCS_GIE})
+target_link_libraries(graph_planner ${CMAKE_JNI_LINKER_FLAGS} ${JAVA_JVM_LIBRARY} ${JNI_LIBRARIES} ${Protobuf_LIBRARIES})
 target_include_directories(graph_planner PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 if (BUILD_TEST)
     add_executable(test_graph_planner test/test.cc)
     target_link_libraries(test_graph_planner PRIVATE graph_planner)
 endif()
+
+# Define where the output library will be installed
+install(TARGETS graph_planner
+    EXPORT GraphPlannerTargets
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+)
+
+# Install header files
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include/ DESTINATION include)
+
+# Export CMake package configuration
+install(EXPORT GraphPlannerTargets
+    FILE GraphPlannerTargets.cmake
+    NAMESPACE GraphPlanner::
+    DESTINATION lib/cmake/GraphPlanner
+)
+
+# Create a GraphPlannerConfig.cmake file for find_package()
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/GraphPlannerConfigVersion.cmake"
+    VERSION 1.0.0
+    COMPATIBILITY AnyNewerVersion
+)
+
+configure_package_config_file(
+    "${CMAKE_SOURCE_DIR}/cmake/GraphPlannerConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/GraphPlannerConfig.cmake"
+    INSTALL_DESTINATION lib/cmake/GraphPlanner
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/GraphPlannerConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/GraphPlannerConfigVersion.cmake"
+    DESTINATION lib/cmake/GraphPlanner
+)

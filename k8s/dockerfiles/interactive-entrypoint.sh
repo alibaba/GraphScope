@@ -50,17 +50,16 @@ function prepare_workspace() {
         mkdir -p ${workspace}
         mkdir -p ${workspace}/conf/
     else 
-        echo "Workspace ${workspace} already exists"
-        return 0
+        if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
+            echo "Workspace ${workspace} already exists"
+            return 0
+        fi
     fi
     # prepare interactive_config.yaml
     engine_config_path="${workspace}/conf/interactive_config.yaml"
     cp ${DEFAULT_INTERACTIVE_CONFIG_FILE} $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
-    # By default, we occupy the all available cpus
-    cpus=$(grep -c ^processor /proc/cpuinfo)
-    sed -i "s/thread_num_per_worker:.*/thread_num_per_worker: ${cpus}/" $engine_config_path
     echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
     
     # copy the builtin graph

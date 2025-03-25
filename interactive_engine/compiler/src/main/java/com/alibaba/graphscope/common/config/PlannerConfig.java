@@ -13,7 +13,7 @@ public class PlannerConfig {
                     "graph.planner.rules",
                     "FilterIntoJoinRule,FilterMatchRule,ExtendIntersectRule,ExpandGetVFusionRule");
     public static final Config<Integer> GRAPH_PLANNER_CBO_GLOGUE_SIZE =
-            Config.intConfig("graph.planner.cbo.glogue.size", 3);
+            Config.intConfig("graph.planner.cbo.glogue.size", 2);
     public static final Config<Integer> JOIN_MIN_PATTERN_SIZE =
             Config.intConfig("graph.planner.join.min.pattern.size", 5);
     public static final Config<Integer> JOIN_COST_FACTOR_1 =
@@ -38,13 +38,17 @@ public class PlannerConfig {
             Config.intConfig("graph.planner.group.size", 8);
     public static final Config<Integer> GRAPH_PLANNER_GROUP_CLEAR_INTERVAL_MINUTES =
             Config.intConfig("graph.planner.group.clear.interval.minutes", 30);
+    public static final Config<String> TRIM_CLASS_NAMES =
+            Config.stringConfig("graph.planner.trim.class.names", "GraphLogicalExpand");
 
     private final Configs configs;
     private final List<String> rules;
+    private final List<String> trimClasses;
 
     public PlannerConfig(Configs configs) {
         this.configs = configs;
         this.rules = Utils.convertDotString(GRAPH_PLANNER_RULES.get(configs));
+        this.trimClasses = Utils.convertDotString(TRIM_CLASS_NAMES.get(configs));
     }
 
     public enum Opt {
@@ -78,6 +82,10 @@ public class PlannerConfig {
 
     public int getJoinCostFactor2() {
         return JOIN_COST_FACTOR_2.get(configs);
+    }
+
+    public List<String> getTrimClassNames() {
+        return Collections.unmodifiableList(trimClasses);
     }
 
     public boolean labelConstraintsEnabled() {

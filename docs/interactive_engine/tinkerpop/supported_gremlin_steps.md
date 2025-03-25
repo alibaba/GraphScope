@@ -707,7 +707,7 @@ g.V().out("1..10").with('RESULT_OPT', 'ALL_V')
 # unfold vertices in the path collection
 g.V().out("1..10").with('RESULT_OPT', 'ALL_V').endV()
 ```
-#### Getting Properites
+#### Getting Properties
 The properties of the elements (vertices and/or edges) in the path can be projected by `values()`-step, `valueMap()`-step, and `elementMap()`-step.
 It is important to note that the specific elements targeted for property projection are determined by the `RESULT_OPT` setting. 
 For instance, if you configure `RESULT_OPT` as `ALL_V`,  `values()`, `valueMap()`, or `elementMap()` will then project the properties of all vertices present in the path. It's important to be aware that:

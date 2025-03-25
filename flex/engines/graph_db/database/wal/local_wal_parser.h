@@ -24,10 +24,10 @@ namespace gs {
 class LocalWalParser : public IWalParser {
  public:
   static std::unique_ptr<IWalParser> Make(const std::string& wal_dir) {
-    return std::unique_ptr<IWalParser>(new LocalWalParser());
+    return std::unique_ptr<IWalParser>(new LocalWalParser(wal_dir));
   }
 
-  LocalWalParser();
+  LocalWalParser(const std::string& wal_uri);
   ~LocalWalParser() { close(); }
 
   void open(const std::string& wal_uri) override;
@@ -41,8 +41,7 @@ class LocalWalParser : public IWalParser {
   std::vector<int> fds_;
   std::vector<void*> mmapped_ptrs_;
   std::vector<size_t> mmapped_size_;
-  WalContentUnit* insert_wal_list_;
-  size_t insert_wal_list_size_;
+  std::vector<WalContentUnit> insert_wal_list_;
   uint32_t last_ts_{0};
 
   std::vector<UpdateWalUnit> update_wal_list_;
