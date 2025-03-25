@@ -1619,4 +1619,17 @@ mod tests {
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
     }
+
+    #[test]
+    fn test_eval_empty_string() {
+        let map1: HashMap<NameOrId, Object> =
+            vec![(NameOrId::from("emptyProp".to_string()), Object::String("".to_string()))]
+                .into_iter()
+                .collect();
+
+        let ctxt = Vertices { vec: vec![Vertex::new(1, Some(9.into()), DynDetails::new(map1))] };
+        let case = "@0.emptyProp == \"\""; // true
+        let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+        assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), object!(true));
+    }
 }
