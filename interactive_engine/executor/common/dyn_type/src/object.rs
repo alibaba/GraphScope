@@ -540,9 +540,6 @@ impl PartialOrd for Primitives {
                 .as_f64()
                 .map(|o| v.partial_cmp(&o))
                 .unwrap_or(None),
-            Primitives::UInteger(_) => todo!(),
-            Primitives::ULong(_) => todo!(),
-            Primitives::Float(_) => todo!(),
         }
     }
 }

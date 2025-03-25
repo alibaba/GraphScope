@@ -682,7 +682,7 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
             Primitives::UInteger(i) => Property::UInt(i),
             Primitives::Long(i) => Property::Long(i),
             Primitives::ULong(i) => Property::ULong(i),
-            Primitives::ULLong(i) => Property::ULong(i as u64),
+            Primitives::ULLong(i) => Property::ULong(i),
             Primitives::Float(f) => Property::Float(f),
             Primitives::Double(f) => Property::Double(f),
         },
@@ -691,14 +691,6 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
             if let Some(probe) = vec.get(0) {
                 match probe {
                     Object::Primitive(p) => match p {
-                        Primitives::Byte(_) | Primitives::Integer(_) | Primitives::UInteger(_) => {
-                            Property::ListInt(
-                                vec.into_iter()
-                                    .map(|i| i.as_i32().unwrap())
-                                    .collect(),
-                            )
-                        }
-                        Primitives::Long(_) | Primitives::ULong(_) => Property::ListLong(
                         Primitives::Byte(_) | Primitives::Integer(_) | Primitives::UInteger(_) => {
                             Property::ListInt(
                                 vec.into_iter()
@@ -716,12 +708,6 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
                                 .map(|i| i.as_u128().unwrap() as i64)
                                 .collect(),
                         ),
-                        Primitives::Float(_) => Property::ListFloat(
-                            vec.into_iter()
-                                .map(|i| i.as_f32().unwrap())
-                                .collect(),
-                        ),
-                        Primitives::Double(_) => Property::ListDouble(
                         Primitives::Float(_) => Property::ListFloat(
                             vec.into_iter()
                                 .map(|i| i.as_f32().unwrap())
