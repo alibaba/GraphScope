@@ -22,15 +22,35 @@
 namespace gs {
 
 std::unique_ptr<IWalWriter> KafkaWalWriter::Make() {
-  // Get env KAFKA_BROKER_LIST
-  const char* broker_list = std::getenv("KAFKA_BROKER_LIST");
-  if (broker_list == nullptr) {
-    LOG(FATAL) << "KAFKA_BROKER_LIST is not set";
-  }
-  return std::unique_ptr<IWalWriter>(new KafkaWalWriter(broker_list));
+  return std::unique_ptr<IWalWriter>(new KafkaWalWriter());
 }
 
-void KafkaWalWriter::open(const std::string& topic, int thread_id) {
+void KafkaWalWriter::open(const std::string& uri, int thread_id) {
+  const std::string prefix = "kafka://";
+  if (uri.find(prefix) != 0) {
+    LOG(FATAL) << "Invalid uri: " << uri;
+  }
+
+  std::string hosts_part = uri.substr(prefix.length());
+  size_t query_pos = hosts_part.find('/');
+  std::string hosts;
+  std::string query;
+  cppkafka::Configuration config;
+  if (query_pos != std::string::npos) {
+    hosts = hosts_part.substr(0, query_pos);
+    query = hosts_part.substr(query_pos + 1);
+  } else {
+    LOG(FATAL) << "Invalid uri: " << uri;
+  }
+  kafka_brokers_ = hosts;
+  size_t top_pos = query.find('?');
+  std::string topic;
+  if (top_pos != std::string::npos) {
+    topic = query.substr(0, top_pos);
+  } else {
+    topic = query;
+  }
+
   if (thread_id_ != -1 || producer_) {
     LOG(FATAL) << "KafkaWalWriter has been opened";
   }

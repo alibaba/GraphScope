@@ -293,13 +293,19 @@ void GraphDB::start_kafka_wal_ingester(const cppkafka::Configuration& config,
     }
   }
   kafka_wal_ingester_thread_running_ = true;
+
   kafka_wal_ingester_thread_ = std::thread([&]() {
     std::vector<char> buffer;
     gs::Encoder encoder(buffer);
-    encoder.put_string(config.get("metadata.broker.list"));
-    encoder.put_string(config.get("group.id"));
-    encoder.put_byte(config.get("enable.auto.commit") == "true");
+    encoder.put_string("topic_name");
     encoder.put_string(topic_name);
+    const auto& mp = config.get_all();
+    encoder.put_string("metadata.broker.list");
+    encoder.put_string(mp.at("metadata.broker.list"));
+    encoder.put_string("group.id");
+    encoder.put_string(mp.at("group.id"));
+    encoder.put_string("enable.auto.commit");
+    encoder.put_string(mp.at("enable.auto.commit"));
     gs::Decoder decoder(buffer.data(), buffer.size());
     KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
   });

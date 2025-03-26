@@ -36,16 +36,54 @@ std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
   return partitions;
 }
 
-std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string&) {
-  const char* broker_list = std::getenv("KAFKA_BROKER_LIST");
-  if (broker_list == nullptr) {
-    LOG(FATAL) << "KAFKA_BROKER_LIST is not set";
+std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string& uri) {
+  // uri should be like
+  // "kafka://localhost:9092,localhost:9093/my_topic?group.id=my_consumer_group&
+  // auto.offset.reset=earliest&enable.auto.commit=false";
+  const std::string prefix = "kafka://";
+  if (uri.find(prefix) != 0) {
+    LOG(FATAL) << "Invalid uri: " << uri;
   }
-  const char* group_id = std::getenv("KAFKA_GROUP_ID");
-  std::string group_id_str = group_id ? group_id : "interactive_consumer";
-  cppkafka::Configuration config = {{"metadata.broker.list", broker_list},
-                                    {"group.id", group_id_str}};
-  return std::unique_ptr<IWalParser>(new KafkaWalParser(config));
+
+  std::string hosts_part = uri.substr(prefix.length());
+  size_t query_pos = hosts_part.find('/');
+  std::string hosts;
+  std::string query;
+  cppkafka::Configuration config;
+  if (query_pos != std::string::npos) {
+    hosts = hosts_part.substr(0, query_pos);
+    query = hosts_part.substr(query_pos + 1);
+  } else {
+    LOG(FATAL) << "Invalid uri: " << uri;
+  }
+  size_t top_pos = query.find('?');
+  std::string topic_name;
+  if (top_pos != std::string::npos) {
+    topic_name = query.substr(0, top_pos);
+    query = query.substr(top_pos + 1);
+  } else {
+    LOG(FATAL) << "Invalid uri: " << uri;
+  }
+  std::istringstream query_stream(query);
+  std::string pair;
+  while (std::getline(query_stream, pair, '&')) {
+    size_t eq_pos = pair.find('=');
+    if (eq_pos != std::string::npos) {
+      std::string key = pair.substr(0, eq_pos);
+      std::string value = pair.substr(eq_pos + 1);
+      if (key == "group.id") {
+        config.set("group.id", value);
+      } else if (key == "auto.offset.reset") {
+        config.set("auto.offset.reset", value);
+      } else if (key == "enable.auto.commit") {
+        config.set("enable.auto.commit", value);
+      }
+    }
+  }
+
+  auto parser = std::unique_ptr<IWalParser>(new KafkaWalParser(config));
+  parser->open(topic_name);
+  return parser;
 }
 
 KafkaWalParser::KafkaWalParser(const cppkafka::Configuration& config)

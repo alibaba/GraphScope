@@ -36,12 +36,13 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Kafka brokers: " << kafka_brokers;
 
   // Write messages to the specified kafka topic, and read them back.
-  gs::KafkaWalWriter writer(kafka_brokers);
+  gs::KafkaWalWriter writer;
   cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
                                     {"group.id", "test"},
                                     {"enable.auto.commit", false}};
   gs::KafkaWalParser parser(config);
-  writer.open(kafka_topic, 0);
+  std::string uri = "kafka://" + kafka_brokers + "/" + kafka_topic;
+  writer.open(uri, 0);
 
   // Let user enter number of messages to write
   LOG(INFO) << "Enter number of messages to write: ";

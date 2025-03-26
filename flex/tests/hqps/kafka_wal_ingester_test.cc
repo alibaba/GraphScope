@@ -41,9 +41,9 @@ int main(int argc, char** argv) {
   std::string kafka_brokers = argv[2];
   std::string kafka_topic = argv[3];
   db.Open(schema, work_dir, 1);
-
-  gs::KafkaWalWriter writer(kafka_brokers);
-  writer.open(kafka_topic, 0);
+  std::string uri = "kafka://" + kafka_brokers + "/" + kafka_topic;
+  gs::KafkaWalWriter writer;
+  writer.open(uri, 0);
   grape::InArchive in_archive;
   in_archive.Resize(sizeof(gs::WalHeader));
   gs::label_t label = db.schema().get_vertex_label_id("PERSON");

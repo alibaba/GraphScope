@@ -42,9 +42,9 @@ class KafkaWalWriter : public IWalWriter {
 
   static std::unique_ptr<IWalWriter> Make();
 
-  KafkaWalWriter(const std::string& kafka_brokers)
+  KafkaWalWriter()
       : thread_id_(-1),
-        kafka_brokers_(kafka_brokers),
+        kafka_brokers_(""),
         kafka_topic_(""),
         producer_(nullptr),
         builder_("") {}  // brokers could be a list of brokers

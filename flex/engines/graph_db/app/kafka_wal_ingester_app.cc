@@ -75,17 +75,19 @@ class KafkaWalConsumer {
 
 bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
                                 Encoder& output) {
-  // TODO: get value from config
-  std::string kafka_brokers = std::string(input.get_string());
-  std::string group_id = std::string(input.get_string());
-  bool enable_auto_commit = input.get_byte();
-  std::string topic_name = std::string(input.get_string());
-  LOG(INFO) << "Kafka brokers: " << kafka_brokers;
+  cppkafka::Configuration config;
+  std::string topic_name;
+  while (!input.empty()) {
+    auto key = input.get_string();
+    auto value = input.get_string();
+    if (key == "topic_name") {
+      topic_name = value;
+    } else {
+      config.set(std::string(key), std::string(value));
+    }
+  }
+  LOG(INFO) << "Kafka brokers: " << config.get("metadata.broker.list");
 
-  cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
-                                    {"group.id", group_id},
-                                    // Disable auto commit
-                                    {"enable.auto.commit", enable_auto_commit}};
   gs::KafkaWalConsumer consumer(config, topic_name, 1);
   // TODO: how to make it stop
   while (graph.db().kafka_wal_ingester_state()) {
