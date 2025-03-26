@@ -40,38 +40,51 @@ int main(int argc, char** argv) {
   std::string work_dir = argv[1];
   std::string kafka_brokers = argv[2];
   std::string kafka_topic = argv[3];
-  db.Open(schema, work_dir, 1);
-  std::string uri = "kafka://" + kafka_brokers + "/" + kafka_topic;
-  gs::KafkaWalWriter writer;
-  writer.open(uri, 0);
-  grape::InArchive in_archive;
-  in_archive.Resize(sizeof(gs::WalHeader));
-  gs::label_t label = db.schema().get_vertex_label_id("PERSON");
-  in_archive << static_cast<uint8_t>(0) << label;
-  int64_t id = 998244353;
-  in_archive << id;
-  int64_t weight = 100;
-  in_archive << weight;
-  auto header = reinterpret_cast<gs::WalHeader*>(in_archive.GetBuffer());
-  header->timestamp = 1;
-  header->type = 0;
-  header->length = in_archive.GetSize() - sizeof(gs::WalHeader);
-  writer.append(in_archive.GetBuffer(), in_archive.GetSize());
-  writer.close();
-  cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
-                                    {"group.id", "test"},
-                                    {"enable.auto.commit", false}};
-  db.start_kafka_wal_ingester(config, kafka_topic);
-  std::this_thread::sleep_for(std::chrono::seconds(1));
-  db.stop_kafka_wal_ingester();
-  auto txn = db.GetReadTransaction(0);
-  gs::vid_t lid;
-  CHECK(txn.GetVertexNum(label) == 1);
-  CHECK(txn.GetVertexIndex(label, id, lid));
-  auto iter = txn.GetVertexIterator(label);
-  CHECK(iter.GetField(0).AsInt64() == 100);
-  std::cout << "Vertex id: " << lid << std::endl;
-  db.Close();
+  gs::GraphDBConfig config(schema, work_dir, "", 1);
+  std::string uri = "kafka://" + kafka_brokers + "/" + kafka_topic +
+                    "?group.id=test&enable.auto.commit=false";
+  config.wal_uri = uri;
+  db.Open(config);
+  {
+    auto txn = db.GetInsertTransaction(0);
+    gs::label_t label = db.schema().get_vertex_label_id("PERSON");
+    int64_t id = 998244353;
+    int64_t weight = 100;
+    txn.AddVertex(label, id, {gs::Any(weight)});
+    txn.Commit();
+  }
+
+  gs::GraphDB db2;
+  db2.Open(config);
+
+  CHECK(db2.GetReadTransaction(0).GetVertexNum(0) == 1)
+      << "Vertex num: " << db2.GetReadTransaction(0).GetVertexNum(0);
+  cppkafka::Configuration config1 = {{"metadata.broker.list", kafka_brokers},
+                                     {"group.id", "test"},
+                                     {"enable.auto.commit", false}};
+  db2.start_kafka_wal_ingester(config1, kafka_topic);
+
+  {
+    auto txn = db.GetInsertTransaction(0);
+    gs::label_t label = db.schema().get_vertex_label_id("PERSON");
+    int64_t id = 998244354;
+    int64_t weight = 200;
+    txn.AddVertex(label, id, {gs::Any(weight)});
+    txn.Commit();
+  }
+  LOG(INFO) << db.GetReadTransaction(0).GetVertexNum(0);
+
+  std::this_thread::sleep_for(std::chrono::seconds(3));
+  {
+    auto txn = db2.GetReadTransaction(0);
+    CHECK(txn.GetVertexNum(0) == 3) << "Vertex num: " << txn.GetVertexNum(0);
+    gs::vid_t lid;
+    CHECK(txn.GetVertexIndex(0, 998244353L, lid));
+    LOG(INFO) << "Vertex id: " << lid;
+    CHECK(txn.GetVertexIndex(0, 998244354L, lid));
+    LOG(INFO) << "Vertex id: " << lid;
+    db2.stop_kafka_wal_ingester();
+  }
 #endif
   return 0;
 }

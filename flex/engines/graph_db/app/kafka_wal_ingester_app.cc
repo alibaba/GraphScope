@@ -96,7 +96,6 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
       std::this_thread::sleep_for(gs::KafkaWalConsumer::POLL_TIMEOUT);
       continue;
     }
-
     auto header = reinterpret_cast<const WalHeader*>(res.data());
     if (header->type == 0) {
       auto txn = graph.GetInsertTransaction();

@@ -22,6 +22,10 @@ std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
     const cppkafka::Configuration& config, const std::string& topic_name) {
   std::vector<cppkafka::TopicPartition> partitions;
   cppkafka::Consumer consumer(config);  // tmp consumer
+  LOG(INFO) << config.get("metadata.broker.list");
+  LOG(INFO) << config.get("group.id");
+
+  LOG(INFO) << "Get metadata for topic " << topic_name;
   auto meta_vector = consumer.get_metadata().get_topics({topic_name});
   if (meta_vector.empty()) {
     LOG(WARNING) << "Failed to get metadata for topic " << topic_name
@@ -50,12 +54,14 @@ std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string& uri) {
   std::string hosts;
   std::string query;
   cppkafka::Configuration config;
+
   if (query_pos != std::string::npos) {
     hosts = hosts_part.substr(0, query_pos);
     query = hosts_part.substr(query_pos + 1);
   } else {
     LOG(FATAL) << "Invalid uri: " << uri;
   }
+  config.set("metadata.broker.list", hosts);
   size_t top_pos = query.find('?');
   std::string topic_name;
   if (top_pos != std::string::npos) {
@@ -179,7 +185,7 @@ const std::vector<UpdateWalUnit>& KafkaWalParser::get_update_wals() const {
 }
 
 const bool KafkaWalParser::registered_ = WalParserFactory::RegisterWalParser(
-    "kafaka", static_cast<WalParserFactory::wal_parser_initializer_t>(
-                  &KafkaWalParser::Make));
+    "kafka", static_cast<WalParserFactory::wal_parser_initializer_t>(
+                 &KafkaWalParser::Make));
 
 }  // namespace gs
