@@ -36,7 +36,7 @@ class KafkaWalConsumer {
   // always track all partitions and from begining
   KafkaWalConsumer(cppkafka::Configuration config,
                    const std::string& topic_name, int32_t thread_num) {
-    auto topic_partitions = get_all_topic_partitions(config, topic_name);
+    auto topic_partitions = get_all_topic_partitions(config, topic_name, false);
     consumers_.reserve(topic_partitions.size());
     for (size_t i = 0; i < topic_partitions.size(); ++i) {
       consumers_.emplace_back(std::make_unique<cppkafka::Consumer>(config));

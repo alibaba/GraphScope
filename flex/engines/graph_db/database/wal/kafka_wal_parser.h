@@ -26,7 +26,8 @@ namespace gs {
  * Get all partitions of the given topic.
  */
 std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
-    const cppkafka::Configuration& config, const std::string& topic_name);
+    const cppkafka::Configuration& config, const std::string& topic_name,
+    bool from_beginning = true);
 
 class KafkaWalParser : public IWalParser {
  public:

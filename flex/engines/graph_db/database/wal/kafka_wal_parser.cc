@@ -19,7 +19,8 @@
 namespace gs {
 
 std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
-    const cppkafka::Configuration& config, const std::string& topic_name) {
+    const cppkafka::Configuration& config, const std::string& topic_name,
+    bool from_beginning) {
   std::vector<cppkafka::TopicPartition> partitions;
   cppkafka::Consumer consumer(config);  // tmp consumer
   LOG(INFO) << config.get("metadata.broker.list");
@@ -34,16 +35,20 @@ std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
   }
   auto metadata = meta_vector.front().get_partitions();
   for (const auto& partition : metadata) {
-    partitions.push_back(cppkafka::TopicPartition(
-        topic_name, partition.get_id(), 0));  // from the beginning
+    if (from_beginning) {
+      partitions.push_back(
+          cppkafka::TopicPartition(topic_name, partition.get_id(), 0));
+    } else {
+      partitions.push_back(cppkafka::TopicPartition(
+          topic_name, partition.get_id()));  // from the beginning
+    }
   }
   return partitions;
 }
 
 std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string& uri) {
   // uri should be like
-  // "kafka://localhost:9092,localhost:9093/my_topic?group.id=my_consumer_group&
-  // auto.offset.reset=earliest&enable.auto.commit=false";
+  // "kafka://localhost:9092,localhost:9093/my_topic?group.id=my_consumer_group"
   const std::string prefix = "kafka://";
   if (uri.find(prefix) != 0) {
     LOG(FATAL) << "Invalid uri: " << uri;
@@ -79,13 +84,10 @@ std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string& uri) {
       std::string value = pair.substr(eq_pos + 1);
       if (key == "group.id") {
         config.set("group.id", value);
-      } else if (key == "auto.offset.reset") {
-        config.set("auto.offset.reset", value);
-      } else if (key == "enable.auto.commit") {
-        config.set("enable.auto.commit", value);
       }
     }
   }
+  config.set("enable.auto.commit", false);
 
   auto parser = std::unique_ptr<IWalParser>(new KafkaWalParser(config));
   parser->open(topic_name);
@@ -124,6 +126,7 @@ void KafkaWalParser::open(
         }
       }
     }
+    consumer_->commit();
   }
 
   for (auto& wal : message_vector_) {

@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
   std::string kafka_brokers = argv[2];
   std::string kafka_topic = argv[3];
   gs::GraphDBConfig config(schema, work_dir, "", 1);
-  std::string uri = "kafka://" + kafka_brokers + "/" + kafka_topic +
-                    "?group.id=test&enable.auto.commit=false";
+  std::string uri =
+      "kafka://" + kafka_brokers + "/" + kafka_topic + "?group.id=test";
   config.wal_uri = uri;
   db.Open(config);
   {
@@ -61,7 +61,8 @@ int main(int argc, char** argv) {
       << "Vertex num: " << db2.GetReadTransaction(0).GetVertexNum(0);
   cppkafka::Configuration config1 = {{"metadata.broker.list", kafka_brokers},
                                      {"group.id", "test"},
-                                     {"enable.auto.commit", false}};
+                                     {"enable.auto.commit", false},
+                                     {"auto.offset.reset", "earliest"}};
   db2.start_kafka_wal_ingester(config1, kafka_topic);
 
   {
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
   std::this_thread::sleep_for(std::chrono::seconds(3));
   {
     auto txn = db2.GetReadTransaction(0);
-    CHECK(txn.GetVertexNum(0) == 3) << "Vertex num: " << txn.GetVertexNum(0);
+    CHECK(txn.GetVertexNum(0) == 2) << "Vertex num: " << txn.GetVertexNum(0);
     gs::vid_t lid;
     CHECK(txn.GetVertexIndex(0, 998244353L, lid));
     LOG(INFO) << "Vertex id: " << lid;

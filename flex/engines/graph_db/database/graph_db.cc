@@ -311,6 +311,10 @@ void GraphDB::start_kafka_wal_ingester(const cppkafka::Configuration& config,
       encoder.put_string("enable.auto.commit");
       encoder.put_string(config.get("enable.auto.commit"));
     }
+    if (config.has_property("auto.offset.reset")) {
+      encoder.put_string("auto.offset.reset");
+      encoder.put_string(config.get("auto.offset.reset"));
+    }
     gs::Decoder decoder(buffer.data(), buffer.size());
     KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
   });
