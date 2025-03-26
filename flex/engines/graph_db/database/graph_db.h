@@ -33,6 +33,9 @@
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+#include "cppkafka/cppkafka.h"
+#endif
 
 namespace gs {
 
@@ -172,11 +175,8 @@ class GraphDB {
 #ifdef BUILD_KAFKA_WAL_WRITER_PARSER
   bool kafka_wal_ingester_state() const;
 
-  void start_kafka_wal_ingester(const std::string& kafka_brokers,
-                                const std::string& brokers,
-                                const std::string& topic_name,
-                                const std::string& group_id,
-                                const std::string& engine_endpoint);
+  void start_kafka_wal_ingester(const cppkafka::Configuration& config,
+                                const std::string& topic_name);
 
   void stop_kafka_wal_ingester();
 #endif

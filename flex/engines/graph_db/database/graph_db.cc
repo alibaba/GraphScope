@@ -56,7 +56,8 @@ struct SessionLocalContext {
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
 };
 
-GraphDB::GraphDB() = default;
+GraphDB::GraphDB()
+    : monitor_thread_running_(false), compact_thread_running_(false) {}
 GraphDB::~GraphDB() {
   if (compact_thread_running_) {
     compact_thread_running_ = false;
@@ -283,24 +284,25 @@ bool GraphDB::kafka_wal_ingester_state() const {
   return kafka_wal_ingester_thread_running_.load();
 }
 
-void GraphDB::start_kafka_wal_ingester(const std::string& kafka_brokers,
-                                       const std::string& brokers,
-                                       const std::string& topic_name,
-                                       const std::string& group_id,
-                                       const std::string& engine_endpoint) {
+void GraphDB::start_kafka_wal_ingester(const cppkafka::Configuration& config,
+                                       const std::string& topic_name) {
   if (kafka_wal_ingester_thread_running_) {
     kafka_wal_ingester_thread_running_ = false;
-    kafka_wal_ingester_thread_.join();
+    if (kafka_wal_ingester_thread_.joinable()) {
+      kafka_wal_ingester_thread_.join();
+    }
   }
-  std::vector<char> buffer;
-  gs::Encoder encoder(buffer);
-  encoder.put_string(kafka_brokers);
-  encoder.put_string(brokers);
-  encoder.put_string(topic_name);
-  encoder.put_string(group_id);
-  encoder.put_string(engine_endpoint);
-  gs::Decoder decoder(buffer.data(), buffer.size());
-  KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
+  kafka_wal_ingester_thread_running_ = true;
+  kafka_wal_ingester_thread_ = std::thread([&]() {
+    std::vector<char> buffer;
+    gs::Encoder encoder(buffer);
+    encoder.put_string(config.get("metadata.broker.list"));
+    encoder.put_string(config.get("group.id"));
+    encoder.put_byte(config.get("enable.auto.commit") == "true");
+    encoder.put_string(topic_name);
+    gs::Decoder decoder(buffer.data(), buffer.size());
+    KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
+  });
 }
 
 void GraphDB::stop_kafka_wal_ingester() {

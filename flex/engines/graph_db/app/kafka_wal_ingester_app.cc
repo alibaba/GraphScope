@@ -77,20 +77,18 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
                                 Encoder& output) {
   // TODO: get value from config
   std::string kafka_brokers = std::string(input.get_string());
-  std::string brokers = std::string(input.get_string());
-  std::string topic_name = std::string(input.get_string());
   std::string group_id = std::string(input.get_string());
-  std::string engine_endpoint = std::string(input.get_string());
+  bool enable_auto_commit = input.get_byte();
+  std::string topic_name = std::string(input.get_string());
   LOG(INFO) << "Kafka brokers: " << kafka_brokers;
-  LOG(INFO) << "engine endpoint: " << engine_endpoint;
 
   cppkafka::Configuration config = {{"metadata.broker.list", kafka_brokers},
                                     {"group.id", group_id},
                                     // Disable auto commit
-                                    {"enable.auto.commit", false}};
+                                    {"enable.auto.commit", enable_auto_commit}};
   gs::KafkaWalConsumer consumer(config, topic_name, 1);
   // TODO: how to make it stop
-  while (!graph.db().kafka_wal_ingester_state()) {
+  while (graph.db().kafka_wal_ingester_state()) {
     auto res = consumer.poll();
     if (res.empty()) {
       std::this_thread::sleep_for(gs::KafkaWalConsumer::POLL_TIMEOUT);
@@ -103,11 +101,13 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
       txn.IngestWal(graph.graph(), txn.timestamp(),
                     const_cast<char*>(res.data()) + sizeof(WalHeader),
                     header->length, txn.allocator());
+      txn.Commit();
     } else if (header->type == 1) {
       auto txn = graph.GetUpdateTransaction();
       txn.IngestWal(graph.graph(), graph.db().work_dir(), txn.timestamp(),
                     const_cast<char*>(res.data()) + sizeof(WalHeader),
                     header->length, txn.allocator());
+      txn.Commit();
     } else {
       LOG(ERROR) << "Unknown wal type: " << header->type;
     }

@@ -17,9 +17,8 @@
 #define ENGINES_GRAPH_DB_DATABASE_WAL_KAFKA_WAL_PARSER_H_
 
 #include <vector>
-#include "flex/engines/graph_db/database/wal/wal.h"
-
 #include "cppkafka/cppkafka.h"
+#include "flex/engines/graph_db/database/wal/wal.h"
 
 namespace gs {
 
@@ -35,7 +34,7 @@ class KafkaWalParser : public IWalParser {
       std::chrono::milliseconds(100);
   static constexpr const size_t MAX_BATCH_SIZE = 1000;
 
-  static std::unique_ptr<IWalParser> Make();
+  static std::unique_ptr<IWalParser> Make(const std::string&);
 
   // always track all partitions and from begining
   KafkaWalParser(const cppkafka::Configuration& config);
@@ -53,13 +52,14 @@ class KafkaWalParser : public IWalParser {
 
  private:
   std::unique_ptr<cppkafka::Consumer> consumer_;
-  WalContentUnit* insert_wal_list_;
-  size_t insert_wal_list_size_;
+  std::vector<WalContentUnit> insert_wal_list_;
   uint32_t last_ts_;
 
   std::vector<UpdateWalUnit> update_wal_list_;
   std::vector<std::string> message_vector_;  // used to hold the polled messages
   cppkafka::Configuration config_;
+
+  static const bool registered_;
 };
 
 }  // namespace gs

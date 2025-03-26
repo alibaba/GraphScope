@@ -14,10 +14,6 @@
  */
 
 #include "flex/engines/graph_db/database/wal/kafka_wal_parser.h"
-#include <fcntl.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <filesystem>
 #include "flex/engines/graph_db/database/wal/wal.h"
 
 namespace gs {
@@ -40,7 +36,7 @@ std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
   return partitions;
 }
 
-std::unique_ptr<IWalParser> KafkaWalParser::Make() {
+std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string&) {
   const char* broker_list = std::getenv("KAFKA_BROKER_LIST");
   if (broker_list == nullptr) {
     LOG(FATAL) << "KAFKA_BROKER_LIST is not set";
@@ -53,11 +49,7 @@ std::unique_ptr<IWalParser> KafkaWalParser::Make() {
 }
 
 KafkaWalParser::KafkaWalParser(const cppkafka::Configuration& config)
-    : consumer_(nullptr),
-      insert_wal_list_(NULL),
-      insert_wal_list_size_(0),
-      last_ts_(0),
-      config_(config) {
+    : consumer_(nullptr), last_ts_(0), config_(config) {
   consumer_ = std::make_unique<cppkafka::Consumer>(config);
 }
 
@@ -69,11 +61,7 @@ void KafkaWalParser::open(const std::string& topic_name) {
 void KafkaWalParser::open(
     const std::vector<cppkafka::TopicPartition>& topic_partitions) {
   consumer_->assign(topic_partitions);
-  insert_wal_list_ = static_cast<WalContentUnit*>(
-      mmap(NULL, IWalWriter::MAX_WALS_NUM * sizeof(WalContentUnit),
-           PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_NORESERVE,
-           -1, 0));
-  insert_wal_list_size_ = IWalWriter::MAX_WALS_NUM;
+  insert_wal_list_.resize(4096);
 
   while (true) {
     auto msgs = consumer_->poll_batch(MAX_BATCH_SIZE);
@@ -95,7 +83,7 @@ void KafkaWalParser::open(
   }
 
   for (auto& wal : message_vector_) {
-    LOG(INFO) << "Got wal:" << wal.size();
+    VLOG(1) << "Got wal:" << wal.size();
     const char* payload = wal.data();
     const WalHeader* header = reinterpret_cast<const WalHeader*>(payload);
     uint32_t cur_ts = header->timestamp;
@@ -111,6 +99,9 @@ void KafkaWalParser::open(
       unit.size = length;
       update_wal_list_.push_back(unit);
     } else {
+      if (cur_ts >= insert_wal_list_.size()) {
+        insert_wal_list_.resize(cur_ts + 1);
+      }
       if (insert_wal_list_[cur_ts].ptr) {
         LOG(WARNING) << "Duplicated timestamp " << cur_ts << ", skip";
       }
@@ -134,9 +125,7 @@ void KafkaWalParser::close() {
   if (consumer_) {
     consumer_.reset();
   }
-  if (insert_wal_list_ != NULL) {
-    munmap(insert_wal_list_, insert_wal_list_size_ * sizeof(WalContentUnit));
-  }
+  insert_wal_list_.clear();
 }
 
 uint32_t KafkaWalParser::last_ts() const { return last_ts_; }
@@ -150,5 +139,9 @@ const WalContentUnit& KafkaWalParser::get_insert_wal(uint32_t ts) const {
 const std::vector<UpdateWalUnit>& KafkaWalParser::get_update_wals() const {
   return update_wal_list_;
 }
+
+const bool KafkaWalParser::registered_ = WalParserFactory::RegisterWalParser(
+    "kafaka", static_cast<WalParserFactory::wal_parser_initializer_t>(
+                  &KafkaWalParser::Make));
 
 }  // namespace gs

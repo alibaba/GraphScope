@@ -371,6 +371,7 @@ jobs:
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
+        cd ${GITHUB_WORKSPACE}/flex/build
         wget https://dlcdn.apache.org/kafka/3.9.0/kafka_2.13-3.9.0.tgz
         tar -zxf kafka_2.13-3.9.0.tgz
         cd kafka_2.13-3.9.0
@@ -379,10 +380,12 @@ jobs:
         bin/kafka-server-start.sh config/kraft/reconfig-server.properties &
 
         bin/kafka-topics.sh --create --topic kafka-test --bootstrap-server localhost:9092
-
-        ./tests/hqps/kafka_test localhost:902 kafka-test
-
-        pkill -f kafka-server-start.sh
+        ../tests/hqps/kafka_test localhost:9092 kafka-test
+        bin/kafka-topics.sh --delete --topic kafka-test --bootstrap-server localhost:9092
+        bin/kafka-topics.sh --create --topic kafka-test --bootstrap-server localhost:9092
+        ../tests/hqps/kafka_wal_ingester_test .. localhost:9092 kafka-test
+        bin/kafka-topics.sh --delete --topic kafka-test --bootstrap-server localhost:9092
+        pkill -f kafka
 
     - name: Run Gremlin test on modern graph
       env:
