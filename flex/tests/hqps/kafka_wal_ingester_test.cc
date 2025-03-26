@@ -46,18 +46,20 @@ int main(int argc, char** argv) {
   config.wal_uri = uri;
   db.Open(config);
   {
-    auto txn = db.GetInsertTransaction(0);
-    gs::label_t label = db.schema().get_vertex_label_id("PERSON");
-    int64_t id = 998244353;
-    int64_t weight = 100;
-    txn.AddVertex(label, id, {gs::Any(weight)});
-    txn.Commit();
+    for (int i = 0; i < 100; ++i) {
+      auto txn = db.GetInsertTransaction(0);
+      gs::label_t label = db.schema().get_vertex_label_id("PERSON");
+      int64_t id = i;
+      int64_t weight = i * 2 + 1;
+      txn.AddVertex(label, id, {gs::Any(weight)});
+      txn.Commit();
+    }
   }
 
   gs::GraphDB db2;
   db2.Open(config);
 
-  CHECK(db2.GetReadTransaction(0).GetVertexNum(0) == 1)
+  CHECK(db2.GetReadTransaction(0).GetVertexNum(0) == 100)
       << "Vertex num: " << db2.GetReadTransaction(0).GetVertexNum(0);
   cppkafka::Configuration config1 = {{"metadata.broker.list", kafka_brokers},
                                      {"group.id", "test"},
@@ -66,23 +68,25 @@ int main(int argc, char** argv) {
   db2.start_kafka_wal_ingester(config1, kafka_topic);
 
   {
-    auto txn = db.GetInsertTransaction(0);
-    gs::label_t label = db.schema().get_vertex_label_id("PERSON");
-    int64_t id = 998244354;
-    int64_t weight = 200;
-    txn.AddVertex(label, id, {gs::Any(weight)});
-    txn.Commit();
+    for (int i = 100; i < 200; ++i) {
+      auto txn = db.GetInsertTransaction(0);
+      gs::label_t label = db.schema().get_vertex_label_id("PERSON");
+      int64_t id = i;
+      int64_t weight = 200;
+      txn.AddVertex(label, id, {gs::Any(weight)});
+      txn.Commit();
+    }
   }
   LOG(INFO) << db.GetReadTransaction(0).GetVertexNum(0);
 
   std::this_thread::sleep_for(std::chrono::seconds(3));
   {
     auto txn = db2.GetReadTransaction(0);
-    CHECK(txn.GetVertexNum(0) == 2) << "Vertex num: " << txn.GetVertexNum(0);
+    CHECK(txn.GetVertexNum(0) == 200) << "Vertex num: " << txn.GetVertexNum(0);
     gs::vid_t lid;
-    CHECK(txn.GetVertexIndex(0, 998244353L, lid));
+    CHECK(txn.GetVertexIndex(0, 90L, lid));
     LOG(INFO) << "Vertex id: " << lid;
-    CHECK(txn.GetVertexIndex(0, 998244354L, lid));
+    CHECK(txn.GetVertexIndex(0, 188L, lid));
     LOG(INFO) << "Vertex id: " << lid;
     db2.stop_kafka_wal_ingester();
   }

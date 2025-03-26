@@ -385,7 +385,7 @@ jobs:
         bin/kafka-topics.sh --create --topic kafka-test --bootstrap-server localhost:9092
         ../tests/hqps/kafka_wal_ingester_test .. localhost:9092 kafka-test
         bin/kafka-topics.sh --delete --topic kafka-test --bootstrap-server localhost:9092
-        pkill -f kafka
+        ps aux | grep kafka | grep -v grep | awk '{print $2}' | xargs kill -9
 
     - name: Run Gremlin test on modern graph
       env:
