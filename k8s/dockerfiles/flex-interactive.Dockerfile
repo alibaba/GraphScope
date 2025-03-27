@@ -103,6 +103,7 @@ RUN find /opt/flex/lib/ -name "*.a" -type f -delete
 # include 
 COPY --from=builder /opt/flex/include/ /opt/graphscope/include/ /opt/vineyard/include/ /opt/flex/include/
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
+COPY --from=builder /opt/graphscope/lib/libcppkafka.so* /opt/flex/lib/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/

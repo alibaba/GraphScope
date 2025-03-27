@@ -69,7 +69,6 @@ class KafkaWalWriter : public IWalWriter {
   std::string kafka_topic_;
   std::shared_ptr<cppkafka::BufferedProducer<std::string>> producer_;
   cppkafka::MessageBuilder builder_;
-  int64_t cur_offset_;
 
   static const bool registered_;
 };
