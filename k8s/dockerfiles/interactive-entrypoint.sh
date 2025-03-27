@@ -99,7 +99,7 @@ function prepare_workspace() {
 
 function launch_service() {
     #expect 1 arg
-    if [ $# -lt 1  || $# -gt 2 ]; then
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
         echo "Usage: launch_service <workspace> [graph_yaml]"
         exit 1
     fi
