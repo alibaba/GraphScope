@@ -61,8 +61,6 @@ class InsertTransaction {
 
   const GraphDBSession& GetSession() const;
 
-  Allocator& allocator() const;
-
  private:
   void clear();
 

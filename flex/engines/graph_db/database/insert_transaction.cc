@@ -233,8 +233,6 @@ const Schema& InsertTransaction::schema() const { return graph_.schema(); }
 
 const GraphDBSession& InsertTransaction::GetSession() const { return session_; }
 
-Allocator& InsertTransaction::allocator() const { return alloc_; }
-
 #define likely(x) __builtin_expect(!!(x), 1)
 
 bool InsertTransaction::get_vertex_with_retries(MutablePropertyFragment& graph,

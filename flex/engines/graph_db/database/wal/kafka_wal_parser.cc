@@ -108,10 +108,10 @@ void KafkaWalParser::open(
     const std::vector<cppkafka::TopicPartition>& topic_partitions) {
   consumer_->assign(topic_partitions);
   insert_wal_list_.resize(4096);
-
+  uint32_t cnt = 0;
   while (true) {
     auto msgs = consumer_->poll_batch(MAX_BATCH_SIZE);
-    if (msgs.empty() || msgs.empty()) {
+    if (msgs.empty() && cnt == last_ts_) {
       LOG(INFO) << "No message are polled, the topic has been all consumed.";
       break;
     }
@@ -123,40 +123,38 @@ void KafkaWalParser::open(
           }
         } else {
           message_vector_.emplace_back(msg.get_payload());
+          const std::string& wal = message_vector_.back();
+          auto header = reinterpret_cast<const WalHeader*>(wal.data());
+          if (header->timestamp == 0) {
+            LOG(WARNING) << "Invalid timestamp 0, skip";
+            continue;
+          }
+          if (header->type) {
+            UpdateWalUnit unit;
+            unit.timestamp = header->timestamp;
+            unit.ptr = const_cast<char*>(wal.data() + sizeof(WalHeader));
+            unit.size = header->length;
+            update_wal_list_.push_back(unit);
+            cnt++;
+          } else {
+            if (header->timestamp >= insert_wal_list_.size()) {
+              insert_wal_list_.resize(header->timestamp + 1);
+            }
+            if (insert_wal_list_[header->timestamp].ptr) {
+              LOG(WARNING) << "Duplicated timestamp " << header->timestamp
+                           << ", skip";
+              continue;
+            }
+            cnt++;
+            insert_wal_list_[header->timestamp].ptr =
+                const_cast<char*>(wal.data() + sizeof(WalHeader));
+            insert_wal_list_[header->timestamp].size = header->length;
+          }
+          last_ts_ = std::max(header->timestamp, last_ts_);
         }
       }
     }
     consumer_->commit();
-  }
-
-  for (auto& wal : message_vector_) {
-    VLOG(1) << "Got wal:" << wal.size();
-    const char* payload = wal.data();
-    const WalHeader* header = reinterpret_cast<const WalHeader*>(payload);
-    uint32_t cur_ts = header->timestamp;
-    if (cur_ts == 0) {
-      LOG(WARNING) << "Invalid timestamp 0, skip";
-      continue;
-    }
-    int length = header->length;
-    if (header->type) {
-      UpdateWalUnit unit;
-      unit.timestamp = cur_ts;
-      unit.ptr = const_cast<char*>(payload + sizeof(WalHeader));
-      unit.size = length;
-      update_wal_list_.push_back(unit);
-    } else {
-      if (cur_ts >= insert_wal_list_.size()) {
-        insert_wal_list_.resize(cur_ts + 1);
-      }
-      if (insert_wal_list_[cur_ts].ptr) {
-        LOG(WARNING) << "Duplicated timestamp " << cur_ts << ", skip";
-      }
-      insert_wal_list_[cur_ts].ptr =
-          const_cast<char*>(payload + sizeof(WalHeader));
-      insert_wal_list_[cur_ts].size = length;
-    }
-    last_ts_ = std::max(cur_ts, last_ts_);
   }
 
   LOG(INFO) << "last_ts: " << last_ts_;

@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include <iostream>
+#include <random>
 #ifdef BUILD_KAFKA_WAL_WRITER_PARSER
 #include <flex/engines/graph_db/database/wal/kafka_wal_parser.h>
 #include <flex/engines/graph_db/database/wal/kafka_wal_writer.h>
@@ -68,13 +69,31 @@ int main(int argc, char** argv) {
   db2.start_kafka_wal_ingester(config1, kafka_topic);
 
   {
+    std::vector<std::thread> threads;
     for (int i = 100; i < 200; ++i) {
-      auto txn = db.GetInsertTransaction(0);
-      gs::label_t label = db.schema().get_vertex_label_id("PERSON");
-      int64_t id = i;
-      int64_t weight = 200;
-      txn.AddVertex(label, id, {gs::Any(weight)});
-      txn.Commit();
+      threads.emplace_back([&db, i] {
+        auto txn = db.GetInsertTransaction(0);
+        gs::label_t label = db.schema().get_vertex_label_id("PERSON");
+        int64_t id = i;
+        int64_t weight = 200;
+        txn.AddVertex(label, id, {gs::Any(weight)});
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::this_thread::sleep_for(std::chrono::milliseconds(gen() % 1000));
+        if (i % 20 == 0) {
+          txn.Abort();
+        } else {
+          txn.Commit();
+        }
+        {
+          auto txn = db.GetUpdateTransaction(0);
+          txn.AddVertex(label, id - 100, {gs::Any(weight - 1)});
+          txn.Commit();
+        }
+      });
+    }
+    for (auto& thrd : threads) {
+      thrd.join();
     }
   }
   LOG(INFO) << db.GetReadTransaction(0).GetVertexNum(0);
@@ -82,12 +101,24 @@ int main(int argc, char** argv) {
   std::this_thread::sleep_for(std::chrono::seconds(3));
   {
     auto txn = db2.GetReadTransaction(0);
-    CHECK(txn.GetVertexNum(0) == 200) << "Vertex num: " << txn.GetVertexNum(0);
+    CHECK(txn.GetVertexNum(0) == 195) << "Vertex num: " << txn.GetVertexNum(0);
     gs::vid_t lid;
     CHECK(txn.GetVertexIndex(0, 90L, lid));
     LOG(INFO) << "Vertex id: " << lid;
     CHECK(txn.GetVertexIndex(0, 188L, lid));
     LOG(INFO) << "Vertex id: " << lid;
+    auto iter = txn.GetVertexIterator(0);
+    int cnt = 0;
+    while (iter.IsValid()) {
+      if (cnt < 100) {
+        CHECK(iter.GetField(0).AsInt64() == 199);
+      } else {
+        CHECK(iter.GetField(0).AsInt64() == 200);
+      }
+      cnt++;
+      iter.Next();
+    }
+
     db2.stop_kafka_wal_ingester();
   }
 #endif

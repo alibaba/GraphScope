@@ -67,6 +67,8 @@ const MutablePropertyFragment& GraphDBSession::graph() const {
 
 const GraphDB& GraphDBSession::db() const { return db_; }
 
+void GraphDBSession::commit(timestamp_t ts) { db_.version_manager_.commit(ts); }
+
 MutablePropertyFragment& GraphDBSession::graph() { return db_.graph(); }
 
 const Schema& GraphDBSession::schema() const { return db_.schema(); }

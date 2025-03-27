@@ -51,6 +51,8 @@ class VersionManager {
   void release_update_timestamp(uint32_t ts);
   bool revert_update_timestamp(uint32_t ts);
 
+  void commit(uint32_t ts);
+
  private:
   std::atomic<uint32_t> write_ts_{1};
   std::atomic<uint32_t> read_ts_{0};

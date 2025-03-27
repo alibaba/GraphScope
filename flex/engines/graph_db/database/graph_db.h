@@ -181,6 +181,9 @@ class GraphDB {
   void stop_kafka_wal_ingester();
 #endif
 
+  uint64_t get_last_ingested_wal_ts() const { return last_ingested_wal_ts_; }
+  void set_last_ingested_wal_ts(uint64_t ts) { last_ingested_wal_ts_ = ts; }
+
  private:
   bool registerApp(const std::string& path, uint8_t index = 0);
 
@@ -218,6 +221,7 @@ class GraphDB {
 
   std::thread kafka_wal_ingester_thread_;
   std::atomic<bool> kafka_wal_ingester_thread_running_;
+  uint64_t last_ingested_wal_ts_;
 
   timestamp_t last_compaction_ts_;
   bool compact_thread_running_ = false;
