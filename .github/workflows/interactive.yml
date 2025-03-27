@@ -372,6 +372,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         cd ${GITHUB_WORKSPACE}/flex/build
+        cmake .. -DBUILD_KAFKA_WAL_WRITER_PARSER=ON && make -j$(nproc)
         wget https://dlcdn.apache.org/kafka/3.9.0/kafka_2.13-3.9.0.tgz
         tar -zxf kafka_2.13-3.9.0.tgz
         cd kafka_2.13-3.9.0

@@ -18,7 +18,7 @@ option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build op
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
 
-option(BUILD_KAFKA_WAL_WRITER_PARSER "Whether to build kafka wal writer and wal parser" ON) # Whether to build kafka wal writer and wal parser, default is ON
+option(BUILD_KAFKA_WAL_WRITER_PARSER "Whether to build kafka wal writer and wal parser" OFF) # Whether to build kafka wal writer and wal parser, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
 
 #print options
