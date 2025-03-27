@@ -89,7 +89,7 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
   LOG(INFO) << "Kafka brokers: " << config.get("metadata.broker.list");
 
   gs::KafkaWalConsumer consumer(config, topic_name, 1);
-  // TODO: how to make it stop
+
   while (graph.db().kafka_wal_ingester_state()) {
     auto res = consumer.poll();
     if (res.empty()) {
@@ -98,11 +98,10 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
     }
     auto header = reinterpret_cast<const WalHeader*>(res.data());
     if (header->type == 0) {
-      auto txn = graph.GetInsertTransaction();
-      txn.IngestWal(graph.graph(), txn.timestamp(),
-                    const_cast<char*>(res.data()) + sizeof(WalHeader),
-                    header->length, txn.allocator());
-      txn.Commit();
+      gs::InsertTransaction::IngestWal(
+          graph.graph(), txn.timestamp(),
+          const_cast<char*>(res.data()) + sizeof(WalHeader), header->length,
+          txn.allocator());
     } else if (header->type == 1) {
       auto txn = graph.GetUpdateTransaction();
       txn.IngestWal(graph.graph(), graph.db().work_dir(), txn.timestamp(),

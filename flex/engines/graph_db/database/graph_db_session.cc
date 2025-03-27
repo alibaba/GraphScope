@@ -248,6 +248,8 @@ AppBase* GraphDBSession::GetApp(int type) {
   return app;
 }
 
+Allocator& GraphDBSession::allocator() { return alloc_; }
+
 #undef likely  // likely
 
 Result<std::pair<uint8_t, std::string_view>>

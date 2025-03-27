@@ -173,6 +173,13 @@ bool InsertTransaction::Commit() {
 
 void InsertTransaction::Abort() {
   if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
+    auto header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
+    header->length = 0;
+    header->timestamp = timestamp_;
+    header->type = 0;
+    if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+      LOG(ERROR) << "Failed to append wal log";
+    }
     LOG(ERROR) << "aborting " << timestamp_ << "-th transaction (insert)";
     vm_.release_insert_timestamp(timestamp_);
     clear();
