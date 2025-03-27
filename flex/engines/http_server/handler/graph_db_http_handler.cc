@@ -881,6 +881,35 @@ class adhoc_query_handler : public StoppableHandler {
 #endif
 };
 
+class service_status_handler : public seastar::httpd::handler_base {
+ public:
+  service_status_handler() {}
+  ~service_status_handler() override = default;
+
+  seastar::future<std::unique_ptr<seastar::httpd::reply>> handle(
+      const seastar::sstring& path,
+      std::unique_ptr<seastar::httpd::request> req,
+      std::unique_ptr<seastar::httpd::reply> rep) override {
+    if (req->_method == "GET") {
+      if (path.find("ready") != seastar::sstring::npos) {
+        auto& graph_db_service = GraphDBService::get();
+        rep->set_content_type("application/json");
+        if (graph_db_service.is_actors_running()) {
+          return new_reply(std::move(rep),
+                           seastar::httpd::reply::status_type::ok,
+                           "Service Is Ready");
+        } else {
+          return new_reply(
+              std::move(rep),
+              seastar::httpd::reply::status_type::service_unavailable,
+              "Service Is Not Ready");
+        }
+      }
+    }
+    return new_bad_request_reply(std::move(rep), "Unsupported action");
+  }
+};
+
 ///////////////////////////graph_db_http_handler/////////////////////////////
 
 graph_db_http_handler::graph_db_http_handler(uint16_t http_port,
@@ -1080,6 +1109,10 @@ seastar::future<> graph_db_http_handler::set_routes() {
           .add_str("/edge");
       r.add(match_rule, OPERATIONS[i]);
     }
+
+    r.add(seastar::httpd::operation_type::GET,
+          seastar::httpd::url("/v1/service/ready"),
+          new service_status_handler());
 
     return seastar::make_ready_future<>();
   });
