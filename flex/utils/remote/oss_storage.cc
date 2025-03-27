@@ -50,6 +50,10 @@ void OSSConf::load_conf_from_env() {
       bucket_name_ = bucket_name;
     }
   }
+  if (std::getenv(kOSSConcurrency)) {
+    concurrency_ = std::stoi(std::getenv(kOSSConcurrency));
+  }
+  LOG(INFO) << "OSS concurrency: " << concurrency_;
 }
 
 class UserRetryStrategy : public AlibabaCloud::OSS::RetryStrategy {
@@ -155,9 +159,8 @@ gs::Status OSSRemoteStorageUploader::Put(const std::string& local_path,
                                                  remote_path, local_path);
   request.MetaData().addHeader("x-oss-forbid-overwrite", "true");
   request.setPartSize(conf_.partition_size_);
-  request.setThreadNum(
-      conf_.uploading_concurrency_);  // Increase the thread number to improve
-                                      // the upload speed
+  request.setThreadNum(conf_.concurrency_);  // Increase the thread number to
+                                             // improve the upload speed
   auto outcome = client_->ResumableUploadObject(request);
   if (!outcome.isSuccess()) {
     std::string error_string = "OSS ResumableUploadObject from local " +
@@ -231,9 +234,8 @@ gs::Status OSSRemoteStorageDownloader::Get(const std::string& remote_path,
   AlibabaCloud::OSS::DownloadObjectRequest request(conf_.bucket_name_,
                                                    remote_path, local_path);
   request.setPartSize(conf_.partition_size_);
-  request.setThreadNum(
-      conf_.uploading_concurrency_);  // Increase the thread number to improve
-                                      // the download speed
+  request.setThreadNum(conf_.concurrency_);  // Increase the thread number to
+                                             // improve the download speed
   auto outcome = client_->ResumableDownloadObject(request);
   if (!outcome.isSuccess()) {
     std::string error_string = oss_outcome_to_string(
