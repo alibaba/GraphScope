@@ -29,6 +29,8 @@ gs_interactive/client
 gs_interactive/models/long_text.py
 gs_interactive/models/date_type.py
 gs_interactive/models/time_stamp_type.py
+gs_interactive/configuration.py
+gs_interactive/api_client.py
 requirements.txt
 test-requirements.txt
 test/

@@ -18,10 +18,15 @@
 
 from abc import ABCMeta
 from abc import abstractmethod
+from enum import Enum
 from typing import Any
 from typing import List
 from typing import Optional
 from typing import Union
+import threading
+import time
+
+import logging
 
 from pydantic import Field
 from pydantic import StrictBytes
@@ -33,6 +38,7 @@ from gs_interactive.api import AdminServiceGraphManagementApi
 from gs_interactive.api import AdminServiceJobManagementApi
 from gs_interactive.api import AdminServiceProcedureManagementApi
 from gs_interactive.api import AdminServiceServiceManagementApi
+from gs_interactive.api import AdminServiceServiceRegistryApi
 from gs_interactive.api import GraphServiceEdgeManagementApi
 from gs_interactive.api import GraphServiceVertexManagementApi
 from gs_interactive.api import QueryServiceApi
@@ -63,6 +69,7 @@ from gs_interactive.models import JobStatus
 from gs_interactive.models import QueryRequest
 from gs_interactive.models import SchemaMapping
 from gs_interactive.models import ServiceStatus
+from gs_interactive.models import GraphServiceRegistryRecord
 from gs_interactive.models import SnapshotStatus
 from gs_interactive.models import StartServiceRequest
 from gs_interactive.models import StopServiceRequest
@@ -71,6 +78,12 @@ from gs_interactive.models import UploadFileResponse
 from gs_interactive.models import VertexData
 from gs_interactive.models import VertexEdgeRequest
 from gs_interactive.models import VertexRequest
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("interactive")
+
+logger.setLevel(logging.INFO)
 
 
 class EdgeInterface(metaclass=ABCMeta):
@@ -318,6 +331,31 @@ class QueryServiceInterface:
         raise NotImplementedError
 
     @abstractmethod
+    def list_service_registry_info(self) -> Result[list[GraphServiceRegistryRecord]]:
+        """_summary_
+        List all graph services in the service registry.
+
+        Returns:
+            Result[list[GraphServiceRegistryRecord]]: The result containing the list of graph services in the service registry.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_service_registry_info(
+        self, graph_id: str, service_name: str
+    ) -> Result[GraphServiceRegistryRecord]:
+        """
+        Get the routing information of a specified graph service.
+        Args:
+            graph_id (_type_): Graph ID.
+            service_name (_type_): Service name: cypher/procedure
+
+        Returns:
+            _type_: The routing information of the specified graph service.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def start_service(
         self,
         start_service_request: Annotated[
@@ -370,13 +408,28 @@ class Session(
     pass
 
 
+class DeploymentKind(Enum):
+    STANDALONE = "standalone"
+    K8S = "k8s"
+    NOT_SET = "not_set"
+
+
 class DefaultSession(Session):
     """
     The default session implementation for Interactive SDK.
     It provides the implementation of all service APIs.
+
+    The default session could connect to two kinds of admin services: standalone or k8s.
+    If the admin service is running in standalone mode, there will only be one stored_proc_uri.
+    If the admin service is running in k8s mode, there will be multiple stored_proc_uris.
     """
 
-    def __init__(self, admin_uri: str, stored_proc_uri: str = None):
+    def __init__(
+        self,
+        admin_uri: str,
+        stored_proc_uri: str = None,
+        service_registry_fetching_interval: int = 1,
+    ):
         """
         Construct a new session using the specified admin_uri and stored_proc_uri.
 
@@ -384,31 +437,94 @@ class DefaultSession(Session):
             admin_uri (str): the uri for the admin service.
             stored_proc_uri (str, optional): the uri for the stored procedure service.
                 If not provided,the uri will be read from the service status.
+            service_registry_fetching_interval (int, optional): the interval for fetching the service registry info.
+                The default value is 1 second.
         """
         self._admin_uri = admin_uri
-        self._client = ApiClient(Configuration(host=admin_uri))
+        self._client = ApiClient(Configuration(hosts=admin_uri))
+        self._deploy_mode = DeploymentKind.NOT_SET
+        self._service_registry_fetching_interval = service_registry_fetching_interval
 
         self._graph_api = AdminServiceGraphManagementApi(self._client)
         self._job_api = AdminServiceJobManagementApi(self._client)
         self._procedure_api = AdminServiceProcedureManagementApi(self._client)
         self._service_api = AdminServiceServiceManagementApi(self._client)
+        self._service_registry_api = AdminServiceServiceRegistryApi(self._client)
         self._utils_api = UtilsApi(self._client)
-        if stored_proc_uri is None:
-            service_status = self.get_service_status()
-            if not service_status.is_ok():
-                raise Exception(
-                    "Failed to get service status: ",
-                    service_status.get_status_message(),
-                )
-            service_port = service_status.get_value().hqps_port
-            # replace the port in uri
-            splitted = admin_uri.split(":")
-            splitted[-1] = str(service_port)
-            stored_proc_uri = ":".join(splitted)
-        self._query_client = ApiClient(Configuration(host=stored_proc_uri))
+        self._query_client = None
+        self._stop_event = None
+        self._init_stored_proc_uri(stored_proc_uri)
+
+        # Holds the latest service registry info
+        self._latest_service_registry_info = []
+        """
+        [
+            {
+                "graph_id": "1",
+                "service_registry": {
+                    "service_name": "cypher
+                    "instances": [
+                        {
+                            "endpoint": "11.22.3.4:7687",
+                            "metrics": {
+                                "snapshot_id": "1",
+                            }
+                        },
+                        {
+                            "endpoint": "11.22.3.5:7687",
+                            "metrics": {
+                                "snapshot_id": "2",
+                            }
+                        },
+                    ],
+                    "primary": {
+                            "endpoint": "11.22.3.5:7687",
+                            "metrics": {
+                                "snapshot_id": "2",
+                            },
+                    },
+                }
+            },
+        ]
+        """
+
+    def _init_stored_proc_uri(self, stored_proc_uri: str):
+        service_status = self.get_service_status()
+        if not service_status.is_ok():
+            raise Exception(
+                "Failed to get service status: ",
+                service_status.get_status_message(),
+            )
+        status_val = service_status.get_value()
+        self._deploy_mode = DeploymentKind(status_val.deploy_mode)
+        if self._deploy_mode == DeploymentKind.STANDALONE:
+            if stored_proc_uri is None:
+                service_port = service_status.get_value().hqps_port
+                # replace the port in uri
+                splitted = self._admin_uri.split(":")
+                splitted[-1] = str(service_port)
+                stored_proc_uri = ":".join(splitted)
+            self._query_client = ApiClient(Configuration(hosts=[stored_proc_uri]))
+        elif self._deploy_mode == DeploymentKind.K8S:
+            # Ignore the stored_proc_uri if the deploy mode is k8s
+            self._query_client = ApiClient(
+                Configuration(hosts=self._get_stored_proc_uris_from_service_registry())
+            )
+        else:
+            raise Exception("Unknown deployment mode: ", self._deploy_mode)
+
         self._query_api = QueryServiceApi(self._query_client)
         self._edge_api = GraphServiceEdgeManagementApi(self._query_client)
         self._vertex_api = GraphServiceVertexManagementApi(self._query_client)
+        
+        if self._deploy_mode == DeploymentKind.K8S:
+            # A background thread which fetches the service registry info periodically
+            self._stop_event = threading.Event()
+            self._service_registry_info_fetcher = threading.Thread(
+                target=self._fetch_service_registry_info,
+                args=(self._service_registry_fetching_interval),
+            )
+            self._service_registry_info_fetcher.start()
 
     def __enter__(self):
         self._client.__enter__()
@@ -416,7 +532,15 @@ class DefaultSession(Session):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self._client.__exit__(exc_type=exc_type, exc_value=exc_val, traceback=exc_tb)
+        
+    def __del__(self):
+        if self._stop_event:
+            self._stop_event.set()
+            if self._service_registry_info_fetcher:
+                self._service_registry_info_fetcher.join()
+         
 
+    @property
     def admin_uri(self):
         return self._admin_uri
 
@@ -988,6 +1112,24 @@ class DefaultSession(Session):
         except Exception as e:
             return Result.from_exception(e)
 
+    def get_service_registry_info(self, graph_id: str, service_name: str) -> Result[GraphServiceRegistryRecord]:
+        """Get the routing info for a specified service on a specified graph.
+
+        Args:
+            graph_id (str): Graph ID.
+            service_name (str): Service name: cypher/procedure
+        """
+        try:
+            response = self._service_registry_api.get_service_registry_info_with_http_info(
+                graph_id, service_name
+            )
+            return Result.from_response(response)
+        except Exception as e:
+            return Result.from_exception(e)
+
+    def list_service_registry_info(self):
+        raise NotImplementedError
+
     def get_service_status(self) -> Result[ServiceStatus]:
         """
         Get the status of the service.
@@ -1267,3 +1409,86 @@ class DefaultSession(Session):
                 + str(param)
             )
         return param
+
+    def _get_stored_proc_uris_from_service_registry(self):
+        """Define a generator which periodically fetches the service registry info, and yields all the uris.
+
+        Raises:
+            Exception: _description_
+
+        Yields:
+            dict: A dict contains primary uri and all available uris.
+        """
+
+        def _graph_instance_list_generator(graph_id: str, to_primary: bool = False):
+            for g_svc_record in self._latest_service_registry_info:
+                if "graph_id" in g_svc_record and g_svc_record["graph_id"] == graph_id:
+                    if to_primary:
+                        if g_svc_record["service_registry"]["primary"]:
+                            logger.info(
+                                f"Found primary stored_proc_uri for graph_id: {graph_id}, stored_proc_uri: {g_svc_record['service_registry']['primary']['endpoint']}"
+                            )
+                            yield [
+                                g_svc_record["service_registry"]["primary"]["endpoint"]
+                            ]
+                        else:
+                            raise Exception(
+                                f"Failed to find primary stored_proc_uri for graph_id: {graph_id}"
+                            )
+                    else:
+                        if g_svc_record["service_registry"]["instances"]:
+                            endpoints = [
+                                instance["endpoint"]
+                                for instance in g_svc_record["service_registry"][
+                                    "instances"
+                                ]
+                            ]
+                            logger.info(
+                                f"Found stored_proc_uris for graph_id: {graph_id}, stored_proc_uris: {endpoints}"
+                            )
+                            yield endpoints
+                        else:
+                            raise Exception(
+                                f"Failed to find stored_proc_uri for graph_id: {graph_id}"
+                            )
+            raise Exception(f"Failed to find stored_proc_uri for graph_id: {graph_id}")
+
+        return _graph_instance_list_generator
+
+    def _fetch_service_registry_info(self,interval: int):
+        while not self._stop_event.is_set():
+            try:
+                response = self.list_service_registry_info()
+                if response.is_ok():
+                    self._latest_service_registry_info = self._parse_registry_info(
+                        response.get_value()
+                    )
+                else:
+                    logger.error(
+                        "Failed to fetch service registry info: ",
+                        response.get_status_message(),
+                    )
+            except Exception as e:
+                print("Failed to fetch service registry info: ", e)
+            time.sleep(interval)
+
+    def _parse_registry_info(
+        self, service_registry_info: list[GraphServiceRegistryRecord]
+    ):
+        """_summary_
+
+        Args:
+            service_registry_info (list[GraphServiceRegistryRecord]): _description_
+
+        Returns:
+            _type_: _description_
+        """
+        result = []
+        for record in service_registry_info:
+            result.append(
+                {
+                    "graph_id": record.graph_id,
+                    "service_registry": record.service_registry.to_dict(),
+                }
+            )
+        return result

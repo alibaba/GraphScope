@@ -395,15 +395,12 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
 // Get the metadata of a graph.
 seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
     query_param&& query_param) {
-  LOG(INFO) << "Get Graph meta for graph_id: " << query_param.content;
   auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
 
   if (meta_res.ok()) {
     auto get_all_procedure_res =
         metadata_store_->GetAllPluginMeta(query_param.content);
     if (get_all_procedure_res.ok()) {
-      VLOG(10) << "Successfully get all procedures: "
-               << get_all_procedure_res.value().size();
       auto& all_plugin_metas = get_all_procedure_res.value();
       for (auto& plugin_meta : all_plugin_metas) {
         add_runnable_info(plugin_meta);
@@ -1148,6 +1145,7 @@ seastar::future<admin_query_result> admin_actor::service_status(
     res.AddMember("status",
                   graph_db_service.is_actors_running() ? "Running" : "Stopped",
                   res.GetAllocator());
+    res.AddMember("deploy_mode", "standalone", res.GetAllocator());
     res.AddMember("hqps_port", query_port, res.GetAllocator());
     res.AddMember("bolt_port", graph_db_service.get_service_config().bolt_port,
                   res.GetAllocator());
