@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <seastar/http/httpd.hh>
 #include "flex/engines/http_server/types.h"
 #include "flex/utils/result.h"
 #include "seastar/http/common.hh"
@@ -22,6 +23,10 @@
 #define ENGINES_HTTP_SERVER_HANDLER_HTTP_UTILS_H_
 
 namespace server {
+
+seastar::future<std::unique_ptr<seastar::httpd::reply>> new_reply(
+    std::unique_ptr<seastar::httpd::reply> rep,
+    seastar::httpd::reply::status_type status, const std::string& msg);
 
 seastar::future<std::unique_ptr<seastar::httpd::reply>> new_bad_request_reply(
     std::unique_ptr<seastar::httpd::reply> rep, const std::string& msg);
