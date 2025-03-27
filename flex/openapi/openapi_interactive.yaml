@@ -1,23 +1,16 @@
 openapi: 3.0.3
-servers:
-  # Added by API Auto Mocking Plugin
-  # Added by API Auto Mocking Plugin
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0
-  - description: SwaggerHub API Auto Mocking
-    url: https://virtserver.swaggerhub.com/GRAPHSCOPE/interactive/1.0.0
 info:
   description: |
     This is the definition of GraphScope Interactive API, including
       - AdminService API
       - Vertex/Edge API
       - QueryService
-    
-    
+
+
     AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.
-    
+
     Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrieve.
-    
+
     QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
   version: "1.0.0"
   title: GraphScope Interactive API v0.3
@@ -53,22 +46,22 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateGraphRequest'
+              $ref: "#/components/schemas/CreateGraphRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateGraphResponse'
-        '400':
+                $ref: "#/components/schemas/CreateGraphResponse"
+        "400":
           description: BadRequest
           content:
             application/json:
               schema:
                 type: string
-        '500':
+        "500":
           description: Internal error
           content:
             application/json:
@@ -80,35 +73,35 @@ paths:
       description: List all graphs
       operationId: list_graphs
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetGraphResponse'
+                  $ref: "#/components/schemas/GetGraphResponse"
   /v1/graph/{graph_id}:
     get:
       tags:
-         - AdminService/GraphManagement
+        - AdminService/GraphManagement
       description: Get a graph by name
       operationId: get_graph
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
           description: The id of graph to get
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetGraphResponse'
-        '404':
+                $ref: "#/components/schemas/GetGraphResponse"
+        "404":
           description: Not found
           content:
             application/json:
@@ -126,32 +119,31 @@ paths:
           required: true
           schema:
             type: string
-          description:
-            The id of graph to delete
+          description: The id of graph to delete
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example: "Successfully delete graph"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example: 
+                $ref: "#/components/schemas/APIResponseWithCode"
+              example:
                 code: 4
                 message: "Graph not found"
-        '500':
+        "500":
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
-              example: 
+                $ref: "#/components/schemas/APIResponseWithCode"
+              example:
                 code: 103
                 message: "Internal error"
   /v1/graph/{graph_id}/schema:
@@ -162,7 +154,7 @@ paths:
       operationId: get_schema
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -173,7 +165,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetGraphSchemaResponse'
+                $ref: "#/components/schemas/GetGraphSchemaResponse"
         500:
           $ref: "#/components/responses/500"
   /v1/graph/{graph_id}/schema/vertex:
@@ -193,17 +185,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVertexType'
+              $ref: "#/components/schemas/CreateVertexType"
       responses:
-        '200':
+        "200":
           description: Successfully created the vertex type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
 
     delete:
@@ -223,21 +215,21 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successfully deleted the vertex type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
-    
+
     put:
       tags:
         - AdminService/GraphManagement
-      description:  Update a vertex type to add more properties
+      description: Update a vertex type to add more properties
       operationId: update_vertex_type
       parameters:
         - name: graph_id
@@ -250,17 +242,17 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateVertexType'
+              $ref: "#/components/schemas/CreateVertexType"
       responses:
-        '200':
+        "200":
           description: Successfully updated the vertex type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
 
   /v1/graph/{graph_id}/schema/edge:
@@ -279,19 +271,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEdgeType'
+              $ref: "#/components/schemas/CreateEdgeType"
       responses:
-        '200':
+        "200":
           description: Successful created the edge type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
-    
+
     delete:
       tags:
         - AdminService/GraphManagement
@@ -319,15 +311,15 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successfully deleted the edge type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
 
     put:
@@ -346,19 +338,19 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateEdgeType'
+              $ref: "#/components/schemas/CreateEdgeType"
       responses:
         200:
           description: Successfully updated the edge type
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
         400:
           $ref: "#/components/responses/400"
         500:
           $ref: "#/components/responses/500"
-  
+
   /v1/graph/{graph_id}/snapshot/{snapshot_id}/status:
     get:
       tags:
@@ -377,17 +369,17 @@ paths:
           schema:
             type: integer
       responses:
-        '200':
-          description: the status of a snapshot_id 
+        "200":
+          description: the status of a snapshot_id
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/SnapshotStatus"
-        '400':
+        "400":
           $ref: "#/components/responses/400"
-        '500':
+        "500":
           $ref: "#/components/responses/500"
- 
+
   /v1/graph/{graph_id}/statistics:
     get:
       tags:
@@ -396,42 +388,42 @@ paths:
       operationId: get_graph_statistic
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
           description: The id of graph to get statistics
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetGraphStatisticsResponse'
-        '500':
+                $ref: "#/components/schemas/GetGraphStatisticsResponse"
+        "500":
           description: Server Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
-        '404':
+        "404":
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Graph not found"
-        '503':
+        "503":
           description: Service Unavailable
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 15
                 message: "Service Unavailable"
@@ -453,15 +445,15 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SchemaMapping'
+              $ref: "#/components/schemas/SchemaMapping"
         required: true
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobResponse'
+                $ref: "#/components/schemas/JobResponse"
   /v1/job/{job_id}:
     get:
       tags:
@@ -475,12 +467,12 @@ paths:
             type: string
           description: The id of the job, returned from POST /v1/graph/{graph_id}/dataloading
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/JobStatus'
+                $ref: "#/components/schemas/JobStatus"
     delete:
       tags:
         - AdminService/JobManagement
@@ -492,12 +484,12 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example: "Successfully cancel job: 123"
   /v1/job:
     get:
@@ -505,14 +497,14 @@ paths:
         - AdminService/JobManagement
       operationId: list_jobs
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/JobStatus'
+                  $ref: "#/components/schemas/JobStatus"
   /v1/graph/{graph_id}/procedure:
     post:
       tags:
@@ -529,39 +521,39 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateProcedureRequest'
+              $ref: "#/components/schemas/CreateProcedureRequest"
         required: true
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CreateProcedureResponse'
-        '400':
+                $ref: "#/components/schemas/CreateProcedureResponse"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 14
                 message: "Bad request"
-        '404':
+        "404":
           description: not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Graph not found"
-        '500':
+        "500":
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -577,15 +569,15 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/GetProcedureResponse'
-        '404':
+                  $ref: "#/components/schemas/GetProcedureResponse"
+        "404":
           description: Not found
           content:
             application/json:
@@ -600,23 +592,23 @@ paths:
       operationId: get_procedure
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
         - name: procedure_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetProcedureResponse'
-        '404':
+                $ref: "#/components/schemas/GetProcedureResponse"
+        "404":
           description: Not found
           content:
             application/json:
@@ -626,7 +618,7 @@ paths:
     put:
       tags:
         - AdminService/ProcedureManagement
-      description:  Update procedure on a graph by id
+      description: Update procedure on a graph by id
       operationId: update_procedure
       parameters:
         - name: graph_id
@@ -635,7 +627,7 @@ paths:
           schema:
             type: string
         - name: procedure_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -643,20 +635,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/UpdateProcedureRequest'
+              $ref: "#/components/schemas/UpdateProcedureRequest"
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '400':
+                $ref: "#/components/schemas/APIResponse"
+        "400":
           description: Bad request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 14
                 message: "Bad request"
@@ -665,7 +657,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Graph not found/Procedure not found"
@@ -674,7 +666,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -690,23 +682,23 @@ paths:
           schema:
             type: string
         - name: procedure_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
         "404":
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Graph not found/Procedure not found"
@@ -721,20 +713,20 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StartServiceRequest'
+              $ref: "#/components/schemas/StartServiceRequest"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
-        '500':
+                $ref: "#/components/schemas/APIResponse"
+        "500":
           description: Internal Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -749,14 +741,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/StopServiceRequest'
+              $ref: "#/components/schemas/StopServiceRequest"
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
   /v1/service/restart:
     post:
       tags:
@@ -764,12 +756,12 @@ paths:
       description: Start current service
       operationId: restart_service
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
   /v1/service/status:
     get:
       tags:
@@ -777,12 +769,12 @@ paths:
       description: Get service status
       operationId: get_service_status
       responses:
-        '200':
+        "200":
           description: successful operation
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ServiceStatus'
+                $ref: "#/components/schemas/ServiceStatus"
   /v1/graph/{graph_id}/vertex:
     get:
       tags:
@@ -814,14 +806,14 @@ paths:
           required: true
           description: The primary key value of querying vertex.
           schema:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: "#/components/schemas/AnyValue"
       responses:
-        '200':
+        "200":
           description: Found vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VertexData'
+                $ref: "#/components/schemas/VertexData"
               example:
                 label: "person"
                 values:
@@ -831,11 +823,11 @@ paths:
                     value: 23
                   - name: "name"
                     value: "amy"
-        '400':
+        "400":
           description: Bad input parameter
-        '404':
+        "404":
           description: Vertex not found or graph not found
-        '500':
+        "500":
           description: Server internal error
     post:
       tags:
@@ -844,7 +836,7 @@ paths:
       operationId: add_vertex
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -855,7 +847,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexEdgeRequest'
+              $ref: "#/components/schemas/VertexEdgeRequest"
             example:
               vertex_request:
                 - label: "person"
@@ -867,57 +859,57 @@ paths:
                 - src_label: "person"
                   dst_label: "software"
                   edge_label: "created"
-                  src_primary_key_values: 
+                  src_primary_key_values:
                     - name: "id"
                       value: 1
-                  dst_primary_key_values: 
+                  dst_primary_key_values:
                     - name: "id"
                       value: 3
                   properties:
                     - name: "weight"
                       value: 0.2
       responses:
-        '200':
+        "200":
           description: Successfully created vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully created vertex"
-        '400':
+        "400":
           description: Invalid input vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input vertex schema"
-        '404':
+        "404":
           description: Graph not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Graph not found"
-        '409':
+        "409":
           description: Vertex already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 102
                 message: "Vertex already exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -930,7 +922,7 @@ paths:
         Update the vertex with the provided properties to the specified graph.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -939,7 +931,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/VertexEdgeRequest'
+              $ref: "#/components/schemas/VertexEdgeRequest"
             example:
               label: "person"
               primary_key_value: 2
@@ -947,38 +939,38 @@ paths:
                 age: 24
                 name: "Cindy"
       responses:
-        '200':
+        "200":
           description: Successfully update vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully updated vertex"
-        '400':
+        "400":
           description: Invalid input parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input vertex schema"
-        '404':
+        "404":
           description: Vertex not exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Vertex not exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -991,7 +983,7 @@ paths:
         Remove the vertex from the specified graph.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -1003,40 +995,40 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/DeleteVertexRequest'
+                $ref: "#/components/schemas/DeleteVertexRequest"
       responses:
-        '200':
+        "200":
           description: Successfully delete vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully delete vertex"
-        '400':
+        "400":
           description: Invalid input vertex
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input vertex schema"
-        '404':
+        "404":
           description: Vertex not exists or Graph not exits.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Vertex not exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1051,7 +1043,7 @@ paths:
         Get the properties for the specified vertex.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -1074,7 +1066,7 @@ paths:
           required: true
           description: The primary key value of src vertex.
           schema:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: "#/components/schemas/AnyValue"
           example: 1
         - name: dst_label
           in: query
@@ -1088,15 +1080,15 @@ paths:
           required: true
           description: The value of dst vertex's primary key
           schema:
-            $ref: '#/components/schemas/AnyValue'
+            $ref: "#/components/schemas/AnyValue"
           example: 3
       responses:
-        '200':
+        "200":
           description: Found Edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/EdgeData'
+                $ref: "#/components/schemas/EdgeData"
               example:
                 src_label: "person"
                 dst_label: "software"
@@ -1106,30 +1098,30 @@ paths:
                 properties:
                   - name: "weight"
                     value: 0.2
-        '400':
+        "400":
           description: Bad input parameter
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input edge schema"
-        '404':
+        "404":
           description: Edge not found or Graph not found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Edge not found"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1142,43 +1134,43 @@ paths:
         Add the edge to graph.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Successfully insert the edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully create edge"
-        '400':
+        "400":
           description: Invalid input edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input edge schema"
-        '409':
+        "409":
           description: edge already exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 102
                 message: "Edge already exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1189,15 +1181,15 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/EdgeRequest'
+                $ref: "#/components/schemas/EdgeRequest"
             example:
               - src_label: "person"
                 dst_label: "software"
                 edge_label: "created"
-                src_primary_key_values: 
+                src_primary_key_values:
                   - name: "id"
                     value: 1
-                dst_primary_key_values: 
+                dst_primary_key_values:
                   - name: "id"
                     value: 3
                 properties:
@@ -1212,7 +1204,7 @@ paths:
         Update the edge on the running graph.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -1223,53 +1215,53 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/EdgeRequest'
+                $ref: "#/components/schemas/EdgeRequest"
             example:
               - src_label: "person"
                 dst_label: "software"
                 edge_label: "created"
-                src_primary_key_values: 
+                src_primary_key_values:
                   - name: "id"
                     value: 1
-                dst_primary_key_values: 
+                dst_primary_key_values:
                   - name: "id"
                     value: 3
                 properties:
                   - name: "weight"
                     value: 0.2
       responses:
-        '200':
+        "200":
           description: Successfully update edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully update edge"
-        '400':
+        "400":
           description: Invalid input parameters
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input edge schema"
-        '404':
+        "404":
           description: Edge not exists
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Edge not exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1282,7 +1274,7 @@ paths:
         Remove the edge from current graph.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -1294,40 +1286,40 @@ paths:
             schema:
               type: array
               items:
-                $ref: '#/components/schemas/DeleteEdgeRequest'
+                $ref: "#/components/schemas/DeleteEdgeRequest"
       responses:
-        '200':
+        "200":
           description: Successfully delete edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponse'
+                $ref: "#/components/schemas/APIResponse"
               example:
                 message: "Successfully delete edge"
-        '400':
+        "400":
           description: Invalid input edge
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 101
                 message: "Invalid input edge schema"
-        '404':
+        "404":
           description: Edge not exists or Graph not exits
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 4
                 message: "Edge not exists"
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1342,7 +1334,7 @@ paths:
         After the procedure is created, user can use this API to run the procedure.
       parameters:
         - name: graph_id
-          in : path
+          in: path
           required: true
           schema:
             type: string
@@ -1353,19 +1345,19 @@ paths:
               type: string
               format: byte
       responses:
-        '200':
+        "200":
           description: Successfully runned.
           content:
             text/plain:
               schema:
                 type: string
                 format: byte
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1384,19 +1376,19 @@ paths:
               type: string
               format: byte
       responses:
-        '200':
+        "200":
           description: Successfully runned. Empty if failed?
           content:
             text/plain:
               schema:
                 type: string
                 format: byte
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1416,19 +1408,19 @@ paths:
               type: string
               format: byte
       responses:
-        '200':
+        "200":
           description: Successfully runned. Empty if failed?
           content:
             text/plain:
               schema:
                 type: string
                 format: byte
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1442,11 +1434,11 @@ paths:
         Submit a adhoc query to the running graph. The adhoc query should be represented by the physical plan:
         https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/physical.proto
       parameters:
-          - name: graph_id
-            in : path
-            required: true
-            schema:
-              type: string
+        - name: graph_id
+          in: path
+          required: true
+          schema:
+            type: string
       requestBody:
         content:
           text/plain:
@@ -1454,19 +1446,19 @@ paths:
               type: string
               format: byte
       responses:
-        '200':
+        "200":
           description: Successfully runned.
           content:
             text/plain:
               schema:
                 type: string
                 format: byte
-        '500':
+        "500":
           description: Server internal error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
@@ -1490,7 +1482,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadFileResponse'
+                $ref: "#/components/schemas/UploadFileResponse"
               example:
                 file_path: /home/graphscope/path/to/file.csv
                 # metadata:
@@ -1501,16 +1493,16 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/APIResponseWithCode'
+                $ref: "#/components/schemas/APIResponseWithCode"
               example:
                 code: 103
                 message: "Internal error"
 
 components:
   schemas:
-########################### Definition for GSDataType ###########################
-# Both Interactive and Coordinator use the same GSDataType definition, but we could
-# not include from another yaml file, so we need to define it twice.
+    ########################### Definition for GSDataType ###########################
+    # Both Interactive and Coordinator use the same GSDataType definition, but we could
+    # not include from another yaml file, so we need to define it twice.
     AnyValue: {}
     TypedValue:
       type: object
@@ -1519,25 +1511,34 @@ components:
         - value
       properties:
         type:
-          $ref: '#/components/schemas/GSDataType'
+          $ref: "#/components/schemas/GSDataType"
         value:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: "#/components/schemas/AnyValue"
     PrimitiveType:
       x-body-name: primitive_type
       type: object
-      required: 
+      required:
         - primitive_type
       properties:
         primitive_type:
           type: string
-          enum: [DT_SIGNED_INT32, DT_UNSIGNED_INT32, DT_SIGNED_INT64, DT_UNSIGNED_INT64,
-                 DT_BOOL, DT_FLOAT, DT_DOUBLE, DT_STRING]
-                 # The DT_STRING is added for backward compatibility, it should be replaced by StringType
+          enum:
+            [
+              DT_SIGNED_INT32,
+              DT_UNSIGNED_INT32,
+              DT_SIGNED_INT64,
+              DT_UNSIGNED_INT64,
+              DT_BOOL,
+              DT_FLOAT,
+              DT_DOUBLE,
+              DT_STRING,
+            ]
+            # The DT_STRING is added for backward compatibility, it should be replaced by StringType
           example: DT_SIGNED_INT32
     LongText:
       x-body-name: long_text
       type: object
-      additionalProperties: false 
+      additionalProperties: false
       required:
         - long_text
       properties:
@@ -1547,7 +1548,7 @@ components:
     FixedChar:
       x-body-name: fixed_char
       type: object
-      additionalProperties: false 
+      additionalProperties: false
       required:
         - char
       properties:
@@ -1561,7 +1562,7 @@ components:
     VarChar:
       x-body-name: var_char
       type: object
-      additionalProperties: false 
+      additionalProperties: false
       required:
         - var_char
       properties:
@@ -1575,14 +1576,14 @@ components:
     StringType:
       x-body-name: string_type
       type: object
-      required: 
+      required:
         - string
       properties:
         string:
           oneOf:
-            - $ref: '#/components/schemas/LongText'
-            - $ref: '#/components/schemas/FixedChar'
-            - $ref: '#/components/schemas/VarChar'
+            - $ref: "#/components/schemas/LongText"
+            - $ref: "#/components/schemas/FixedChar"
+            - $ref: "#/components/schemas/VarChar"
     TimeStampType:
       x-body-name: time_stamp_type
       type: object
@@ -1596,7 +1597,7 @@ components:
       x-body-name: date_type
       type: object
       required:
-       - date32
+        - date32
       properties:
         date32:
           type: string
@@ -1609,14 +1610,14 @@ components:
       properties:
         temporal:
           oneOf:
-            - $ref: '#/components/schemas/TimeStampType'
-            - $ref: '#/components/schemas/DateType'
+            - $ref: "#/components/schemas/TimeStampType"
+            - $ref: "#/components/schemas/DateType"
     GSDataType:
       x-body-name: gs_data_type
       oneOf:
-        - $ref: '#/components/schemas/PrimitiveType'
-        - $ref: '#/components/schemas/StringType'
-        - $ref: '#/components/schemas/TemporalType'
+        - $ref: "#/components/schemas/PrimitiveType"
+        - $ref: "#/components/schemas/StringType"
+        - $ref: "#/components/schemas/TemporalType"
     Property:
       x-body-name: property
       type: object
@@ -1628,7 +1629,7 @@ components:
           type: string
           example: "id"
         value:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: "#/components/schemas/AnyValue"
           # type: object
     Parameter:
       x-body-name: parameter
@@ -1641,7 +1642,7 @@ components:
           type: string
           example: param1
         type:
-          $ref: '#/components/schemas/GSDataType'
+          $ref: "#/components/schemas/GSDataType"
         allow_cast:
           type: boolean
           example: true
@@ -1659,11 +1660,11 @@ components:
         primary_key_values:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
         properties:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     DeleteVertexRequest:
       x-body-name: delete_vertex_request
       type: object
@@ -1676,7 +1677,7 @@ components:
           type: array
           description: Primary key values for the vertex.
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     VertexData:
       x-body-name: vertex_data
       type: object
@@ -1689,7 +1690,7 @@ components:
         values:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     EdgeData:
       x-body-name: edge_data
       type: object
@@ -1711,13 +1712,13 @@ components:
           type: string
           example: created
         src_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: "#/components/schemas/AnyValue"
         dst_primary_key_value:
-          $ref: '#/components/schemas/AnyValue'
+          $ref: "#/components/schemas/AnyValue"
         properties:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     EdgeRequest:
       x-body-name: edge_request
       type: object
@@ -1740,15 +1741,15 @@ components:
         src_primary_key_values:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
         dst_primary_key_values:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
         properties:
           type: array
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     DeleteEdgeRequest:
       x-body-name: delete_edge_request
       type: object
@@ -1769,17 +1770,17 @@ components:
           type: array
           description: Primary key values for the source vertex.
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
         dst_primary_key_values:
           type: array
           description: Primary key values for the destination vertex.
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
         properties:
           type: array
           description: The properties of the edge. If the edge type has primary key, it should be included in the properties.
           items:
-            $ref: '#/components/schemas/Property'
+            $ref: "#/components/schemas/Property"
     QueryRequest:
       x-body-name: query_request
       type: object
@@ -1792,7 +1793,7 @@ components:
         arguments:
           type: array
           items:
-            $ref: '#/components/schemas/TypedValue'
+            $ref: "#/components/schemas/TypedValue"
     CreateProcedureRequest:
       x-body-name: create_procedure_request
       type: object
@@ -1801,13 +1802,13 @@ components:
         - type
         - query
       properties:
-        name: 
+        name:
           type: string
           example: query1
         description:
           type: string
           example: A sample stored procedure
-        type: 
+        type:
           type: string
           enum:
             - cpp
@@ -1827,7 +1828,7 @@ components:
     StoredProcedureMeta:
       x-body-name: stored_procedure_meta
       allOf:
-        - $ref: '#/components/schemas/CreateProcedureRequest'
+        - $ref: "#/components/schemas/CreateProcedureRequest"
         - type: object
           properties:
             id:
@@ -1838,22 +1839,22 @@ components:
               example: /path/to/library
             params:
               type: array
-              items: 
-               $ref: '#/components/schemas/Parameter'
+              items:
+                $ref: "#/components/schemas/Parameter"
             returns:
               type: array
-              items: 
-               $ref: '#/components/schemas/Parameter'
+              items:
+                $ref: "#/components/schemas/Parameter"
             enable:
               type: boolean
-              example : true
+              example: true
             option:
               type: object
               additionalProperties: true
     GetProcedureResponse:
       x-body-name: get_procedure_response
       allOf:
-        - $ref: '#/components/schemas/StoredProcedureMeta'
+        - $ref: "#/components/schemas/StoredProcedureMeta"
         - type: object
           properties:
             bound_graph:
@@ -1890,10 +1891,10 @@ components:
           example: A default description
         stored_procedures:
           type: array
-          items: 
-            $ref: '#/components/schemas/CreateProcedureRequest'
+          items:
+            $ref: "#/components/schemas/CreateProcedureRequest"
         schema:
-          $ref: '#/components/schemas/CreateGraphSchemaRequest'
+          $ref: "#/components/schemas/CreateGraphSchemaRequest"
     APIResponse:
       x-body-name: api_response
       type: string
@@ -1928,7 +1929,7 @@ components:
         - destination_vertex
         - count
       properties:
-        source_vertex: 
+        source_vertex:
           type: string
         destination_vertex:
           type: string
@@ -1945,7 +1946,7 @@ components:
         vertex_type_pair_statistics:
           type: array
           items:
-            $ref: '#/components/schemas/VertexTypePairStatistics'
+            $ref: "#/components/schemas/VertexTypePairStatistics"
     GetGraphStatisticsResponse:
       x-body-name: graph_statistics_response
       type: object
@@ -1959,19 +1960,19 @@ components:
           type: integer
         vertex_type_statistics:
           type: array
-          items: 
-            $ref: '#/components/schemas/VertexStatistics'
+          items:
+            $ref: "#/components/schemas/VertexStatistics"
         edge_type_statistics:
           type: array
           items:
-            $ref: '#/components/schemas/EdgeStatistics'
+            $ref: "#/components/schemas/EdgeStatistics"
     GetGraphResponse:
       x-body-name: get_graph_response
       type: object
       properties:
         version:
           type: string
-        id: 
+        id:
           type: string
         name:
           type: string
@@ -1990,11 +1991,14 @@ components:
         stored_procedures:
           type: array
           items:
-            $ref: '#/components/schemas/GetProcedureResponse'
+            $ref: "#/components/schemas/GetProcedureResponse"
         schema:
-          $ref: '#/components/schemas/GetGraphSchemaResponse'
+          $ref: "#/components/schemas/GetGraphSchemaResponse"
         data_import_config:
-          $ref: '#/components/schemas/SchemaMapping'
+          $ref: "#/components/schemas/SchemaMapping"
+        remote_path:
+          type: string
+          example: /path/to/remote # If remote_path is specified, we could download the data from remote path.
     CreateGraphSchemaRequest:
       x-body-name: create_graph_schema_request
       type: object
@@ -2002,11 +2006,11 @@ components:
         vertex_types:
           type: array
           items:
-            $ref: '#/components/schemas/CreateVertexType'
+            $ref: "#/components/schemas/CreateVertexType"
         edge_types:
           type: array
           items:
-            $ref: '#/components/schemas/CreateEdgeType'
+            $ref: "#/components/schemas/CreateEdgeType"
     GetGraphSchemaResponse:
       x-body-name: get_graph_schema_response
       type: object
@@ -2014,11 +2018,11 @@ components:
         vertex_types:
           type: array
           items:
-            $ref: '#/components/schemas/GetVertexType'
+            $ref: "#/components/schemas/GetVertexType"
         edge_types:
           type: array
           items:
-            $ref: '#/components/schemas/GetEdgeType'
+            $ref: "#/components/schemas/GetEdgeType"
     BaseVertexType:
       type: object
       properties:
@@ -2037,17 +2041,17 @@ components:
     CreateVertexType:
       x-body-name: create_vertex_type
       allOf:
-        - $ref: '#/components/schemas/BaseVertexType'
-        - type: object       
+        - $ref: "#/components/schemas/BaseVertexType"
+        - type: object
           properties:
             properties:
               type: array
               items:
-                $ref: '#/components/schemas/CreatePropertyMeta'
+                $ref: "#/components/schemas/CreatePropertyMeta"
     GetVertexType:
       x-body-name: get_vertex_type
       allOf:
-        - $ref: '#/components/schemas/BaseVertexType'
+        - $ref: "#/components/schemas/BaseVertexType"
         - type: object
           properties:
             type_id:
@@ -2056,7 +2060,7 @@ components:
             properties:
               type: array
               items:
-                $ref: '#/components/schemas/GetPropertyMeta'
+                $ref: "#/components/schemas/GetPropertyMeta"
             description:
               type: string
     BaseEdgeType:
@@ -2104,17 +2108,17 @@ components:
     CreateEdgeType:
       x-body-name: create_edge_type
       allOf:
-        - $ref: '#/components/schemas/BaseEdgeType'
+        - $ref: "#/components/schemas/BaseEdgeType"
         - type: object
           properties:
             properties:
               type: array
               items:
-                $ref: '#/components/schemas/CreatePropertyMeta'
+                $ref: "#/components/schemas/CreatePropertyMeta"
     GetEdgeType:
       x-body-name: get_edge_type
       allOf:
-        - $ref: '#/components/schemas/BaseEdgeType'
+        - $ref: "#/components/schemas/BaseEdgeType"
         - type: object
           properties:
             type_id:
@@ -2125,22 +2129,22 @@ components:
             properties:
               type: array
               items:
-                $ref: '#/components/schemas/GetPropertyMeta'
+                $ref: "#/components/schemas/GetPropertyMeta"
     BasePropertyMeta:
       type: object
       properties:
         property_name:
           type: string
-        property_type: 
-          $ref: '#/components/schemas/GSDataType'
+        property_type:
+          $ref: "#/components/schemas/GSDataType"
     CreatePropertyMeta:
       x-body-name: create_property_meta
       allOf:
-        - $ref: '#/components/schemas/BasePropertyMeta'
+        - $ref: "#/components/schemas/BasePropertyMeta"
     GetPropertyMeta:
       x-body-name: get_property_meta
       allOf:
-        - $ref: '#/components/schemas/BasePropertyMeta'
+        - $ref: "#/components/schemas/BasePropertyMeta"
         - type: object
           properties:
             property_id:
@@ -2186,14 +2190,16 @@ components:
                 metadata:
                   type: object
                   additionalProperties: true
+            destination:
+              type: string # oss path or local path
         vertex_mappings:
           type: array
           items:
-            $ref: '#/components/schemas/VertexMapping'
+            $ref: "#/components/schemas/VertexMapping"
         edge_mappings:
           type: array
           items:
-            $ref: '#/components/schemas/EdgeMapping'
+            $ref: "#/components/schemas/EdgeMapping"
     VertexMapping:
       x-body-name: vertex_mapping
       type: object
@@ -2208,7 +2214,7 @@ components:
         column_mappings:
           type: array
           items:
-            $ref: '#/components/schemas/ColumnMapping'
+            $ref: "#/components/schemas/ColumnMapping"
     EdgeMapping:
       x-body-name: edge_mapping
       type: object
@@ -2264,7 +2270,7 @@ components:
         column_mappings:
           type: array
           items:
-            $ref: '#/components/schemas/ColumnMapping'
+            $ref: "#/components/schemas/ColumnMapping"
     ColumnMapping:
       x-body-name: column_mapping
       type: object
@@ -2296,12 +2302,17 @@ components:
       x-body-name: service_status
       type: object
       properties:
+        deploy_mode:
+          type: string
+          enum:
+            - standalone
+            - k8s # when the deploy_mode is k8s, bolt_port, hqps_port and gremlin_port will not be available
         statistics_enabled: # indicate whether the graph statistics interface is enabled
           type: boolean
         status:
           type: string
         graph:
-          $ref: '#/components/schemas/GetGraphResponse'
+          $ref: "#/components/schemas/GetGraphResponse"
         bolt_port:
           type: integer
           format: int32
@@ -2366,11 +2377,11 @@ components:
         vertex_request:
           type: array
           items:
-            $ref: '#/components/schemas/VertexRequest'
+            $ref: "#/components/schemas/VertexRequest"
         edge_request:
           type: array
           items:
-            $ref: '#/components/schemas/EdgeRequest'
+            $ref: "#/components/schemas/EdgeRequest"
     SnapshotStatus:
       type: object
       required:
@@ -2382,3 +2393,22 @@ components:
         status:
           type: string
           example: "AVAILABLE"
+  responses:
+    "400":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Bad request
+    "404":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Not found
+    "500":
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+      description: Server error
