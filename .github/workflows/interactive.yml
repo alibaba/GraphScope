@@ -55,7 +55,7 @@ jobs:
         git submodule update --init
         cd ${GITHUB_WORKSPACE}/flex
         mkdir build && cd build
-        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG -DBUILD_ETCD_METASTORE=ON && sudo make -j$(nproc)
+        cmake .. -DCMAKE_INSTALL_PREFIX=/opt/graphscope -DCMAKE_BUILD_TYPE=DEBUG && sudo make -j$(nproc)
         # package the build artifacts
         cd .. && tar -zcf build.tar.gz build
     
@@ -184,7 +184,7 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
+        bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml ${GS_TEST_DIR}
 
         # test admin service with etcd metastore
         GOOGLE_URL=https://storage.googleapis.com/etcd
@@ -197,7 +197,7 @@ jobs:
         sleep 3
 
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        python3 -c 'import yaml;f=open("./interactive_config_test.yaml");y=yaml.safe_load(f);y["compute_engine"]["metadata_store"]["uri"] = "http://localhost:2379"; f.close();f=open("./interactive_config_test_etcd.yaml","w");yaml.dump(y,f);f.close()'
+        python3 -c 'import yaml;f=open("./interactive_config_standalone.yaml");y=yaml.safe_load(f);y["compute_engine"]["metadata_store"]["uri"] = "http://localhost:2379"; f.close();f=open("./interactive_config_test_etcd.yaml","w");yaml.dump(y,f);f.close()'
         bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test_etcd.yaml ${GS_TEST_DIR}
         rm ./interactive_config_test_etcd.yaml
 
@@ -227,11 +227,11 @@ jobs:
         cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        sed -i 's/interactive_workspace/temp_workspace/g' ./interactive_config_test.yaml
-        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml java
+        sed -i 's/interactive_workspace/temp_workspace/g' ./interactive_config_standalone.yaml
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml java
         export ENGINE_TYPE=interactive
-        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml python
-        sed -i 's/temp_workspace/interactive_workspace/g' ./interactive_config_test.yaml
+        bash hqps_sdk_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml python
+        sed -i 's/temp_workspace/interactive_workspace/g' ./interactive_config_standalone.yaml
   
     - name: Robustness test 
       env:
@@ -239,7 +239,7 @@ jobs:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
+        bash hqps_robust_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml ./interactive_config_standalone_cbo.yaml
 
     - name: Sample Query test
       env:
@@ -262,7 +262,7 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         pip3 install argparse
         pip3 install neo4j
-        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml
+        bash hqps_compiler_get_meta_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml
 
     - name: Run codegen test.
       env:
@@ -270,7 +270,7 @@ jobs:
         INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
       run: |
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
-        bash hqps_codegen_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ./interactive_config_test_cbo.yaml
+        bash hqps_codegen_test.sh ${INTERACTIVE_WORKSPACE} ./interactive_config_standalone.yaml ./interactive_config_standalone_cbo.yaml
 
     - name: Test cypher&cpp procedure generation and loading
       env:
@@ -291,18 +291,18 @@ jobs:
         
         cd ${GITHUB_WORKSPACE}/flex/bin
         ./load_plan_and_gen.sh -e=hqps -i=../tests/interactive/plus_one.cc -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml -o=${PLUGIN_DIR} \
           --procedure_name=plus_one \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml \
           --procedure_desc="This is test procedure, and the input is a number, and the output is the number plus one."
         
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/sdk/java/src/test/resources/sample_app.cc -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml -o=${PLUGIN_DIR} \
           --procedure_name=sample_app \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
 
         ./load_plan_and_gen.sh -e=hqps -i=../interactive/examples/modern_graph/count_vertex_num.cypher -w=/tmp/codegen \
-          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml  -o=${PLUGIN_DIR} \
+          --ir_conf=${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml  -o=${PLUGIN_DIR} \
           --procedure_name=count_vertex_num \
           --graph_schema_path=../interactive/examples/modern_graph/graph.yaml
         
@@ -311,12 +311,12 @@ jobs:
         # plus_one: (num: int64) -> (num: int64), CppEncoder
         # sample_app: (num: int64) -> (num: int64), kCypherJson
 
-        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sed -i 's/interactive_workspace/temp_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml
         cd ${GITHUB_WORKSPACE}/flex/tests/interactive/
         bash test_plugin_loading.sh ${TMP_INTERACTIVE_WORKSPACE} modern_graph \
-           ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
+           ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml \
            ./modern_graph_schema_v0_0.yaml  ./modern_graph_schema_v0_1.yaml
-        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sed -i 's/temp_workspace/interactive_workspace/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml
       
     - name: Let compiler use latest interactive java sdk
       env:
@@ -487,7 +487,6 @@ jobs:
         git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
         cd /tmp/libgrape-lite
         mkdir -p build && cd build
-        cmake .. -BUILD_ETCD_METASTORE=ON
         make -j$(nproc)
         make install
 
@@ -653,16 +652,3 @@ jobs:
         BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
         sed -i 's/|/\\t/g' ${BULK_LOAD_FILE}
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d /tmp/csr-data-dir/
-
-    - name: Test etcd-based metadata service
-      run: |
-        GOOGLE_URL=https://storage.googleapis.com/etcd
-        GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
-        DOWNLOAD_URL=${GOOGLE_URL}
-        rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
-        curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
-        tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test
-        /tmp/etcd-download-test/etcd &
-        sleep 3
-
-        GLOG_v=10 ./tests/hqps/etcd_meta_test http://localhost:2379/

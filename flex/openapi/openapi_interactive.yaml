@@ -1509,7 +1509,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: "#/components/schemas/AllGraphServiceRegistryRecord"
+                  $ref: "#/components/schemas/GraphServiceRegistryRecord"
                 type: array
           description: successful operation
         "500":
@@ -2380,6 +2380,11 @@ components:
       x-body-name: service_status
       type: object
       properties:
+        deploy_mode:
+          type: string
+          enum:
+            - standalone
+            - k8s # when the deploy_mode is k8s, bolt_port, hqps_port and gremlin_port will not be available
         statistics_enabled: # indicate whether the graph statistics interface is enabled
           type: boolean
         status:
@@ -2507,7 +2512,9 @@ components:
           title: service_name
           type: string
         instances:
-          $ref: "#/components/schemas/RegistryInstanceRecord"
+          type: array
+          items:
+            $ref: "#/components/schemas/RegistryInstanceRecord"
         primary:
           $ref: "#/components/schemas/RegistryInstanceRecord"
       title: ServiceRegistryRecord
@@ -2517,9 +2524,12 @@ components:
         graph_id: "1"
         service_registry:
           instances:
-            endpoint: ip:port
-            metrics:
-              snapshot_id: "1"
+            - endpoint: ip:port
+              metrics:
+                snapshot_id: "1"
+            - endpoint: ip:port
+              metrics:
+                snapshot_id: "1"
           service_name: graphscope
           primary:
             endpoint: ip:port
@@ -2534,11 +2544,6 @@ components:
           $ref: "#/components/schemas/ServiceRegistryRecord"
       title: GraphServiceRegistryRecord
       type: object
-    AllGraphServiceRegistryRecord:
-      items:
-        $ref: "#/components/schemas/GraphServiceRegistryRecord"
-      title: AllGraphServiceRegistryRecord
-      type: array
   responses:
     "400":
       content:

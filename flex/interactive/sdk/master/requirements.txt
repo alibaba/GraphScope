@@ -8,3 +8,4 @@ etcd3 == 0.12.0
 kubernetes>=24.2.0
 simple_parsing == 0.1.7
 pyyaml >= 6.0.2
+oss2 >= 2.19.1

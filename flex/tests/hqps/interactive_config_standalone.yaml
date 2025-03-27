@@ -10,7 +10,7 @@ compute_engine:
   store:
     type: cpp-mcsr
   metadata_store:
-    uri: http://localhost:2379 # Could be file://{WORKSPACE}/METADATA or other supported storage class. WORKSPACE is the placeholder for the workspace directory.
+    uri: file://{WORKSPACE}/METADATA # Could be file://{WORKSPACE}/METADATA or other supported storage class. WORKSPACE is the placeholder for the workspace directory.
   wal_uri: file://{GRAPH_DATA_DIR}/wal # Could be file://{GRAPH_DATA_DIR}/wal or other supported storage class. GRAPH_DATA_DIR is the placeholder for the graph data directory.
 compiler:
   planner:
@@ -23,10 +23,10 @@ compiler:
   meta:
     reader:
       schema:
-        uri: http://localhost:7776/v1/graph/1
+        uri: http://localhost:7777/v1/service/status
         interval: 1000 # ms
       statistics:
-        uri: http://localhost:7776/v1/graph/%s/statistics
+        uri: http://localhost:7777/v1/graph/%s/statistics
         interval: 86400000 # ms
       timeout: 1000 # ms
   endpoint:
@@ -35,7 +35,7 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: true
+      disabled: false
       port: 8182
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite

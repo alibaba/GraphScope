@@ -31,6 +31,7 @@ from gs_interactive_admin.models.snapshot_status import SnapshotStatus  # noqa: 
 from gs_interactive_admin import util
 from gs_interactive_admin.core.metadata.metadata_store import get_metadata_store
 from gs_interactive_admin.core.job.job_manager import get_job_manager
+from gs_interactive_admin.core.service.service_manager import get_service_manager
 
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
@@ -91,6 +92,12 @@ def delete_graph(graph_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
+    # Before we delete graph, we need to make sure the service on the graph has been stopped.
+    if get_service_manager().is_graph_running(graph_id):
+        # bad request
+        return APIResponseWithCode(
+            code=400, message=f"The service on the graph {graph_id} has not been stopped"
+        )
     return get_metadata_store().delete_graph_meta(graph_id)
 
 

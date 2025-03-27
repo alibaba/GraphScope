@@ -17,10 +17,10 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
-option(BUILD_ETCD_METASTORE "Whether to build with etcd metastore" OFF) # Whether to build with etcd metastore, default is OFF
-option(ENABLE_SERVICE_REGISTER "Whether to enable service register" OFF) # Whether to enable service register, default is OFF
+
+option(ENABLE_SERVICE_REGISTER "Whether to enable service register" ON) # Whether to enable service register, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
-option(BUILD_BULKLOADER_ONLY "Only to build bulkloader" OFF)
+option(BUILD_FOR_MASTER "Only to build bulkloader" OFF)
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -146,7 +146,7 @@ add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 #find hiactor----------------------------------------------------------------------
-if (NOT BUILD_BULKLOADER_ONLY)
+if (NOT BUILD_FOR_MASTER)
     find_package(Hiactor)
 endif()
 if (NOT Hiactor_FOUND)
@@ -245,7 +245,7 @@ macro(install_without_export_flex_target target)
     )
 endmacro()
 
-if (BUILD_ETCD_METASTORE OR ENABLE_SERVICE_REGISTER)
+if (ENABLE_SERVICE_REGISTER)
     include("cmake/BuildEtcdCpp.cmake")
     include_directories(SYSTEM ${CPPREST_INCLUDE_DIR})
     message(STATUS "Include directory: ${CPPREST_INCLUDE_DIR}")
@@ -255,26 +255,21 @@ if (BUILD_ETCD_METASTORE OR ENABLE_SERVICE_REGISTER)
     endforeach()
 endif()
 
-if (BUILD_ETCD_METASTORE)
-    add_definitions(-DBUILD_ETCD_METASTORE)
-    # cd to third_party/cpprestsdk and run git submodule update --init
-endif()
-
 if (ENABLE_SERVICE_REGISTER)
     add_definitions(-DENABLE_SERVICE_REGISTER)
 endif()
 
 add_subdirectory(utils)
 add_subdirectory(storages)
-if (NOT BUILD_BULKLOADER_ONLY)
-    add_subdirectory(codegen)
+add_subdirectory(codegen)
+if (NOT BUILD_FOR_MASTER)
     add_subdirectory(engines)
 endif()
 add_subdirectory(bin)
 if (OPENTELEMETRY_CPP_FOUND)
    add_subdirectory(otel)
 endif()
-if (BUILD_TEST)
+if ((NOT BUILD_FOR_MASTER) AND BUILD_TEST)
    add_subdirectory(tests)
 endif()
 

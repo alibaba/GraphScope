@@ -45,7 +45,7 @@ ServiceConfig::ServiceConfig()
       start_compiler(false),
       enable_gremlin(false),
       enable_bolt(false),
-      metadata_store_uri(DEFAULT_METADATA_STORE_URI),
+      metadata_store_type_(gs::MetadataStoreType::kLocalFile),
       log_level(DEFAULT_LOG_LEVEL),
       verbose_level(DEFAULT_VERBOSE_LEVEL),
       sharding_mode(DEFAULT_SHARDING_MODE),
@@ -142,14 +142,8 @@ void GraphDBService::init(const ServiceConfig& config) {
   service_config_ = config;
   gs::init_cpu_usage_watch();
   if (config.start_admin_service) {
-    // instantiate the placeholder {WOKRSPACE} in metadata store uri.
-    auto metadata_store_uri = config.metadata_store_uri;
-    if (metadata_store_uri.find("{WORKSPACE}") != std::string::npos) {
-      metadata_store_uri =
-          std::regex_replace(metadata_store_uri, std::regex("\\{WORKSPACE\\}"),
-                             WorkDirManipulator::GetWorkspace());
-    }
-    metadata_store_ = gs::MetadataStoreFactory::Create(metadata_store_uri);
+    metadata_store_ = gs::MetadataStoreFactory::Create(
+        config.metadata_store_type_, WorkDirManipulator::GetWorkspace());
 
     auto res = metadata_store_->Open();
     if (!res.ok()) {
@@ -384,7 +378,6 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
       return std::make_pair(false, payload);
     }
     payload.graph_id = cur_running_graph.value();
-
   } else {
     // Try to get from current graph_db
     auto& db = gs::GraphDB::get();
@@ -392,7 +385,6 @@ std::pair<bool, AllServiceRegisterPayload> GraphDBService::get_service_info() {
               << db.schema().GetGraphId();
     payload.graph_id = db.schema().GetGraphId();
   }
-  LOG(INFO) << "Get service info for graph: " << payload.graph_id;
 
   auto procedure_endpoint =
       ip + ":" + std::to_string(service_config_.query_port);

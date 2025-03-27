@@ -26,12 +26,17 @@
 #include "flex/engines/http_server/types.h"
 #include "flex/third_party/etcd-cpp-apiv3/etcd/Client.hpp"
 #include "flex/third_party/etcd-cpp-apiv3/etcd/KeepAlive.hpp"
+#include "flex/third_party/etcd-cpp-apiv3/etcd/Watcher.hpp"
 #include "flex/third_party/etcd-cpp-apiv3/etcd/v3/Transaction.hpp"
 #include "flex/utils/result.h"
 
-#include "flex/third_party/etcd-cpp-apiv3/etcd/v3/V3Response.hpp"
-
 #include <glog/logging.h>
+#include <rapidjson/document.h>
+#include <rapidjson/pointer.h>
+#include <rapidjson/rapidjson.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include "flex/third_party/etcd-cpp-apiv3/etcd/v3/V3Response.hpp"
 
 namespace server {
 
@@ -40,9 +45,7 @@ struct ServiceMetrics {
   ServiceMetrics() = default;
   ServiceMetrics(const std::string& snapshot_id) : snapshot_id(snapshot_id) {}
 
-  inline std::string to_string() const {
-    return "\"snapshot_id\": \"" + snapshot_id + "\"";
-  }
+  inline std::string to_string() const { return "\"snapshot_id\": \"" + snapshot_id + "\""; }
 };
 
 struct ServiceRegisterPayload {
@@ -50,13 +53,20 @@ struct ServiceRegisterPayload {
   ServiceMetrics metrics;  // service metrics
 
   ServiceRegisterPayload() = default;
-  ServiceRegisterPayload(const std::string& endpoint,
-                         const ServiceMetrics& metrics)
+  ServiceRegisterPayload(const std::string& endpoint, const ServiceMetrics& metrics)
       : endpoint(endpoint), metrics(metrics) {}
 
   std::string to_string() const {
-    return "{\"endpoint\": \"" + endpoint + "\", \"metrics\": {" +
-           metrics.to_string() + "}}";
+    rapidjson::Document json(rapidjson::kObjectType);
+    json.AddMember("endpoint", rapidjson::Value(endpoint.c_str(), json.GetAllocator()).Move(),
+                   json.GetAllocator());
+    json.AddMember("metrics",
+                   rapidjson::Value(metrics.to_string().c_str(), json.GetAllocator()).Move(),
+                   json.GetAllocator());
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    json.Accept(writer);
+    return buffer.GetString();
   }
 };
 
@@ -78,40 +88,60 @@ struct AllServiceRegisterPayload {
   }
 };
 
-#define INSERT_OR_UPDATE_ETCD_KEY_VALUE(client, key, value, lease_id, retry) \
-  {                                                                          \
-    int _retry = retry;                                                      \
-    while (_retry-- > 0) {                                                   \
-      auto _resp = client->put(key, value, lease_id);                        \
-      if (_resp.is_ok()) {                                                   \
-        return gs::Status::OK();                                             \
-      } else {                                                               \
-        continue;                                                            \
-      }                                                                      \
-    }                                                                        \
-    LOG(ERROR) << "Failed to insert or update key: " << key;                 \
-    return gs::Status(gs::StatusCode::INTERNAL_ERROR,                        \
-                      "Failed to insert or update key: " + key);             \
+#define INSERT_OR_UPDATE_ETCD_KEY_VALUE(client, key, value, lease_id, retry)                     \
+  {                                                                                              \
+    int _retry = retry;                                                                          \
+    while (_retry-- > 0) {                                                                       \
+      auto _resp = client->put(key, value, lease_id);                                            \
+      if (_resp.is_ok()) {                                                                       \
+        return gs::Status::OK();                                                                 \
+      } else {                                                                                   \
+        continue;                                                                                \
+      }                                                                                          \
+    }                                                                                            \
+    LOG(ERROR) << "Failed to insert or update key: " << key;                                     \
+    return gs::Status(gs::StatusCode::INTERNAL_ERROR, "Failed to insert or update key: " + key); \
   }
 
-#define INSERT_IF_ETCD_KEY_VALUE(client, key, value, lease_id, retry) \
-  {                                                                   \
-    int _retry = retry;                                               \
-    while (_retry-- > 0) {                                            \
-      auto _resp = client->add(key, value, lease_id);                 \
-      if (_resp.is_ok()) {                                            \
-        return gs::Status::OK();                                      \
-      } else {                                                        \
-        continue;                                                     \
-      }                                                               \
-    }                                                                 \
-    LOG(ERROR) << "Failed to insert key: " << key;                    \
-    return gs::Status(gs::StatusCode::INTERNAL_ERROR,                 \
-                      "Failed to insert key: " + key);                \
+#define INSERT_IF_ETCD_KEY_VALUE(client, key, value, lease_id, retry)                  \
+  {                                                                                    \
+    int _retry = retry;                                                                \
+    while (_retry-- > 0) {                                                             \
+      auto _resp = client->add(key, value, lease_id);                                  \
+      if (_resp.is_ok()) {                                                             \
+        return gs::Status::OK();                                                       \
+      } else {                                                                         \
+        continue;                                                                      \
+      }                                                                                \
+    }                                                                                  \
+    LOG(ERROR) << "Failed to insert key: " << key;                                     \
+    return gs::Status(gs::StatusCode::INTERNAL_ERROR, "Failed to insert key: " + key); \
   }
 
 /**
  * A wapper of a thread that periodically register the service to master.
+ * .
+├── graph_1
+│   ├── instance_list
+│   │   ├── cypher
+│   │   │   ├── 11.12.13.14_7687
+│   │   │   └── 22.12.13.14_7687
+│   |   ├── gremlin
+│   │   │   ├── 11.12.13.14_12314
+│   │   │   └── 22.12.13.14_12314
+│   |		└── procedure
+│   |       ├── 11.12.13.14_10000
+│   |       └── 22.12.13.14_10000
+│   │
+|   └─── primary
+└── metadata
+    ├── graph_meta
+    │   ├── graph_1
+    │   └── graph_2
+    ├── job_meta
+    │   └── job_1
+    └── plugin_meta
+        └── plugin_1
  */
 class ServiceRegister {
  public:
@@ -119,11 +149,9 @@ class ServiceRegister {
   static constexpr const char* INSTANCE_LIST = "instance_list";
   static constexpr const char* SERVICE_NAME = "service";
   static constexpr const int32_t MAX_RETRY = 5;
-  ServiceRegister(const std::string& etcd_endpoint,
-                  const std::string& namespace_,
+  ServiceRegister(const std::string& etcd_endpoint, const std::string& namespace_,
                   const std::string& instance_name,
-                  std::function<std::pair<bool, AllServiceRegisterPayload>()>
-                      get_service_info,
+                  std::function<std::pair<bool, AllServiceRegisterPayload>()> get_service_info,
                   int interval_seconds = 10)
       : etcd_endpoint_(etcd_endpoint),
         namespace_(namespace_),
@@ -143,29 +171,29 @@ class ServiceRegister {
   void Stop();
 
  private:
-  void register_service();
+  void init_register_thread();
+  void init_election_thread();
+  void init_lease();
+  void process_delete_events(const etcd::Event& event, const std::string graph_id);
+  // Set primary etcd key-value pair until the primary is set by use or by other
+  // nodes. If it is set by us, then we are primary node, return true. Else
+  // return false.
+  bool add_primary_until_success();
 
   // Should align with service_registry.py
-  inline std::string get_service_instance_list_key(
-      const std::string& service_name, const std::string& endpoint,
-      const std::string& graph_id) {
-    return "/" + namespace_ + "/" + instance_name_ + "/" +
-           std::string(SERVICE_NAME) + "/" + graph_id + "/" + service_name +
-           "/" + INSTANCE_LIST + "/" + endpoint;
+  inline std::string get_service_instance_list_key(const std::string& service_name,
+                                                   const std::string& endpoint,
+                                                   const std::string& graph_id) {
+    return "/" + namespace_ + "/" + instance_name_ + "/" + std::string(SERVICE_NAME) + "/" +
+           graph_id + "/" + INSTANCE_LIST + "/" + service_name + "/" + endpoint;
   }
 
-  inline std::string get_service_primary_key(const std::string& service_name,
-                                             const std::string& graph_id) {
-    return "/" + namespace_ + "/" + instance_name_ + "/" +
-           std::string(SERVICE_NAME) + "/" + graph_id + "/" + service_name +
-           "/" + PRIMARY_SUFFIX;
+  inline std::string get_service_primary_key(const std::string& graph_id) {
+    return "/" + namespace_ + "/" + instance_name_ + "/" + std::string(SERVICE_NAME) + "/" +
+           graph_id + "/" + PRIMARY_SUFFIX;
   }
 
-  gs::Status insert_to_instance_list(const std::string& key,
-                                     const std::string& value);
-
-  gs::Status insert_to_primary(const std::string& key,
-                               const std::string& value);
+  gs::Status insert_to_instance_list(const std::string& key, const std::string& value);
 
   std::string etcd_endpoint_;
   std::string namespace_;
@@ -179,12 +207,16 @@ class ServiceRegister {
 
   // A thread periodically wakeup and register the service itself to master.
   std::unique_ptr<std::thread> service_register_thread_;
+  std::unique_ptr<std::thread> election_thread_;
   std::unique_ptr<etcd::SyncClient> client_;
 
   std::mutex mutex_;
   std::condition_variable cv_;
   int64_t lease_id_;
   std::unique_ptr<etcd::KeepAlive> keep_alive_;
+
+  std::atomic<bool> is_primary_{false};
+  std::unique_ptr<etcd::Watcher> watcher_;
 };
 
 }  // namespace server

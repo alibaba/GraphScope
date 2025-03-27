@@ -64,9 +64,23 @@ class IMetadataStore(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_graph_statistics(self, graph_id : str):
+    def get_graph_schema(self, graph_id: str):
+        """
+        Get the schema for a graph.
+        """
+        pass
+
+    @abstractmethod
+    def get_graph_statistics(self, graph_id: str):
         """
         Get the statistics for a graph.
+        """
+        pass
+    
+    @abstractmethod
+    def create_graph_statistics(self, graph_id: str, statistics: str):
+        """
+        Create the statistics for a graph.
         """
         pass
 
@@ -90,7 +104,7 @@ class IMetadataStore(metaclass=ABCMeta):
         Update the metadata for a graph.
         """
         pass
-    
+
     @abstractmethod
     def update_graph_meta_with_func(self, graph_id: str, func):
         """
@@ -194,7 +208,7 @@ class DefaultMetadataStore(IMetadataStore):
         namespace="interactive",
         instance_name="default",
     ):
-        self._kv_store_handle = kv_store_handle
+        self._kv_store_handle : AbstractKeyValueStore = kv_store_handle
         self._meta_key_helper = MetaKeyHelper(namespace, instance_name)
 
     def open(self):
@@ -225,11 +239,7 @@ class DefaultMetadataStore(IMetadataStore):
         return key_id
 
     def get_graph_meta(self, graph_id: str) -> dict:
-        logger.info(
-            "Getting graph meta prefix %s, graph_id %s"
-            % (self._meta_key_helper.graph_meta_prefix(), graph_id)
-        )
-        meta_str =  self._kv_store_handle.get(
+        meta_str = self._kv_store_handle.get(
             "/".join([self._meta_key_helper.graph_meta_prefix(), graph_id])
         )
         if meta_str is None:
@@ -242,21 +252,64 @@ class DefaultMetadataStore(IMetadataStore):
             del res["_schema"]
         # Remove all key-value pairs that value is None, recursively.
         res = remove_nones(res)
-        logger.info("Remove none values from graph meta: %s" % res)
         return res
-    
-    def get_graph_statistics(self, graph_id : str) -> dict:
+
+    def get_graph_statistics(self, graph_id: str) -> dict:
         """
         Get the statistic info for a graph.
         Args:
             graph_id (str): The unique identifier of the graph
         """
         logger.info(f"Getting graph statistics fo {graph_id}")
-        return self._kv_store_handle.get(self._meta_key_helper.graph_statistics_key(graph_id))
+        json_str =  self._kv_store_handle.get(
+            self._meta_key_helper.graph_statistics_key(graph_id)
+        )
+        logger.info("Got graph statistics: %s" % json_str)
+        # convert the string to dict
+        res = yaml.safe_load(json_str)
+        return res
         
+    def create_graph_statistics(self, graph_id: str, statistics: str) -> bool:
+        """Create graph statistics
+
+        Args:
+            graph_id (str): graph_id
+            statistics (str): statistics info
+            {
+                "total_vertex_count": 0,
+                "total_edge_count": 0,
+                "vertex_type_statistics: [
+                    "type_id": 0,
+                    "type_name": "person",
+                    "count": 0
+                ],
+                "edge_type_statistics": [
+                    "type_id": 0,
+                    "type_name": "knows",
+                    "vertex_type_pair_statistics": [
+                        {
+                            "source_vertex": 0,
+                            "destination_vertex": 0,
+                            "count": 0
+                        }
+                    ]
+                ]
+            }
+
+        Returns:
+            bool: success or not
+        """
+        logger.info(f"Creating graph statistics for {graph_id}")
+        return self._kv_store_handle.insert(
+            self._meta_key_helper.graph_statistics_key(graph_id), statistics
+        )
+
     def get_graph_schema(self, graph_id: str) -> dict:
         meta = self.get_graph_meta(graph_id)
-        return meta.get("schema", {})
+        if "schema" in meta:
+            return meta["schema"]
+        else:
+            raise RuntimeError(f"Internal error, schema not found in graph meta, graph_id {graph_id}")
 
     def get_all_graph_meta(self) -> list:
         logger.info(
@@ -284,7 +337,7 @@ class DefaultMetadataStore(IMetadataStore):
         return self._kv_store_handle.update(
             "/".join([self._meta_key_helper.graph_meta_prefix(), graph_id]), graph_meta
         )
-        
+
     def update_graph_meta_with_func(self, graph_id, func):
         logger.info(
             "Updating graph meta prefix %s, id %s with function"
@@ -331,38 +384,46 @@ class DefaultMetadataStore(IMetadataStore):
     def create_plugin_meta(self, graph_id: str, plugin_meta: dict) -> str:
         logger.info(
             "Creating plugin meta prefix %s, value %s"
-            % (self._meta_key_helper.plugin_meta_prefix(), plugin_meta)
+            % (self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_meta)
         )
         full_key, key_id = self._kv_store_handle.insert_with_prefix(
-            self._meta_key_helper.plugin_meta_prefix(), plugin_meta
+            self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_meta
         )
         return key_id
 
-    def get_plugin_meta(self, graph_id: str, plugin_id: str) -> dict:
+    def get_plugin_meta(self, graph_id: str, plugin_id: str) -> str:
         logger.info(
-            "Getting plugin meta prefix %s, id %s"
-            % (self._meta_key_helper.plugin_meta_prefix(), plugin_id)
+            "Getting plugin meta prefix %s, graph id %s,  id %s"
+            % (self._meta_key_helper.plugin_meta_prefix(graph_id), graph_id, plugin_id)
         )
         return self._kv_store_handle.get(
-            "/".join([self._meta_key_helper.plugin_meta_prefix(), plugin_id])
+            "/".join([self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_id])
         )
 
     def get_all_plugin_meta(self, graph_id: str) -> list:
+        """ returns list of string
+
+        Args:
+            graph_id (str): _description_
+
+        Returns:
+            list: _description_
+        """
         logger.info(
             "Getting all plugin meta prefix %s"
-            % self._meta_key_helper.plugin_meta_prefix()
+            % self._meta_key_helper.plugin_meta_prefix(graph_id)
         )
         return self._kv_store_handle.get_with_prefix(
-            self._meta_key_helper.plugin_meta_prefix()
+            self._meta_key_helper.plugin_meta_prefix(graph_id)
         )
 
     def delete_plugin_meta(self, graph_id: str, plugin_id: str) -> bool:
         logger.info(
             "Deleting plugin meta prefix %s, id %s"
-            % (self._meta_key_helper.plugin_meta_prefix(), plugin_id)
+            % (self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_id)
         )
         return self._kv_store_handle.delete(
-            "/".join([self._meta_key_helper.plugin_meta_prefix(), plugin_id])
+            "/".join([self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_id])
         )
 
     def update_plugin_meta(
@@ -370,10 +431,10 @@ class DefaultMetadataStore(IMetadataStore):
     ) -> bool:
         logger.info(
             "Updating plugin meta prefix %s, id %s, value %s"
-            % (self._meta_key_helper.plugin_meta_prefix(), plugin_id, plugin_meta)
+            % (self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_id, plugin_meta)
         )
         return self._kv_store_handle.update(
-            "/".join([self._meta_key_helper.plugin_meta_prefix(), plugin_id]),
+            "/".join([self._meta_key_helper.plugin_meta_prefix(graph_id), plugin_id]),
             plugin_meta,
         )
 
@@ -401,6 +462,7 @@ metadata_store = None
 def get_metadata_store():
     global metadata_store
     return metadata_store
+
 
 test_graph_def = {
     "name": "modern_graph",
@@ -456,20 +518,23 @@ def __make_default_graph_meta(metadata_store: IMetadataStore):
         if key_id != "1":
             raise ValueError("The key_id is not 1: %s" % key_id)
         logger.info("Created graph meta with key_id 1")
-        #NOTE: The bulk_loading process will be automatically triggered when the engine pod are launched.
+        # NOTE: The bulk_loading process will be automatically triggered when the engine pod are launched.
+
 
 def init_metadata_store(config: Config):
     global metadata_store
     if config.compute_engine.metadata_store.uri.startswith("http://"):
         # we assume is etcd key-value store
+        key_helper = MetaKeyHelper(
+            namespace=config.master.k8s_launcher_config.namespace,
+            instance_name=config.master.instance_name,
+        )
         etcd_metadata_store = ETCDKeyValueStore.create_from_endpoint(
-            config.compute_engine.metadata_store.uri,
-            config.master.k8s_launcher_config.namespace,
-            config.master.instance_name,
+            key_helper, config.compute_engine.metadata_store.uri
         )
         metadata_store = DefaultMetadataStore(etcd_metadata_store)
         metadata_store.open()
-        
+
         # Check whether default graph's metadata exists, if not, create it.
         __make_default_graph_meta(metadata_store)
     else:

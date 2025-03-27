@@ -7,10 +7,13 @@ from gs_interactive_admin.models.graph_service_registry_record import (
     GraphServiceRegistryRecord,
 )  # noqa: E501
 from gs_interactive_admin import util
+import logging
 
 from gs_interactive_admin.core.service_discovery.service_registry import (
     get_service_registry,
 )
+
+logger = logging.getLogger("interactive")
 
 
 def get_service_registry_info(graph_id, service_name):  # noqa: E501
@@ -25,7 +28,10 @@ def get_service_registry_info(graph_id, service_name):  # noqa: E501
 
     :rtype: Union[GraphServiceRegistryRecord, Tuple[GraphServiceRegistryRecord, int], Tuple[GraphServiceRegistryRecord, int, Dict[str, str]]
     """
-    return get_service_registry().discover(graph_id, service_name)
+    logger.info(f"get_service_registry_info: {graph_id}, {service_name}")
+    ret = get_service_registry().discover(graph_id, service_name)
+    logger.info(f"get_service_registry_info: {ret}")
+    return GraphServiceRegistryRecord.from_dict(ret)
 
 
 def list_service_registry_info():  # noqa: E501
@@ -36,4 +42,6 @@ def list_service_registry_info():  # noqa: E501
 
     :rtype: Union[List[List[GraphServiceRegistryRecord]], Tuple[List[List[GraphServiceRegistryRecord]], int], Tuple[List[List[GraphServiceRegistryRecord]], int, Dict[str, str]]
     """
-    return get_service_registry().list_all()
+    ret = get_service_registry().list_all()
+    logging.info(f"list_service_registry_info: {ret}")
+    return [GraphServiceRegistryRecord.from_dict(x) for x in ret]

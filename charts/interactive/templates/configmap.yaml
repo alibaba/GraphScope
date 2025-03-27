@@ -79,6 +79,8 @@ data:
     #!/bin/bash
     # This should be the entrypoint of the master instance
     echo "Starting master instance..."
+    mkdir -p {{ include "graphscope-interactive.master.workspace" . }}
+    mkdir -p {{ include "graphscope-interactive.master.codegenWorkDir" . }}
     echo "using configfile: {{ include "graphscope-interactive.master.configFileMountPath" . }}"
     python3 -m gs_interactive_admin --config-file {{ include "graphscope-interactive.master.configFileMountPath" . }}
     #sleep infinity

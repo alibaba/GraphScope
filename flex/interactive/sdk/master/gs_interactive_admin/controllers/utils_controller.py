@@ -23,4 +23,3 @@ def upload_file(filestorage=None):  # noqa: E501
     :rtype: Union[UploadFileResponse, Tuple[UploadFileResponse, int], Tuple[UploadFileResponse, int, Dict[str, str]]
     """
     return upload_file_impl(filestorage)
-   

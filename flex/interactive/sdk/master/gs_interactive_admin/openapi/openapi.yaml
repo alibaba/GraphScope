@@ -1621,7 +1621,7 @@ paths:
             application/json:
               schema:
                 items:
-                  $ref: '#/components/schemas/AllGraphServiceRegistryRecord'
+                  $ref: '#/components/schemas/GraphServiceRegistryRecord'
                 type: array
           description: successful operation
         "500":
@@ -2587,6 +2587,7 @@ components:
                 name: name
                 index: 6
               property: property
+        remote_path: /path/to/remote
         version: version
         data_update_time: 11123445
       properties:
@@ -2624,6 +2625,10 @@ components:
           $ref: '#/components/schemas/GetGraphSchemaResponse'
         data_import_config:
           $ref: '#/components/schemas/SchemaMapping'
+        remote_path:
+          example: /path/to/remote
+          title: remote_path
+          type: string
       title: GetGraphResponse
       type: object
       x-body-name: get_graph_response
@@ -3043,6 +3048,7 @@ components:
       x-body-name: stop_service_request
     ServiceStatus:
       example:
+        deploy_mode: standalone
         start_time: 5
         statistics_enabled: true
         bolt_port: 0
@@ -3175,10 +3181,17 @@ components:
                   name: name
                   index: 6
                 property: property
+          remote_path: /path/to/remote
           version: version
           data_update_time: 11123445
         status: status
       properties:
+        deploy_mode:
+          enum:
+          - standalone
+          - k8s
+          title: deploy_mode
+          type: string
         statistics_enabled:
           title: statistics_enabled
           type: boolean
@@ -3412,7 +3425,9 @@ components:
           title: service_name
           type: string
         instances:
-          $ref: '#/components/schemas/RegistryInstanceRecord'
+          items:
+            $ref: '#/components/schemas/RegistryInstanceRecord'
+          type: array
         primary:
           $ref: '#/components/schemas/RegistryInstanceRecord'
       title: ServiceRegistryRecord
@@ -3422,7 +3437,10 @@ components:
         graph_id: "1"
         service_registry:
           instances:
-            endpoint: ip:port
+          - endpoint: ip:port
+            metrics:
+              snapshot_id: "1"
+          - endpoint: ip:port
             metrics:
               snapshot_id: "1"
           service_name: graphscope
@@ -3439,11 +3457,6 @@ components:
           $ref: '#/components/schemas/ServiceRegistryRecord'
       title: GraphServiceRegistryRecord
       type: object
-    AllGraphServiceRegistryRecord:
-      items:
-        $ref: '#/components/schemas/GraphServiceRegistryRecord'
-      title: AllGraphServiceRegistryRecord
-      type: array
     uploadFile_request:
       properties:
         filestorage:

@@ -9,7 +9,6 @@ from gs_interactive_admin.core.job.job_manager import get_job_manager
 import logging
 
 
-
 def delete_job_by_id(job_id):  # noqa: E501
     """delete_job_by_id
 
@@ -36,7 +35,6 @@ def get_job_by_id(job_id):  # noqa: E501
     logging.info("Get job by id: %s", job_id)
     data = get_job_manager().get_job_by_id(job_id)
     return JobStatus.from_dict(data)
-    
 
 
 def list_jobs():  # noqa: E501

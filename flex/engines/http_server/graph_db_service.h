@@ -79,7 +79,7 @@ struct ServiceConfig {
   bool start_compiler;
   bool enable_gremlin;
   bool enable_bolt;
-  std::string metadata_store_uri;
+  gs::MetadataStoreType metadata_store_type_;
   // verbose log level. should be a int
   // could also be set from command line: GLOG_v={}.
   // If we found GLOG_v in the environment, we will at the first place.

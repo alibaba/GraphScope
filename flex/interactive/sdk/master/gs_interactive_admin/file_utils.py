@@ -1,4 +1,3 @@
-
 import datetime
 
 import typing
@@ -12,6 +11,7 @@ from gs_interactive_admin.core.config import INTERACTIVE_WORKSPACE
 from gs_interactive_admin.models.upload_file_response import UploadFileResponse
 
 logger = logging.getLogger("interactive")
+
 
 def parse_file_metadata(location: str) -> dict:
     """
@@ -34,12 +34,11 @@ def parse_file_metadata(location: str) -> dict:
         metadata["file_type"] = file_extension[1:]
     return metadata
 
+
 def upload_file_impl(filestorage) -> str:
     filepath = os.path.join(INTERACTIVE_WORKSPACE, filestorage.filename)
     if not os.path.exists(INTERACTIVE_WORKSPACE):
         os.makedirs(INTERACTIVE_WORKSPACE)
     filestorage.save(filepath)
     metadata = parse_file_metadata(filepath)
-    return UploadFileResponse.from_dict(
-        {"file_path": filepath, "metadata": metadata}
-    )
+    return UploadFileResponse.from_dict({"file_path": filepath, "metadata": metadata})

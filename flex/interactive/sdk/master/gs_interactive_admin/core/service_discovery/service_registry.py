@@ -22,6 +22,7 @@ from abc import abstractmethod
 
 import json
 import logging
+import etcd3
 
 import etcd3.events
 import etcd3.watch
@@ -31,15 +32,26 @@ from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
 from etcd3.events import PutEvent
 from etcd3.events import DeleteEvent
 from gs_interactive_admin.core.config import Config
-from gs_interactive_admin.util import MetaKeyHelper
+from gs_interactive_admin.util import META_SERVICE_KEY, MetaKeyHelper
 
-import etcd3
 
 from gs_interactive_admin.models.base_model import Model
 
 logger = logging.getLogger("interactive")
 
 ETCD_RETRY_TIMES = 3
+
+
+def like_endpoint(ip_port: str):
+    """Expect ip_port to be a ip or ip+port"""
+    if ip_port is None:
+        return False
+    parts = ip_port.split(":")
+    if len(parts) == 1:
+        return True
+    if len(parts) == 2:
+        return parts[1].isdigit()
+    return False
 
 
 class IServiceRegistry(metaclass=ABCMeta):
@@ -130,30 +142,42 @@ class ServiceInstance(Model):
 class DiscoverResult(Model):
     """
     The result of the service discovery.
+    ├────── instance_list
+    │   │   ├── cypher
+    │   │   │   ├── 11.12.13.14_7687
+    │   │   │   └── 22.12.13.14_7687
+    │   |   ├── gremlin
+    │   │   │   ├── 11.12.13.14_12314
+    │   │   │   └── 22.12.13.14_12314
+    │   |	└─-- procedure
+    │   |       ├── 11.12.13.14_10000
+    │   |       └── 22.12.13.14_10000
+    │   │
+    |   └── primary
     """
 
     def __init__(self):
-        self._instance_list = set()
-        self._primary_instance = None
+        self._instance_list = dict()
+        self._primary: str = None
 
-        self.openapi_types = {"primary": ServiceInstance, "instance_list": set}
+        self.openapi_types = {"instance_list": dict, "primary": str}
 
-        self.attribute_map = {"primary": "primary", "instance_list": "instance_list"}
+        self.attribute_map = {"instance_list": "instance_list", "primary": "primary"}
 
     @property
     def primary(self):
-        return self._primary_instance
+        return self._primary
 
-    @primary.setter
-    def primary(self, primary_instance: ServiceInstance):
-        self._primary_instance = primary_instance
+    def set_primary(self, primary: str):
+        logger.info(f"----Set primary: {primary}")
+        self._primary = primary
 
     @property
     def instance_list(self):
         return self._instance_list
 
     @instance_list.setter
-    def instance_list(self, instance_list: set):
+    def instance_list(self, instance_list: dict):
         self._instance_list = instance_list
 
     @classmethod
@@ -167,81 +191,190 @@ class DiscoverResult(Model):
         """
         return util.deserialize_model(dikt, cls)
 
-    def add_instance(self, end_point, metrics: str):
-        self._instance_list.add(ServiceInstance(end_point, metrics))
+    def add_instance(self, service_name: str, end_point, metrics: str):
+        """Add a service instance to the instance list of the service name.
+
+        Args:
+            service_name (str): The name of the service.
+            end_point (_type_): The endpoint of the service instance.
+            metrics (str): The metrics of the service instance.
+        """
+        if service_name not in self._instance_list:
+            self._instance_list[service_name] = set()
+        self._instance_list[service_name].add(ServiceInstance(end_point, metrics))
 
     def get_instance_list(self):
         return self._instance_list
 
-    def get_primary_instance(self):
-        return self._primary_instance
+    def get_instance_list(self, service_name: str) -> list:
+        if service_name not in self._instance_list:
+            return []
+        return list(self._instance_list[service_name])
 
-    def set_primary_instance(self, metrics: str):
-        """
-        expect metrics is json string, and endpoint is in the metrics.
-        """
-        try:
-            logger.info("Set primary instance: %s", metrics)
-            json_obj = json.loads(metrics)
-        except json.JSONDecodeError as e:
-            raise ValueError("Invalid metrics: %s", metrics)
-        if metrics is not None and "endpoint" in json_obj:
-            self._primary_instance = ServiceInstance(json_obj["endpoint"], metrics)
-        else:
-            raise ValueError("Invalid metrics: %s", metrics)
-
-    def is_valid(self):
-        if self._primary_instance is None:
-            return False
-        if len(self._instance_list) == 0:
-            return False
-        if self._primary_instance not in self._instance_list:
-            return False
-        return True
+    def find_service(self, service_name: str) -> bool:
+        return service_name in self._instance_list
 
     def to_dict(self):
-        return {
-            "primary": (
-                self._primary_instance.to_dict()
-                if self._primary_instance is not None
-                else None
-            ),
-            "instance_list": [i.to_dict() for i in self._instance_list],
-        }
+        ret = {}
+        logger.info(f"-----to dict {self._primary}")
+        if self._primary is not None:
+            ret["primary"] = self._primary
+        if self._instance_list is not None:
+            ret["instance_list"] = {}
+            for k, v in self._instance_list.items():
+                ret["instance_list"][k] = list(v)
+        return ret
 
 
 class GlobalServiceDiscovery(Model):
     def __init__(self):
-        self._map = {}  # graph_id -> service_name -> DiscoverResult
+        """
+        ├── graph_1
+        │   ├── instance_list
+        │   │   ├── cypher
+        │   │   │   ├── 11.12.13.14_7687
+        │   │   │   └── 22.12.13.14_7687
+        │   |   ├── gremlin
+        │   │   │   ├── 11.12.13.14_12314
+        │   │   │   └── 22.12.13.14_12314
+        │   |	└─-- procedure
+        │   |       ├── 11.12.13.14_10000
+        │   |       └── 22.12.13.14_10000
+        │   │
+        |   └── primary
+        """
+        self._map = {}
+        """
+        {
+            graph_id: {
+                primary: primary_ip
+                instance_list: {
+                    cypher: [
+                        {
+                        endpoint: xxxx
+                        metrics {
+                            snapshot: xxxx
+                            }
+                        },
+                        {
+                        endpoint: xxxx
+                        metrics {
+                            snapshot: xxxx
+                            },
+                        }]
+                }
+            }
+        }
+        """
 
     def add_discovery_instance(self, graph_id, service_name, endpoint, metrics):
         if graph_id not in self._map:
-            self._map[graph_id] = {}
-        if service_name not in self._map[graph_id]:
-            self._map[graph_id][service_name] = DiscoverResult()
-        self._map[graph_id][service_name].add_instance(endpoint, metrics)
+            self._map[graph_id] = DiscoverResult()
+        self._map[graph_id].add_instance(service_name, endpoint, metrics)
 
-    def set_primary_instance(self, graph_id, service_name, metrics):
+    def set_primary_instance(self, graph_id: str, primary_ip: str):
+        """Expect primary_ip to be a single string
+
+        Args:
+            graph_id (_type_): The unique identifier for the graph
+            primary_ip (str): A single string
+        """
         if graph_id not in self._map:
-            self._map[graph_id] = {}
-        if service_name not in self._map[graph_id]:
-            self._map[graph_id][service_name] = DiscoverResult()
-        self._map[graph_id][service_name].set_primary_instance(metrics)
+            self._map[graph_id] = DiscoverResult()
+        logger.info(f"Set primary instance: {graph_id}, {primary_ip}")
+        self._map[graph_id].set_primary(primary_ip)
 
-    def get(self, graph_id, service_name) -> DiscoverResult:
+    def get(self, graph_id, service_name) -> dict:
+        """In raw storage, we store primary as a ip, when fetching, we should return it as a ServiceInstance
+
+        Args:
+            graph_id (_type_): _description_
+            service_name (_type_): _description_
+
+        Returns:
+            dict: {
+                primary: ServiceInstance,
+                instance_list: [ServiceInstance]
+            }
+        """
         if graph_id not in self._map:
             return None
-        if service_name not in self._map[graph_id]:
+        if not self._map[graph_id].find_service(service_name):
+            logger.error(f"Service not found: {service_name}")
             return None
-        return self._map[graph_id][service_name]
+        # TODO: FIX me
+        instance_list = self._map[graph_id].get_instance_list(service_name)
+        primary = self._map[graph_id].primary
+        for i in range(len(instance_list)):
+            if instance_list[i].endpoint.startswith(primary):
+                primary = instance_list[i]
+                return {
+                    "graph_id": graph_id,
+                    "service_registry": {
+                        "service_name": service_name,
+                        "primary": primary.to_dict(),
+                        "instances": [x.to_dict() for x in instance_list],
+                    },
+                }
+        logger.error(
+            f"Primary instance not found in instance list: {primary}, {instance_list}"
+        )
+        return {
+            "graph_id": graph_id,
+            "service_registry": {
+                "primary": None,
+                "serivce_name": service_name,
+                "instances": [x.to_dict() for x in instance_list],
+            },
+        }
+
+    def list_all(self) -> list:
+        """
+
+        Returns:
+            dict: {
+                graph_id: {
+                    service_name: {
+                        primary: ServiceInstance,
+                        instance_list: [ServiceInstance]
+                    }
+                }
+            }
+        """
+        ori_dict = self.to_dict()
+        ret = []
+        for graph_id, registry_info in ori_dict.items():
+            cur = {}
+            cur["graph_id"] = graph_id
+            cur["service_registry"] = {}
+            primary_ip = registry_info.primary
+            logger.info(f"Found primary ip {primary_ip} for {graph_id}")
+            for service_name, instance_list in registry_info.instance_list.items():
+                logger.info(
+                    f"Found service {service_name} for {graph_id}, {instance_list}"
+                )
+                cur["service_registry"]["service_name"] = service_name
+                if primary_ip:
+                    cur["service_registry"]["primary"] = primary_ip
+                    # for instance in instance_list:
+                    #     if instance.endpoint.startswith(primary_ip):
+                    #         cur["service_registry"]["primary"] = instance.to_dict()
+                    #         logger.info(f"Found primary instance {instance} for {graph_id}, {service_name}")
+                cur["service_registry"]["instances"] = instance_list
+            ret.append(cur)
+        return ret
 
     def remove_discovery(self, graph_id, service_name):
+        logger.info(f"Remove discovery: {graph_id}, {service_name}")
         if graph_id in self._map and service_name in self._map[graph_id]:
             del self._map[graph_id][service_name]
 
     def remove_primary_instance(self, graph_id, service_name):
-        if graph_id in self._map and service_name in self._map[graph_id]:
-            self._map[graph_id][service_name]._primary_instance = None
+        logger.info(
+            f'Remove primary instance: {graph_id}, {self._map[graph_id]["primary"]}'
+        )
+        if graph_id in self._map:
+            del self._map[graph_id]["primary"]
 
     def to_dict(self):
         return dict(self._map)
@@ -262,13 +395,14 @@ class EtcdServiceRegistry(IServiceRegistry):
         logger.info("namespace: %s, instance_name: %s", namespace, instance_name)
         self._namespace = namespace
         self._instance_name = instance_name
-        self._etcd_kv_store = ETCDKeyValueStore.create(
-            etcd_host, etcd_port, namespace, instance_name
-        )
-        self._etcd_kv_store.open()
         self._key_helper = MetaKeyHelper(
             namespace=namespace, instance_name=instance_name
         )
+        self._etcd_kv_store = ETCDKeyValueStore.create(
+            self._key_helper, etcd_host, etcd_port
+        )
+        self._etcd_kv_store.open()
+
         self._global_discovery = GlobalServiceDiscovery()
         self._cancel_watch_handler = None
 
@@ -317,6 +451,15 @@ class EtcdServiceRegistry(IServiceRegistry):
             else:
                 raise ValueError("Invalid event type: %s", event)
 
+        # When we start, we need to first scan whether primary is set, then we watch
+        # the service registry
+        self._etcd_kv_store.get_with_prefix(META_SERVICE_KEY)
+        for key, value in self._etcd_kv_store.get_with_prefix(META_SERVICE_KEY):
+            logger.info(f"Get key: {key}, value: {value}")
+            # The returned key is after prefix, append the prefix
+            key = self._etcd_kv_store.root + "/" + key
+            self._handle_put_event_impl(key, value)
+
         logger.info("Watch prefix: %s", self._key_helper.service_prefix())
         self._cancel_watch_handler = self._etcd_kv_store.add_watch_prefix_callback(
             self._key_helper.service_prefix(), service_watch_call_back
@@ -344,23 +487,18 @@ class EtcdServiceRegistry(IServiceRegistry):
 
         return: True if the service is registered successfully, False otherwise
         """
-        ret = self._global_discovery.get(graph_id, service_name)
-        return ret.to_dict() if ret is not None else {}
+        return self._global_discovery.get(graph_id, service_name)
 
     def list_all(self) -> dict:
         """
         List all services in the service registry.
         """
-        ret = self._global_discovery
-        return ret.to_dict() if ret is not None else {}
+        return self._global_discovery.list_all()
 
-    def _handle_put_event(self, event: PutEvent):
-        """
-        Handle the put event.
-        """
-        value = event.value.decode("utf-8")
-        key = event.key.decode("utf-8")
+    def _handle_put_event_impl(self, key, value):
         graph_id, service_name, ip_port = self._try_decode_key(key)
+        if graph_id is None:
+            return
         logger.info(
             "Put event: graph_id=%s, service_name=%s, endpoint=%s, value=%s",
             graph_id,
@@ -368,12 +506,21 @@ class EtcdServiceRegistry(IServiceRegistry):
             ip_port,
             value,
         )
+        # check whether ip_port is like ip or ip_port
         if ip_port is None:
-            self._global_discovery.set_primary_instance(graph_id, service_name, value)
+            self._global_discovery.set_primary_instance(graph_id, value)
         else:
             self._global_discovery.add_discovery_instance(
                 graph_id, service_name, ip_port, value
             )
+
+    def _handle_put_event(self, event: PutEvent):
+        """
+        Handle the put event.
+        """
+        value = event.value.decode("utf-8")
+        key = event.key.decode("utf-8")
+        return self._handle_put_event_impl(key, value)
 
     def _handle_delete_event(self, event: DeleteEvent):
         """
@@ -387,7 +534,7 @@ class EtcdServiceRegistry(IServiceRegistry):
             ip_port,
         )
         if ip_port is None:
-            self._global_discovery.remove_primary_instance(graph_id, service_name)
+            self._global_discovery.remove_primary_instance(graph_id)
         else:
             self._global_discovery.remove_discovery(graph_id, service_name)
 
@@ -399,7 +546,7 @@ class EtcdServiceRegistry(IServiceRegistry):
         """
         _tuple = self._key_helper.decode_service_key(key)
         if _tuple is None:
-            raise RuntimeError("Got invalid key: %s", key)
+            return None, None, None
         if len(_tuple) != 3:
             raise RuntimeError("Expect 3 parts, but got %d", len(_tuple))
         return _tuple

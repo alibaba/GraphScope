@@ -4,10 +4,27 @@ import typing
 import subprocess
 import threading
 import os
+import oss2
 from gs_interactive_admin import typing_utils
 import logging
+import yaml
+
+from gs_interactive_admin.core.config import OSS_BUCKET_NAME, OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET, OSS_ENDPOINT
 
 logger = logging.getLogger("interactive")
+
+def dump_file(data, file_path):
+    if isinstance(data, str):
+        with open(file_path, "w") as f:
+            f.write(data)
+        return file_path
+    elif isinstance(data, dict):
+        # dump as yaml
+        with open(file_path, "w") as f:
+            yaml.dump(data, f)
+        return file_path
+    else:
+        raise ValueError(f"Invalid data type: {type(data)}")
 
 class SubProcessRunner(object):
     def __init__(self, graph_id, command, callback, log_file):
@@ -17,25 +34,27 @@ class SubProcessRunner(object):
         self.log_file = log_file
         self.process_id = None
         self.thread = None
-        
+
     @property
     def graph_id(self):
         return self._graph_id
-        
+
     def start(self):
         def target():
             with open(self.log_file, "w") as log:
                 process = subprocess.Popen(self.command, stdout=log, stderr=log)
                 self.process_id = process.pid
-                
+
             process.wait()
-            logger.info(f"Job process {self.process_id} finished with code {process.returncode}, calling callback")
+            logger.info(
+                f"Job process {self.process_id} finished with code {process.returncode}, calling callback"
+            )
             self.callback(process)
-        
+
         self.thread = threading.Thread(target=target)
         self.thread.start()
         return self.thread, self.process_id
-    
+
     def is_alive(self):
         return self.thread.is_alive()
 
@@ -45,11 +64,14 @@ def remove_nones(data: dict):
     Recursively remove None values from a dictionary.
     """
     if isinstance(data, dict):
-        return {key: remove_nones(value) for key, value in data.items() if value is not None}
+        return {
+            key: remove_nones(value) for key, value in data.items() if value is not None
+        }
     elif isinstance(data, list):
         return [remove_nones(item) for item in data]
     else:
         return data
+
 
 def _deserialize(data, klass):
     """Deserializes dict, list, str into an object.
@@ -211,16 +233,26 @@ class MetaKeyHelper(object):
     def __init__(self, namespace="interactive", instance_name="default"):
         self.namespace = namespace
         self.instance_name = instance_name
+        self._root = "/" + "/".join([namespace, instance_name])
         self._service_root = "/" + "/".join(
             [namespace, instance_name, META_SERVICE_KEY]
         )
         self._meta_root = "/" + "/".join([namespace, instance_name, METADATA_KEY])
+        
+    @property 
+    def root(self):
+        return self._root
 
     def graph_meta_prefix(self):
         return "/".join([self._meta_root, GRAPH_META_KEY])
 
-    def plugin_meta_prefix(self):
-        return "/".join([self._meta_root, PLUGIN_META_KEY])
+    def plugin_meta_prefix(self, graph_id):
+        """Plugin is unique for graph scope, not global.
+
+        Returns:
+            _type_: _description_
+        """
+        return "/".join([self._meta_root, graph_id + "_" + PLUGIN_META_KEY])
 
     def job_meta_prefix(self):
         return "/".join([self._meta_root, JOB_META_KEY])
@@ -229,32 +261,57 @@ class MetaKeyHelper(object):
         return self._service_root
 
     def service_instance_list_prefix(self, graph_id, service_name):
-        return "/".join([self._service_root, graph_id, service_name, INSTANCE_LIST_KEY])
+        return "/".join([self._service_root, graph_id, INSTANCE_LIST_KEY, service_name])
 
     def service_primary_key(self, graph_id, service_name):
-        return "/".join([self._service_root, graph_id, service_name, META_PRIMARY_KEY])
+        return "/".join([self._service_root, graph_id, META_PRIMARY_KEY, service_name])
 
     def graph_status_key(self, graph_id):
         return "/".join([self._meta_root, STATUS_META_KEY, graph_id])
-    
+
     def graph_statistics_key(self, graph_id):
         return "/".join([self._meta_root, STATISTICS_KEY, graph_id])
 
     def decode_service_key(self, key):
         """
         Decode a key into instance_list_key or primary_key.
-        /namespace/instance_name/service/graph_id/service_name/instance_list/ip:port
-        /namespace/instance_name/service/graph_id/service_name/primary
+        /namespace/instance_name/service/graph_id/instance_list/service_name/ip:port
+        /namespace/instance_name/service/graph_id/primary
         return graph_id, service_name, endpoint, <ip:port>
         """
-        keys = key.split("/") 
+        keys = key.split("/")
         keys = list(filter(None, keys))
-        if len(keys) > 7 or len(keys) < 6:
+        if len(keys) > 7 or len(keys) < 5:
             raise ValueError(f"Invalid key: {keys}")
-        graph_id, service_name, key_type = keys[3:6]
+        logger.info(f"keys {keys}")
+        key_type = keys[4]
         if key_type == INSTANCE_LIST_KEY:
-            return graph_id, service_name, keys[-1]
+            # graph_id, service_name, endpoint
+            return keys[3], keys[5], keys[6]
         elif key_type == META_PRIMARY_KEY:
-            return graph_id, service_name, None
+            if len(keys) == 5:
+                return keys[3], None, None
+            else:
+                logger.warning(f"Got invalid key: {keys}")
+                return None
         else:
-            raise ValueError("Invalid key type: %s" % key_type)
+            raise ValueError(f"Invalid key type: {key_type}, {keys}")
+
+
+def get_current_time_stamp_ms():
+    return int(datetime.datetime.now().timestamp() * 1000)
+
+def check_field_in_dict(data, field):
+    if field not in data:
+        raise ValueError(f"Field {field} not found in {data}")
+
+class OssReader(object):
+    def __init__(self):
+        self._auth = oss2.Auth(OSS_ACCESS_KEY_ID, OSS_ACCESS_KEY_SECRET)
+        self._bucket = oss2.Bucket(self._auth, OSS_ENDPOINT, OSS_BUCKET_NAME)
+
+    def read(self, key):
+        """
+        Read a file under the bucket.
+        """
+        return self._bucket.get_object(key).read().decode("utf-8")

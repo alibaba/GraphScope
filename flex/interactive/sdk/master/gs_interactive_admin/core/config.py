@@ -28,8 +28,18 @@ import os
 
 OSS_BUCKET_NAME = os.getenv("OSS_BUCKET_NAME", "graphscope")
 OSS_BUCKET_DATA_DIR = os.getenv("OSS_BUCKET_DATA_DIR", "interactive")
+OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID", "")
+OSS_ACCESS_KEY_SECRET = os.getenv("OSS_ACCESS_KEY_SECRET", "")
+OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "oss-cn-beijing.aliyuncs.com")
+OSS_BUCKET_NAME = os.getenv("OSS_BUCKENT_NAME", "graphscope")
 
-INTERACTIVE_WORKSPACE = os.environ.get("INTERACTIVE_WORKSPACE", "/tmp/interactive_workspace")
+INTERACTIVE_WORKSPACE = os.environ.get(
+    "INTERACTIVE_WORKSPACE", "/tmp/interactive_workspace"
+)
+
+# The name of the script to load plan and generate code.
+CODE_GEN_BIN = "load_pland_and_gen.sh"
+CODE_GEN_TMP_DIR = os.environ.get("INTERACTIVE_CODE_GEN_WORKDIR", "/tmp/interactive_workspace/codegen")
 
 
 @dataclass
@@ -56,7 +66,7 @@ class ComputeEngine:
 
     metadata_store: MetadataStore = field(default_factory=MetadataStore)
     wal_uri: str = f"file://{{GRAPH_DATA_DIR}}/wal"
-    
+
     config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
     entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
 
@@ -126,7 +136,7 @@ class K8sLauncherConfig:
     engine_pod_annotations: dict = field(default_factory=dict)
     service_account_create: bool = False
     service_account_name: str = None
-    
+
     engine_config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
     engine_entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
 
@@ -153,17 +163,29 @@ class ConnectorConfig:
 class CompilerEndpoint:
     default_listen_address: str = "localhost"
     bolt_connector: ConnectorConfig = field(default_factory=ConnectorConfig)
+    
 
+@dataclass
+class ReaderUri:
+    uri: str = ""
+    interval : int = 1000 # ms
+
+@dataclass
+class CompilerMeta:
+    schema: ReaderUri = field(default_factory=ReaderUri)
+    statistics: ReaderUri = field(default_factory=ReaderUri)
+    timeout: int = 1000 # ms
 
 @dataclass
 class CompilerConfig:
     endpoint: CompilerEndpoint = field(default_factory=CompilerEndpoint)
+    meta : CompilerMeta = field(default_factory=CompilerMeta)    
 
 
 @dataclass
 class Config(Serializable):
     """
-    Stores all configurations for Interactive. Corresponding to the yaml file https://github.com/alibaba/GraphScope/blob/main/flex/tests/hqps/interactive_config_test.yaml
+    Stores all configurations for Interactive. Corresponding to the yaml file https://github.com/alibaba/GraphScope/blob/main/flex/tests/hqps/interactive_config_standalone.yaml
     """
 
     log_level: str = "INFO"

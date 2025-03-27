@@ -1,6 +1,10 @@
 from gs_interactive_admin.core.metadata.metadata_store import IMetadataStore
-from gs_interactive_admin.core.config import Config, OSS_BUCKET_NAME, OSS_BUCKET_DATA_DIR
-from gs_interactive_admin.util import remove_nones, SubProcessRunner
+from gs_interactive_admin.core.config import (
+    Config,
+    OSS_BUCKET_NAME,
+    OSS_BUCKET_DATA_DIR,
+)
+from gs_interactive_admin.util import remove_nones, SubProcessRunner, OssReader, get_current_time_stamp_ms
 from abc import ABCMeta
 from abc import abstractmethod
 import os
@@ -18,23 +22,25 @@ class JobProcessCallback(object):
     """
     This class is used as a callback function for the data loading subprocess.
     """
-    def __init__(self,meta_store, graph_id, process_id, log_path, job_id, oss_graph_path):
-        self.metadata_store = meta_store
+
+    def __init__(
+        self, meta_store, graph_id, process_id, log_path, job_id, oss_graph_path
+    ):
+        self.metadata_store : IMetadataStore = meta_store
         self.graph_id = graph_id
         self.process_id = process_id
         self.log_path = log_path
         self.job_id = job_id
         self.oss_graph_path = oss_graph_path
-        
-    
-        
+
     def _update_remote_storage_path(self):
         """
         This method should be called when the job is successfully finished.
         We need to update the remote storage path of the graph, such that the graph can be accessed by the users.
         """
         logger.info("Update remote storage path of the graph")
-        def _update_remote_storage_path_of_graph(graph_meta : str):
+
+        def _update_remote_storage_path_of_graph(graph_meta: str):
             old_meta = yaml.safe_load(graph_meta)
             old_name = None
             old_path = None
@@ -44,14 +50,16 @@ class JobProcessCallback(object):
             logger.info(f"old path: {old_path}")
 
             if old_path and old_path.startswith("oss://"):
-                # Get the object name 
+                # Get the object name
                 split_paths = old_path[5:].split("/")
                 old_name = split_paths[-1]
             if old_name:
                 # new name should be larger than the old name in timestamp
                 new_name = self.oss_graph_path.split("/")[-1]
                 if new_name <= old_name:
-                    logger.warning(f"New path {self.oss_graph_path} is not larger than the old path {old_path}")
+                    logger.warning(
+                        f"New path {self.oss_graph_path} is not larger than the old path {old_path}"
+                    )
                     return graph_meta
             else:
                 old_meta["remote_path"] = self.oss_graph_path
@@ -59,14 +67,24 @@ class JobProcessCallback(object):
             logger.info("new meta: %s", res)
             return res
 
-        self.metadata_store.update_graph_meta_with_func(self.graph_id, _update_remote_storage_path_of_graph)        
-    
+        self.metadata_store.update_graph_meta_with_func(
+            self.graph_id, _update_remote_storage_path_of_graph
+        )
+
     def _update_graph_statistics(self):
-        #TODO: Implement the method to update the graph statistics. The graph statistics should be reported by the bulk_loader process.
-        pass
-        
+        # The statistics should be reported by bulk loader process by writing to a remote oss file. In master, we download the oss file and insert the content into metadata store.
+        reader = OssReader()
+        try: 
+            statistics = reader.read(self.oss_graph_path + "_statistics.json")
+            self.metadata_store.create_graph_statistics(self.graph_id, statistics)
+        except Exception as e:
+            logger.error(f"Failed to update graph statistics: {e}")
+            
+
     def __call__(self, process: subprocess.CompletedProcess):
-        logger.info(f"Job process {self.process_id} finished with code {process.returncode}")
+        logger.info(
+            f"Job process {self.process_id} finished with code {process.returncode}"
+        )
         if process.returncode == 0:
             status = "SUCCESS"
         else:
@@ -76,18 +94,20 @@ class JobProcessCallback(object):
             "process_id": self.process_id,
             "log": "@" + self.log_path,
             "status": status,
-            "end_time": int(time.time() * 1000),
+            "end_time": get_current_time_stamp_ms(),
             "type": "BULK_LOADING",
         }
         logger.info(f"Update Job meta: {job_meta}")
-        self.res_code = self.metadata_store.update_job_meta(job_id = self.job_id, job_meta = job_meta)
+        self.res_code = self.metadata_store.update_job_meta(
+            job_id=self.job_id, job_meta=job_meta
+        )
         logger.info(f"Job meta Update with id {self.res_code}")
-        
+
         # We should also update graph meta to update the remote storage path of the graph.
         if status == "SUCCESS":
             self._update_remote_storage_path()
             self._update_graph_statistics()
-        
+
 
 class JobManager(metaclass=ABCMeta):
     def __init__(self, config: Config, metadata_store: IMetadataStore):
@@ -120,7 +140,7 @@ class DefaultJobManager(JobManager):
         return self.metadata_store.get_all_job_meta()
 
     def get_job_by_id(self, job_id) -> dict:
-        job_meta_str =  self.metadata_store.get_job_meta(job_id)
+        job_meta_str = self.metadata_store.get_job_meta(job_id)
         # convert the string to dict
         data = yaml.load(job_meta_str, Loader=yaml.FullLoader)
         logger.info(f"Get job by id: {job_id}, data: {data}")
@@ -130,7 +150,6 @@ class DefaultJobManager(JobManager):
                 with open(log_path, "r") as f:
                     data["log"] = f.read()
         return data
-        
 
     def delete_job_by_id(self, job_id):
         if job_id in self._data_loading_processes:
@@ -142,20 +161,25 @@ class DefaultJobManager(JobManager):
         """
         Create a dataloading job which running in a child process.
         """
-        
+
         bulk_loader = self._get_bulk_loader()
-        temp_mapping_file, schema_mapping = self._dump_schema_mapping(graph_id, schema_mapping)
+        temp_mapping_file, schema_mapping = self._dump_schema_mapping(
+            graph_id, schema_mapping
+        )
         temp_graph_file = self._dump_graph_schema(graph_id)
 
         # Create a log file for the process
         log_path = os.path.join("/tmp", graph_id, "bulk_loader.log")
-        if "loading_config" in schema_mapping and "destination" in schema_mapping["loading_config"]:
+        if (
+            "loading_config" in schema_mapping
+            and "destination" in schema_mapping["loading_config"]
+        ):
             oss_graph_path = schema_mapping["loading_config"]["destination"]
         else:
-            cur_time_stamp = int(time.time() * 1000)
+            cur_time_stamp = get_current_time_stamp_ms()
             oss_graph_path = f"oss://{OSS_BUCKET_NAME}/{OSS_BUCKET_DATA_DIR}/{graph_id}/{cur_time_stamp}"
         logger.info(f"oss_graph_path: {oss_graph_path}")
-        
+
         cmds = [
             bulk_loader,
             "-l",
@@ -163,7 +187,7 @@ class DefaultJobManager(JobManager):
             "-g",
             temp_graph_file,
             "-d",
-            oss_graph_path, # The path where the graph data is stored
+            oss_graph_path,  # The path where the graph data is stored
         ]
         logger.info(f"Running bulk loader with command {cmds}")
         job_meta = self._new_job_meta(
@@ -178,12 +202,21 @@ class DefaultJobManager(JobManager):
             if process.is_alive():
                 if process.graph_id == graph_id:
                     logger.info(f"Job {job_id} is already running for graph {graph_id}")
-                    raise Exception(f"Job {job_id} is already running for graph {graph_id}")
+                    raise Exception(
+                        f"Job {job_id} is already running for graph {graph_id}"
+                    )
         job_id = self.metadata_store.create_job_meta(str(job_meta))
         logger.info(f"Data loading job created with {job_meta}")
-        runner = SubProcessRunner(graph_id, cmds, JobProcessCallback(self.metadata_store, graph_id, 0, log_path, job_id, oss_graph_path), log_path)
+        runner = SubProcessRunner(
+            graph_id,
+            cmds,
+            JobProcessCallback(
+                self.metadata_store, graph_id, 0, log_path, job_id, oss_graph_path
+            ),
+            log_path,
+        )
         self._data_loading_processes[job_id] = runner
-        
+
         runner.start()
         logger.info(f"Job id {job_id} created for data loading job")
         return job_id
@@ -212,7 +245,7 @@ class DefaultJobManager(JobManager):
         if os.path.exists(relative_path) and os.access(relative_path, os.X_OK):
             return relative_path
         raise RuntimeError("Cannot find bulk_loader in the current environment.")
-    
+
     def _dump_schema_mapping(self, graph_id, schema_mapping):
         # dump the schema_mapping to a temp file
         schema_mapping = remove_nones(schema_mapping)
@@ -223,7 +256,7 @@ class DefaultJobManager(JobManager):
             # write the dict in yaml format
             yaml.dump(schema_mapping, f)
         return (temp_mapping_file, schema_mapping)
-    
+
     def _dump_graph_schema(self, graph_id):
         graph_metadata = self.metadata_store.get_graph_meta(graph_id)
         logger.info("graph metadata: %s", graph_metadata)
@@ -239,7 +272,7 @@ class DefaultJobManager(JobManager):
             "log": "@" + log_path,
             "status": status,
             # in milliseconds timestamp
-            "start_time": int(time.time() * 1000),
+            "start_time": get_current_time_stamp_ms(),
             "end_time": 0,
             "type": type,
         }

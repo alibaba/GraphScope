@@ -3,7 +3,7 @@ ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG VINEYARD_VERSION=latest
 FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
-ARG PARALLEL=16
+ARG PARALLEL=8
 
 RUN sudo mkdir -p /opt/flex/wheel && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
@@ -21,7 +21,7 @@ RUN cd ${HOME}/GraphScope && \
 
 # install flex
 RUN cd ${HOME}/GraphScope/flex && \
-    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DBUILD_BULKLOADER_ONLY=ON \
+    mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DBUILD_FOR_MASTER=ON \
     -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON -DBUILD_WITH_OSS=ON -DENABLE_SERVICE_REGISTER=ON && \
     make -j ${PARALLEL} && make install
 
@@ -29,6 +29,23 @@ RUN cd ${HOME}/GraphScope/flex && \
 RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
 # strip all binary in /opt/flex/bin
 RUN sudo strip /opt/flex/bin/bulk_loader
+
+########################### Compiler Builder ###########################
+FROM $REGISTRY/graphscope/graphscope-dev:v0.24.2-amd64 AS compiler_builder
+
+RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/ && mkdir /opt/flex/lib
+USER graphscope
+WORKDIR /home/graphscope
+
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+
+RUN . ${HOME}/.cargo/env && cd ${HOME}/GraphScope/flex && git submodule update --init && \
+    cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
+    cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
+    cp target/libs/*.jar /opt/flex/lib/ && \
+    ls ~/GraphScope/interactive_engine/executor/ir && \
+    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
+
 
 
 ########################### RUNTIME IMAGE ###########################
@@ -57,8 +74,13 @@ RUN apt-get update && apt-get install -y git && pip3 install --upgrade pip && \
 
 RUN mkdir /opt/vineyard/
 
+#Copy compiler related libs
+COPY --from=compiler_builder /opt/flex/lib/ /opt/flex/lib/
+
     # copy builder's /opt/flex to final image
-COPY --from=builder /opt/flex/bin/bulk_loader /opt/flex/bin/
+COPY --from=builder /opt/flex/bin/bulk_loader  \
+                /opt/flex/bin/gen_code_from_plan \
+                /opt/flex/bin/load_plan_and_gen.sh /opt/flex/bin/
 COPY --from=builder /opt/flex/lib/ /opt/flex/lib/
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libsnappy*.so* /usr/lib/$PLATFORM-linux-gnu/

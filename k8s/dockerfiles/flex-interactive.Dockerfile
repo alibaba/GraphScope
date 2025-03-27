@@ -128,7 +128,7 @@ COPY --from=builder /opt/graphscope/lib/libboost_program_options*.so* /opt/flex/
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
-COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_test.yaml /opt/flex/share/interactive_config.yaml
+COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_standalone.yaml /opt/flex/share/interactive_config.yaml
 COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml && \
     sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/interactive_config.yaml

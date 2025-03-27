@@ -22,6 +22,7 @@ from abc import abstractmethod
 import etcd3
 
 import logging
+from gs_interactive_admin.util import MetaKeyHelper
 
 logger = logging.getLogger("interactive")
 
@@ -119,24 +120,27 @@ class AbstractKeyValueStore(metaclass=ABCMeta):
 class ETCDKeyValueStore(AbstractKeyValueStore):
     """
     An implementation of key value store using ETCD.
+    TODO: Currently KeyValueStore and KeyHelper both takes namespace and instance name as prefix.
+    It should only be controlled by one of them, not both
     """
 
-    def __init__(self, host="localhost", port=2379, root="/interactive/default"):
+    def __init__(self, meta_key_helper : None, host="localhost", port=2379):
+        self._meta_key_helper : MetaKeyHelper = meta_key_helper
         self._host = host
         self._port = port
         self._client = None
-        self._root = root
+        # self.root = root
         self.inc_id_dir = "/inc_id"
 
     @classmethod
     def create(
-        cls, host: str, port: int, namespace="interactive", instance_name="default"
-    ):
-        return ETCDKeyValueStore(host, port, "/" + "/".join([namespace, instance_name]))
+        cls, meta_key_helper,  host: str, port: int):
+        #, namespace="interactive", instance_name="default"
+        return ETCDKeyValueStore(meta_key_helper, host, port) #"/" + "/".join([namespace, instance_name])
 
     @classmethod
     def create_from_endpoint(
-        cls, endpoint: str, namespace="interactive", instance_name="default"
+        cls, meta_key_helper,  endpoint: str
     ):
         """
         Initialize the key value store with the endpoint.
@@ -148,14 +152,20 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         endpoint = endpoint[7:]
         host, port = endpoint.split(":")
         return ETCDKeyValueStore(
-            host, int(port), "/" + "/".join([namespace, instance_name])
+            meta_key_helper, host, int(port) #"/" + "/".join([namespace, instance_name]
         )
+
+    @property
+    def root(self):
+        if self._meta_key_helper is None:
+            return "/"
+        return self._meta_key_helper.root
 
     def _get_full_key(self, keys: list):
         if isinstance(keys, str):
-            return self._root + "/" + keys
+            return self.root + "/" + keys
         elif isinstance(keys, list):
-            return self._root + "/" + "/".join(keys)
+            return self.root + "/" + "/".join(keys)
         else:
             raise ValueError("Invalid key type.")
 
@@ -163,6 +173,8 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         """
         Inside etcd client, we maintain a key to store the next key to be used.
         This operation is atomic.
+        
+        returns: 1) The full path key 2) The subpath key
         """
         full_key = self._get_full_key([self.inc_id_dir, prefix])
         self._client.put_if_not_exists(
@@ -185,60 +197,96 @@ class ETCDKeyValueStore(AbstractKeyValueStore):
         logger.info("ETCD connection closed.")
 
     def insert(self, key, value) -> str:
-        logger.info(f"Inserting key {self._get_full_key(key)} with value {value}")
-        print(f"Inserting key {self._get_full_key(key)} with value {value}")
-        self._client.put(self._get_full_key(key), value)
+        """Expect the key to be a full-pathed key
+
+        Args:
+            key (_type_): full-pathed key
+            value (_type_): value
+
+        Returns:
+            str: full-pathed-key
+        """
+        logger.info(f"Inserting key {key} with value {value}")
+        if not key.startswith(self.root):
+            raise ValueError(f"Key must start with.: {self.root}")
+        self._client.put(key, value)
         return key
+    
+    def get(self, key) -> str:
+        """Expect the key to be a full-pathed key
+
+        Args:
+            key (_type_): full-pathed key
+
+        Returns:
+            str: value
+        """
+        logger.info(f"Getting key {key}")
+        if not key.startswith(self.root):
+            raise ValueError(f"Key must start with.: {self.root}")
+        ret = self._client.get(key)
+        if not ret[0]:
+            return None
+        return ret[0].decode("utf-8")
 
     def insert_with_prefix(self, prefix, value) -> tuple:
         """
         Insert the value without giving a specific key, but a prefix. The key is generated automatically, in increasing order.
         """
         next_key, next_val = self._get_next_key(prefix)
-        full_key = self._get_full_key(next_key)
-        logger.info(f"Inserting key {full_key} with value {value}")
-        self._client.put(full_key, value)
+        logger.info(f"Inserting key {next_key} with value {value}")
+        self._client.put(next_key, value)
         return next_key, str(next_val)
-
-    def get(self, key) -> str:
-        logger.info("Getting key: " + self._get_full_key(key))
-        ret = self._client.get(self._get_full_key(key))
-        if not ret[0]:
-            return None
-        return ret[0].decode("utf-8")
 
     def get_with_prefix(self, prefix) -> list:
         logger.info("Getting keys with prefix: " + self._get_full_key(prefix))
-        # return list(self._client.get_prefix(self._get_full_key(prefix)))
         ret = self._client.get_prefix(self._get_full_key(prefix))
-        # for each key value pair in ret, use the pair[1].key and pair[0] to construct a list of tuples.
-        # for pair[1].key substr with self._root
         return [
             (
-                pair[1].key.decode("utf-8")[len(self._root) + 1 :],
+                pair[1].key.decode("utf-8")[len(self.root) + 1 :],
                 pair[0].decode("utf-8"),
             )
             for pair in ret
         ]
 
     def delete(self, key) -> bool:
-        return self._client.delete(self._get_full_key(key))
+        """Delete key-value pair with full-pathed key
+
+        Args:
+            key (_type_): full-pathed key
+
+        Returns:
+            bool: True if successful
+        """
+        return self._client.delete(key)
 
     def delete_with_prefix(self, prefix) -> bool:
-        return self._client.delete_prefix(self._get_full_key(prefix))
+        """delete key-value pairs with prefix
+
+        Args:
+            prefix (_type_): prefix should be a full-pathed key
+
+        Returns:
+            bool: True if successful
+        """
+        return self._client.delete_prefix(prefix)
 
     def update(self, key, new_value):
-        if not self._client.get(self._get_full_key(key)):
+        """
+        Update the value of a key. key should be a full-pathed key
+        """
+        if not self._client.get(key):
             raise ValueError("Key does not exist.")
         cur_value = self.get(key)
-        return self._client.replace(self._get_full_key(key), cur_value, new_value)
+        logger.info(f"Updating key {key} from {cur_value} to {new_value}")
+        return self._client.replace(key, cur_value, new_value)
 
     def update_with_func(self, key, func):
-        if not self._client.get(self._get_full_key(key)):
+        if not self._client.get(key):
             raise ValueError("Key does not exist.")
         cur_value = self.get(key)
         new_value = func(cur_value)
-        return self._client.replace(self._get_full_key(key), cur_value, new_value)
+        return self._client.replace(key, cur_value, new_value)
 
     def add_watch_prefix_callback(self, prefix, callback):
         """

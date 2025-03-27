@@ -33,16 +33,16 @@ compiler:
     default_listen_address: localhost
     bolt_connector:
       disabled: false
-      port: 7687
+      port: 7688
     gremlin_connector:
       disabled: true
-      port: 8182
+      port: 8183
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite
 http_service:
   default_listen_address: localhost
-  admin_port: 7777
-  query_port: 10000
+  admin_port: 7778
+  query_port: 10001
   max_content_length: 1GB
 master:
   port: 7776

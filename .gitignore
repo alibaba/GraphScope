@@ -158,9 +158,7 @@ flex/interactive/sdk/python/pyproject.toml
 flex/interactive/sdk/python/gs_interactive/models/
 flex/interactive/sdk/python/gs_interactive/api/
 flex/interactive/sdk/python/gs_interactive/__init__.py
-flex/interactive/sdk/python/gs_interactive/api_client.py
 flex/interactive/sdk/python/gs_interactive/api_response.py
-flex/interactive/sdk/python/gs_interactive/configuration.py
 flex/interactive/sdk/python/gs_interactive/exceptions.py
 flex/interactive/sdk/python/gs_interactive/rest.py
 !flex/interactive/sdk/python/gs_interactive/client/generated/__init__.py

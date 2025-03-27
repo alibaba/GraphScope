@@ -2,6 +2,17 @@
 {{- printf "http://%s-etcd.%s.svc.cluster.local:2379" .Release.Name .Release.Namespace | quote }}
 {{- end -}}
 
+{{- define "graphscope-interactive.master.workspace" -}}
+{{- if .Values.workspace }}
+{{- .Values.workspace }}
+{{- else }}
+{{- "/tmp/interactive_workspace/" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.codegenWorkDir" -}}
+{{- printf "%s/codegen" (include "graphscope-interactive.master.workspace" .) }}
+{{- end -}}
 
 {{- define "graphscope-interactive.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
@@ -130,7 +141,7 @@
 {{- if .Values.engine.compiler.meta.reader.schema.uri -}}
 {{- .Values.engine.compiler.meta.reader.schema.uri }}
 {{- else }}
-{{- printf "http://%s/v1/graph/%s" (include "graphscope-interactive.master.endpoint" . ) "1"  | trimSuffix "-" }}
+{{- printf "http://%s/v1/graph/%s/schema" (include "graphscope-interactive.master.endpoint" . ) "1"  | trimSuffix "-" }}
 {{- end -}}
 {{- end -}}
 

@@ -46,7 +46,6 @@ class LocalFileMetadataStore : public IMetaStore {
   using meta_value_t = IMetaStore::meta_value_t;
   using meta_kind_t = IMetaStore::meta_kind_t;
 
-  static constexpr const char* METADATA_DIR = "METADATA";
   static constexpr const char* META_FILE_PREFIX = "META_";
   static constexpr const char* CUR_ID_FILE_NAME = "CUR_ID";
 
