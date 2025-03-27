@@ -17,7 +17,6 @@
 #include <dlfcn.h>
 #include <memory>
 #include <utility>
-#include "flex/utils/service_utils.h"
 
 #include <boost/algorithm/string.hpp>
 
@@ -55,7 +54,7 @@ void WalWriterFactory::Finalize() {}
 std::unique_ptr<IWalWriter> WalWriterFactory::CreateWalWriter(
     const std::string& wal_uri) {
   auto& known_writers_ = getKnownWalWriters();
-  auto scheme = get_uri_scheme(wal_uri);
+  auto scheme = get_wal_uri_scheme(wal_uri);
   auto iter = known_writers_.find(scheme);
   if (iter != known_writers_.end()) {
     return iter->second();
@@ -90,7 +89,7 @@ void WalParserFactory::Finalize() {}
 std::unique_ptr<IWalParser> WalParserFactory::CreateWalParser(
     const std::string& wal_uri) {
   auto& know_parsers_ = getKnownWalParsers();
-  auto scheme = get_uri_scheme(wal_uri);
+  auto scheme = get_wal_uri_scheme(wal_uri);
   auto iter = know_parsers_.find(scheme);
   if (iter != know_parsers_.end()) {
     return iter->second(wal_uri);

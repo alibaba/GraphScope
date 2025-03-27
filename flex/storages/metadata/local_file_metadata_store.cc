@@ -186,10 +186,11 @@ LocalFileMetadataStore::get_next_meta_key(
 }
 
 std::string LocalFileMetadataStore::get_root_meta_dir() const {
-  if (!std::filesystem::exists(root_dir_)) {
-    std::filesystem::create_directory(root_dir_);
+  auto ret = root_dir_ + "/" + METADATA_DIR;
+  if (!std::filesystem::exists(ret)) {
+    std::filesystem::create_directory(ret);
   }
-  return root_dir_;
+  return ret;
 }
 
 std::string LocalFileMetadataStore::get_meta_kind_dir(

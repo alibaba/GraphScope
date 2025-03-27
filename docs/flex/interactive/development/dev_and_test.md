@@ -264,7 +264,7 @@ In Interactive's execution engine, transactions such as `ReadTransaction`, `Upda
 3. It is important to note that errors can still occur when replaying the WAL to the graph database. Replaying might fail due to limitations in resources or due to unforeseen bugs. **However,** any errors encountered during this stage will be handled via exceptions or may result in process failure. Currently, there is no established mechanism to handle such failures. Future improvements should focus on implementing failover strategies, potentially allowing the GraphDB to continue replaying the WAL until it succeeds.
 
 
-## Using ETCD as Metadata storage
+## Enable Service Registry
 
 ```bash
 ETCD_VER=v3.4.13

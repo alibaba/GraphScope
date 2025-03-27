@@ -26,7 +26,7 @@ std::unique_ptr<IWalWriter> LocalWalWriter::Make() {
 }
 
 void LocalWalWriter::open(const std::string& wal_uri, int thread_id) {
-  auto prefix = get_uri_path(wal_uri);
+  auto prefix = get_wal_uri_path(wal_uri);
   if (!std::filesystem::exists(prefix)) {
     std::filesystem::create_directories(prefix);
   }
