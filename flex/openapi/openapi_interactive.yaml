@@ -1995,6 +1995,9 @@ components:
           $ref: '#/components/schemas/GetGraphSchemaResponse'
         data_import_config:
           $ref: '#/components/schemas/SchemaMapping'
+        remote_path:
+          type: string
+          example: /path/to/remote # If remote_path is specified, we could download the data from remote path.
     CreateGraphSchemaRequest:
       x-body-name: create_graph_schema_request
       type: object
