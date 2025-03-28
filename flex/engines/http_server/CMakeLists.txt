@@ -1,9 +1,18 @@
 if (Hiactor_FOUND)
   include (${Hiactor_CODEGEN_CMAKE_FILE})
 
+  # the included_paths depends on ENABLE_SERVICE_REGISTER
+  set (server_actor_autogen_include_paths ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
+  if (ENABLE_SERVICE_REGISTER)
+    # append
+    set (server_actor_autogen_include_paths ${server_actor_autogen_include_paths},${CPPREST_INCLUDE_DIR},${ETCD_CPP_INCLUDE_DIR})
+  endif ()
+  if (BUILD_WITH_OSS)
+    set (server_actor_autogen_include_paths ${server_actor_autogen_include_paths},${OSS_CPP_SDK_INCLUDE_DIR})
+  endif ()
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_BINARY_DIR}/../../utils/,${CPPREST_INCLUDE_DIR},${ETCD_CPP_INCLUDE_DIR},${OSS_CPP_SDK_INCLUDE_DIR})
+        INCLUDE_PATHS ${server_actor_autogen_include_paths})
         
 
   # get all .cc files in current directory, except for generated/
