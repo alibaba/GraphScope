@@ -425,6 +425,23 @@ bool GraphDBService::stop_compiler_subprocess() {
   return true;
 }
 
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+bool GraphDBService::start_kafka_wal_ingester() {
+  kafka_wal_ingester_ = std::make_unique<KafkaWalIngester>();
+  kafka_wal_ingester_->open(gs::GraphDB::get(), service_config_.wal_uri);
+  return true;
+}
+
+bool GraphDBService::stop_kafka_wal_ingester() {
+  if (kafka_wal_ingester_) {
+    kafka_wal_ingester_->close();
+    kafka_wal_ingester_.reset();
+    return true;
+  }
+  return false;
+}
+#endif
+
 std::string GraphDBService::find_interactive_class_path() {
   std::string interactive_home = DEFAULT_INTERACTIVE_HOME;
   if (std::getenv("INTERACTIVE_HOME")) {

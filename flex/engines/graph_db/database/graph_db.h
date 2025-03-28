@@ -33,9 +33,6 @@
 #include "flex/storages/rt_mutable_graph/loader/loader_factory.h"
 #include "flex/storages/rt_mutable_graph/loading_config.h"
 #include "flex/storages/rt_mutable_graph/mutable_property_fragment.h"
-#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
-#include "cppkafka/cppkafka.h"
-#endif
 
 namespace gs {
 
@@ -172,15 +169,6 @@ class GraphDB {
 
   inline const GraphDBConfig& config() const { return config_; }
 
-#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
-  bool kafka_wal_ingester_state() const;
-
-  void start_kafka_wal_ingester(const cppkafka::Configuration& config,
-                                const std::string& topic_name);
-
-  void stop_kafka_wal_ingester();
-#endif
-
   uint64_t get_last_ingested_wal_ts() const { return last_ingested_wal_ts_; }
   void set_last_ingested_wal_ts(uint64_t ts) { last_ingested_wal_ts_ = ts; }
 
@@ -219,8 +207,6 @@ class GraphDB {
   std::thread monitor_thread_;
   bool monitor_thread_running_;
 
-  std::thread kafka_wal_ingester_thread_;
-  std::atomic<bool> kafka_wal_ingester_thread_running_;
   uint64_t last_ingested_wal_ts_;
 
   timestamp_t last_compaction_ts_;

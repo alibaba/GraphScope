@@ -16,12 +16,13 @@
 #include "flex/engines/graph_db/app/kafka_wal_ingester_app.h"
 #include "cppkafka/cppkafka.h"
 #include "flex/engines/graph_db/database/graph_db.h"
-#include "flex/engines/graph_db/database/wal/kafka_wal_parser.h"
+#include "flex/engines/graph_db/database/wal/kafka_wal_utils.h"
 
 namespace gs {
 #ifdef BUILD_KAFKA_WAL_WRITER_PARSER
 
 struct WalIngester {
+  constexpr static size_t BUFFSIZ = 4096;
   GraphDBSession& session_;
   timestamp_t begin_;
   timestamp_t end_;
@@ -31,30 +32,32 @@ struct WalIngester {
   std::vector<uint8_t> states_;
 
   void resize() {
-    size_t n = data_.size();
-    std::vector<std::string> new_data(n + 4096);
-    std::vector<uint8_t> new_states(n + 4096, 0);
-    size_t idx = (ingested_plus_one_ - begin_) % n;
-    for (size_t i = 0; i < n; ++i) {
+    size_t origin_len = data_.size();
+    std::vector<std::string> new_data(origin_len + BUFFSIZ);
+    std::vector<uint8_t> new_states(origin_len + BUFFSIZ, 0);
+    size_t idx = (ingested_plus_one_ - begin_) % origin_len;
+    for (size_t i = 0; i < origin_len; ++i) {
       new_data[i] = data_[idx];
       new_states[i] = states_[idx];
       if (states_[idx]) {
         end_ = ingested_plus_one_ + i + 1;
       }
       ++idx;
-      idx %= n;
+      idx %= origin_len;
     }
     data_ = std::move(new_data);
     states_ = std::move(new_states);
     begin_ = ingested_plus_one_;
   }
+
+  timestamp_t last_ingested() const { return ingested_plus_one_ - 1; }
   WalIngester(GraphDBSession& session, timestamp_t cur)
       : session_(session),
         begin_(cur),
         end_(cur),
         ingested_plus_one_(cur),
-        data_(4096),
-        states_(4096, 0) {}
+        data_(BUFFSIZ),
+        states_(BUFFSIZ, 0) {}
 
   bool empty() const { return ingested_plus_one_ == end_; }
 
@@ -77,7 +80,8 @@ struct WalIngester {
   }
 
   void ingest() {
-    size_t idx = (ingested_plus_one_ - begin_) % data_.size();
+    size_t len = data_.size();
+    size_t idx = (ingested_plus_one_ - begin_) % len;
     bool flag = false;
     while (states_[idx] == 2 || states_[idx] == 1) {
       if (states_[idx] == 1) {
@@ -86,7 +90,7 @@ struct WalIngester {
       states_[idx] = 0;
       ++ingested_plus_one_;
       ++idx;
-      idx %= data_.size();
+      idx %= len;
       flag = true;
     }
     if (flag) {
@@ -180,6 +184,7 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
     if (key == "topic_name") {
       topic_name = value;
     } else {
+      LOG(INFO) << "Kafka config: " << key << " = " << value;
       config.set(std::string(key), std::string(value));
     }
   }
@@ -187,7 +192,7 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
   timestamp_t cur_ts = graph.db().get_last_ingested_wal_ts() + 1;
   gs::WalIngester ingester(graph, cur_ts);
   gs::KafkaWalConsumer consumer(ingester, config, topic_name, 1);
-  while (graph.db().kafka_wal_ingester_state()) {
+  while (!force_stop_.load()) {
     consumer.poll();
     ingester.ingest();
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
@@ -196,8 +201,16 @@ bool KafkaWalIngesterApp::Query(GraphDBSession& graph, Decoder& input,
     consumer.poll();
     ingester.ingest();
   }
+  int64_t ts = ingester.last_ingested();
+  output.put_long(ts);
   return true;
 }
+
+bool KafkaWalIngesterApp::terminal() {
+  force_stop_.store(true);
+  return true;
+}
+
 AppWrapper KafkaWalIngesterAppFactory::CreateApp(const GraphDB& db) {
   return AppWrapper(new KafkaWalIngesterApp(), NULL);
 }

@@ -17,6 +17,7 @@
 #ifdef BUILD_KAFKA_WAL_WRITER_PARSER
 #include <flex/engines/graph_db/database/wal/kafka_wal_parser.h>
 #include <flex/engines/graph_db/database/wal/kafka_wal_writer.h>
+#include "flex/engines/http_server/kafka_wal_ingester.h"
 #endif
 #include "grape/serialization/in_archive.h"
 #include "grape/serialization/out_archive.h"
@@ -66,8 +67,8 @@ int main(int argc, char** argv) {
                                      {"group.id", "test"},
                                      {"enable.auto.commit", false},
                                      {"auto.offset.reset", "earliest"}};
-  db2.start_kafka_wal_ingester(config1, kafka_topic);
-
+  server::KafkaWalIngester ingester;
+  ingester.open(db2, uri);
   {
     std::vector<std::thread> threads;
     for (int i = 100; i < 200; ++i) {
@@ -98,7 +99,7 @@ int main(int argc, char** argv) {
   }
   LOG(INFO) << db.GetReadTransaction(0).GetVertexNum(0);
 
-  std::this_thread::sleep_for(std::chrono::seconds(3));
+  std::this_thread::sleep_for(std::chrono::seconds(4));
   {
     auto txn = db2.GetReadTransaction(0);
     CHECK(txn.GetVertexNum(0) == 195) << "Vertex num: " << txn.GetVertexNum(0);
@@ -118,8 +119,9 @@ int main(int argc, char** argv) {
       cnt++;
       iter.Next();
     }
+    ingester.close();
 
-    db2.stop_kafka_wal_ingester();
+    // db2.stop_kafka_wal_ingester();
   }
 #endif
   return 0;
