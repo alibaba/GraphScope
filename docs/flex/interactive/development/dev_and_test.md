@@ -265,8 +265,7 @@ In Interactive's execution engine, transactions such as `ReadTransaction`, `Upda
 
 ## Persisting WAL to kafka
 
-Kafka-based WAL storages is also provided. Follows [kafka-quick-start](https://kafka.apache.org/quickstart).
-
+Kafka-based WAL storage is also provided. Follows [kafka-quick-start](https://kafka.apache.org/quickstart).
 ### Install kafka
 
 ```bash
