@@ -181,7 +181,7 @@ public class GraphQueryExecutor extends FabricExecutor {
                                 listener.onCompleted();
                             }
                         };
-            } else if (metaProcedureCall(planSummary.getLogicalPlan())) {
+            } else if (planSummary.getLogicalPlan().getMode() == LogicalPlan.Mode.SCHEMA) {
                 executor = StoredProcedureMeta.Mode.SCHEMA;
             } else {
                 executor =

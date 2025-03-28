@@ -52,8 +52,14 @@ CALL : ( 'C' | 'c' ) ( 'A' | 'a' ) ( 'L' | 'l' ) ( 'L' | 'l' ) ;
 YIELD : ( 'Y' | 'y' ) ( 'I' | 'i' ) ( 'E' | 'e' ) ( 'L' | 'l' ) ( 'D' | 'd' ) ;
 
 oC_RegularQuery
-     : ( ( oC_ReadingClause ) SP? )+  ( SP oC_Return )
+     : ( ( oC_ReadingClause | oC_UpdatingClause ) SP? )* SP? oC_ReadingClause ( SP oC_Return )
+     | ( ( oC_ReadingClause | oC_UpdatingClause ) SP? )* SP? oC_UpdatingClause ( SP oC_Return )?
      ;
+
+oC_UpdatingClause
+      : oC_Create
+      | oC_Set
+      ;
 
 oC_ReadingClause
      :    oC_Match
@@ -62,6 +68,21 @@ oC_ReadingClause
      |    oC_Unwind
      |    oC_UnionCallSubQuery
      ;
+
+CREATE : ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'T' | 't' ) ( 'E' | 'e' ) ;
+
+oC_Create
+      :  CREATE SP? oC_Pattern ;
+
+oC_Set
+   :  SET SP? oC_SetItem ( SP? ',' SP? oC_SetItem )* ;
+
+SET : ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' ) ;
+
+oC_SetItem
+       :  ( oC_PropertyOrLabelsExpression SP? '=' SP? oC_Expression )
+           | ( oC_Variable SP? '=' SP? oC_Expression )
+           ;
 
 oC_SubQuery
      : ( ( oC_Match | oC_With | oC_Unwind ) SP? )* ( SP? oC_Return ) ;
