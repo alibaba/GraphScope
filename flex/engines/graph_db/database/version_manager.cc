@@ -98,6 +98,13 @@ void VersionManager::release_insert_timestamp(uint32_t ts) {
   pending_reqs_.fetch_sub(1);
 }
 
+void VersionManager::commit(uint32_t ts) {
+  lock_.lock();
+  read_ts_.store(ts);
+  write_ts_.store(ts + 1);
+  lock_.unlock();
+}
+
 uint32_t VersionManager::acquire_update_timestamp() {
   int expected_update_reqs = 0;
   while (
