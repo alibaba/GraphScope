@@ -297,5 +297,5 @@ bin/kafka-topics.sh --describe --topic kafka-test --bootstrap-server localhost:9
 cd flex && mkdir build
 cd build && cmake .. -DBUILD_TEST=ON && make -j
 ./tests/hqps/kafka_test localhost:902 kafka-test
-# run the kafka tst
+# run the kafka test
 ```
