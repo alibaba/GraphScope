@@ -491,7 +491,7 @@ jobs:
     
     - name: Clean up
       run: |
-        pkill -f etcd
+        pkill -P $(pgrep -f etcd)
         pkill -f interactive_server
         rm -rf /tmp/etcd-download-test
 
