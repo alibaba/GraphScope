@@ -474,7 +474,7 @@ jobs:
         GLOG_v=10 ${GITHUB_WORKSPACE}/flex/build/bin/interactive_server -c ./interactive_config_test.yaml \
           -g ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml --data-path ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/ \
           -w ${TMP_INTERACTIVE_WORKSPACE} &
-        sleep 5
+        sleep 20
 
         cd /tmp/etcd-download-test
         # get the result of /default/interactive/service/modern_graph/primary
