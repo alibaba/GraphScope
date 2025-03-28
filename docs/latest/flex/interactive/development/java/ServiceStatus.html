@@ -10,8 +10,8 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
@@ -705,40 +705,65 @@ MathJax = {
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><strong>statisticsEnabled</strong></p></td>
+<tr class="row-even"><td><p><strong>deployMode</strong></p></td>
+<td><p><a class="reference internal" href="#DeployModeEnum"><span class="xref myst"><strong>DeployModeEnum</strong></span></a></p></td>
+<td><p></p></td>
+<td><p>[optional]</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>statisticsEnabled</strong></p></td>
 <td><p><strong>Boolean</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>status</strong></p></td>
+<tr class="row-even"><td><p><strong>status</strong></p></td>
 <td><p><strong>String</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>graph</strong></p></td>
+<tr class="row-odd"><td><p><strong>graph</strong></p></td>
 <td><p><a class="reference internal" href="GetGraphResponse.html"><span class="std std-doc"><strong>GetGraphResponse</strong></span></a></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>boltPort</strong></p></td>
+<tr class="row-even"><td><p><strong>boltPort</strong></p></td>
 <td><p><strong>Integer</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>hqpsPort</strong></p></td>
+<tr class="row-odd"><td><p><strong>hqpsPort</strong></p></td>
 <td><p><strong>Integer</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>gremlinPort</strong></p></td>
+<tr class="row-even"><td><p><strong>gremlinPort</strong></p></td>
 <td><p><strong>Integer</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
 </tr>
-<tr class="row-even"><td><p><strong>startTime</strong></p></td>
+<tr class="row-odd"><td><p><strong>startTime</strong></p></td>
 <td><p><strong>Integer</strong></p></td>
 <td><p></p></td>
 <td><p>[optional]</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="enum-deploymodeenum">
+<h2>Enum: DeployModeEnum<a class="headerlink" href="#enum-deploymodeenum" title="Permalink to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>STANDALONE</p></td>
+<td><p>“standalone”</p></td>
+</tr>
+<tr class="row-odd"><td><p>K8S</p></td>
+<td><p>“k8s”</p></td>
 </tr>
 </tbody>
 </table>
@@ -788,6 +813,7 @@ MathJax = {
             <ul>
 <li><a class="reference internal" href="#">ServiceStatus</a><ul>
 <li><a class="reference internal" href="#properties">Properties</a></li>
+<li><a class="reference internal" href="#enum-deploymodeenum">Enum: DeployModeEnum</a></li>
 </ul>
 </li>
 </ul>

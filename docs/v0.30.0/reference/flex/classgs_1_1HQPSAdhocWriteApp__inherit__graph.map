@@ -1,5 +1,0 @@
-<map id="gs::HQPSAdhocWriteApp" name="gs::HQPSAdhocWriteApp">
-<area shape="rect" id="node1" title="HQPSAdhocWriteApp is a builtin, proxy app used to evaluate adhoc write query." alt="" coords="5,155,188,181"/>
-<area shape="rect" id="node2" href="$classgs_1_1WriteAppBase.html" title=" " alt="" coords="28,80,165,107"/>
-<area shape="rect" id="node3" href="$classgs_1_1AppBase.html" title=" " alt="" coords="45,5,148,32"/>
-</map>

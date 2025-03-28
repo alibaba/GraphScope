@@ -15,6 +15,7 @@ Name | Type | Description | Notes
 **stored_procedures** | [**List[GetProcedureResponse]**](GetProcedureResponse.md) |  | [optional] 
 **var_schema** | [**GetGraphSchemaResponse**](GetGraphSchemaResponse.md) |  | [optional] 
 **data_import_config** | [**SchemaMapping**](SchemaMapping.md) |  | [optional] 
+**remote_path** | **str** |  | [optional] 
 
 ## Example
 

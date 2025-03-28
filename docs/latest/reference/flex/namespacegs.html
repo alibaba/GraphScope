@@ -399,6 +399,10 @@ Classes</h2></td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1RefColumnBase.html">RefColumnBase</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create RefColumn for ease of usage for hqps.  <a href="classgs_1_1RefColumnBase.html#details">More...</a><br /></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1RemoteStorageDownloader.html">RemoteStorageDownloader</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1RemoteStorageUploader.html">RemoteStorageUploader</a></td></tr>
+<tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Result.html">Result</a></td></tr>
 <tr class="separator:"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classgs_1_1Schema.html">Schema</a></td></tr>
@@ -776,6 +780,10 @@ Functions</h2></td></tr>
 <tr class="memitem:a4e3d4433d7a9e4d989c5a72b18607853"><td class="memTemplParams" colspan="2">template&lt;typename T &gt; </td></tr>
 <tr class="memitem:a4e3d4433d7a9e4d989c5a72b18607853"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a4e3d4433d7a9e4d989c5a72b18607853">emplace_into_vector</a> (const std::shared_ptr&lt; arrow::ChunkedArray &gt; &amp;array, std::vector&lt; <a class="el" href="structgs_1_1Any.html">Any</a> &gt; &amp;vec)</td></tr>
 <tr class="separator:a4e3d4433d7a9e4d989c5a72b18607853"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9aa59e784dadffd9b2d34006167f8e8e"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a9aa59e784dadffd9b2d34006167f8e8e">read_string_from_file</a> (const std::string &amp;file_path, std::string &amp;content)</td></tr>
+<tr class="separator:a9aa59e784dadffd9b2d34006167f8e8e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5872687a4356fc9de1cb5cdf3dffe665"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespacegs.html#a5872687a4356fc9de1cb5cdf3dffe665">write_string_to_file</a> (const std::string &amp;content, const std::string &amp;file_path)</td></tr>
+<tr class="separator:a5872687a4356fc9de1cb5cdf3dffe665"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a977b1a3fb8bc17d41e8943fbc80d8cbe"><td class="memTemplParams" colspan="2">template&lt;typename KEY_T , typename INDEX_T &gt; </td></tr>
 <tr class="memitem:a977b1a3fb8bc17d41e8943fbc80d8cbe"><td class="memTemplItemLeft" align="right" valign="top">void&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="namespacegs.html#a977b1a3fb8bc17d41e8943fbc80d8cbe">build_lf_indexer</a> (const <a class="el" href="classgs_1_1IdIndexer.html">IdIndexer</a>&lt; KEY_T, INDEX_T &gt; &amp;input, const std::string &amp;filename, <a class="el" href="classgs_1_1LFIndexer.html">LFIndexer</a>&lt; INDEX_T &gt; &amp;lf, const std::string &amp;<a class="el" href="namespacegs.html#a7b3c15cf1d07a35af97828c907a77fc8">snapshot_dir</a>, const std::string &amp;work_dir, <a class="el" href="structgs_1_1PropertyType.html">PropertyType</a> type)</td></tr>
 <tr class="separator:a977b1a3fb8bc17d41e8943fbc80d8cbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -4258,6 +4266,34 @@ template&lt;typename T &gt; </div>
 
 </div>
 </div>
+<a id="a9aa59e784dadffd9b2d34006167f8e8e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9aa59e784dadffd9b2d34006167f8e8e">&#9670;&nbsp;</a></span>read_string_from_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::read_string_from_file </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>file_path</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">std::string &amp;&#160;</td>
+          <td class="paramname"><em>content</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a518ae3130eeaa314eac949a0a8261548"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a518ae3130eeaa314eac949a0a8261548">&#9670;&nbsp;</a></span>runtime_dir()</h2>
 
@@ -5019,6 +5055,34 @@ template&lt;typename COL_T &gt; </div>
           <td></td>
           <td class="paramtype">int32_t&#160;</td>
           <td class="paramname"><em>result_limit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a5872687a4356fc9de1cb5cdf3dffe665"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5872687a4356fc9de1cb5cdf3dffe665">&#9670;&nbsp;</a></span>write_string_to_file()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool gs::write_string_to_file </td>
+          <td>(</td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>content</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">const std::string &amp;&#160;</td>
+          <td class="paramname"><em>file_path</em>&#160;</td>
         </tr>
         <tr>
           <td></td>

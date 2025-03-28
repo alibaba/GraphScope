@@ -1426,6 +1426,10 @@ ul.nav-tabs {
     },
     "data_import_config" : {
       "$ref" : "#/components/schemas/SchemaMapping"
+    },
+    "remote_path" : {
+      "type" : "string",
+      "example" : "/path/to/remote"
     }
   },
   "x-body-name" : "get_graph_response"
@@ -1682,6 +1686,9 @@ ul.nav-tabs {
     },
     "format" : {
       "$ref" : "#/components/schemas/SchemaMapping_loading_config_format"
+    },
+    "destination" : {
+      "type" : "string"
     }
   }
 };
@@ -1727,6 +1734,10 @@ ul.nav-tabs {
     defs["ServiceStatus"] = {
   "type" : "object",
   "properties" : {
+    "deploy_mode" : {
+      "type" : "string",
+      "enum" : [ "standalone", "k8s" ]
+    },
     "statistics_enabled" : {
       "type" : "boolean"
     },
@@ -2256,7 +2267,7 @@ ul.nav-tabs {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/dataloading" \
+ "http://localhost/v1/graph/{graph_id}/dataloading" \
  -d '{
   &quot;loading_config&quot; : {
     &quot;x_csr_params&quot; : {
@@ -2270,6 +2281,7 @@ ul.nav-tabs {
       },
       &quot;type&quot; : &quot;type&quot;
     },
+    &quot;destination&quot; : &quot;destination&quot;,
     &quot;import_option&quot; : &quot;init&quot;,
     &quot;data_source&quot; : {
       &quot;scheme&quot; : &quot;odps&quot;,
@@ -2828,7 +2840,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/edge" \
+ "http://localhost/v1/graph/{graph_id}/schema/edge" \
  -d '{
   &quot;type_name&quot; : &quot;type_name&quot;,
   &quot;primary_keys&quot; : [ &quot;primary_keys&quot;, &quot;primary_keys&quot; ],
@@ -3251,7 +3263,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-createEdgeType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-createEdgeType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-createEdgeType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -3263,6 +3275,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-createEdgeType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-createEdgeType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -3274,7 +3291,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -3315,7 +3339,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-createEdgeType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-createEdgeType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-createEdgeType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -3327,6 +3351,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-createEdgeType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-createEdgeType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -3338,7 +3367,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -3416,7 +3452,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph" \
+ "http://localhost/v1/graph" \
  -d '{
   &quot;schema&quot; : {
     &quot;vertex_types&quot; : [ {
@@ -4076,7 +4112,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/vertex" \
+ "http://localhost/v1/graph/{graph_id}/schema/vertex" \
  -d '{
   &quot;type_name&quot; : &quot;type_name&quot;,
   &quot;primary_keys&quot; : [ &quot;primary_keys&quot;, &quot;primary_keys&quot; ],
@@ -4480,7 +4516,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-createVertexType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-createVertexType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-createVertexType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -4492,6 +4528,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-createVertexType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-createVertexType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -4503,7 +4544,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -4544,7 +4592,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-createVertexType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-createVertexType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-createVertexType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -4556,6 +4604,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-createVertexType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-createVertexType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -4567,7 +4620,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -4644,7 +4704,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-deleteEdgeType-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/edge?type_name=typeName_example&source_vertex_type=sourceVertexType_example&destination_vertex_type=destinationVertexType_example"
+ "http://localhost/v1/graph/{graph_id}/schema/edge?type_name=typeName_example&source_vertex_type=sourceVertexType_example&destination_vertex_type=destinationVertexType_example"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-deleteEdgeType-0-java">
@@ -5071,7 +5131,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-deleteEdgeType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-deleteEdgeType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-deleteEdgeType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -5083,6 +5143,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-deleteEdgeType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-deleteEdgeType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -5094,7 +5159,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -5135,7 +5207,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-deleteEdgeType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-deleteEdgeType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-deleteEdgeType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -5147,6 +5219,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-deleteEdgeType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-deleteEdgeType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -5158,7 +5235,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -5235,7 +5319,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-deleteGraph-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}"
+ "http://localhost/v1/graph/{graph_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-deleteGraph-0-java">
@@ -5762,7 +5846,7 @@ The id of graph to delete
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-deleteVertexType-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/vertex?type_name=typeName_example"
+ "http://localhost/v1/graph/{graph_id}/schema/vertex?type_name=typeName_example"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-deleteVertexType-0-java">
@@ -6127,7 +6211,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-deleteVertexType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-deleteVertexType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-deleteVertexType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -6139,6 +6223,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-deleteVertexType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-deleteVertexType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -6150,7 +6239,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -6191,7 +6287,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-deleteVertexType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-deleteVertexType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-deleteVertexType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -6203,6 +6299,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-deleteVertexType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-deleteVertexType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -6214,7 +6315,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -6291,7 +6399,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-getGraph-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}"
+ "http://localhost/v1/graph/{graph_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-getGraph-0-java">
@@ -6734,7 +6842,7 @@ The id of graph to get
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-getGraphStatistic-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/statistics"
+ "http://localhost/v1/graph/{graph_id}/statistics"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-getGraphStatistic-0-java">
@@ -7340,7 +7448,7 @@ The id of graph to get statistics
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-getSchema-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema"
+ "http://localhost/v1/graph/{graph_id}/schema"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-getSchema-0-java">
@@ -7670,7 +7778,7 @@ The id of graph to get schema
                             <h3 id="examples-AdminServiceGraphManagement-getSchema-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-getSchema-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-getSchema-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -7682,6 +7790,11 @@ The id of graph to get schema
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-getSchema-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-getSchema-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -7693,7 +7806,14 @@ The id of graph to get schema
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -7770,7 +7890,7 @@ The id of graph to get schema
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-getSnapshotStatus-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/snapshot/{snapshot_id}/status"
+ "http://localhost/v1/graph/{graph_id}/snapshot/{snapshot_id}/status"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-getSnapshotStatus-0-java">
@@ -8128,7 +8248,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-getSnapshotStatus-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-getSnapshotStatus-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-getSnapshotStatus-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -8140,6 +8260,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-getSnapshotStatus-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-getSnapshotStatus-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -8151,7 +8276,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -8192,7 +8324,7 @@ pub fn main() {
                             <h3 id="examples-AdminServiceGraphManagement-getSnapshotStatus-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-getSnapshotStatus-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-getSnapshotStatus-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -8204,6 +8336,11 @@ pub fn main() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-getSnapshotStatus-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-getSnapshotStatus-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -8215,7 +8352,14 @@ pub fn main() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -8292,7 +8436,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceGraphManagement-listGraphs-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph"
+ "http://localhost/v1/graph"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceGraphManagement-listGraphs-0-java">
@@ -8621,7 +8765,7 @@ pub fn main() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/edge" \
+ "http://localhost/v1/graph/{graph_id}/schema/edge" \
  -d '{
   &quot;type_name&quot; : &quot;type_name&quot;,
   &quot;primary_keys&quot; : [ &quot;primary_keys&quot;, &quot;primary_keys&quot; ],
@@ -9043,7 +9187,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-updateEdgeType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-updateEdgeType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-updateEdgeType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -9055,6 +9199,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-updateEdgeType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-updateEdgeType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -9066,7 +9215,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -9107,7 +9263,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-updateEdgeType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-updateEdgeType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-updateEdgeType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -9119,6 +9275,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-updateEdgeType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-updateEdgeType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -9130,7 +9291,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -9208,7 +9376,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/schema/vertex" \
+ "http://localhost/v1/graph/{graph_id}/schema/vertex" \
  -d '{
   &quot;type_name&quot; : &quot;type_name&quot;,
   &quot;primary_keys&quot; : [ &quot;primary_keys&quot;, &quot;primary_keys&quot; ],
@@ -9612,7 +9780,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-updateVertexType-title-400"></h3>
                             <p id="examples-AdminServiceGraphManagement-updateVertexType-description-400" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement400_description = ``;
+                              var responseAdminServiceGraphManagement400_description = `Bad request`;
                               var responseAdminServiceGraphManagement400_description_break = responseAdminServiceGraphManagement400_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement400_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-updateVertexType-title-400").text("Status: 400 - " + responseAdminServiceGraphManagement400_description);
@@ -9624,6 +9792,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-updateVertexType-400" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-updateVertexType-400-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -9635,7 +9808,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/400"
+  "description" : "Bad request",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -9676,7 +9856,7 @@ $(document).ready(function() {
                             <h3 id="examples-AdminServiceGraphManagement-updateVertexType-title-500"></h3>
                             <p id="examples-AdminServiceGraphManagement-updateVertexType-description-500" class="marked"></p>
                             <script>
-                              var responseAdminServiceGraphManagement500_description = ``;
+                              var responseAdminServiceGraphManagement500_description = `Server error`;
                               var responseAdminServiceGraphManagement500_description_break = responseAdminServiceGraphManagement500_description.indexOf('\n');
                               if (responseAdminServiceGraphManagement500_description_break == -1) {
                                 $("#examples-AdminServiceGraphManagement-updateVertexType-title-500").text("Status: 500 - " + responseAdminServiceGraphManagement500_description);
@@ -9688,6 +9868,11 @@ $(document).ready(function() {
 
 
                             <ul id="responses-detail-AdminServiceGraphManagement-updateVertexType-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceGraphManagement-updateVertexType-500-schema">Schema</a>
+                                </li>
+
+
 
 
                             </ul>
@@ -9699,7 +9884,14 @@ $(document).ready(function() {
                                   <script>
                                     $(document).ready(function() {
                                       var schemaWrapper = {
-  "$ref" : "#/components/responses/500"
+  "description" : "Server error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
 };
                                       var schema = findNode('schema',schemaWrapper).schema;
                                       if (!schema) {
@@ -9779,7 +9971,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-AdminServiceJobManagement-deleteJobById-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/job/{job_id}"
+ "http://localhost/v1/job/{job_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceJobManagement-deleteJobById-0-java">
@@ -10143,7 +10335,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceJobManagement-getJobById-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/job/{job_id}"
+ "http://localhost/v1/job/{job_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceJobManagement-getJobById-0-java">
@@ -10509,7 +10701,7 @@ The id of the job, returned from POST /v1/graph/{graph_id}/dataloading
                           <div class="tab-pane active" id="examples-AdminServiceJobManagement-listJobs-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/job"
+ "http://localhost/v1/job"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceJobManagement-listJobs-0-java">
@@ -10841,7 +11033,7 @@ pub fn main() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/procedure" \
+ "http://localhost/v1/graph/{graph_id}/procedure" \
  -d '{
   &quot;query&quot; : &quot;MATCH(a) return COUNT(a);&quot;,
   &quot;name&quot; : &quot;query1&quot;,
@@ -11509,7 +11701,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-AdminServiceProcedureManagement-deleteProcedure-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/procedure/{procedure_id}"
+ "http://localhost/v1/graph/{graph_id}/procedure/{procedure_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceProcedureManagement-deleteProcedure-0-java">
@@ -11983,7 +12175,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceProcedureManagement-getProcedure-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/procedure/{procedure_id}"
+ "http://localhost/v1/graph/{graph_id}/procedure/{procedure_id}"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceProcedureManagement-getProcedure-0-java">
@@ -12454,7 +12646,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceProcedureManagement-listProcedures-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/procedure"
+ "http://localhost/v1/graph/{graph_id}/procedure"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceProcedureManagement-listProcedures-0-java">
@@ -12898,7 +13090,7 @@ pub fn main() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/procedure/{procedure_id}" \
+ "http://localhost/v1/graph/{graph_id}/procedure/{procedure_id}" \
  -d '{
   &quot;description&quot; : &quot;A sample stored procedure&quot;
 }'
@@ -13598,7 +13790,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-AdminServiceServiceManagement-getServiceStatus-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/status"
+ "http://localhost/v1/service/status"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceServiceManagement-getServiceStatus-0-java">
@@ -13923,7 +14115,7 @@ pub fn main() {
                           <div class="tab-pane active" id="examples-AdminServiceServiceManagement-restartService-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/restart"
+ "http://localhost/v1/service/restart"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-AdminServiceServiceManagement-restartService-0-java">
@@ -14249,7 +14441,7 @@ pub fn main() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/start" \
+ "http://localhost/v1/service/start" \
  -d '{
   &quot;graph_id&quot; : &quot;graph_id&quot;
 }'
@@ -14719,7 +14911,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/service/stop" \
+ "http://localhost/v1/service/stop" \
  -d '{
   &quot;graph_id&quot; : &quot;graph_id&quot;
 }'
@@ -15113,7 +15305,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/edge" \
+ "http://localhost/v1/graph/{graph_id}/edge" \
  -d '{
   &quot;src_label&quot; : &quot;person&quot;,
   &quot;dst_primary_key_values&quot; : [ {
@@ -15829,7 +16021,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/edge" \
+ "http://localhost/v1/graph/{graph_id}/edge" \
  -d '{
   &quot;src_label&quot; : &quot;person&quot;,
   &quot;dst_primary_key_values&quot; : [ {
@@ -16528,7 +16720,7 @@ $(document).ready(function() {
                           <div class="tab-pane active" id="examples-GraphServiceEdgeManagement-getEdge-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/edge?edge_label=created&src_label=person&src_primary_key_value=1&dst_label=software&dst_primary_key_value=3"
+ "http://localhost/v1/graph/{graph_id}/edge?edge_label=created&src_label=person&src_primary_key_value=1&dst_label=software&dst_primary_key_value=3"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-GraphServiceEdgeManagement-getEdge-0-java">
@@ -17324,7 +17516,7 @@ The value of dst vertex&#39;s primary key
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/edge" \
+ "http://localhost/v1/graph/{graph_id}/edge" \
  -d '{
   &quot;src_label&quot; : &quot;person&quot;,
   &quot;dst_primary_key_values&quot; : [ {
@@ -18043,7 +18235,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/vertex" \
+ "http://localhost/v1/graph/{graph_id}/vertex" \
  -d '{
   &quot;vertex_request&quot; : [ {
     &quot;primary_key_values&quot; : [ {
@@ -18906,7 +19098,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X DELETE \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/vertex" \
+ "http://localhost/v1/graph/{graph_id}/vertex" \
  -d '{
   &quot;primary_key_values&quot; : [ {
     &quot;name&quot; : &quot;id&quot;,
@@ -19594,7 +19786,7 @@ Host: example.com
                           <div class="tab-pane active" id="examples-GraphServiceVertexManagement-getVertex-0-curl">
                             <pre class="prettyprint"><code class="language-bsh">curl -X GET \
  -H "Accept: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/vertex?label=label_example&primary_key_value="
+ "http://localhost/v1/graph/{graph_id}/vertex?label=label_example&primary_key_value="
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-GraphServiceVertexManagement-getVertex-0-java">
@@ -20245,7 +20437,7 @@ The primary key value of querying vertex.
                             <pre class="prettyprint"><code class="language-bsh">curl -X PUT \
  -H "Accept: application/json" \
  -H "Content-Type: application/json" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/vertex" \
+ "http://localhost/v1/graph/{graph_id}/vertex" \
  -d '{
   &quot;vertex_request&quot; : [ {
     &quot;primary_key_values&quot; : [ {
@@ -21012,7 +21204,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/query" \
+ "http://localhost/v1/graph/{graph_id}/query" \
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
@@ -21523,7 +21715,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/current/query" \
+ "http://localhost/v1/graph/current/query" \
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
@@ -21997,7 +22189,7 @@ https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/p
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/{graph_id}/adhoc_query" \
+ "http://localhost/v1/graph/{graph_id}/adhoc_query" \
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
@@ -22509,7 +22701,7 @@ https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/p
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: text/plain,application/json" \
  -H "Content-Type: text/plain" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/graph/current/adhoc_query" \
+ "http://localhost/v1/graph/current/adhoc_query" \
  -d 'Custom MIME type example not yet supported: text/plain'
 </code></pre>
                           </div>
@@ -22984,7 +23176,7 @@ $(document).ready(function() {
                             <pre class="prettyprint"><code class="language-bsh">curl -X POST \
  -H "Accept: application/json" \
  -H "Content-Type: multipart/form-data" \
- "https://virtserver.swaggerhub.com/GRAPHSCOPE/InteractiveAPI/1.0.0/v1/file/upload"
+ "http://localhost/v1/file/upload"
 </code></pre>
                           </div>
                           <div class="tab-pane" id="examples-Utils-uploadFile-0-java">

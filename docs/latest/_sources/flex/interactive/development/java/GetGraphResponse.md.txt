@@ -17,6 +17,7 @@
 |**storedProcedures** | [**List&lt;GetProcedureResponse&gt;**](GetProcedureResponse.md) |  |  [optional] |
 |**schema** | [**GetGraphSchemaResponse**](GetGraphSchemaResponse.md) |  |  [optional] |
 |**dataImportConfig** | [**SchemaMapping**](SchemaMapping.md) |  |  [optional] |
+|**remotePath** | **String** |  |  [optional] |
 
 
 

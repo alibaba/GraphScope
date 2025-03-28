@@ -5,6 +5,7 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
+**deploy_mode** | **str** |  | [optional] 
 **statistics_enabled** | **bool** |  | [optional] 
 **status** | **str** |  | [optional] 
 **graph** | [**GetGraphResponse**](GetGraphResponse.md) |  | [optional] 

@@ -7,6 +7,7 @@
 
 | Name | Type | Description | Notes |
 |------------ | ------------- | ------------- | -------------|
+|**deployMode** | [**DeployModeEnum**](#DeployModeEnum) |  |  [optional] |
 |**statisticsEnabled** | **Boolean** |  |  [optional] |
 |**status** | **String** |  |  [optional] |
 |**graph** | [**GetGraphResponse**](GetGraphResponse.md) |  |  [optional] |
@@ -14,6 +15,15 @@
 |**hqpsPort** | **Integer** |  |  [optional] |
 |**gremlinPort** | **Integer** |  |  [optional] |
 |**startTime** | **Integer** |  |  [optional] |
+
+
+
+## Enum: DeployModeEnum
+
+| Name | Value |
+|---- | -----|
+| STANDALONE | &quot;standalone&quot; |
+| K8S | &quot;k8s&quot; |
 
 
 

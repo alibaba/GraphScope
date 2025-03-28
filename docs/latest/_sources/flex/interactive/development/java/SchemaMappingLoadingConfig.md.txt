@@ -11,6 +11,7 @@
 |**dataSource** | [**SchemaMappingLoadingConfigDataSource**](SchemaMappingLoadingConfigDataSource.md) |  |  [optional] |
 |**importOption** | [**ImportOptionEnum**](#ImportOptionEnum) |  |  [optional] |
 |**format** | [**SchemaMappingLoadingConfigFormat**](SchemaMappingLoadingConfigFormat.md) |  |  [optional] |
+|**destination** | **String** |  |  [optional] |
 
 
 
