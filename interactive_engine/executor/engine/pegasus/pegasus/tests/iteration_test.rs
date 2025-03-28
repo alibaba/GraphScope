@@ -337,7 +337,7 @@ fn iterate_x_map_reduce_unfold_x_test() {
         .unwrap();
     println!("i2 = {}", i2);
     assert_eq!(count, 1000);
-    assert_eq!(sum, (1..i2).rev().take(1000).sum());
+    assert_eq!(sum, (1..i2).rev().take(1000).sum::<u32>());
 }
 
 #[test]

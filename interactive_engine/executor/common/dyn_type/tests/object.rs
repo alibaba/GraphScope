@@ -17,7 +17,7 @@
 mod tests {
     use std::cmp::Ordering;
 
-    use dyn_type::{object, BorrowObject, Object, Primitives};
+    use dyn_type::{object, BorrowObject, Object, OwnedOrRef, Primitives};
 
     #[test]
     fn test_as_primitive() {
@@ -139,7 +139,7 @@ mod tests {
     fn test_owned_or_ref() {
         let a = object!(8_u128);
         let left = 0u128;
-        let right = a.get().unwrap();
+        let right: OwnedOrRef<'_, u128> = a.get().unwrap();
         assert_eq!(left.partial_cmp(&*right), Some(Ordering::Less));
         assert_eq!(right.partial_cmp(&left), Some(Ordering::Greater));
         assert_eq!(*&*right, 8_u128);
