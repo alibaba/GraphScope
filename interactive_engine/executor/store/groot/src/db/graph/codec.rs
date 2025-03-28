@@ -178,6 +178,7 @@ impl Decoder {
             ValueType::Short => reader.read_bytes(offset, 2),
             ValueType::Int | ValueType::Float => reader.read_bytes(offset, 4),
             ValueType::Double | ValueType::Long => reader.read_bytes(offset, 8),
+            ValueType::FixedChar(len) => reader.read_bytes(offset, len),
             _ => unreachable!(),
         };
         let ret = ValueRef::new(info.r#type, bytes);
@@ -720,7 +721,7 @@ mod tests {
         assert_ne!(decode_item, None);
         if let Some((prop_id, v)) = decode_item {
             assert_eq!(prop_id, 18);
-            assert_eq!(*v.get_type() as i32, ValueType::Long as i32);
+            assert_eq!(*v.get_type(), ValueType::Long);
             assert_eq!(v.get_long().unwrap(), 20120904101614543);
         }
         assert_eq!(decode_iter.next(), None);
