@@ -404,13 +404,6 @@ struct convert<server::ServiceConfig> {
                    << service_config.service_registry_ttl;
         }
       }
-      if (master_node["k8s_launcher_config"]) {
-        auto k8s_config_node = master_node["k8s_launcher_config"];
-        if (k8s_config_node["namespace"]) {
-          service_config.namespace_ =
-              k8s_config_node["namespace"].as<std::string>();
-        }
-      }
     }
 
     return true;
