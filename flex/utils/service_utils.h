@@ -208,6 +208,8 @@ std::string memory_to_mb_str(uint64_t mem_bytes);
 
 size_t human_readable_to_bytes(const std::string& human_readable);
 
+std::string get_local_ip();
+
 }  // namespace gs
 
 #endif  // SERVICE_UTILS_H

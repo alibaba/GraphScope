@@ -377,6 +377,125 @@ jobs:
         export ENGINE_TYPE=hiactor
         bash hqps_adhoc_test.sh ${INTERACTIVE_WORKSPACE} modern_graph RBO gremlin
 
+  test-service-registry:
+    runs-on: ubuntu-20.04
+    needs: build-interactive
+    if: ${{ github.repository == 'alibaba/GraphScope' }}
+    container:
+      image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.m2/repository
+        key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+        restore-keys: |
+            ${{ runner.os }}-maven-
+
+    - uses: actions/cache@v4
+      with:
+        path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ~/.cache/sccache
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+    - name: Install latest libgrape-lite
+      if: false
+      run: |
+        git clone --single-branch https://github.com/alibaba/libgrape-lite.git /tmp/libgrape-lite
+        cd /tmp/libgrape-lite
+        mkdir -p build && cd build
+        cmake ..
+        make -j$(nproc)
+        make install
+    
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: interactive_build-${{ github.sha }}
+
+    - name: Setup tmate session
+      if: false
+      uses: mxschmitt/action-tmate@v3
+
+    - name: Extract build artifacts
+      run: |
+        cd ${GITHUB_WORKSPACE}
+        tar zxf build.tar.gz -C flex && rm build.tar.gz
+    
+    - name: Rebuild with ENABLE_SERVICE_REGISTER=ON
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex
+        git submodule update --init
+        mkdir build && cd build
+        cmake .. -DENABLE_SERVICE_REGISTER=ON
+        sudo make -j4
+
+    - name: Test service registry
+      env: 
+        FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph
+        TMP_INTERACTIVE_WORKSPACE: /tmp/temp_workspace
+      run: |
+        rm -rf ${TMP_INTERACTIVE_WORKSPACE}
+        cd ${GITHUB_WORKSPACE}/flex/build/
+        SCHEMA_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml
+        BULK_LOAD_FILE=${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/bulk_load.yaml
+        mkdir -p ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/
+        cp ${SCHEMA_FILE} ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml
+        GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
+
+        # download etcd
+        ETCD_VER=v3.4.13
+        # choose either URL
+        GOOGLE_URL=https://storage.googleapis.com/etcd
+        GITHUB_URL=https://github.com/etcd-io/etcd/releases/download
+        DOWNLOAD_URL=${GOOGLE_URL}
+        rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+        rm -rf /tmp/etcd-download-test && mkdir -p /tmp/etcd-download-test
+        curl -L ${DOWNLOAD_URL}/${ETCD_VER}/etcd-${ETCD_VER}-linux-amd64.tar.gz -o /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+        tar xzvf /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz -C /tmp/etcd-download-test --strip-components=1
+        rm -f /tmp/etcd-${ETCD_VER}-linux-amd64.tar.gz
+        cd /tmp/etcd-download-test
+
+        ./etcd & 
+
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        cat >> ./interactive_config_test.yaml <<EOF
+        master:
+          service_registry:
+            type: etcd
+            endpoint: http://localhost:2379
+            ttl: 5
+        EOF
+
+        GLOG_v=10 ${GITHUB_WORKSPACE}/flex/build/bin/interactive_server -c ./interactive_config_test.yaml \
+          -g ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/graph.yaml --data-path ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/ \
+          -w ${TMP_INTERACTIVE_WORKSPACE} &
+        sleep 5
+
+        cd /tmp/etcd-download-test
+        # get the result of /default/interactive/service/modern_graph/primary
+        primary=$(./etcdctl get --prefix /default/interactive/service/modern_graph/primary)
+        if [ -z "$primary" ]; then
+          echo "Failed to get primary from etcd"
+          exit 1
+        fi
+        instance_list=$(./etcdctl get --prefix /default/interactive/service/modern_graph/instance_list)
+        # check cypher and 7687 is in the instance list
+        (echo $instance_list | grep cypher | grep 7687) || exit 1
+        (echo $instance_list | grep procedure | grep 10000) || exit 1
+    
+    - name: Clean up
+      run: |
+        pkill -f etcd
+        pkill -f interactive_server
+        rm -rf /tmp/etcd-download-test
+
+
   test-build-flex:
     runs-on: ubuntu-22.04
 

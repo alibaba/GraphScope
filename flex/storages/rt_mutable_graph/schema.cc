@@ -413,7 +413,8 @@ void Schema::Serialize(std::unique_ptr<grape::LocalIOAdaptor>& writer) const {
   arc << v_primary_keys_ << vproperties_ << vprop_names_ << vprop_storage_
       << eproperties_ << eprop_names_ << ie_strategy_ << oe_strategy_
       << ie_mutability_ << oe_mutability_ << sort_on_compactions_ << max_vnum_
-      << v_descriptions_ << e_descriptions_ << description_ << version_;
+      << v_descriptions_ << e_descriptions_ << description_ << version_
+      << remote_path_ << name_ << id_;
   CHECK(writer->WriteArchive(arc));
 }
 
@@ -426,7 +427,8 @@ void Schema::Deserialize(std::unique_ptr<grape::LocalIOAdaptor>& reader) {
   arc >> v_primary_keys_ >> vproperties_ >> vprop_names_ >> vprop_storage_ >>
       eproperties_ >> eprop_names_ >> ie_strategy_ >> oe_strategy_ >>
       ie_mutability_ >> oe_mutability_ >> sort_on_compactions_ >> max_vnum_ >>
-      v_descriptions_ >> e_descriptions_ >> description_ >> version_;
+      v_descriptions_ >> e_descriptions_ >> description_ >> version_ >>
+      remote_path_ >> name_ >> id_;
   has_multi_props_edge_ = false;
   for (auto& eprops : eproperties_) {
     if (eprops.second.size() > 1) {
@@ -1199,9 +1201,28 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
     LOG(WARNING) << "store_type is not set properly, use default value: "
                  << "mutable_csr";
   }
+  if (graph_node["name"]) {
+    schema.SetGraphName(graph_node["name"].as<std::string>());
+  }
+
+  if (graph_node["id"]) {
+    VLOG(1) << "Got id: " << graph_node["id"].as<std::string>();
+    schema.SetGraphId(graph_node["id"].as<std::string>());
+  } else {
+    VLOG(1) << "id is not set";
+    if (schema.GetGraphName().empty()) {
+      LOG(ERROR) << "Graph name is not set";
+      return Status(StatusCode::INVALID_SCHEMA, "Graph name is not set");
+    }
+    schema.SetGraphId(schema.GetGraphName());
+  }
 
   if (graph_node["description"]) {
     schema.SetDescription(graph_node["description"].as<std::string>());
+  }
+
+  if (graph_node["remote_path"]) {
+    schema.SetRemotePath(graph_node["remote_path"].as<std::string>());
   }
 
   // check whether a version field is specified for the schema, if
@@ -1385,6 +1406,10 @@ std::string Schema::GetDescription() const { return description_; }
 
 void Schema::SetDescription(const std::string& description) {
   description_ = description;
+}
+
+void Schema::SetRemotePath(const std::string& remote_path) {
+  remote_path_ = remote_path;
 }
 
 void Schema::SetVersion(const std::string& version) { version_ = version; }
