@@ -431,8 +431,7 @@ jobs:
       run: |
         cd ${GITHUB_WORKSPACE}/flex
         git submodule update --init
-        mkdir build && cd build
-        cmake .. -DENABLE_SERVICE_REGISTER=ON
+        cd build && cmake .. -DENABLE_SERVICE_REGISTER=ON
         sudo make -j4
 
     - name: Test service registry
