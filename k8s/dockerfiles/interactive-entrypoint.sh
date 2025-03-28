@@ -231,7 +231,7 @@ done
 # service, coordinator and admin service should not be started
 prepare_workspace $WORKSPACE ${CUSTOM_GRAPH_YAML}
 launch_service $WORKSPACE ${CUSTOM_GRAPH_YAML}
-if [ ! -z "${CUSTOM_GRAPH_YAML}" ]; then
+if [ -z "${CUSTOM_GRAPH_YAML}" ]; then
   launch_coordinator $PORT_MAPPING
 fi
 
