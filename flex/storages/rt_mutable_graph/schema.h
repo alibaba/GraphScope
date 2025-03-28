@@ -263,9 +263,21 @@ class Schema {
 
   std::string GetPluginDir() const;
 
+  inline void SetGraphName(const std::string& name) { name_ = name; }
+
+  inline void SetGraphId(const std::string& id) { id_ = id; }
+
+  inline std::string GetGraphName() const { return name_; }
+
+  inline std::string GetGraphId() const { return id_; }
+
   std::string GetDescription() const;
 
   void SetDescription(const std::string& description);
+
+  void SetRemotePath(const std::string& remote_path);
+
+  inline std::string GetRemotePath() const { return remote_path_; }
 
   void SetVersion(const std::string& version);
 
@@ -283,6 +295,7 @@ class Schema {
 
   uint32_t generate_edge_label(label_t src, label_t dst, label_t edge) const;
 
+  std::string name_, id_;
   IdIndexer<std::string, label_t> vlabel_indexer_;
   IdIndexer<std::string, label_t> elabel_indexer_;
   std::vector<std::vector<PropertyType>> vproperties_;
@@ -310,6 +323,7 @@ class Schema {
   std::string description_;
   std::string version_;
   std::string compiler_path_;
+  std::string remote_path_;  // The path to the data on the remote storage
   bool has_multi_props_edge_;
 };
 
