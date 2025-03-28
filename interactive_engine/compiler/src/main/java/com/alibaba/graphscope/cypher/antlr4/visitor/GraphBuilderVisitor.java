@@ -18,9 +18,13 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.ir.rel.DummyTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphProcedureCall;
+import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.type.FieldMappings;
+import com.alibaba.graphscope.common.ir.rel.type.TargetGraph;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -37,6 +41,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -120,6 +125,65 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         RexNode expr = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
         String alias = Utils.getAliasName(ctx.oC_Variable());
         return builder.unfold(expr, alias);
+    }
+
+    @Override
+    public GraphBuilder visitOC_Set(CypherGSParser.OC_SetContext ctx) {
+        FieldMappings updateMappings = createFieldMappings(ctx);
+        TableModify update =
+                new GraphTableModify.Update(builder.getCluster(), builder.build(), updateMappings);
+        return builder.push(update);
+    }
+
+    private FieldMappings createFieldMappings(CypherGSParser.OC_SetContext ctx) {
+        List<FieldMappings.Entry> mappings =
+                ctx.oC_SetItem().stream()
+                        .map(
+                                item -> {
+                                    RexNode target = null, source = null;
+                                    if (item.oC_PropertyOrLabelsExpression() != null) {
+                                        target =
+                                                expressionVisitor
+                                                        .visitOC_PropertyOrLabelsExpression(
+                                                                item
+                                                                        .oC_PropertyOrLabelsExpression())
+                                                        .getExpr();
+                                    } else if (item.oC_Variable() != null) {
+                                        target =
+                                                expressionVisitor
+                                                        .visitOC_Variable(item.oC_Variable())
+                                                        .getExpr();
+                                    }
+                                    if (item.oC_Expression() != null) {
+                                        source =
+                                                expressionVisitor
+                                                        .visitOC_Expression(item.oC_Expression())
+                                                        .getExpr();
+                                    }
+                                    Preconditions.checkArgument(
+                                            source != null && target != null,
+                                            "source and target should not be null in set item");
+                                    return new FieldMappings.Entry(source, target);
+                                })
+                        .collect(Collectors.toList());
+        return new FieldMappings(mappings);
+    }
+
+    @Override
+    public GraphBuilder visitOC_Create(CypherGSParser.OC_CreateContext ctx) {
+        if (builder.size() == 0) {
+            builder.push(
+                    new DummyTableScan((GraphOptCluster) builder.getCluster(), ImmutableList.of()));
+        }
+        List<TargetGraph> targets = new TargetGraphVisitor(this).visit(ctx.oC_Pattern());
+        targets.forEach(
+                target -> {
+                    TableModify insert =
+                            new GraphTableModify.Insert(
+                                    builder.getCluster(), builder.build(), target);
+                    builder.push(insert);
+                });
+        return builder;
     }
 
     @Override
@@ -279,6 +343,10 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitOC_With(CypherGSParser.OC_WithContext ctx) {
+        if (builder.size() == 0) {
+            builder.push(
+                    new DummyTableScan((GraphOptCluster) builder.getCluster(), ImmutableList.of()));
+        }
         visitOC_ProjectionBody(ctx.oC_ProjectionBody());
         return (ctx.oC_Where() != null) ? visitOC_Where(ctx.oC_Where()) : builder;
     }

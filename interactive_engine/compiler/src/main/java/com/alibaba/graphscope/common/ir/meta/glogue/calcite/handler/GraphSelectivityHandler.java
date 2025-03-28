@@ -28,8 +28,6 @@ import com.alibaba.graphscope.common.ir.rex.RexGraphVariable;
 import com.alibaba.graphscope.common.ir.rex.RexVariableAliasCollector;
 import com.alibaba.graphscope.common.ir.tools.AliasInference;
 import com.alibaba.graphscope.common.ir.tools.config.GraphOpt;
-import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
-import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -41,7 +39,6 @@ import org.apache.calcite.rel.metadata.BuiltInMetadata;
 import org.apache.calcite.rel.metadata.RelMdSelectivity;
 import org.apache.calcite.rel.metadata.RelMdUtil;
 import org.apache.calcite.rel.metadata.RelMetadataQuery;
-import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
@@ -132,7 +129,9 @@ public class GraphSelectivityHandler extends RelMdSelectivity
             case KEY:
                 GraphSchemaType schemaType =
                         (GraphSchemaType) tableScan.getRowType().getFieldList().get(0).getType();
-                ImmutableBitSet propertyIds = getPropertyIds(var.getProperty(), schemaType);
+                ImmutableBitSet propertyIds =
+                        com.alibaba.graphscope.common.ir.tools.Utils.getPropertyIds(
+                                var.getProperty(), schemaType);
                 if (!propertyIds.isEmpty() && tableScan.getTable().isKey(propertyIds)) {
                     return true;
                 }
@@ -142,21 +141,6 @@ public class GraphSelectivityHandler extends RelMdSelectivity
             default:
                 return false;
         }
-    }
-
-    private ImmutableBitSet getPropertyIds(GraphProperty property, GraphSchemaType schemaType) {
-        if (property.getOpt() != GraphProperty.Opt.KEY) return ImmutableBitSet.of();
-        GraphNameOrId key = property.getKey();
-        if (key.getOpt() == GraphNameOrId.Opt.ID) {
-            return ImmutableBitSet.of(key.getId());
-        }
-        for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
-            RelDataTypeField field = schemaType.getFieldList().get(i);
-            if (field.getName().equals(key.getName())) {
-                return ImmutableBitSet.of(i);
-            }
-        }
-        return ImmutableBitSet.of();
     }
 
     private TableScan getTableScanByAlias(RelNode top, int aliasId) {
