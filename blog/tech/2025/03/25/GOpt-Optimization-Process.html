@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2025-03-25">25 Mar 2025</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2025-03-25">25 Mar 2025</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2025-03-25-title-picture.jpg" alt="gopt" />
+In today’s data analysis landscape, the optimization of complex graph queries has been a persistent challenge for the industry. GOpt is an optimizer framework designed for complex graph queries and was officially presented at <a href="https://arxiv.org/abs/2401.17786">SIGMOD Industry 2025</a>. Its core objective is to provide an efficient and universal optimization solution that adapts to various graph query languages and execution engines. In this article, we will delve into the key innovations of GOpt in unified graph query optimization and analyze its optimization process through specific query cases from <a href="https://ldbcouncil.org/benchmarks/snb">LDBC SNB</a>.</p>
+
+<p>GOpt achieves breakthroughs in the following areas:</p>
+
+<ul>
+  <li>
+    <p>Seamless support for mainstream graph query languages: GOpt is compatible with current leading graph query languages, including <a href="https://neo4j.com/docs/cypher-manual/current/introduction">Cypher</a> and <a href="https://tinkerpop.apache.org">Gremlin</a>, with future plans to further support the graph query standard <a href="https://www.gqlstandards.org">GQL</a>.</p>
+  </li>
+  <li>
+    <p>Unified optimization of complex patterns: Deep optimization of various complex patterns such as Triangle, Path, Square, Clique, etc. Figure Fig.1 illustrates the various complex pattern forms supported by GOpt.</p>
+  </li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/complex_patterns.png" alt="image" /></p>
+<div style="text-align: center;">Fig.1 Complex Patterns Supported by GOpt.</div>
+
+<ul>
+  <li>Support for multi-pattern features in Cypher queries: GOpt first represents multi-patterns according to Cypher semantics as Inner/Left/Anti Joins, converting optimizations between multiple patterns into optimizations for Joins, thus directly reusing mature Join optimization rules from relational databases. Fig.2 showcases the various multi-pattern queries supported by GOpt and their internal representations within GOpt.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/multi_patterns.png" alt="image" /></p>
+<div style="text-align: center;">Fig.2 Multi-Patterns Supported by GOpt.</div>
+
+<ul>
+  <li>Integration with popular graph query execution engines: In a previous article <a href="https://mp.weixin.qq.com/s/07w8YaH0VmhgJXJkDN0KUg">Revolution: Enhancing Neo4j Efficiency with GOpt</a>, we integrated GOpt into the Neo4j engine. Figure Fig.3 compares the execution effects of Neo4j and the GOpt optimization plans on the Neo4j engine. Within the <a href="https://ldbcouncil.org/benchmarks/snb">LDBC Social Network Benchmark (LDBC SNB)</a> standard test suite (where IC and BI represent Interactive-Complex and Business Intelligence queries respectively), GOpt brings an average improvement of 15.8X for Neo4j. We have further integrated GOpt into the GraphScope engine, achieving an average query performance improvement of 243.4X compared to GraphScope’s built-in rule-based optimizer.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/neo4_vs_gopt.png" alt="image" /></p>
+<div style="text-align: center;">Fig.3 Time Cost of LDBC Queries on Neo4j.</div>
+
+<p>In this article, we will further explore points 1, 2, and 3, delving deeply into the optimization process of GOpt. We have chosen standard queries from LDBC SNB as a case study to intuitively demonstrate GOpt’s optimization process. Regarding point 4, GOpt has designed a dedicated Physical Converter layer. However, due to the excessive focus on underlying implementations, we will release subsequent articles on our official account to further decrypt this part, mainly covering: “How to Integrate GOpt with Neo4j?” and “How to Integrate GOpt with DuckDB?”. Stay tuned.</p>
+
+<h2 id="optimization-process">Optimization Process</h2>
+
+<p>Fig.4 illustrates the system framework of GOpt, which mainly consists of the following three layers:</p>
+
+<ol>
+  <li>
+    <p><strong>Query Parser</strong>: Cypher/Gremlin queries first undergo syntax checking via <a href="https://www.antlr.org">Antlr</a>, followed by conversion of the Antlr AST into an initial GIR structure through the GIRBuilder Tool.</p>
+  </li>
+  <li>
+    <p><strong>GIR Optimizer</strong>: Applies optimizations based on the GIR structure, performing transform operations on the input GIR structure and outputting an optimized GIR structure. Depending on the implementation of transforms, optimizations can be executed based on heuristic or top-down search approaches.</p>
+  </li>
+  <li>
+    <p><strong>Physical Convertor</strong>: Further converts the physical execution plan into code that can be executed by backend engines.</p>
+  </li>
+</ol>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/gopt_overview.png" alt="image" /></p>
+<div style="text-align: center;">Fig.4 System Overview of GOpt.</div>
+
+<h3 id="gir-structure">GIR Structure</h3>
+
+<p>Firstly, let’s introduce what the GIR structure is. GIR (Graph Intermediate Representation) is a graph query language-independent intermediate data structure for graph queries, encompassing definitions of data models and a series of operator combinations for manipulating these data models.</p>
+
+<p>The data model in GIR consists of graph data types and basic data types. Graph data types include Vertex (nodes), Edge (relationships), Path (paths), etc. Basic data types refer to Integer (integer), Float (floating point), String (character), Array/Map/Set (composite types), etc. GIR adopts data formats from relational databases: each data tuple contains multiple items, each with a name and a value, where the value type can be either a graph data type or a basic data type.</p>
+
+<p>Operator combinations in GIR include graph operators and relational operators.</p>
+
+<p>Graph operators define how queries retrieve graph data, including:</p>
+
+<ol>
+  <li>GET_VERTEX: Represents fetching node data sources from a graph database or retrieving endpoints from input edge data.</li>
+  <li>EXPAND_EDGE: Represents fetching edge data sources from a graph database or expanding adjacent edges from input node data.</li>
+  <li>EXPAND_PATH: Represents expanding paths composed of multiple edges from input node data.</li>
+  <li>MATCH_PATTERN: Expresses the Match Clause in Cypher or Gremlin as a unified structure. In GIR, there are two ways to represent this: a. A composite structure consisting of the aforementioned graph operators, marked by <code class="language-plaintext highlighter-rouge">MATCH_START</code> and <code class="language-plaintext highlighter-rouge">MATCH_END</code> indicating the start and end of graph operators. b. Represented as a Graph structure using <a href="https://jgrapht.org">JGraphT</a>. These two structures are equivalent and can be converted interchangeably, as shown in Fig.5(c), where the Match Clause in the left-side query is represented uniformly in both forms.</li>
+</ol>
+
+<p>Relational operators include Filter, Sort, Limit, Unfold, Project, Group, Join, Union. The support for them in GOpt is consistent with traditional databases, hence we will not elaborate further here. As illustrated in Fig.5(c), both Cypher query Fig.5(a) and Gremlin query Fig.5(b) are uniformly represented as corresponding GIR structures.</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/GIR.png" alt="image" /></p>
+<div style="text-align: center;">Fig.5 GIR Representation of Query Example.</div>
+
+<h2 id="optimization-strategies">Optimization Strategies</h2>
+
+<p>Next, we introduce how GOpt optimizes queries based on the GIR structure. The entire optimization process in the GIR Optimizer can be represented as a Directed Acyclic Graph (DAG). Each node in the DAG represents a Strategy, which embodies the execution of one or more rules. The edges in the DAG represent the sequential order of rule execution. GOpt executes these rules according to the topological sort of the DAG graph. Figure 6 shows a series of Strategies implemented by GOpt and their corresponding DAG relationships.</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/DAG.png" alt="image" /></p>
+<div style="text-align: center;">Figure 6: DAG of Optimization Process in GOpt.</div>
+
+<p>The interface definition for Strategy is as follows:</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">interface</span> <span class="nc">Strategy</span> <span class="o">{</span>
+    <span class="nc">GIRPlan</span> <span class="nf">transform</span><span class="o">(</span><span class="nc">GIRPlan</span> <span class="n">input</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Based on this interface, GOpt provides two types of Strategy implementations: RuleBasedStrategy and PatternStrategy.</p>
+
+<p>RuleBasedStrategy includes a series of heuristic rules, where each rule specifically implements the transform function to perform equivalent transformations on the input GIRPlan and output the transformed GIRPlan. These rules are partly reused from Calcite, including: FieldTrim, SortProjectTrans, AggJoinTrans. Additionally, to handle specific optimizations related to graph data and operations, GOpt has implemented specialized rules for graph data models, including: FilterIntoPattern, JoinToPattern, ComSubPattern, EVFusion, DegFusion, PKIndex, and LateProject.</p>
+
+<p>PatternStrategy primarily optimizes the sequence of graph operators within Patterns, referred to as PatternOrders. The transform method takes a Logical GIRPlan, composed of <code class="language-plaintext highlighter-rouge">MATCH_PATTERN</code> and other relational operators, as shown in Figure 7(a); it outputs a Physical GIRPlan representing the PatternOrder, consisting of a series of physical operators, as shown in Figure 7(b). The transform method executes a top-down search algorithm as described in the <a href="https://arxiv.org/abs/2401.17786">GOpt paper</a>, obtaining a series of PatternOrders along with their respective costs, and selects the PatternOrder with the lowest cost as the output Physical GIRPlan.</p>
+
+<p>Finally, through the Physical Convertor, the Physical GIRPlan is converted into an Execution Plan supported by various engines. As shown in Figure 7(c), the Physical GIRPlan is converted into an Execution Plan supported by the GraphScope engine, where <code class="language-plaintext highlighter-rouge">Expand(v1-&gt;v2, v3-&gt;v2)</code> is converted to the ExpandIntersect implementation. In the Neo4j engine, this operator is converted to the ExpandInto implementation, as shown in Figure 7(d).</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/optimize.png" alt="image" /></p>
+<div style="text-align: center;">Figure 7: Optimization and Physical Conversion of Query Example.</div>
+
+<h1 id="case-study">Case Study</h1>
+
+<p>We selected a query case from LDBC SNB that involves complex patterns, multiple patterns, and aggregate computations, which are common optimization requirements. We represent this query using Fig.8 and Cypher as follows:</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/query_case.png" alt="image" /></p>
+<div style="text-align: center;">Fig.8 Query Case Description.</div>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// M1</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">person:</span><span class="n">PERSON</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:KNOWS</span><span class="o">*</span><span class="m">1</span><span class="o">..</span><span class="m">3</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="n">otherP</span><span class="ss">),</span>
+      <span class="ss">(</span><span class="n">otherP</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="py">membership:</span><span class="n">HASMEMBER</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="n">forum</span><span class="ss">)</span>
+
+<span class="c1">// M2</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">otherP</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:HASCREATOR</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="n">post</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:CONTAINEROF</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="n">forum</span><span class="ss">)</span>
+
+<span class="c1">// M3</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">otherP</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:HASCREATOR</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="nc">:POST</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:HASTAG</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">tag:</span><span class="n">Tag</span><span class="ss">)</span>
+
+<span class="c1">// Filter</span>
+<span class="k">WHERE</span> <span class="n">person.id</span> <span class="o">=</span> <span class="n">$personId</span>
+      <span class="ow">AND</span> <span class="n">otherP</span> <span class="o">&lt;&gt;</span> <span class="n">$personId</span> 
+      <span class="ow">AND</span> <span class="n">membership.joinDate</span> <span class="o">&gt;</span> <span class="n">$minDate</span>
+
+<span class="c1">// Aggregate</span>
+<span class="k">RETURN</span> <span class="n">otherP</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">post</span><span class="ss">)</span> <span class="k">AS</span> <span class="n">post_cnt</span><span class="ss">;</span>
+</code></pre></div></div>
+
+<p>GOpt first converts the Cypher query into GIR (Graph Intermediate Representation) through the Query Parser, as shown in Fig.9. M1, M2, and M3 form the initial Join structure, followed by a series of relational operations.</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_gir.png" alt="image" /></p>
+<div style="text-align: center;">Fig.9 Initial GIR of the Query Case.</div>
+
+<p>Next, the GIR Optimizer applies optimizations to the GIR based on strategies defined in the DAG (Directed Acyclic Graph). In the DAG diagram, we highlight the strategies that take effect for this query, as shown in Fig.10.</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_dag.png" alt="image" /></p>
+<div style="text-align: center;">Fig.10 DAG of Optimization Process in the Query Case.</div>
+
+<h2 id="optimization-rules">Optimization Rules</h2>
+
+<p>We further explain the optimization rules applicable to this query:</p>
+
+<ul>
+  <li>
+    <p>FilterIntoPattern: An extended implementation based on Calcite’s FilterIntoJoin. It pushes filtering conditions further down to graph operation operators within patterns. For example, given the following Cypher query:</p>
+
+    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
+      <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">),</span>
+      <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">)</span>
+  <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
+  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
+  <span class="k">WHERE</span> <span class="n">v3.name</span> <span class="o">=</span> <span class="s2">"China"</span>
+  <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
+</code></pre></div>    </div>
+    <p>After applying this rule, the optimized query is equivalent to rewriting it as:</p>
+
+    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
+      <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">}),</span>
+      <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">})</span>
+  <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
+  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
+  <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>AggJoinTrans: Pushes aggregate operations down to the Join operator. This optimization rule is inspired by <a href="https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/rules/AggregateJoinTransposeRule.html">relational databases</a>.</p>
+  </li>
+  <li>JoinToPattern: Removes the Join operator between patterns and merges the left and right sub-patterns into a unified pattern. Whether patterns can be merged depends on whether the semantics remain consistent after merging. Based on the semantic requirements of different query languages, we define three types of semantics within patterns:
+    <ul>
+      <li>Homomorphism Semantics: Allows repetition of vertices or edges within the pattern, which is adopted by Gremlin.</li>
+      <li>Edge-Distinct Semantics: Allows repetition of vertices but not edges within the pattern, which is adopted by Cypher.</li>
+      <li>Vertex-Distinct Semantics: Allows repetition of edges but not vertices.</li>
+      <li>Vertex-Edge-Distinct Semantics: Neither vertices nor edges can repeat within the pattern.</li>
+    </ul>
+
+    <p>Since the Join between two patterns inherently represents Homomorphism semantics, this rule only applies under that premise.</p>
+  </li>
+  <li>PatternStrategy: As described earlier, this strategy applies a Top-Down Search Algorithm to the input pattern structure and selects the optimal PatternOrder based on cost.</li>
+  <li>ComSubPattern: For the two sub-patterns involved in a Join, extracts their common parts as the original input data. If the common part consists of only a single vertex, the Join operation can be further optimized into an Expand operation.</li>
+</ul>
+
+<h2 id="optimization-process-1">Optimization Process</h2>
+
+<p>The GIR Optimizer executes specific strategies on the GIR in the order specified by Fig.10:</p>
+
+<ul>
+  <li>FilterIntoPattern is performed first: The filtering conditions <code class="language-plaintext highlighter-rouge">{person.id = $personId, otherP &lt;&gt; $personId, membership.joinDate &gt; $minDate}</code> are pushed down to the graph operators that generate <code class="language-plaintext highlighter-rouge">person</code> nodes, <code class="language-plaintext highlighter-rouge">otherP</code> nodes, and <code class="language-plaintext highlighter-rouge">membership</code> edges.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_filter.png" alt="image" /></p>
+<div style="text-align: center;">Fig.11 The Optimization of FilterIntoPattern.</div>
+
+<ul>
+  <li>Next, AggJoinTrans is executed: This involves splitting the <code class="language-plaintext highlighter-rouge">{otherP, count(post) as post_cnt;}</code> related group operation. Part of it is pushed down into the left branch of the Join, while the other part remains after the Join to sum up the previously computed group results to ensure semantic equivalence.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_agg.png" alt="image" /></p>
+<div style="text-align: center;">Fig.12 The Optimization of AggJoinTrans.</div>
+
+<ul>
+  <li>JoinToPattern is then applied: The Join operation between M1 and M2 is removed, and M1 and M2 are merged into a unified pattern M4. In this example, we assume the patterns conform to Homomorphism semantics, which is a prerequisite for applying this rule.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_join_pat.png" alt="image" /></p>
+<div style="text-align: center;">Fig.13 The Optimization of JoinToPattern.</div>
+
+<ul>
+  <li>PatternStrategy is executed next: The following figure represents the output Optimal Pattern Order, consisting of a series of physical operators.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_cbo.png" alt="image" /></p>
+<div style="text-align: center;">Fig.14 The Optimization of PatternStrategies in M3 and M4.</div>
+
+<ul>
+  <li>Finally, ComSubPattern is applied: This optimizes the reusable common results between patterns. As shown in Fig.14, in the left branch of the Join, M4 produces two columns <code class="language-plaintext highlighter-rouge">(p2, _cnt)</code> after performing a Group operation, while the optimized PatternOrder of the right branch M3 starts with <code class="language-plaintext highlighter-rouge">Scan p2(PERSON, id &lt;&gt; $id)</code>. Given that the common part only contains the single point p2, according to the ComSubPattern rule, the Join structure is further optimized into an Expand operation. Hence, M3 directly continues from the P2 point produced by the Group operation to execute <code class="language-plaintext highlighter-rouge">Expand p2-&gt;"" (HASCREATOR)</code>.</li>
+</ul>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_com.png" alt="image" /></p>
+<div style="text-align: center;">Fig.15 The Optimization of ComSubPattern Between M3 and M4.</div>
+
+<h2 id="experimental-results">Experimental Results</h2>
+
+<p>For the aforementioned case study, we conducted two main experiments: ablation tests and Pattern Orders. We used the LDBC<sub>100</sub> dataset, as shown in Table Tab.1.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Graph</th>
+      <th>|V|</th>
+      <th>|E|</th>
+      <th>Size</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>sf100</td>
+      <td>283M</td>
+      <td>1754M</td>
+      <td>156GB</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="text-align:center;">Tab.1 The LDCB<sub>100</sub> DataSet.</div>
+
+<p>The system configuration consists of a single node with the following specifications:</p>
+<ul>
+  <li>8-core Intel Xeon E5-2620 v4 CPUs at 2.1GHz</li>
+  <li>512GB memory</li>
+  <li>10Gbps network.</li>
+</ul>
+
+<p>We used the <a href="https://github.com/alibaba/GraphScope/releases/tag/v0.29.0">GraphScope v0.29.0</a> system, powered by the underlying <a href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/executor/engine/pegasus">Gaia</a> engine, with 32 threads.</p>
+
+<p>The ablation tests primarily compare the individual optimization effects of the rules: FilterIntoPattern, AggJoinTrans, JoinToPattern, and ComSubPattern. To avoid mutual interference between these rules, we sequentially added them in the order defined in Fig.10 and compared the execution time after each rule was added. The results are shown in Table Tab.2.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rules</th>
+      <th>Time Cost (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>None</td>
+      <td>770573</td>
+    </tr>
+    <tr>
+      <td>+FilterIntoPattern</td>
+      <td>234313</td>
+    </tr>
+    <tr>
+      <td>+AggJoinTrans</td>
+      <td>214955</td>
+    </tr>
+    <tr>
+      <td>+JoinToPattern</td>
+      <td>64466</td>
+    </tr>
+    <tr>
+      <td>+ComSubPattern</td>
+      <td>7014</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="text-align:center;">Tab.2 Time Cost of Ablation Tests in the Query Case.</div>
+
+<p>The Pattern Orders experiment compares the optimal order generated by PatternStrategy with two other randomly chosen orders. Figure Fig.16 illustrates the execution sequence of the three Pattern Orders and annotates the actual intermediate data volume produced at each step. Finally, we compare the execution times of the three orders in Table Tab.3.</p>
+
+<p><img src="/blog/assets/images/2025-03-25-gopt/case_orders.png" alt="image" /></p>
+<div style="text-align: center;">Fig.16 Pattern Orders of GOpt-plan, Alt-plan1, Alt-plan2.</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rules</th>
+      <th>Time Cost (ms)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GOpt-plan</td>
+      <td>7014</td>
+    </tr>
+    <tr>
+      <td>Alt-plan1</td>
+      <td>22211</td>
+    </tr>
+    <tr>
+      <td>Alt-plan2</td>
+      <td>194047</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="text-align:center;">Tab.3 Time Cost of Pattern Orders in the Query Case.</div>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries&amp;url=https://graphscope.io/tech/2025/03/25/GOpt-Optimization-Process.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2025/03/25/GOpt-Optimization-Process.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2025/03/25/GOpt-Optimization-Process.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2025 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
