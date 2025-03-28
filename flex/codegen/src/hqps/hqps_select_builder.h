@@ -99,11 +99,11 @@ class SelectOpBuilder {
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
 
-    boost::format formater(SELECT_OP_TEMPLATE_STR);
-    formater % expr_var_name_ % expr_name_ % func_call_param_str_ %
+    boost::format formatter(SELECT_OP_TEMPLATE_STR);
+    formatter % expr_var_name_ % expr_name_ % func_call_param_str_ %
         selectors_str_ % next_ctx_name % in_col_ids_str_ % ctx_.GraphVar() %
         prev_ctx_name;
-    return formater.str();
+    return formatter.str();
   }
 
  private:
