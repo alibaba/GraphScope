@@ -490,9 +490,9 @@ jobs:
     
     - name: Clean up
       run: |
-        pkill -P $(pgrep -f etcd)
-        pkill -f interactive_server
-        rm -rf /tmp/etcd-download-test
+        pkill -P $(pgrep -f etcd) || true
+        pkill -f interactive_server || true
+        rm -rf /tmp/etcd-download-test || true
 
 
   test-build-flex:
