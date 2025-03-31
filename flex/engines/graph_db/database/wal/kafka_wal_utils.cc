@@ -71,8 +71,8 @@ std::optional<std::vector<char>> parse_uri(const std::string& wal_uri) {
     topic = query.substr(0, top_pos);
     query = query.substr(top_pos + 1);
   } else {
-    LOG(ERROR) << "Invalid uri: " << wal_uri;
-    return std::nullopt;
+    topic = query;
+    query = "";
   }
   encoder.put_string(std::string("topic_name"));
   encoder.put_string(topic);
