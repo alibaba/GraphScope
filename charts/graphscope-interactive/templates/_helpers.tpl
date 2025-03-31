@@ -1,15 +1,23 @@
-{{/*
-Expand the name of the chart.
-*/}}
+{{- define "graphscope-interactive.etcd.endpoint" -}}
+{{- printf "http://%s-etcd.%s.svc.cluster.local:2379" .Release.Name .Release.Namespace | quote }}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.workspace" -}}
+{{- if .Values.workspace }}
+{{- .Values.workspace }}
+{{- else }}
+{{- "/tmp/interactive_workspace/" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.codegenWorkDir" -}}
+{{- printf "%s/codegen" (include "graphscope-interactive.master.workspace" .) }}
+{{- end -}}
+
 {{- define "graphscope-interactive.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- end -}}
 
-{{/*
-Create a default fully qualified app name.
-We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
-If release name contains chart name it will be used as a full name.
-*/}}
 {{- define "graphscope-interactive.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
@@ -19,29 +27,166 @@ If release name contains chart name it will be used as a full name.
 {{- .Release.Name | trunc 63 | trimSuffix "-" }}
 {{- else }}
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" }}
-{{- end }}
-{{- end }}
-{{- end }}
-
-{{- define "graphscope-interactive.frontend.fullname" -}}
-{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "frontend" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interacitve.engine.defaultGraphSchemaPath" -}}
+{{- "/opt/flex/share/gs_interactive_default_graph/graph.yaml" }}
+{{- end -}}
+
+
+{{- define "graphscope-interactive.ossAccessKeyId" -}}
+{{- if .Values.oss.accessKeyId }}
+{{- .Values.oss.accessKeyId | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossAccessKeySecret" -}}
+{{- if .Values.oss.accessKeySecret }}
+{{- .Values.oss.accessKeySecret | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossEndpoint" -}}
+{{- if .Values.oss.endpoint }}
+{{- .Values.oss.endpoint | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.ossBucketName" -}}
+{{- if .Values.oss.bucketName }}
+{{- .Values.oss.bucketName | quote }}
+{{- else }}
+{{- "" }}
+{{- end -}}
+{{- end -}}
+
 
 {{- define "graphscope-interactive.engine.fullname" -}}
 {{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "engine" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
 
-{{/*
-Create chart name and version as used by the chart label.
-*/}}
-{{- define "graphscope-interactive.chart" -}}
-{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
-{{- end }}
+{{- define "graphscope-interactive.master.fullname" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.fullname" .) "master" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
 
-{{/*
-Common labels
-*/}}
+{{- define "graphscope-interactive.master.serviceName" -}}
+{{- printf "%s-%s" (include "graphscope-interactive.master.fullname" .) "headless" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.servicePort" -}}
+{{- if .Values.master.service.adminPort }}
+{{- .Values.master.service.adminPort }}
+{{- else }}
+{{- 7776 }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.endpoint" -}}
+{{- printf "%s.%s.svc.cluster.local:%s" (include "graphscope-interactive.master.serviceName" . ) .Release.Namespace (include "graphscope-interactive.master.servicePort" .) | trimSuffix "-" }}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.entrypointMountPath" -}}
+{{- if .Values.master.entrypointMountPath }}
+{{- .Values.master.entrypointMountPath }}
+{{- else }}
+{{- "/etc/interactive/master_entrypoint.sh" }}
+{{- end -}}
+{{- end -}}
+
+
+{{- define "graphscope-interactive.engine.entrypointMountPath" -}}
+{{- if .Values.engine.entrypointMountPath }}
+{{- .Values.engine.entrypointMountPath }}
+{{- else }}
+{{- "/etc/interactive/engine_entrypoint.sh" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.command" -}}
+{{- if .Values.master.command }}
+{{- toYaml .Values.master.command }}
+{{- else }}
+{{- include "graphscope-interactive.master.entrypointMountPath" . }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.command" -}}
+{{- if .Values.engine.command }}
+{{- toYaml .Values.engine.command }}
+{{- else }}
+{{- include "graphscope-interactive.engine.entrypointMountPath" . }}
+{{- end -}}
+{{- end -}}
+
+
+
+{{- define "graphscope-interactive.engine.metadataStoreUri" -}}
+{{- if .Values.engine.metadataStoreUri -}}
+{{- .Values.engine.metadataStoreUri }}
+{{- else }}
+{{- include "graphscope-interactive.etcd.endpoint" . }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.compiler.metaReaderSchemaUri" -}}
+{{- if .Values.engine.compiler.meta.reader.schema.uri -}}
+{{- .Values.engine.compiler.meta.reader.schema.uri }}
+{{- else }}
+{{- printf "http://%s/v1/graph/%s/schema" (include "graphscope-interactive.master.endpoint" . ) "1"  | trimSuffix "-" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.compiler.metaStatisticsUri" -}}
+{{- if .Values.engine.compiler.meta.reader.statistics.uri -}}
+{{- .Values.engine.compiler.meta.reader.statistics.uri }}
+{{- else }}
+{{- printf "http://%s/v1/graph/%s/statistics" (include "graphscope-interactive.master.endpoint" . )  "1" | trimSuffix "-" }}
+{{- end -}}
+{{- end -}}
+
+
+{{- define "graphscope-interactive.engine.walUri" -}}
+{{- if .Values.engine.walUri -}}
+{{- .Values.engine.walUri }}
+{{- else }}
+{{- "file://{GRAPH_DATA_DIR}/wal" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.master.serviceRegistry.endpoint" -}}
+{{- if .Values.master.serviceRegistry.endpoint }}
+{{- .Values.master.serviceRegistry.endpoint }}
+{{- else }}
+{{- include "graphscope-interactive.etcd.endpoint" . }}
+{{- end -}}
+{{- end -}}
+
+
+{{- define "graphscope-interactive.master.configFileMountPath" -}}
+{{- if .Values.master.configFileMountPath }}
+{{- .Values.master.configFileMountPath }}
+{{- else }}
+{{- "/opt/flex/share/interactive_config.yaml" }}
+{{- end -}}
+{{- end -}}
+
+{{- define "graphscope-interactive.engine.configFileMountPath" -}}
+{{- if .Values.engine.configFileMountPath }}
+{{- .Values.engine.configFileMountPath }}
+{{- else }}
+{{- "/opt/flex/share/interactive_config.yaml" }}
+{{- end -}}
+{{- end -}}
+
 {{- define "graphscope-interactive.labels" -}}
 helm.sh/chart: {{ include "graphscope-interactive.chart" . }}
 {{ include "graphscope-interactive.selectorLabels" . }}
@@ -49,6 +194,10 @@ helm.sh/chart: {{ include "graphscope-interactive.chart" . }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{- define "graphscope-interactive.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -59,12 +208,9 @@ app.kubernetes.io/name: {{ include "graphscope-interactive.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
-{{/*
-Return the proper graphscope-interactive frontend image name
-*/}}
-{{- define "graphscope-interactive.frontend.image" -}}
+{{- define "graphscope-interactive.master.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
-{{- with .Values.frontend.image -}}
+{{- with .Values.master.image -}}
 {{- if .tag -}}
 {{- $tag = .tag | toString -}}
 {{- end -}}
@@ -76,13 +222,10 @@ Return the proper graphscope-interactive frontend image name
 {{- end -}}
 {{- end -}}
 
-{{/*
-Return the proper graphscope-interactive engine image name
-*/}}
 {{- define "graphscope-interactive.engine.image" -}}
 {{- $tag := .Chart.AppVersion | toString -}}
 {{- with .Values.engine.image -}}
-{{- if .tag -}}
+{{- if .tag }}
 {{- $tag = .tag | toString -}}
 {{- end -}}
 {{- if .registry -}}
@@ -94,20 +237,15 @@ Return the proper graphscope-interactive engine image name
 {{- end -}}
 
 
-{{/*
-Create the name of the service account to use
-*/}}
 {{- define "graphscope-interactive.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
 {{- default (include "graphscope-interactive.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
-{{- end }}
-{{- end }}
+{{- end -}}
+{{- end -}}
 
-{{/*
-Return the proper Storage Class
-*/}}
+
 {{- define "graphscope-interactive.storageClass" -}}
 {{/*
 Helm 2.11 supports the assignment of a value to a variable defined in a different scope,
@@ -141,9 +279,6 @@ but Helm 2.9 and 2.10 does not support it, so we need to implement this if-else 
 {{- end -}}
 
 
-{{/*
-Return the configmap with the graphscope configuration
-*/}}
 {{- define "graphscope-interactive.configmapName" -}}
 {{- if .Values.existingConfigmap -}}
     {{- printf "%s" (tpl .Values.existingConfigmap $) -}}
@@ -152,55 +287,17 @@ Return the configmap with the graphscope configuration
 {{- end -}}
 {{- end -}}
 
-{{/*
-Return the engineConfigPath with the graphscope configuration
-*/}}
-{{- define "graphscope-interactive.engineConfigPath" -}}
-/etc/interactive/interactive_config.yaml
-{{- end -}}
 
-{{/*
-Return the realEngineConfigPath with the graphscope configuration, templated by frontend
-*/}}
-{{- define "graphscope-interactive.realEngineConfigPath" -}}
-/etc/interactive/real_interactive_config.yaml
-{{- end -}}
 
-{{/*
-Return the path to server_binary
-*/}}
 {{- define "graphscope-interactive.engineBinaryPath" -}}
 /opt/flex/bin/interactive_server
 {{- end -}}
 
-{{/*
-Return the path to compiler jar
-*/}}
-{{- define "graphscope-interactive.classPath" -}}
-/opt/flex/lib/*
+{{- define "graphscope-interactive.bulkLoaderBinaryPath" -}}
+/opt/flex/bin/bulk_loader
 {{- end -}}
 
-{{/*
-Return the path to compiler jar
-*/}}
-{{- define "graphscope-interactive.libraryPath" -}}
-/opt/flex/lib/
-{{- end -}}
 
-{{/*
-Return the path to the default graph's schema file.
-*/}}
-{{- define "graphscope-interactive.graphSchemaPath" -}}
-{{- if not .Values.defaultGraph}}
-    {{- printf "%s/%s/%s/%s" (tpl .Values.workspace .) "data" "gs_interactive_default_graph" "graph.yaml" | trimSuffix "-" -}}
-{{- else -}}
-    {{- printf "%s/%s/%s/%s" (tpl .Values.workspace .) "data" (tpl .Values.defaultGraph .) "graph.yaml" | trimSuffix "-" -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Return true if a configmap object should be created for graphscope-service
-*/}}
 {{- define "graphscope-interactive.createConfigmap" -}}
 {{- if not .Values.existingConfigmap }}
     {{- true -}}
@@ -219,7 +316,7 @@ Usage:
         {{- tpl .value .context }}
     {{- else }}
         {{- tpl (.value | toYaml) .context }}
-    {{- end }}
+    {{- end -}}
 {{- end -}}
 
 

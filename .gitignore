@@ -97,6 +97,7 @@ coordinator/graphlearn*
 Chart.lock
 **/Cargo.lock
 package.lock
+requirements.lock
 
 # Core dump
 core.*
