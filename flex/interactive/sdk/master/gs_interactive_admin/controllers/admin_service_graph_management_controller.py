@@ -1,20 +1,38 @@
-import connexion
+import logging
 from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from gs_interactive_admin.models.api_response_with_code import APIResponseWithCode  # noqa: E501
+import connexion
+
+from gs_interactive_admin import util
+from gs_interactive_admin.models.api_response_with_code import (  # noqa: E501
+    APIResponseWithCode,
+)
 from gs_interactive_admin.models.create_edge_type import CreateEdgeType  # noqa: E501
-from gs_interactive_admin.models.create_graph_request import CreateGraphRequest  # noqa: E501
-from gs_interactive_admin.models.create_graph_response import CreateGraphResponse  # noqa: E501
-from gs_interactive_admin.models.create_vertex_type import CreateVertexType  # noqa: E501
-from gs_interactive_admin.models.get_graph_response import GetGraphResponse  # noqa: E501
-from gs_interactive_admin.models.get_graph_schema_response import GetGraphSchemaResponse  # noqa: E501
-from gs_interactive_admin.models.get_graph_statistics_response import GetGraphStatisticsResponse  # noqa: E501
+from gs_interactive_admin.models.create_graph_request import (  # noqa: E501
+    CreateGraphRequest,
+)
+from gs_interactive_admin.models.create_graph_response import (  # noqa: E501
+    CreateGraphResponse,
+)
+from gs_interactive_admin.models.create_vertex_type import (  # noqa: E501
+    CreateVertexType,
+)
+from gs_interactive_admin.models.get_graph_response import (  # noqa: E501
+    GetGraphResponse,
+)
+from gs_interactive_admin.models.get_graph_schema_response import (  # noqa: E501
+    GetGraphSchemaResponse,
+)
+from gs_interactive_admin.models.get_graph_statistics_response import (  # noqa: E501
+    GetGraphStatisticsResponse,
+)
 from gs_interactive_admin.models.job_response import JobResponse  # noqa: E501
 from gs_interactive_admin.models.schema_mapping import SchemaMapping  # noqa: E501
 from gs_interactive_admin.models.snapshot_status import SnapshotStatus  # noqa: E501
-from gs_interactive_admin import util
+
+logger = logging.getLogger("interactive")
 
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
@@ -24,14 +42,16 @@ def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
 
     :param graph_id: The id of graph to do bulk loading.
     :type graph_id: str
-    :param schema_mapping: 
+    :param schema_mapping:
     :type schema_mapping: dict | bytes
 
     :rtype: Union[JobResponse, Tuple[JobResponse, int], Tuple[JobResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        schema_mapping = SchemaMapping.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        schema_mapping = SchemaMapping.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"
 
 
 def create_edge_type(graph_id, create_edge_type=None):  # noqa: E501
@@ -39,16 +59,18 @@ def create_edge_type(graph_id, create_edge_type=None):  # noqa: E501
 
     Create a edge type # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_edge_type: 
+    :param create_edge_type:
     :type create_edge_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_edge_type = CreateEdgeType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        create_edge_type = CreateEdgeType.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"
 
 
 def create_graph(create_graph_request):  # noqa: E501
@@ -56,14 +78,16 @@ def create_graph(create_graph_request):  # noqa: E501
 
     Create a new graph # noqa: E501
 
-    :param create_graph_request: 
+    :param create_graph_request:
     :type create_graph_request: dict | bytes
 
     :rtype: Union[CreateGraphResponse, Tuple[CreateGraphResponse, int], Tuple[CreateGraphResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_graph_request = CreateGraphRequest.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        create_graph_request = CreateGraphRequest.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"
 
 
 def create_vertex_type(graph_id, create_vertex_type):  # noqa: E501
@@ -71,35 +95,39 @@ def create_vertex_type(graph_id, create_vertex_type):  # noqa: E501
 
     Create a vertex type # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_vertex_type: 
+    :param create_vertex_type:
     :type create_vertex_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_vertex_type = CreateVertexType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        create_vertex_type = CreateVertexType.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"
 
 
-def delete_edge_type(graph_id, type_name, source_vertex_type, destination_vertex_type):  # noqa: E501
+def delete_edge_type(
+    graph_id, type_name, source_vertex_type, destination_vertex_type
+):  # noqa: E501
     """delete_edge_type
 
     Delete an edge type by name # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param type_name: 
+    :param type_name:
     :type type_name: str
-    :param source_vertex_type: 
+    :param source_vertex_type:
     :type source_vertex_type: str
-    :param destination_vertex_type: 
+    :param destination_vertex_type:
     :type destination_vertex_type: str
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def delete_graph(graph_id):  # noqa: E501
@@ -112,7 +140,7 @@ def delete_graph(graph_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def delete_vertex_type(graph_id, type_name):  # noqa: E501
@@ -120,14 +148,14 @@ def delete_vertex_type(graph_id, type_name):  # noqa: E501
 
     Delete a vertex type by name # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param type_name: 
+    :param type_name:
     :type type_name: str
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def get_graph(graph_id):  # noqa: E501
@@ -140,7 +168,7 @@ def get_graph(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphResponse, Tuple[GetGraphResponse, int], Tuple[GetGraphResponse, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def get_graph_statistic(graph_id):  # noqa: E501
@@ -153,7 +181,7 @@ def get_graph_statistic(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphStatisticsResponse, Tuple[GetGraphStatisticsResponse, int], Tuple[GetGraphStatisticsResponse, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def get_schema(graph_id):  # noqa: E501
@@ -166,7 +194,7 @@ def get_schema(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphSchemaResponse, Tuple[GetGraphSchemaResponse, int], Tuple[GetGraphSchemaResponse, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def get_snapshot_status(graph_id, snapshot_id):  # noqa: E501
@@ -174,14 +202,14 @@ def get_snapshot_status(graph_id, snapshot_id):  # noqa: E501
 
     Get the status of a snapshot by id # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param snapshot_id: 
+    :param snapshot_id:
     :type snapshot_id: int
 
     :rtype: Union[SnapshotStatus, Tuple[SnapshotStatus, int], Tuple[SnapshotStatus, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def list_graphs():  # noqa: E501
@@ -192,7 +220,7 @@ def list_graphs():  # noqa: E501
 
     :rtype: Union[List[GetGraphResponse], Tuple[List[GetGraphResponse], int], Tuple[List[GetGraphResponse], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def update_edge_type(graph_id, create_edge_type):  # noqa: E501
@@ -200,16 +228,18 @@ def update_edge_type(graph_id, create_edge_type):  # noqa: E501
 
     Update an edge type to add more properties # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_edge_type: 
+    :param create_edge_type:
     :type create_edge_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_edge_type = CreateEdgeType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        create_edge_type = CreateEdgeType.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"
 
 
 def update_vertex_type(graph_id, create_vertex_type):  # noqa: E501
@@ -217,13 +247,15 @@ def update_vertex_type(graph_id, create_vertex_type):  # noqa: E501
 
     Update a vertex type to add more properties # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param create_vertex_type: 
+    :param create_vertex_type:
     :type create_vertex_type: dict | bytes
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_vertex_type = CreateVertexType.from_dict(connexion.request.get_json())  # noqa: E501
-    return 'do some magic!'
+        create_vertex_type = CreateVertexType.from_dict(  # noqa: F841
+            connexion.request.get_json()
+        )  # noqa: E501
+    return "do some magic!"

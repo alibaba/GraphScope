@@ -1,6 +1,8 @@
-import sys
 import os
-from setuptools import setup, find_packages
+import sys
+
+from setuptools import find_packages
+from setuptools import setup
 
 NAME = "gs_interactive_admin"
 VERSION = "0.3"
@@ -36,6 +38,6 @@ setup(
         "console_scripts": ["gs_interactive_admin=gs_interactive_admin.__main__:main"]
     },
     long_description="""\
-    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrieve.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query. 
-    """,
+    This is the definition of GraphScope Interactive API, including   - AdminService API   - Vertex/Edge API   - QueryService   AdminService API (with tag AdminService) defines the API for GraphManagement, ProcedureManagement and Service Management.  Vertex/Edge API (with tag GraphService) defines the API for Vertex/Edge management, including creation/updating/delete/retrieve.  QueryService API (with tag QueryService) defines the API for procedure_call, Ahodc query.
+    """,  # noqa: E501
 )

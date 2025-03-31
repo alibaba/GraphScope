@@ -1,10 +1,16 @@
-import connexion
+import logging
 from typing import Dict
 from typing import Tuple
 from typing import Union
 
-from gs_interactive_admin.models.graph_service_registry_record import GraphServiceRegistryRecord  # noqa: E501
+import connexion
+
 from gs_interactive_admin import util
+from gs_interactive_admin.models.graph_service_registry_record import (  # noqa: E501
+    GraphServiceRegistryRecord,
+)
+
+logger = logging.getLogger("interactive")
 
 
 def get_service_registry_info(graph_id, service_name):  # noqa: E501
@@ -12,14 +18,14 @@ def get_service_registry_info(graph_id, service_name):  # noqa: E501
 
     Get a service registry by graph_id and service_name # noqa: E501
 
-    :param graph_id: 
+    :param graph_id:
     :type graph_id: str
-    :param service_name: 
+    :param service_name:
     :type service_name: str
 
     :rtype: Union[GraphServiceRegistryRecord, Tuple[GraphServiceRegistryRecord, int], Tuple[GraphServiceRegistryRecord, int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
 
 
 def list_service_registry_info():  # noqa: E501
@@ -30,4 +36,4 @@ def list_service_registry_info():  # noqa: E501
 
     :rtype: Union[List[GraphServiceRegistryRecord], Tuple[List[GraphServiceRegistryRecord], int], Tuple[List[GraphServiceRegistryRecord], int, Dict[str, str]]
     """
-    return 'do some magic!'
+    return "do some magic!"
