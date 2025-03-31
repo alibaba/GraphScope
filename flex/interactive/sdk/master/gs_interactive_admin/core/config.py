@@ -38,7 +38,7 @@ INTERACTIVE_WORKSPACE = os.environ.get(
 )
 
 # The name of the script to load plan and generate code.
-CODE_GEN_BIN = "load_pland_and_gen.sh"
+CODE_GEN_BIN = "load_plan_and_gen.sh"
 CODE_GEN_TMP_DIR = os.environ.get("INTERACTIVE_CODE_GEN_WORKDIR", "/tmp/interactive_workspace/codegen")
 
 
@@ -103,9 +103,7 @@ class K8sLauncherConfig:
     # The namespace must be created before launching the interactive engine.
     namespace: Union[str, None] = "default"
     instance_prefix: str = "gs-interactive"
-    instance_id: str = (
-        None  # If instance_id is specified, it will override the instance_prefix
-    )
+    instance_id: str = "" # If instance_id is not empty, the launcher will use it as the instance_id.
     default_replicas: int = 1
     config_file: Union[str, None] = None
 
@@ -129,13 +127,11 @@ class K8sLauncherConfig:
     annotations: dict = field(default_factory=dict)
 
     service_type: str = "NodePort"
-    cluster_ip: str = (
-        None  # If service_type is ClusterIP, user could specify the cluster_ip
-    )
+    cluster_ip: str = ""  # If service_type is ClusterIP, user could specify the cluster_ip
+
     update_strategy: str = "RollingUpdate"
     engine_pod_annotations: dict = field(default_factory=dict)
-    service_account_create: bool = False
-    service_account_name: str = None
+    service_account_name: str = ""
 
     engine_config_file_mount_path: str = "/opt/flex/share/interactive_config.yaml"
     engine_entrypoint_mount_path: str = "/etc/interactive/engine_entrypoint.sh"
@@ -163,23 +159,37 @@ class ConnectorConfig:
 class CompilerEndpoint:
     default_listen_address: str = "localhost"
     bolt_connector: ConnectorConfig = field(default_factory=ConnectorConfig)
+    gremlin_connector: ConnectorConfig = ConnectorConfig(disabled=True, port=8182)
     
 
 @dataclass
 class ReaderUri:
     uri: str = ""
     interval : int = 1000 # ms
-
+    
 @dataclass
-class CompilerMeta:
+class CompilerMetaReader:
     schema: ReaderUri = field(default_factory=ReaderUri)
     statistics: ReaderUri = field(default_factory=ReaderUri)
     timeout: int = 1000 # ms
 
 @dataclass
+class CompilerMeta:
+    reader : CompilerMetaReader = field(default_factory=CompilerMetaReader)
+    
+@dataclass
+class PlannerConfig:
+    is_on: bool = True
+    opt: str = "RBO"
+    rules: list = field(default_factory=list)
+
+@dataclass
 class CompilerConfig:
     endpoint: CompilerEndpoint = field(default_factory=CompilerEndpoint)
     meta : CompilerMeta = field(default_factory=CompilerMeta)    
+    planner: PlannerConfig = field(default_factory=PlannerConfig)
+    query_timeout: int = 40000 # ms
+    gremlin_script_language_name : str = "antlr_gremlin_calcite"
 
 
 @dataclass

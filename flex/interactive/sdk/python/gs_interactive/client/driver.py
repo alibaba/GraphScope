@@ -198,7 +198,7 @@ class Driver:
             if service_registry_val.service_registry is None:
                 raise RuntimeError(f"Internal error: service_registry is None")
             #NOTE: Currently we return all cypher endpoints, didn't take care of the primary one
-            return [instance.endpoint for instance in service_registry_val.service_registry.instances]
+            return ["bolt://" + instance.endpoint for instance in service_registry_val.service_registry.instances]
         else:
             raise ValueError(
                 f"Failed to get service registry {service_registry.get_status_message()}"

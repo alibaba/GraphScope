@@ -41,48 +41,19 @@ EOF
 
 function prepare_workspace() {
     #receive args
-    local workspace=$1
-    if [ -z "${workspace}" ]; then
-        workspace="/tmp/interactive_workspace"
-    fi
-    #if workspace is not exist, create it
-    mkdir -p ${workspace}/conf/
-    mkdir -p ${workspace}/METADATA
-    mkdir -p ${workspace}/log
-    if [ -f "${workspace}/conf/interactive_config.yaml" ]; then
-        echo "Workspace ${workspace} already exists"
-        return 0
-    fi
-    # prepare interactive_config.yaml
-    engine_config_path="${workspace}/conf/interactive_config.yaml"
-    cp ${DEFAULT_INTERACTIVE_CONFIG_FILE} $engine_config_path
-    #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
-    sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
-    echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
-    
-    # copy the builtin graph
-    builtin_graph_dir="${workspace}/data/${DEFAULT_GRAPH_NAME}"
-    mkdir -p $builtin_graph_dir
-    builtin_graph_import_path="${builtin_graph_dir}/import.yaml"
-    builtin_graph_schema_path="${builtin_graph_dir}/graph.yaml"
-    builtin_graph_data_path="${builtin_graph_dir}/indices"
-    cp /opt/flex/share/${DEFAULT_GRAPH_NAME}/graph.yaml  ${builtin_graph_schema_path}
-    cp /opt/flex/share/${DEFAULT_GRAPH_NAME}/bulk_load.yaml ${builtin_graph_import_path}
-    export FLEX_DATA_DIR=/opt/flex/share/gs_interactive_default_graph/
-    builtin_graph_loader_cmd="${BULK_LOADER_BINARY_PATH} -g ${builtin_graph_schema_path} -d ${builtin_graph_data_path} -l ${builtin_graph_import_path}"
-    echo "Loading builtin graph: ${DEFAULT_GRAPH_NAME} with command: $builtin_graph_loader_cmd"
-    eval $builtin_graph_loader_cmd || (echo "Failed to load builtin graph: ${DEFAULT_GRAPH_NAME}" && exit 1)
-    echo "Successfully loaded builtin graph: ${DEFAULT_GRAPH_NAME}"
-}
-
-function prepare_workspace_with_custom_graph() {
-    #receive args
-    if [ $# -ne 2 ]; then
-        echo "Usage: launch_with_custom_graph <workspace> <graph_yaml>"
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
+        echo "Usage: prepare_workspace <workspace> [graph_yaml]"
+        echo "           workspace: the path to the workspace"
+        echo "           graph_yaml: the path to the graph yaml file. If not provided, will use the default graph"
+        echo "                       if specified, we assume the remote_path is set in the graph yaml"
         exit 1
     fi
     local workspace=$1
-    local graph_yaml=$2
+    local graph_yaml=""
+    if [ $# -eq 2 ]; then
+        graph_yaml=$2
+    fi
+    echo "workspace: ${workspace}, graph_yaml: ${graph_yaml}"
     #if workspace is not exist, create it
     mkdir -p ${workspace}/conf/
     mkdir -p ${workspace}/METADATA
@@ -96,28 +67,39 @@ function prepare_workspace_with_custom_graph() {
     cp ${DEFAULT_INTERACTIVE_CONFIG_FILE} $engine_config_path
     #make sure the line which start with default_graph is changed to default_graph: ${DEFAULT_GRAPH_NAME}
     sed -i "s/default_graph:.*/default_graph: ${DEFAULT_GRAPH_NAME}/" $engine_config_path
-    # echo "Using default graph: ${DEFAULT_GRAPH_NAME} to start the service"
-    
-    # # copy the builtin graph
-    # builtin_graph_dir="${workspace}/data/${DEFAULT_GRAPH_NAME}"
-    # mkdir -p $builtin_graph_dir
-    # builtin_graph_schema_path="${builtin_graph_dir}/graph.yaml"
-    # builtin_graph_data_path="${builtin_graph_dir}/indices"
-    # cp ${graph_yaml} ${builtin_graph_schema_path}
-
-    # engine_config_path="${workspace}/conf/interactive_config.yaml"
-    # # start the service
-    # start_cmd="${INTERACTIVE_SERVER_BIN} -c ${engine_config_path}"
-    # start_cmd="${start_cmd} -g ${graph_yaml} --data-path ${builtin_graph_data_path}"
-    # start_cmd="${start_cmd} --start-compiler true -w ${workspace}"
-
-    # echo "Starting the service with command: $start_cmd"
-    # eval $start_cmd
+    builtin_graph_dir="${workspace}/data/${DEFAULT_GRAPH_NAME}"
+    mkdir -p $builtin_graph_dir
+    builtin_graph_schema_path="${builtin_graph_dir}/graph.yaml"
+    builtin_graph_data_path="${builtin_graph_dir}/indices"
+    if [ -z "${graph_yaml}" ]; then
+        # construct the builtin graph.
+        builtin_graph_import_path="${builtin_graph_dir}/import.yaml"
+        cp /opt/flex/share/${DEFAULT_GRAPH_NAME}/graph.yaml  ${builtin_graph_schema_path}
+        cp /opt/flex/share/${DEFAULT_GRAPH_NAME}/bulk_load.yaml ${builtin_graph_import_path}
+        export FLEX_DATA_DIR=/opt/flex/share/gs_interactive_default_graph/
+        builtin_graph_loader_cmd="${BULK_LOADER_BINARY_PATH} -g ${builtin_graph_schema_path} -d ${builtin_graph_data_path} -l ${builtin_graph_import_path}"
+        echo "Loading builtin graph: ${DEFAULT_GRAPH_NAME} with command: $builtin_graph_loader_cmd"
+        eval $builtin_graph_loader_cmd || (echo "Failed to load builtin graph: ${DEFAULT_GRAPH_NAME}" && exit 1)
+        echo "Successfully loaded builtin graph: ${DEFAULT_GRAPH_NAME}"
+    else
+        if [ ! -f "${graph_yaml}" ]; then
+            echo "Graph yaml file ${graph_yaml} does not exist"
+            exit 1
+        fi
+        # check if remote_path is set in the graph yaml
+        remote_path=$(grep "remote_path" ${graph_yaml} | cut -d':' -f2 | tr -d ' ')
+        if [ -z "${remote_path}" ]; then
+            echo "remote_path is not set in the graph yaml"
+            exit 1
+        fi
+        cp ${graph_yaml} ${builtin_graph_schema_path}
+        # The indices will be downloaded to ${builtin_graph_data_path} when starting the service
+    fi
 }
 
 function launch_service() {
     #expect 1 arg
-    if [ $# -lt 1  || $# -gt 2 ]; then
+    if [ $# -lt 1 ] || [ $# -gt 2 ]; then
         echo "Usage: launch_service <workspace> [graph_yaml]"
         exit 1
     fi
@@ -199,7 +181,7 @@ EOF
 
 ENABLE_COORDINATOR=false
 WORKSPACE=/tmp/interactive_workspace
-DEFAULT_GRAPH_YAML=""
+CUSTOM_GRAPH_YAML=""
 while [[ $# -gt 0 ]]; do
   case $1 in
     -w | --workspace)
@@ -217,7 +199,7 @@ while [[ $# -gt 0 ]]; do
         echo "Option -g requires an argument." >&2
         exit 1
       fi
-      DEFAULT_GRAPH_YAML=$1
+      CUSTOM_GRAPH_YAML=$1
       shift
       ;;
     -c | --enable-coordinator)
@@ -245,15 +227,11 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [ -z "${DEFAULT_GRAPH_YAML}" ]; then
-  prepare_workspace $WORKSPACE
-  launch_service $WORKSPACE
-  # Note that the COORDINATOR_CONFIG_FILE should be inside the container
+# When a custom graph yaml is specified, we only need to start the query
+# service, coordinator and admin service should not be started
+prepare_workspace $WORKSPACE ${CUSTOM_GRAPH_YAML}
+launch_service $WORKSPACE ${CUSTOM_GRAPH_YAML}
+if [ -z "${CUSTOM_GRAPH_YAML}" ]; then
   launch_coordinator $PORT_MAPPING
-else
-  echo "Got graph yaml: ${DEFAULT_GRAPH_YAML}, will start query service only on it."
-  # Create workspace with custom graph, 
-  prepare_workspace_with_custom_graph $WORKSPACE $DEFAULT_GRAPH_YAML
-  launch_service $WORKSPACE $DEFAULT_GRAPH_YAML
 fi
 

@@ -61,11 +61,21 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 
-RUN apt-get update && apt-get -y install sudo locales tzdata python3 python3-pip zip unzip curl && \
+RUN apt-get update && apt-get -y install sudo locales tzdata python3 python3-pip zip unzip curl cmake && \
     locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY --from=builder /opt/flex/wheel/ /opt/flex/wheel/
+COPY --from=builder /opt/flex/include/ /opt/graphscope/include/ /opt/vineyard/include/ /opt/flex/include/
+COPY --from=builder /usr/include/arrow /usr/include/arrow
+COPY --from=builder /usr/include/yaml-cpp /usr/include/yaml-cpp
+COPY --from=builder /usr/include/boost/filesystem* /usr/include/boost
+COPY --from=builder /usr/include/boost/format* /usr/include/boost
+COPY --from=builder /usr/include/google /usr/include/google
+COPY --from=builder /usr/include/glog /usr/include/glog
+COPY --from=builder /usr/include/gflags /usr/include/gflags
+COPY --from=builder /usr/include/rapidjson /usr/include/rapidjson
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/openmpi/include/ /opt/flex/include
 
 RUN apt-get update && apt-get install -y git && pip3 install --upgrade pip && \
     pip3 install git+https://github.com/kragniz/python-etcd3.git@e58a899579ba416449c4e225b61f039457c8072a && \

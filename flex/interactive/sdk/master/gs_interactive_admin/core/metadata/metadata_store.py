@@ -20,6 +20,7 @@ from gs_interactive_admin.core.metadata.kv_store import AbstractKeyValueStore
 from abc import ABCMeta
 from abc import abstractmethod
 import logging
+import json
 
 from gs_interactive_admin.core.config import Config
 from gs_interactive_admin.core.metadata.kv_store import ETCDKeyValueStore
@@ -205,11 +206,10 @@ class DefaultMetadataStore(IMetadataStore):
     def __init__(
         self,
         kv_store_handle: AbstractKeyValueStore,
-        namespace="interactive",
-        instance_name="default",
+        key_helper: MetaKeyHelper,
     ):
         self._kv_store_handle : AbstractKeyValueStore = kv_store_handle
-        self._meta_key_helper = MetaKeyHelper(namespace, instance_name)
+        self._meta_key_helper = key_helper
 
     def open(self):
         self._kv_store_handle.open()
@@ -266,7 +266,8 @@ class DefaultMetadataStore(IMetadataStore):
         )
         logger.info("Got graph statistics: %s" % json_str)
         # convert the string to dict
-        res = yaml.safe_load(json_str)
+        # TODO: try to debug failure
+        res = json.loads(json_str)
         return res
         
     def create_graph_statistics(self, graph_id: str, statistics: str) -> bool:
@@ -464,7 +465,7 @@ def get_metadata_store():
     return metadata_store
 
 
-test_graph_def = {
+default_graph_def = {
     "name": "modern_graph",
     "description": "This is a test graph",
     "schema": {
@@ -510,14 +511,56 @@ test_graph_def = {
     },
 }
 
+default_graph_statistics = {  
+  "total_vertex_count": 6,  
+  "total_edge_count": 6,  
+  "vertex_type_statistics": [  
+    {  
+      "type_id": 0,   
+      "type_name": "person",   
+      "count": 4  
+    },   
+    {  
+      "type_id": 1,   
+      "type_name": "software",   
+      "count": 2  
+    }  
+  ],  
+  "edge_type_statistics": [  
+    {  
+      "type_id": 0,   
+      "type_name": "knows",   
+      "vertex_type_pair_statistics": [  
+        {  
+          "source_vertex": "person",   
+          "destination_vertex": "person",   
+          "count": 2  
+        }  
+      ]  
+    },   
+    {  
+      "type_id": 1,   
+      "type_name": "created",   
+      "vertex_type_pair_statistics": [  
+        {  
+          "source_vertex": "person",   
+          "destination_vertex": "software",   
+          "count": 4  
+        }  
+      ]  
+    }  
+  ]  
+}  
 
 def __make_default_graph_meta(metadata_store: IMetadataStore):
     if metadata_store.get_graph_meta("1") is None:
-        key_id = metadata_store.create_graph_meta(test_graph_def)
+        key_id = metadata_store.create_graph_meta(default_graph_def)
         # Expect the key_id is 1
         if key_id != "1":
             raise ValueError("The key_id is not 1: %s" % key_id)
         logger.info("Created graph meta with key_id 1")
+        metadata_store.create_graph_statistics("1", str(default_graph_statistics))
+        logger.info("Created graph statistics with key_id 1")
         # NOTE: The bulk_loading process will be automatically triggered when the engine pod are launched.
 
 
@@ -532,7 +575,7 @@ def init_metadata_store(config: Config):
         etcd_metadata_store = ETCDKeyValueStore.create_from_endpoint(
             key_helper, config.compute_engine.metadata_store.uri
         )
-        metadata_store = DefaultMetadataStore(etcd_metadata_store)
+        metadata_store = DefaultMetadataStore(etcd_metadata_store, key_helper)
         metadata_store.open()
 
         # Check whether default graph's metadata exists, if not, create it.

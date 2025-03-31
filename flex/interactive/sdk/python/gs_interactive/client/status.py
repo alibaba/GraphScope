@@ -115,6 +115,8 @@ class Status:
             return Status(StatusCode.INTERNAL_ERROR, exception)
         elif isinstance(exception, AttributeError):
             return Status(StatusCode.INTERNAL_ERROR, exception)
+        elif isinstance(exception, TypeError):
+            return Status(StatusCode.INTERNAL_ERROR, exception)
         return Status(
             StatusCode.UNKNOWN, "Unknown Error from exception " + exception.body
         )

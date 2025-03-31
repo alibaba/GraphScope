@@ -2,6 +2,7 @@ import connexion
 from typing import Dict
 from typing import Tuple
 from typing import Union
+import logging
 
 from gs_interactive_admin.models.api_response_with_code import (
     APIResponseWithCode,
@@ -33,6 +34,7 @@ from gs_interactive_admin.core.metadata.metadata_store import get_metadata_store
 from gs_interactive_admin.core.job.job_manager import get_job_manager
 from gs_interactive_admin.core.service.service_manager import get_service_manager
 
+logger = logging.getLogger("interactive")
 
 def create_dataloading_job(graph_id, schema_mapping):  # noqa: E501
     """create_dataloading_job
@@ -124,7 +126,9 @@ def get_graph_statistic(graph_id):  # noqa: E501
 
     :rtype: Union[GetGraphStatisticsResponse, Tuple[GetGraphStatisticsResponse, int], Tuple[GetGraphStatisticsResponse, int, Dict[str, str]]
     """
-    raise get_metadata_store().get_graph_statistics(graph_id)
+    res = get_metadata_store().get_graph_statistics(graph_id)
+    logger.info(f"Get graph statistics response: {res}")
+    return GetGraphStatisticsResponse.from_dict(res)
 
 
 def get_schema(graph_id):  # noqa: E501

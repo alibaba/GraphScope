@@ -68,11 +68,20 @@ class ServiceManager(object):
             raise RuntimeError(f"Graph {graph_id} has not been loaded with data")
 
         # we need serialize the graph_meta into a yaml file, and mount it to the pod that we are going to create
-        custom_graph_name = "custom-graph"
-        custom_graph_file_mount_path = f"/etc/interactive/{custom_graph_name}.yaml"
+        custom_graph_name = f"graph-{graph_id}.yaml"
+        custom_graph_file_mount_path = f"/etc/interactive/{custom_graph_name}"
+        custom_graph_file_sub_path = custom_graph_name
         custom_graph_statistics_mount_path = f"{self._config.workspace}/data/gs_interactive_default_graph/indices/statistics.json"
         custom_graph_file_data = yaml.dump(graph_meta, default_flow_style=False)
         logger.info("Custom graph file data: %s", custom_graph_file_data)
+        
+        custom_engine_config_name = "interactive_config.yaml"
+        custom_engine_config_mount_path = "/opt/flex/share/interactive_config.yaml"
+        custom_engine_config_sub_path = "interactive_config.yaml"
+        custom_engine_config_data = self._config.to_dict()
+        custom_engine_config_data["compiler"]["meta"]["reader"]["schema"]["uri"] = custom_graph_file_mount_path
+        custom_engine_config_data["compiler"]["meta"]["reader"]["statistics"]["uri"] = custom_graph_statistics_mount_path
+        custom_engine_config_data = yaml.dump(custom_engine_config_data, default_flow_style=False)
 
         cluster = self._launcher.launch_cluster(
             graph_id=graph_id,
@@ -84,7 +93,14 @@ class ServiceManager(object):
                 (
                     custom_graph_name,
                     custom_graph_file_mount_path,
+                    custom_graph_file_sub_path,
                     custom_graph_file_data,
+                ),
+                (
+                    custom_engine_config_name,
+                    custom_engine_config_mount_path,
+                    custom_engine_config_sub_path,
+                    custom_engine_config_data,
                 )
             ],
         )

@@ -82,8 +82,8 @@ data:
     mkdir -p {{ include "graphscope-interactive.master.workspace" . }}
     mkdir -p {{ include "graphscope-interactive.master.codegenWorkDir" . }}
     echo "using configfile: {{ include "graphscope-interactive.master.configFileMountPath" . }}"
-    python3 -m gs_interactive_admin --config-file {{ include "graphscope-interactive.master.configFileMountPath" . }}
-    #sleep infinity
+    #python3 -m gs_interactive_admin --config-file {{ include "graphscope-interactive.master.configFileMountPath" . }}
+    sleep infinity
 
 
   engine_entrypoint.sh: |-
@@ -103,5 +103,5 @@ data:
     echo "Workspace: {{ .Values.workspace }} "
     mkdir -p  {{ .Values.workspace }}/conf
     echo "config file ${graph_file}"
-    /opt/flex/bin/entrypoint.sh -w {{ .Values.workspace }} -g $graph_file
-    #sleep infinity
+    #/opt/flex/bin/entrypoint.sh -w {{ .Values.workspace }} -g $graph_file
+    sleep infinity

@@ -355,12 +355,15 @@ class GlobalServiceDiscovery(Model):
                 )
                 cur["service_registry"]["service_name"] = service_name
                 if primary_ip:
-                    cur["service_registry"]["primary"] = primary_ip
+                    for instance in instance_list:
+                        if instance.endpoint.startswith(primary_ip):
+                            cur["service_registry"]["primary"] = instance.to_dict()
+                            logger.info(f"Found primary instance {instance} for {graph_id}, {service_name}")
                     # for instance in instance_list:
                     #     if instance.endpoint.startswith(primary_ip):
                     #         cur["service_registry"]["primary"] = instance.to_dict()
                     #         logger.info(f"Found primary instance {instance} for {graph_id}, {service_name}")
-                cur["service_registry"]["instances"] = instance_list
+                cur["service_registry"]["instances"] = [x.to_dict() for x in instance_list]
             ret.append(cur)
         return ret
 
@@ -526,7 +529,8 @@ class EtcdServiceRegistry(IServiceRegistry):
         """
         Handle the delete event.
         """
-        graph_id, service_name, ip_port = self._try_decode_key(event.key)
+        key = event.key.decode("utf-8")
+        graph_id, service_name, ip_port = self._try_decode_key(key)
         logger.info(
             "Delete event: graph_id=%s, service_name=%s, endpoint=%s",
             graph_id,

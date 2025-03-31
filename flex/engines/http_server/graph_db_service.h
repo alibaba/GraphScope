@@ -282,10 +282,17 @@ struct convert<server::ServiceConfig> {
 
       auto metadata_store_node = engine_node["metadata_store"];
       if (metadata_store_node) {
-        auto metadata_store_uri = metadata_store_node["uri"];
-        if (metadata_store_uri) {
-          service_config.metadata_store_uri =
-              metadata_store_uri.as<std::string>();
+        auto metadata_store_type = metadata_store_node["type"];
+        if (metadata_store_type) {
+          auto metadata_store_type_str = metadata_store_type.as<std::string>();
+          if (metadata_store_type_str == "file") {
+            service_config.metadata_store_type_ =
+                gs::MetadataStoreType::kLocalFile;
+          } else {
+            LOG(ERROR) << "Unsupported metadata store type: "
+                       << metadata_store_type_str;
+            return false;
+          }
         }
       }
       if (engine_node["wal_uri"]) {

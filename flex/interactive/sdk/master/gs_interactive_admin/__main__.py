@@ -35,15 +35,11 @@ from gs_interactive_admin.core.metadata.metadata_store import (
 )
 from gs_interactive_admin.core.service.service_manager import init_service_manager
 from gs_interactive_admin.core.job.job_manager import init_job_manager
+from gs_interactive_admin.core.procedure.procedure_manager import init_procedure_manager
 
 
 def setup_args_parsing():
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--config",
-        type=str,
-        help="The base64 encoded config in json format.",
-    )
     parser.add_argument(
         "--config-file", type=str, help="The config file path in yaml or json format"
     )
@@ -67,7 +63,7 @@ def config_logging(log_level):
     logger.setLevel(log_level)
 
 
-def initialize_global_variables(config):
+def initialize_global_variables(config, config_file):
     """
     Initialize global variables. All global variables should have two methods:
     - initialize_xxx: Initialize the global variable
@@ -78,6 +74,7 @@ def initialize_global_variables(config):
     # Should be placed after init_metadata_store
     init_service_manager(config)
     init_job_manager(config, get_metadata_store())
+    init_procedure_manager(config, config_file_path=config_file)
 
 
 def preprocess_config(config: Config):
@@ -96,17 +93,14 @@ def main():
 
     args = setup_args_parsing()
     config: Config = None
-    if args.config:
-        config = base64.b64decode(args.config).decode("utf-8", errors="ignore")
-        config = Config.loads_json(config)
-    elif args.config_file:
-        config = Config.load(args.config_file)
-    else:
+    if not args.config_file:
         raise RuntimeError("Must specify a config or config-file")
+    
+    config = Config.load(args.config_file)
     preprocess_config(config)
 
     config_logging(config.log_level)
-    initialize_global_variables(config)
+    initialize_global_variables(config, args.config_file)
 
     app = connexion.App(__name__, specification_dir="./openapi/")
     app.add_api(

@@ -74,6 +74,7 @@ class JobProcessCallback(object):
     def _update_graph_statistics(self):
         # The statistics should be reported by bulk loader process by writing to a remote oss file. In master, we download the oss file and insert the content into metadata store.
         reader = OssReader()
+        logger.info(f"Update graph statistics for graph {self.graph_id}")
         try: 
             statistics = reader.read(self.oss_graph_path + "_statistics.json")
             self.metadata_store.create_graph_statistics(self.graph_id, statistics)

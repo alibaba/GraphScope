@@ -1166,7 +1166,7 @@ class DefaultSession(Session):
         """
 
         try:
-            req = StopServiceRequest()
+            req = StopServiceRequest(graph_id)
             if graph_id:
                 req.graph_id = graph_id
             response = self._service_api.stop_service_with_http_info(req)

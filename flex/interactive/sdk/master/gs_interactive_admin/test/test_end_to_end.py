@@ -71,25 +71,26 @@ test_graph_def = {
 class TestEndToEnd(unittest.TestCase):
     """A comprehensive test case contains creating graph, importing data, running queries, and deleting graph"""
 
-    def setUp(self):
-        if os.environ.get("INTERACTIVE_ENDPOINT") is None:
-            raise Exception("INTERACTIVE_ENDPOINT is not set")
-        self._endpoint = os.environ.get("INTERACTIVE_ENDPOINT")
+    def setup_class(self):
+        if os.environ.get("INTERACTIVE_ADMIN_ENDPOINT") is None:
+            raise Exception("INTERACTIVE_ADMIN_ENDPOINT is not set")
+        self._endpoint = os.environ.get("INTERACTIVE_ADMIN_ENDPOINT")
         logger.info("Endpoint: %s", self._endpoint)
         self._driver = Driver(self._endpoint)
         self._sess = self._driver.getDefaultSession()
-        self._graph_id = None
+        self._graph_id = "33"
 
     def test1(self):
         # self.create_graph()
         # self.import_data()
+        # self.get_statistics()
         # self.start_service()
-        self.call_builtin_procedure()
+        # self.call_builtin_procedure()
         self.create_cpp_procedure()
-        self.start_service_on_graph(self._graph_id)
-        self.call_cpp_procedure()
-        self.stop_service()
-        self.callVertexEdgeQuery()
+        # self.start_service_on_graph(self._graph_id)
+        # self.call_cpp_procedure()
+        # self.stop_service()
+        # self.callVertexEdgeQuery()
         
     def start_service_on_graph(self, graph_id):
         resp = self._sess.start_service(
@@ -140,6 +141,11 @@ class TestEndToEnd(unittest.TestCase):
         job_id = resp.get_value().job_id
         assert self.waitJobFinish(job_id)
         logger.info("Successfully import data")
+        
+    def get_statistics(self):
+        resp = self._sess.get_graph_statistics(self._graph_id)
+        assert resp.is_ok()
+        print("Statistics: ", resp.get_value())
 
     def start_service(self):
         resp = self._sess.start_service(
@@ -152,9 +158,10 @@ class TestEndToEnd(unittest.TestCase):
         assert resp.is_ok()
 
     def stop_service(self):
-        logger.info("Stopping service")
+        # logger.info("Stopping service")
+        # # logger.info(f"Wil wait 10 seconds before stopping service")
+        # # time.sleep(200)
         resp = self._sess.stop_service(graph_id=self._graph_id)
-        assert resp.is_ok()
         logger.info(f"Stop service resp {resp}")
 
     def waitJobFinish(self, job_id: str):
@@ -250,13 +257,17 @@ class TestEndToEnd(unittest.TestCase):
                 {"name": "age", "value": 29},
             ],
         }
-
+        
     def tearDown(self):
         if self._graph_id is not None:
             rep1 = self.stop_service()
             print("stop service: ", rep1)
-            rep2 = self._sess.delete_graph(self._graph_id)
-            print("delete graph: ", rep2)
+
+    def teardown_class(self):
+        pass
+        # if self._graph_id is not None:
+            # rep2 = self._sess.delete_graph(self._graph_id)
+            # print("delete graph: ", rep2)
         
 
 

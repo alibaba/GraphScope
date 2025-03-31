@@ -26,6 +26,12 @@ def dump_file(data, file_path):
     else:
         raise ValueError(f"Invalid data type: {type(data)}")
 
+def convert_str_to_k8s_valid(str):
+    """
+    Convert a string to a valid k8s name.
+    """
+    return str.replace("_", "-").replace(".", "-").replace("/", "-").replace(":", "-")
+
 class SubProcessRunner(object):
     def __init__(self, graph_id, command, callback, log_file):
         self._graph_id = graph_id
@@ -314,4 +320,13 @@ class OssReader(object):
         """
         Read a file under the bucket.
         """
+        # remove the oss:// prefix if exists
+        if key.startswith("oss://"):
+            key = key[6:]
+        # remove the bucket name if exists
+        if key.startswith(OSS_BUCKET_NAME):
+            key = key[len(OSS_BUCKET_NAME) + 1:]
+        else:
+            logger.warning(f"Key {key} does not start with bucket name {OSS_BUCKET_NAME}")
+            logger.warning(f"Trying to read {key}")
         return self._bucket.get_object(key).read().decode("utf-8")

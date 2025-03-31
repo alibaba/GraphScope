@@ -91,7 +91,7 @@
 {{- end -}}
 
 {{- define "graphscope-interactive.master.endpoint" -}}
-{{- printf "%s-0.%s.%s.svc.cluster.local:%s" (include "graphscope-interactive.master.fullname" .) (include "graphscope-interactive.master.serviceName" . ) .Release.Namespace (include "graphscope-interactive.master.servicePort" .) | trimSuffix "-" }}
+{{- printf "%s.%s.svc.cluster.local:%s" (include "graphscope-interactive.master.serviceName" . ) .Release.Namespace (include "graphscope-interactive.master.servicePort" .) | trimSuffix "-" }}
 {{- end -}}
 
 {{- define "graphscope-interactive.master.entrypointMountPath" -}}

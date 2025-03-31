@@ -142,7 +142,7 @@ master:
   # Master has no persistence configuration. It should store all data in etcd
 
   service:
-    type: NodePort
+    type: ClusterIP
     adminPort: 7776
 
     nodePorts:

@@ -243,7 +243,10 @@ public class YamlConfigs extends Configs {
     private static void flattenAndConvert(
             Map<String, Object> data, Map<String, String> properties, String parentKey) {
         for (Map.Entry<String, Object> entry : data.entrySet()) {
+            System.out.println("entry: " + entry);
+            System.out.println("parentKey: " + parentKey);
             String key = parentKey.isEmpty() ? entry.getKey() : parentKey + "." + entry.getKey();
+            System.out.println("key: " + key);
             Object value = entry.getValue();
             if (value instanceof Map) {
                 flattenAndConvert((Map<String, Object>) value, properties, key);
