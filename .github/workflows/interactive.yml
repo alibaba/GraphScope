@@ -186,6 +186,11 @@ jobs:
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
 
+    - name: Test Interactive Python Admin Service
+      run:
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk
+        bash generate_sdk.sh -g python -t server
+
     - name: Build and test Interactive Java/Python SDK
       env: 
         FLEX_DATA_DIR: ${{ github.workspace }}/flex/interactive/examples/modern_graph

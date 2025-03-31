@@ -35,6 +35,8 @@ tags:
     description: EdgeManagement
   - name: QueryService
     description: Graph query
+  - name: AdminService/ServiceRegistry
+    description: ServiceRegistry
 paths:
   /v1/graph:
     post:
@@ -1497,7 +1499,83 @@ paths:
               example:
                 code: 103
                 message: "Internal error"
-
+  /v1/service/registry:
+    get:
+      description: List all services registry
+      operationId: list_service_registry_info
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/GraphServiceRegistryRecord"
+                type: array
+          description: successful operation
+        "500":
+          content:
+            application/json:
+              schema:
+                example: Internal error
+                type: string
+          description: Internal error
+      tags:
+        - AdminService/ServiceRegistry
+  /v1/service/registry/{graph_id}/{service_name}:
+    get:
+      description: Get a service registry by graph_id and service_name
+      operationId: get_service_registry_info
+      parameters:
+        - explode: false
+          in: path
+          name: graph_id
+          required: true
+          schema:
+            type: string
+          style: simple
+        - explode: false
+          in: path
+          name: service_name
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GraphServiceRegistryRecord"
+          description: successful operation
+        "404":
+          content:
+            application/json:
+              schema:
+                example: Service not found
+                type: string
+          description: Not found
+        "500":
+          content:
+            application/json:
+              schema:
+                example: Internal error
+                type: string
+          description: Internal error
+      tags:
+        - AdminService/ServiceRegistry
+  /v1/service/ready:
+    get:
+      description: Check if the service is ready
+      operationId: check_service_ready
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/APIResponse"
+          description: successful operation
+      tags:
+        - AdminService/ServiceManagement
 components:
   schemas:
     ########################### Definition for GSDataType ###########################
@@ -2393,6 +2471,79 @@ components:
         status:
           type: string
           example: "AVAILABLE"
+    ServiceMetrics:
+      example:
+        snapshot_id: "1"
+      properties:
+        snapshot_id:
+          example: "1"
+          title: snapshot_id
+          type: string
+      title: ServiceMetrics
+      type: object
+    RegistryInstanceRecord:
+      example:
+        endpoint: ip:port
+        metrics:
+          snapshot_id: "1"
+      properties:
+        endpoint:
+          example: ip:port
+          title: endpoint
+          type: string
+        metrics:
+          $ref: "#/components/schemas/ServiceMetrics"
+      title: RegistryInstanceRecord
+      type: object
+    ServiceRegistryRecord:
+      example:
+        instances:
+          endpoint: ip:port
+          metrics:
+            snapshot_id: "1"
+        service_name: graphscope
+        primary:
+          endpoint: ip:port
+          metrics:
+            snapshot_id: "1"
+      properties:
+        service_name:
+          example: graphscope
+          title: service_name
+          type: string
+        instances:
+          type: array
+          items:
+            $ref: "#/components/schemas/RegistryInstanceRecord"
+        primary:
+          $ref: "#/components/schemas/RegistryInstanceRecord"
+      title: ServiceRegistryRecord
+      type: object
+    GraphServiceRegistryRecord:
+      example:
+        graph_id: "1"
+        service_registry:
+          instances:
+            - endpoint: ip:port
+              metrics:
+                snapshot_id: "1"
+            - endpoint: ip:port
+              metrics:
+                snapshot_id: "1"
+          service_name: graphscope
+          primary:
+            endpoint: ip:port
+            metrics:
+              snapshot_id: "1"
+      properties:
+        graph_id:
+          example: "1"
+          title: graph_id
+          type: string
+        service_registry:
+          $ref: "#/components/schemas/ServiceRegistryRecord"
+      title: GraphServiceRegistryRecord
+      type: object
   responses:
     "400":
       content:
