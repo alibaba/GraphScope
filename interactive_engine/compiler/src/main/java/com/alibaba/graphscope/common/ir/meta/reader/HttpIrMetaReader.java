@@ -144,10 +144,18 @@ public class HttpIrMetaReader implements IrMetaReader {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode rootNode = mapper.readTree(metaInJson);
         Map<String, Object> rootMap = mapper.convertValue(rootNode, Map.class);
-        Map metaMap = (Map) rootMap.get("graph");
-        GraphId graphId = new GraphId(metaMap.get("id"));
-        Yaml yaml = new Yaml();
-        return Pair.with(graphId, yaml.dump(metaMap));
+        if (rootMap.containsKey("graph")) {
+            // Parse the response if in the 'graph' field of the response
+            Map metaMap = (Map) rootMap.get("graph");
+            GraphId graphId = new GraphId(metaMap.get("id"));
+            Yaml yaml = new Yaml();
+            return Pair.with(graphId, yaml.dump(metaMap));
+        } else {
+            // Parser the response if the response is the root
+            GraphId graphId = new GraphId(rootMap.get("id"));
+            Yaml yaml = new Yaml();
+            return Pair.with(graphId, yaml.dump(rootMap));
+        }
     }
 
     private boolean getStaticEnabled(String metaInJson) throws IOException {
