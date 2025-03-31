@@ -3,7 +3,7 @@ werkzeug == 3.0.3; python_version=="3.5" or python_version=="3.4"
 swagger-ui-bundle >= 0.0.2
 python_dateutil >= 2.6.0
 setuptools >= 21.0.0
-Flask == 2.1.1
+Flask == 2.2.5
 etcd3 == 0.12.0
 kubernetes>=24.2.0
 simple_parsing == 0.1.7

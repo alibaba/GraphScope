@@ -27,13 +27,13 @@ python3 -m gs_interactive_admin
 and open your browser to here:
 
 ```
-http://localhost:8080/GRAPHSCOPE/InteractiveAPI/1.0.0/ui/
+http://localhost:8080/ui/
 ```
 
 Your OpenAPI definition lives here:
 
 ```
-http://localhost:8080/GRAPHSCOPE/InteractiveAPI/1.0.0/openapi.json
+http://localhost:8080/openapi.json
 ```
 
 To launch the integration tests, use tox:
