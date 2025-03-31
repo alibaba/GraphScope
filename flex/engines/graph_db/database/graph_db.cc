@@ -28,10 +28,6 @@
 #include "flex/engines/graph_db/runtime/utils/cypher_runner_impl.h"
 #include "flex/utils/yaml_utils.h"
 
-#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
-#include "flex/engines/graph_db/app/kafka_wal_ingester_app.h"
-#endif
-
 #include "flex/third_party/httplib.h"
 
 namespace gs {
@@ -58,7 +54,6 @@ struct SessionLocalContext {
 
 GraphDB::GraphDB()
     : monitor_thread_running_(false),
-      kafka_wal_ingester_thread_running_(false),
       last_ingested_wal_ts_(0),
       compact_thread_running_(false) {}
 GraphDB::~GraphDB() {
@@ -281,54 +276,6 @@ void GraphDB::Close() {
   std::fill(app_paths_.begin(), app_paths_.end(), "");
   std::fill(app_factories_.begin(), app_factories_.end(), nullptr);
 }
-
-#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
-bool GraphDB::kafka_wal_ingester_state() const {
-  return kafka_wal_ingester_thread_running_.load();
-}
-
-void GraphDB::start_kafka_wal_ingester(const cppkafka::Configuration& config,
-                                       const std::string& topic_name) {
-  if (kafka_wal_ingester_thread_running_) {
-    kafka_wal_ingester_thread_running_ = false;
-    if (kafka_wal_ingester_thread_.joinable()) {
-      kafka_wal_ingester_thread_.join();
-    }
-  }
-  kafka_wal_ingester_thread_running_ = true;
-
-  kafka_wal_ingester_thread_ = std::thread([&]() {
-    std::vector<char> buffer;
-    gs::Encoder encoder(buffer);
-    encoder.put_string("topic_name");
-    encoder.put_string(topic_name);
-    if (config.has_property("metadata.broker.list")) {
-      encoder.put_string("metadata.broker.list");
-      encoder.put_string(config.get("metadata.broker.list"));
-    }
-    if (config.has_property("group.id")) {
-      encoder.put_string("group.id");
-      encoder.put_string(config.get("group.id"));
-    }
-    if (config.has_property("enable.auto.commit")) {
-      encoder.put_string("enable.auto.commit");
-      encoder.put_string(config.get("enable.auto.commit"));
-    }
-    if (config.has_property("auto.offset.reset")) {
-      encoder.put_string("auto.offset.reset");
-      encoder.put_string(config.get("auto.offset.reset"));
-    }
-    gs::Decoder decoder(buffer.data(), buffer.size());
-    KafkaWalIngesterApp().Query(GetSession(0), decoder, encoder);
-  });
-}
-
-void GraphDB::stop_kafka_wal_ingester() {
-  kafka_wal_ingester_thread_running_ = false;
-  kafka_wal_ingester_thread_.join();
-}
-
-#endif
 
 ReadTransaction GraphDB::GetReadTransaction(int thread_id) {
   return contexts_[thread_id].session.GetReadTransaction();

@@ -24,11 +24,14 @@ namespace gs {
 // Ingest wal from kafka
 class KafkaWalIngesterApp : public WriteAppBase {
  public:
-  KafkaWalIngesterApp() {}
+  KafkaWalIngesterApp() : force_stop_(false) {}
 
   AppType type() const override { return AppType::kBuiltIn; }
 
   bool Query(GraphDBSession& graph, Decoder& input, Encoder& output) override;
+
+  bool terminal();
+  std::atomic<bool> force_stop_{false};
 };
 
 class KafkaWalIngesterAppFactory : public AppFactoryBase {

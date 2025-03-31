@@ -14,81 +14,31 @@
  */
 
 #include "flex/engines/graph_db/database/wal/kafka_wal_parser.h"
+#include "flex/engines/graph_db/database/wal/kafka_wal_utils.h"
 #include "flex/engines/graph_db/database/wal/wal.h"
 
 namespace gs {
 
-std::vector<cppkafka::TopicPartition> get_all_topic_partitions(
-    const cppkafka::Configuration& config, const std::string& topic_name,
-    bool from_beginning) {
-  std::vector<cppkafka::TopicPartition> partitions;
-  cppkafka::Consumer consumer(config);  // tmp consumer
-  LOG(INFO) << config.get("metadata.broker.list");
-  LOG(INFO) << config.get("group.id");
-
-  LOG(INFO) << "Get metadata for topic " << topic_name;
-  auto meta_vector = consumer.get_metadata().get_topics({topic_name});
-  if (meta_vector.empty()) {
-    LOG(WARNING) << "Failed to get metadata for topic " << topic_name
-                 << ", maybe the topic does not exist";
-    return {};
-  }
-  auto metadata = meta_vector.front().get_partitions();
-  for (const auto& partition : metadata) {
-    if (from_beginning) {
-      partitions.push_back(
-          cppkafka::TopicPartition(topic_name, partition.get_id(), 0));
-    } else {
-      partitions.push_back(cppkafka::TopicPartition(
-          topic_name, partition.get_id()));  // from the beginning
-    }
-  }
-  return partitions;
-}
-
 std::unique_ptr<IWalParser> KafkaWalParser::Make(const std::string& uri) {
   // uri should be like
   // "kafka://localhost:9092,localhost:9093/my_topic?group.id=my_consumer_group"
-  const std::string prefix = "kafka://";
-  if (uri.find(prefix) != 0) {
-    LOG(FATAL) << "Invalid uri: " << uri;
+  auto res = parse_uri(uri);
+  if (!res) {
+    LOG(FATAL) << "Failed to parse uri: " << uri;
+    return nullptr;
   }
-
-  std::string hosts_part = uri.substr(prefix.length());
-  size_t query_pos = hosts_part.find('/');
-  std::string hosts;
-  std::string query;
-  cppkafka::Configuration config;
-
-  if (query_pos != std::string::npos) {
-    hosts = hosts_part.substr(0, query_pos);
-    query = hosts_part.substr(query_pos + 1);
-  } else {
-    LOG(FATAL) << "Invalid uri: " << uri;
-  }
-  config.set("metadata.broker.list", hosts);
-  size_t top_pos = query.find('?');
+  gs::Decoder decoder(res.value().data(), res.value().size());
   std::string topic_name;
-  if (top_pos != std::string::npos) {
-    topic_name = query.substr(0, top_pos);
-    query = query.substr(top_pos + 1);
-  } else {
-    LOG(FATAL) << "Invalid uri: " << uri;
-  }
-  std::istringstream query_stream(query);
-  std::string pair;
-  while (std::getline(query_stream, pair, '&')) {
-    size_t eq_pos = pair.find('=');
-    if (eq_pos != std::string::npos) {
-      std::string key = pair.substr(0, eq_pos);
-      std::string value = pair.substr(eq_pos + 1);
-      if (key == "group.id") {
-        config.set("group.id", value);
-      }
+  cppkafka::Configuration config;
+  while (!decoder.empty()) {
+    auto key = decoder.get_string();
+    auto value = decoder.get_string();
+    if (key == "topic_name") {
+      topic_name = value;
+    } else {
+      config.set(std::string(key), std::string(value));
     }
   }
-  config.set("enable.auto.commit", false);
-
   auto parser = std::unique_ptr<IWalParser>(new KafkaWalParser(config));
   parser->open(topic_name);
   return parser;
