@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.cypher.service;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.write.HttpWriteClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -50,6 +51,7 @@ public class CypherBootstrapper extends CommunityBootstrapper {
     private final Dependencies externalDependencies;
     private final List<Class<?>> externalClassTypes;
     private final ExecutionClient client;
+    private final HttpWriteClient writeClient;
 
     public CypherBootstrapper(
             Configs graphConfig,
@@ -57,11 +59,19 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
             QueryCache queryCache,
-            GraphPlanner graphPlanner) {
+            GraphPlanner graphPlanner,
+            HttpWriteClient writeClient) {
         this.client = client;
+        this.writeClient = writeClient;
         this.externalDependencies =
                 createExternalDependencies(
-                        graphConfig, idGenerator, queryCallback, client, queryCache, graphPlanner);
+                        graphConfig,
+                        idGenerator,
+                        queryCallback,
+                        client,
+                        queryCache,
+                        graphPlanner,
+                        writeClient);
         this.externalClassTypes =
                 Arrays.asList(
                         Configs.class,
@@ -69,7 +79,8 @@ public class CypherBootstrapper extends CommunityBootstrapper {
                         IrMetaQueryCallback.class,
                         ExecutionClient.class,
                         QueryCache.class,
-                        GraphPlanner.class);
+                        GraphPlanner.class,
+                        HttpWriteClient.class);
     }
 
     @Override
@@ -81,6 +92,7 @@ public class CypherBootstrapper extends CommunityBootstrapper {
                                 () -> {
                                     try {
                                         client.close();
+                                        writeClient.close();
                                     } catch (Exception e) {
                                         logger.error("close client error", e);
                                     }
@@ -98,10 +110,11 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
             QueryCache queryCache,
-            GraphPlanner graphPlanner) {
+            GraphPlanner graphPlanner,
+            HttpWriteClient writeClient) {
         Dependencies dependencies = new Dependencies();
         dependencies.satisfyDependencies(
-                configs, idGenerator, queryCallback, client, queryCache, graphPlanner);
+                configs, idGenerator, queryCallback, client, queryCache, graphPlanner, writeClient);
         return dependencies;
     }
 

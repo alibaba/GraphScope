@@ -362,6 +362,7 @@
                         <exclude>**/IrPatternTest.java</exclude>
                         <exclude>**/MovieTest.java</exclude>
                         <exclude>**/GraphAlgoTest.java</exclude>
+                        <exclude>**/MovieWriteTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
