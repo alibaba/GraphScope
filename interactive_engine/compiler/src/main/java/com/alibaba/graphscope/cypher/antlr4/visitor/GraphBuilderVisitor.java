@@ -23,7 +23,6 @@ import com.alibaba.graphscope.common.ir.rel.GraphProcedureCall;
 import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
-import com.alibaba.graphscope.common.ir.rel.type.FieldMappings;
 import com.alibaba.graphscope.common.ir.rel.type.TargetGraph;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
@@ -125,48 +124,6 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         RexNode expr = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
         String alias = Utils.getAliasName(ctx.oC_Variable());
         return builder.unfold(expr, alias);
-    }
-
-    @Override
-    public GraphBuilder visitOC_Set(CypherGSParser.OC_SetContext ctx) {
-        FieldMappings updateMappings = createFieldMappings(ctx);
-        TableModify update =
-                new GraphTableModify.Update(builder.getCluster(), builder.build(), updateMappings);
-        return builder.push(update);
-    }
-
-    private FieldMappings createFieldMappings(CypherGSParser.OC_SetContext ctx) {
-        List<FieldMappings.Entry> mappings =
-                ctx.oC_SetItem().stream()
-                        .map(
-                                item -> {
-                                    RexNode target = null, source = null;
-                                    if (item.oC_PropertyOrLabelsExpression() != null) {
-                                        target =
-                                                expressionVisitor
-                                                        .visitOC_PropertyOrLabelsExpression(
-                                                                item
-                                                                        .oC_PropertyOrLabelsExpression())
-                                                        .getExpr();
-                                    } else if (item.oC_Variable() != null) {
-                                        target =
-                                                expressionVisitor
-                                                        .visitOC_Variable(item.oC_Variable())
-                                                        .getExpr();
-                                    }
-                                    if (item.oC_Expression() != null) {
-                                        source =
-                                                expressionVisitor
-                                                        .visitOC_Expression(item.oC_Expression())
-                                                        .getExpr();
-                                    }
-                                    Preconditions.checkArgument(
-                                            source != null && target != null,
-                                            "source and target should not be null in set item");
-                                    return new FieldMappings.Entry(source, target);
-                                })
-                        .collect(Collectors.toList());
-        return new FieldMappings(mappings);
     }
 
     @Override

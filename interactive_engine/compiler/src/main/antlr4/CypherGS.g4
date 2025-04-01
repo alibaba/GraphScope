@@ -58,7 +58,6 @@ oC_RegularQuery
 
 oC_UpdatingClause
       : oC_Create
-      | oC_Set
       ;
 
 oC_ReadingClause
@@ -73,16 +72,6 @@ CREATE : ( 'C' | 'c' ) ( 'R' | 'r' ) ( 'E' | 'e' ) ( 'A' | 'a' ) ( 'T' | 't' ) (
 
 oC_Create
       :  CREATE SP? oC_Pattern ;
-
-oC_Set
-   :  SET SP? oC_SetItem ( SP? ',' SP? oC_SetItem )* ;
-
-SET : ( 'S' | 's' ) ( 'E' | 'e' ) ( 'T' | 't' ) ;
-
-oC_SetItem
-       :  ( oC_PropertyOrLabelsExpression SP? '=' SP? oC_Expression )
-           | ( oC_Variable SP? '=' SP? oC_Expression )
-           ;
 
 oC_SubQuery
      : ( ( oC_Match | oC_With | oC_Unwind ) SP? )* ( SP? oC_Return ) ;
