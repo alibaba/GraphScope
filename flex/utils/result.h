@@ -160,9 +160,6 @@ struct is_gs_status_type<Status> : std::true_type {};
   return ::boost::leaf::new_error(        \
       gs::Status(::gs::flex::interactive::Code::code, msg))
 
-// see: https://etcd.io/docs/v2.3/errorcode/
-StatusCode etcdCodeToStatusCode(int etcd_code);
-
 }  // namespace gs
 
 namespace std {

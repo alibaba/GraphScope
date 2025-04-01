@@ -40,15 +40,4 @@ std::string Status::ToString() const {
          error_msg_ + "\"}";
 }
 
-StatusCode etcdCodeToStatusCode(int etcd_code) {
-  switch (etcd_code) {
-  case 0:
-    return StatusCode::OK;
-  case 100:
-    return StatusCode::META_KEY_NOT_FOUND;
-  default:
-    return StatusCode::UNKNOWN;
-  }
-}
-
 }  // namespace gs
