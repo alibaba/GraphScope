@@ -85,7 +85,10 @@ impl RocksDB {
 
         let prev = self.db.swap(cur, Ordering::Release, guard);
         unsafe {
-            drop(prev.into_owned());
+            let prev = prev.into_owned();
+            prev.cancel_all_background_work(true);
+            std::thread::sleep(Duration::from_secs(30));
+            drop(prev);
         }
         info!("RocksDB replaced");
     }
@@ -109,7 +112,7 @@ impl RocksDB {
             return Ok(());
         }
         let db = self.get_db()?;
-        let opt = WriteOptions::default();
+        let mut opt = WriteOptions::default();
         opt.set_sync(false);
         db.put_opt(key, val, &opt).map_err(|e| {
             let msg = format!("rocksdb.put failed because {}", e.into_string());
@@ -385,10 +388,9 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     opts.set_max_write_buffer_number(4);
     opts.set_allow_concurrent_memtable_write(true);
     opts.set_enable_write_thread_adaptive_yield(true);
-    opts.set_enable_pipelined_write(true);
-
     opts.set_bytes_per_sync(1048576);
-    opts.set_unordered_write(true);
+    opts.set_enable_pipelined_write(true);
+    opts.set_unordered_write(false);
 
     if let Some(conf_str) = options.get("store.rocksdb.disable.auto.compactions") {
         let val = conf_str.parse().unwrap();
