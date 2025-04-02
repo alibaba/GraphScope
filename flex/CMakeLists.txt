@@ -17,6 +17,8 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
+
+option(BUILD_KAFKA_WAL_WRITER_PARSER "Whether to build kafka wal writer and wal parser" OFF) # Whether to build kafka wal writer and wal parser, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
 
 #print options
@@ -128,6 +130,21 @@ include_directories(SYSTEM ${yaml-cpp_INCLUDE_DIRS})
 if (NOT yaml-cpp_FOUND)
     message(FATAL_ERROR "yaml-cpp not found, please install the yaml-cpp library")
 endif ()
+
+#find CppKafka-------------------------------------------------------------------
+if (BUILD_KAFKA_WAL_WRITER_PARSER)
+    find_package(CppKafka)
+    if (NOT CppKafka_FOUND)
+        message(FATAL_ERROR "cppkafka not found, please install cppkafka library")
+    else()
+        include_directories(SYSTEM ${CppKafka_INCLUDE_DIRS})
+        message(STATUS "cpp kafka include dir: ${CppKafka_INCLUDE_DIRS}")
+        set(CppKafka_LIBRARIES CppKafka::cppkafka)
+        add_definitions(-DBUILD_KAFKA_WAL_WRITER_PARSER)
+        message(STATUS "cppkafka found")
+    endif ()
+endif()
+
 
 #find boost----------------------------------------------------------------------
 find_package(Boost REQUIRED COMPONENTS system filesystem

@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
   service_config.query_port = http_port;
   service_config.start_admin_service = false;
   service_config.start_compiler = false;
+  service_config.wal_uri = config.wal_uri;
   service_config.set_sharding_mode(vm["sharding-mode"].as<std::string>());
   server::GraphDBService::get().init(service_config);
 

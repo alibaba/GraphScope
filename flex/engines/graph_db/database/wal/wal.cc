@@ -101,7 +101,7 @@ std::unique_ptr<IWalParser> WalParserFactory::CreateWalParser(
 bool WalParserFactory::RegisterWalParser(
     const std::string& wal_writer_type,
     WalParserFactory::wal_parser_initializer_t initializer) {
-  LOG(INFO) << "Registering wal writer of type: " << wal_writer_type;
+  LOG(INFO) << "Registering wal parser of type: " << wal_writer_type;
   auto& known_parsers_ = getKnownWalParsers();
   known_parsers_.emplace(wal_writer_type, initializer);
   return true;

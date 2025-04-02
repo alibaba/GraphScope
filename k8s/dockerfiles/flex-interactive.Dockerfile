@@ -27,7 +27,9 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && make -j ${PARALLEL} && make install && \
+    git submodule update --init && mkdir build && cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF \
+        -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON -DBUILD_KAFKA_WAL_WRITER_PARSER=ON && make -j ${PARALLEL} && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
     cp target/libs/*.jar /opt/flex/lib/ && \
@@ -103,6 +105,7 @@ RUN find /opt/flex/lib/ -name "*.a" -type f -delete
 # include 
 COPY --from=builder /opt/flex/include/ /opt/graphscope/include/ /opt/vineyard/include/ /opt/flex/include/
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
+COPY --from=builder /opt/graphscope/lib/libcppkafka.so* /opt/flex/lib/
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
@@ -146,6 +149,7 @@ COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM
     /usr/lib/$PLATFORM-linux-gnu/libglog*.so* \
     /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* \
     /usr/lib/$PLATFORM-linux-gnu/libicudata.so* \
+    /usr/lib/$PLATFORM-linux-gnu/librdkafka* \
     /usr/lib/$PLATFORM-linux-gnu/
 
 RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \

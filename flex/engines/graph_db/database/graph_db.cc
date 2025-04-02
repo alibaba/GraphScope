@@ -52,7 +52,10 @@ struct SessionLocalContext {
   char _padding2[4096 - sizeof(GraphDBSession) % 4096];
 };
 
-GraphDB::GraphDB() = default;
+GraphDB::GraphDB()
+    : monitor_thread_running_(false),
+      last_ingested_wal_ts_(0),
+      compact_thread_running_(false) {}
 GraphDB::~GraphDB() {
   if (compact_thread_running_) {
     compact_thread_running_ = false;
@@ -486,6 +489,7 @@ void GraphDB::openWalAndCreateContexts(const GraphDBConfig& config,
   }
   auto wal_parser = WalParserFactory::CreateWalParser(wal_uri);
   ingestWals(*wal_parser, data_dir, thread_num_);
+  last_ingested_wal_ts_ = wal_parser->last_ts();
 
   for (int i = 0; i < thread_num_; ++i) {
     contexts_[i].logger->open(wal_uri, i);

@@ -108,6 +108,10 @@ class GraphDBSession {
 
   AppBase* GetApp(const std::string& name);
 
+  Allocator& allocator();
+
+  void commit(timestamp_t ts);
+
  private:
   Result<std::pair<uint8_t, std::string_view>>
   parse_query_type_from_cypher_json(const std::string_view& input);
