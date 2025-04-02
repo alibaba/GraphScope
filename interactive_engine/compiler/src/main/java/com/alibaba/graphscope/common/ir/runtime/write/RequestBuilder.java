@@ -43,8 +43,8 @@ import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.ImmutableBitSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.List;
 import java.util.Arrays;
+import java.util.List;
 
 public class RequestBuilder extends PhysicalBuilder {
 
@@ -141,7 +141,9 @@ public class RequestBuilder extends PhysicalBuilder {
                             if (optTable.isKey(propertyIds)) {
                                 String propertyName =
                                         ((RexGraphVariable) target).getName().split("\\.")[1];
-                                request.setPrimaryKeyValues(Arrays.asList(new Property().name(propertyName).value(value)));
+                                request.setPrimaryKeyValues(
+                                        Arrays.asList(
+                                                new Property().name(propertyName).value(value)));
                             } else {
                                 String propertyName =
                                         ((RexGraphVariable) target).getName().split("\\.")[1];
