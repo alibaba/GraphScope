@@ -44,6 +44,7 @@ import org.apache.calcite.util.ImmutableBitSet;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.List;
+import java.util.Arrays;
 
 public class RequestBuilder extends PhysicalBuilder {
 
@@ -138,7 +139,9 @@ public class RequestBuilder extends PhysicalBuilder {
                             ImmutableBitSet propertyIds =
                                     Utils.getPropertyIds(property, schemaType);
                             if (optTable.isKey(propertyIds)) {
-                                request.setPrimaryKeyValue(value);
+                                String propertyName =
+                                        ((RexGraphVariable) target).getName().split("\\.")[1];
+                                request.setPrimaryKeyValues(Arrays.asList(new Property().name(propertyName).value(value)));
                             } else {
                                 String propertyName =
                                         ((RexGraphVariable) target).getName().split("\\.")[1];
@@ -164,12 +167,12 @@ public class RequestBuilder extends PhysicalBuilder {
         VertexRequest srcVertex = createVertex(edge.getSrcVertex());
         VertexRequest dstVertex = createVertex(edge.getDstVertex());
 
-        if (srcVertex.getPrimaryKeyValue() != null) {
-            request.setSrcPrimaryKeyValue(srcVertex.getPrimaryKeyValue());
+        if (srcVertex.getPrimaryKeyValues() != null) {
+            request.setSrcPrimaryKeyValues(srcVertex.getPrimaryKeyValues());
         }
 
-        if (dstVertex.getPrimaryKeyValue() != null) {
-            request.setDstPrimaryKeyValue(dstVertex.getPrimaryKeyValue());
+        if (dstVertex.getPrimaryKeyValues() != null) {
+            request.setDstPrimaryKeyValues(dstVertex.getPrimaryKeyValues());
         }
 
         FieldMappings mappings = edge.getMappings();

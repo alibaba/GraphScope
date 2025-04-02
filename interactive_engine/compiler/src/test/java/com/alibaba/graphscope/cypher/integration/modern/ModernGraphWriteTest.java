@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.cypher.integration.movie;
+package com.alibaba.graphscope.cypher.integration.modern;
 
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -25,7 +25,7 @@ import org.neo4j.driver.Record;
 import org.neo4j.driver.Result;
 import org.neo4j.driver.Session;
 
-public class MovieWriteTest {
+public class ModernGraphWriteTest {
     private static Session session;
 
     @BeforeClass
@@ -39,17 +39,17 @@ public class MovieWriteTest {
     public void insert_vertex_edge_test() {
         // create 2 new vertices and an edge between them
         session.run(
-                        "CREATE (p1:Person {name: 'test1', id: 2110, age: 32}) CREATE (p2:Person"
-                                + " {name: 'test2', id: 2111, age: 33}) CREATE (p1:Person {id:"
-                                + " 2110})-[:FOLLOWS]->(p2:Person {id: 2111})")
+                        "CREATE (p1:person {name: 'test1', id: 2110, age: 32}) CREATE (p2:person"
+                                + " {name: 'test2', id: 2111, age: 33}) CREATE (p1:person {id:"
+                                + " 2110})-[:knows {weight: 0.1} ]->(p2:person {id: 2111})")
                 .list();
-        Result testP1 = session.run("MATCH (p:Person {name: 'test1'}) RETURN p.name, p.id, p.age");
+        Result testP1 = session.run("MATCH (p:person {name: 'test1'}) RETURN p.name, p.id, p.age");
         Record record = testP1.list().get(0);
         Assert.assertEquals("test1", record.get(0).asString());
         Assert.assertEquals(2110, record.get(1).asInt());
         Assert.assertEquals(32, record.get(2).asInt());
 
-        Result testP2 = session.run("MATCH (p:Person {name: 'test2'}) RETURN p.name, p.id, p.age");
+        Result testP2 = session.run("MATCH (p:person {name: 'test2'}) RETURN p.name, p.id, p.age");
         record = testP2.list().get(0);
         Assert.assertEquals("test2", record.get(0).asString());
         Assert.assertEquals(2111, record.get(1).asInt());
@@ -57,7 +57,7 @@ public class MovieWriteTest {
 
         Result testEdge =
                 session.run(
-                        "MATCH (p1:Person {id: 2110})-[f:FOLLOWS]->(p2:Person {id: 2111}) RETURN"
+                        "MATCH (p1:person {id: 2110})-[f:knows]->(p2:person {id: 2111}) RETURN"
                                 + " f");
         Assert.assertEquals(1, testEdge.list().size());
     }

@@ -260,12 +260,17 @@ VertexData GraphDBOperations::inputVertex(const rapidjson::Value& vertex_json,
                                           GraphDBSession& session) {
   VertexData vertex;
   std::string label = jsonToString(vertex_json["label"]);
-  if (!check_primary_key_value_valid(vertex_json)) {
-    throw std::runtime_error("primary_key_values is invalid");
+  if (check_primary_key_value_valid(vertex_json, "primary_key_values") ||
+      check_primary_key_value_valid(vertex_json, "primary_key_value")) {
+    throw std::runtime_error("primary_key_values/primary_key_value is invalid");
   }
 
-  vertex.pk_value =
-      Any(jsonToString(vertex_json["primary_key_values"][0]["value"]));
+  if (vertex_json.HasMember("primary_key_values")) {
+    vertex.pk_value =
+        Any(jsonToString(vertex_json["primary_key_values"][0]["value"]));
+  } else {
+    vertex.pk_value = Any(jsonToString(vertex_json["primary_key_value"]));
+  }
   std::unordered_set<std::string> property_names;
   std::vector<std::string> property_names_arr;
   for (auto& property : vertex_json["properties"].GetArray()) {
@@ -294,16 +299,27 @@ EdgeData GraphDBOperations::inputEdge(const rapidjson::Value& edge_json,
   std::string src_label = jsonToString(edge_json["src_label"]);
   std::string dst_label = jsonToString(edge_json["dst_label"]);
   std::string edge_label = jsonToString(edge_json["edge_label"]);
-  if (!check_primary_key_value_valid(edge_json, "src_primary_key_values")) {
-    throw std::runtime_error("src_primary_key_values is invalid");
+  if (check_primary_key_value_valid(edge_json, "src_primary_key_values") ||
+      check_primary_key_value_valid(edge_json, "dst_primary_key_value")) {
+    throw std::runtime_error(
+        "src_primary_key_values/src_primary_key_value is invalid");
   }
-  if (!check_primary_key_value_valid(edge_json, "dst_primary_key_values")) {
+  if (check_primary_key_value_valid(edge_json, "dst_primary_key_values") ||
+      check_primary_key_value_valid(edge_json, "dst_primary_key_value")) {
     throw std::runtime_error("dst_primary_key_values is invalid");
   }
-  edge.src_pk_value =
-      Any(jsonToString(edge_json["src_primary_key_values"][0]["value"]));
-  edge.dst_pk_value =
-      Any(jsonToString(edge_json["dst_primary_key_values"][0]["value"]));
+  if (edge_json.HasMember("src_primary_key_values")) {
+    edge.src_pk_value =
+        Any(jsonToString(edge_json["src_primary_key_values"][0]["value"]));
+  } else {
+    edge.src_pk_value = Any(jsonToString(edge_json["src_primary_key_value"]));
+  }
+  if (edge_json.HasMember("dst_primary_key_values")) {
+    edge.dst_pk_value =
+        Any(jsonToString(edge_json["dst_primary_key_values"][0]["value"]));
+  } else {
+    edge.dst_pk_value = Any(jsonToString(edge_json["dst_primary_key_value"]));
+  }
   // Check that all parameters in the parameter
   if (edge_json["properties"].Size() > 1) {
     throw std::runtime_error(
