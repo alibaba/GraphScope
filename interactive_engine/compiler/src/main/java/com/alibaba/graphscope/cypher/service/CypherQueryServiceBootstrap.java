@@ -21,6 +21,7 @@ import static org.neo4j.scheduler.Group.FABRIC_WORKER;
 import static org.neo4j.scheduler.JobMonitoringParams.systemJob;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.write.HttpWriteClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -166,6 +167,7 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
         var executionClient = (ExecutionClient) resolve(ExecutionClient.class);
         var queryCache = (QueryCache) resolve(QueryCache.class);
         var graphPlanner = (GraphPlanner) resolve(GraphPlanner.class);
+        var writeClient = resolve(HttpWriteClient.class);
         var fabricExecutor =
                 new GraphQueryExecutor(
                         fabricConfig,
@@ -180,7 +182,8 @@ public class CypherQueryServiceBootstrap extends FabricServicesBootstrap.Communi
                         metaQueryCallback,
                         executionClient,
                         queryCache,
-                        graphPlanner);
+                        graphPlanner,
+                        writeClient);
         register(fabricExecutor, FabricExecutor.class);
 
         register(

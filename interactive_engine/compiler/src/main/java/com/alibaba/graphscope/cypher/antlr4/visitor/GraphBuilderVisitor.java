@@ -18,9 +18,12 @@ package com.alibaba.graphscope.cypher.antlr4.visitor;
 
 import com.alibaba.graphscope.common.antlr4.ExprUniqueAliasInfer;
 import com.alibaba.graphscope.common.antlr4.ExprVisitorResult;
+import com.alibaba.graphscope.common.ir.rel.DummyTableScan;
 import com.alibaba.graphscope.common.ir.rel.GraphProcedureCall;
+import com.alibaba.graphscope.common.ir.rel.ddl.GraphTableModify;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalGetV;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
+import com.alibaba.graphscope.common.ir.rel.type.TargetGraph;
 import com.alibaba.graphscope.common.ir.rel.type.group.GraphAggCall;
 import com.alibaba.graphscope.common.ir.rex.RexTmpVariableConverter;
 import com.alibaba.graphscope.common.ir.tools.GraphBuilder;
@@ -37,6 +40,7 @@ import org.apache.calcite.plan.GraphOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelNode;
+import org.apache.calcite.rel.core.TableModify;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexNode;
@@ -120,6 +124,23 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
         RexNode expr = expressionVisitor.visitOC_Expression(ctx.oC_Expression()).getExpr();
         String alias = Utils.getAliasName(ctx.oC_Variable());
         return builder.unfold(expr, alias);
+    }
+
+    @Override
+    public GraphBuilder visitOC_Create(CypherGSParser.OC_CreateContext ctx) {
+        if (builder.size() == 0) {
+            builder.push(
+                    new DummyTableScan((GraphOptCluster) builder.getCluster(), ImmutableList.of()));
+        }
+        List<TargetGraph> targets = new TargetGraphVisitor(this).visit(ctx.oC_Pattern());
+        targets.forEach(
+                target -> {
+                    TableModify insert =
+                            new GraphTableModify.Insert(
+                                    builder.getCluster(), builder.build(), target);
+                    builder.push(insert);
+                });
+        return builder;
     }
 
     @Override
@@ -279,6 +300,10 @@ public class GraphBuilderVisitor extends CypherGSBaseVisitor<GraphBuilder> {
 
     @Override
     public GraphBuilder visitOC_With(CypherGSParser.OC_WithContext ctx) {
+        if (builder.size() == 0) {
+            builder.push(
+                    new DummyTableScan((GraphOptCluster) builder.getCluster(), ImmutableList.of()));
+        }
         visitOC_ProjectionBody(ctx.oC_ProjectionBody());
         return (ctx.oC_Where() != null) ? visitOC_Where(ctx.oC_Where()) : builder;
     }

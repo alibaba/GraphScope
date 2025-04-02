@@ -36,6 +36,7 @@ import com.alibaba.graphscope.common.ir.runtime.PhysicalPlan;
 import com.alibaba.graphscope.common.ir.runtime.ProcedurePhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.ffi.FfiPhysicalBuilder;
 import com.alibaba.graphscope.common.ir.runtime.proto.GraphRelProtoPhysicalBuilder;
+import com.alibaba.graphscope.common.ir.runtime.write.RequestBuilder;
 import com.alibaba.graphscope.common.ir.type.GraphTypeFactoryImpl;
 import com.alibaba.graphscope.common.utils.ClassUtils;
 import com.alibaba.graphscope.gremlin.plugin.QueryLogger;
@@ -174,7 +175,9 @@ public class GraphPlanner {
             // build physical plan from logical plan
             if (logicalPlan.isReturnEmpty()) {
                 return PhysicalPlan.createEmpty();
-            } else if (logicalPlan.getRegularQuery() != null) {
+            } else if (logicalPlan.getMode() == LogicalPlan.Mode.WRITE_ONLY) {
+                return new RequestBuilder(logicalPlan).build();
+            } else if (logicalPlan.getMode() == LogicalPlan.Mode.READ_WRITE) {
                 String physicalOpt = FrontendConfig.GRAPH_PHYSICAL_OPT.get(graphConfig);
                 if ("proto".equals(physicalOpt.toLowerCase())) {
                     logger.debug("physical type is proto");
@@ -193,9 +196,13 @@ public class GraphPlanner {
                         throw new RuntimeException(e);
                     }
                 }
-            } else {
+            } else if (logicalPlan.getMode() == LogicalPlan.Mode.PROCEDURE) {
                 return new ProcedurePhysicalBuilder(graphConfig, irMeta, logicalPlan).build();
             }
+            throw new IllegalArgumentException(
+                    "invalid logical plan mode: "
+                            + logicalPlan.getMode()
+                            + " in physical plan builder");
         }
 
         public @Nullable QueryLogger getQueryLogger() {

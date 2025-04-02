@@ -42,7 +42,8 @@ import java.util.Map;
 /**
  * return streaming records in a reactive way
  */
-public class CypherRecordProcessor implements QueryExecution, ExecutionResponseListener {
+public class CypherRecordProcessor
+        implements QueryExecution, ExecutionResponseListener<IrResult.Record> {
     private final RecordParser<AnyValue> recordParser;
     private final QuerySubscriber subscriber;
     private final StreamIterator<IrResult.Record> recordIterator;

@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client.type;
+package com.alibaba.graphscope.common.ir.runtime.write;
 
-/**
- * listener to handle response from remote engine service
- */
-public interface ExecutionResponseListener<T> {
-    void onNext(T record);
-
-    void onCompleted();
-
-    void onError(Throwable t);
+public enum Type {
+    ADD_VERTEX,
+    ADD_EDGE,
 }
