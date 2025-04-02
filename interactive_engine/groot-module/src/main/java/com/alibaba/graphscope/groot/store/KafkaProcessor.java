@@ -372,16 +372,15 @@ public class KafkaProcessor {
         long batchSnapshotId;
         int replayCount = 0;
         try (LogReader logReader = this.logService.createReader(storeId, offset, timestamp)) {
-            ReadLogEntry readLogEntry;
+            ConsumerRecord<LogEntry, LogEntry> record;
             batchSnapshotId = latestSnapshotId.get();
-            while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
-                LogEntry logEntry = readLogEntry.getLogEntry();
+            while (!shouldStop && (record = logReader.readNextRecord()) != null) {
+                LogEntry logEntry = record.value();
                 OperationBatch batch = Utils.extractOperations(logEntry.getOperationBatch(), types);
                 if (batch.getOperationCount() == 0) {
                     continue;
                 }
-                ReadLogEntry entry =
-                        new ReadLogEntry(readLogEntry.getOffset(), batchSnapshotId, batch);
+                ReadLogEntry entry = new ReadLogEntry(record.offset(), batchSnapshotId, batch);
                 replayQueue.put(entry);
                 replayCount++;
                 if (replayCount % 10000 == 0) {
