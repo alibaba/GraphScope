@@ -1536,6 +1536,43 @@ ul.nav-tabs {
   } ],
   "x-body-name" : "get_vertex_type"
 };
+    defs["GraphServiceRegistryRecord"] = {
+  "title" : "GraphServiceRegistryRecord",
+  "type" : "object",
+  "properties" : {
+    "graph_id" : {
+      "title" : "graph_id",
+      "type" : "string",
+      "example" : "1"
+    },
+    "service_registry" : {
+      "$ref" : "#/components/schemas/ServiceRegistryRecord"
+    }
+  },
+  "example" : {
+    "graph_id" : "1",
+    "service_registry" : {
+      "instances" : [ {
+        "endpoint" : "ip:port",
+        "metrics" : {
+          "snapshot_id" : "1"
+        }
+      }, {
+        "endpoint" : "ip:port",
+        "metrics" : {
+          "snapshot_id" : "1"
+        }
+      } ],
+      "service_name" : "graphscope",
+      "primary" : {
+        "endpoint" : "ip:port",
+        "metrics" : {
+          "snapshot_id" : "1"
+        }
+      }
+    }
+  }
+};
     defs["JobResponse"] = {
   "type" : "object",
   "properties" : {
@@ -1650,6 +1687,26 @@ ul.nav-tabs {
   },
   "x-body-name" : "query_request"
 };
+    defs["RegistryInstanceRecord"] = {
+  "title" : "RegistryInstanceRecord",
+  "type" : "object",
+  "properties" : {
+    "endpoint" : {
+      "title" : "endpoint",
+      "type" : "string",
+      "example" : "ip:port"
+    },
+    "metrics" : {
+      "$ref" : "#/components/schemas/ServiceMetrics"
+    }
+  },
+  "example" : {
+    "endpoint" : "ip:port",
+    "metrics" : {
+      "snapshot_id" : "1"
+    }
+  }
+};
     defs["SchemaMapping"] = {
   "type" : "object",
   "properties" : {
@@ -1730,6 +1787,55 @@ ul.nav-tabs {
     }
   },
   "description" : "mutable_csr specific parameters"
+};
+    defs["ServiceMetrics"] = {
+  "title" : "ServiceMetrics",
+  "type" : "object",
+  "properties" : {
+    "snapshot_id" : {
+      "title" : "snapshot_id",
+      "type" : "string",
+      "example" : "1"
+    }
+  },
+  "example" : {
+    "snapshot_id" : "1"
+  }
+};
+    defs["ServiceRegistryRecord"] = {
+  "title" : "ServiceRegistryRecord",
+  "type" : "object",
+  "properties" : {
+    "service_name" : {
+      "title" : "service_name",
+      "type" : "string",
+      "example" : "graphscope"
+    },
+    "instances" : {
+      "type" : "array",
+      "items" : {
+        "$ref" : "#/components/schemas/RegistryInstanceRecord"
+      }
+    },
+    "primary" : {
+      "$ref" : "#/components/schemas/RegistryInstanceRecord"
+    }
+  },
+  "example" : {
+    "instances" : {
+      "endpoint" : "ip:port",
+      "metrics" : {
+        "snapshot_id" : "1"
+      }
+    },
+    "service_name" : "graphscope",
+    "primary" : {
+      "endpoint" : "ip:port",
+      "metrics" : {
+        "snapshot_id" : "1"
+      }
+    }
+  }
 };
     defs["ServiceStatus"] = {
   "type" : "object",
@@ -2143,6 +2249,9 @@ ul.nav-tabs {
                       <a href="#api-AdminServiceProcedureManagement-updateProcedure">updateProcedure</a>
                     </li>
                   <li class="nav-header" data-group="AdminServiceServiceManagement"><a href="#api-AdminServiceServiceManagement">API Methods - AdminServiceServiceManagement</a></li>
+                    <li data-group="AdminServiceServiceManagement" data-name="checkServiceReady" class="">
+                      <a href="#api-AdminServiceServiceManagement-checkServiceReady">checkServiceReady</a>
+                    </li>
                     <li data-group="AdminServiceServiceManagement" data-name="getServiceStatus" class="">
                       <a href="#api-AdminServiceServiceManagement-getServiceStatus">getServiceStatus</a>
                     </li>
@@ -2154,6 +2263,13 @@ ul.nav-tabs {
                     </li>
                     <li data-group="AdminServiceServiceManagement" data-name="stopService" class="">
                       <a href="#api-AdminServiceServiceManagement-stopService">stopService</a>
+                    </li>
+                  <li class="nav-header" data-group="AdminServiceServiceRegistry"><a href="#api-AdminServiceServiceRegistry">API Methods - AdminServiceServiceRegistry</a></li>
+                    <li data-group="AdminServiceServiceRegistry" data-name="getServiceRegistryInfo" class="">
+                      <a href="#api-AdminServiceServiceRegistry-getServiceRegistryInfo">getServiceRegistryInfo</a>
+                    </li>
+                    <li data-group="AdminServiceServiceRegistry" data-name="listServiceRegistryInfo" class="">
+                      <a href="#api-AdminServiceServiceRegistry-listServiceRegistryInfo">listServiceRegistryInfo</a>
                     </li>
                   <li class="nav-header" data-group="GraphServiceEdgeManagement"><a href="#api-GraphServiceEdgeManagement">API Methods - GraphServiceEdgeManagement</a></li>
                     <li data-group="GraphServiceEdgeManagement" data-name="addEdge" class="">
@@ -13754,6 +13870,331 @@ $(document).ready(function() {
                   </section>
                 <section id="api-AdminServiceServiceManagement">
                   <h1>AdminServiceServiceManagement</h1>
+                    <div id="api-AdminServiceServiceManagement-checkServiceReady">
+                      <article id="api-AdminServiceServiceManagement-checkServiceReady-0" data-group="User" data-name="checkServiceReady" data-version="0">
+                        <div class="pull-left">
+                          <h1>checkServiceReady</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Check if the service is ready</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/v1/service/ready</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-python">Python</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceManagement-checkServiceReady-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminServiceServiceManagement-checkServiceReady-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X GET \
+ -H "Accept: application/json" \
+ "http://localhost/v1/service/ready"
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.AdminServiceServiceManagementApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminServiceServiceManagementApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi();
+
+        try {
+            'String' result = apiInstance.checkServiceReady();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceManagementApi#checkServiceReady");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+
+try {
+    final result = await api_instance.checkServiceReady();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->checkServiceReady: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.AdminServiceServiceManagementApi;
+
+public class AdminServiceServiceManagementApiExample {
+    public static void main(String[] args) {
+        AdminServiceServiceManagementApi apiInstance = new AdminServiceServiceManagementApi();
+
+        try {
+            'String' result = apiInstance.checkServiceReady();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceManagementApi#checkServiceReady");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+AdminServiceServiceManagementApi *apiInstance = [[AdminServiceServiceManagementApi alloc] init];
+
+[apiInstance checkServiceReadyWithCompletionHandler: 
+              ^('String' output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
+
+// Create an instance of the API class
+var api = new GraphScopeInteractiveApiV03.AdminServiceServiceManagementApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.checkServiceReady(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class checkServiceReadyExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new AdminServiceServiceManagementApi();
+
+            try {
+                'String' result = apiInstance.checkServiceReady();
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling AdminServiceServiceManagementApi.checkServiceReady: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\AdminServiceServiceManagementApi();
+
+try {
+    $result = $api_instance->checkServiceReady();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminServiceServiceManagementApi->checkServiceReady: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::AdminServiceServiceManagementApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::AdminServiceServiceManagementApi->new();
+
+eval {
+    my $result = $api_instance->checkServiceReady();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminServiceServiceManagementApi->checkServiceReady: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.AdminServiceServiceManagementApi()
+
+try:
+    api_response = api_instance.check_service_ready()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminServiceServiceManagementApi->checkServiceReady: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceManagement-checkServiceReady-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate AdminServiceServiceManagementApi;
+
+pub fn main() {
+
+    let mut context = AdminServiceServiceManagementApi::Context::default();
+    let result = client.checkServiceReady(&context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-AdminServiceServiceManagement-checkServiceReady-title-200"></h3>
+                            <p id="examples-AdminServiceServiceManagement-checkServiceReady-description-200" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceManagement200_description = `successful operation`;
+                              var responseAdminServiceServiceManagement200_description_break = responseAdminServiceServiceManagement200_description.indexOf('\n');
+                              if (responseAdminServiceServiceManagement200_description_break == -1) {
+                                $("#examples-AdminServiceServiceManagement-checkServiceReady-title-200").text("Status: 200 - " + responseAdminServiceServiceManagement200_description);
+                              } else {
+                                $("#examples-AdminServiceServiceManagement-checkServiceReady-title-200").text("Status: 200 - " + responseAdminServiceServiceManagement200_description.substring(0, responseAdminServiceServiceManagement200_description_break));
+                                $("#examples-AdminServiceServiceManagement-checkServiceReady-description-200").html(responseAdminServiceServiceManagement200_description.substring(responseAdminServiceServiceManagement200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceManagement-checkServiceReady-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceManagement-checkServiceReady-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceManagement-checkServiceReady-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceManagement-checkServiceReady-200-schema">
+                                <div id="responses-AdminServiceServiceManagement-checkServiceReady-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "successful operation",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/APIResponse"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceManagement-checkServiceReady-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceManagement-checkServiceReady-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceManagement-checkServiceReady-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
                     <div id="api-AdminServiceServiceManagement-getServiceStatus">
                       <article id="api-AdminServiceServiceManagement-getServiceStatus-0" data-group="User" data-name="getServiceStatus" data-version="0">
                         <div class="pull-left">
@@ -15259,6 +15700,962 @@ $(document).ready(function() {
                                   </script>
                                 </div>
                                 <input id='responses-AdminServiceServiceManagement-stopService-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                  </section>
+                <section id="api-AdminServiceServiceRegistry">
+                  <h1>AdminServiceServiceRegistry</h1>
+                    <div id="api-AdminServiceServiceRegistry-getServiceRegistryInfo">
+                      <article id="api-AdminServiceServiceRegistry-getServiceRegistryInfo-0" data-group="User" data-name="getServiceRegistryInfo" data-version="0">
+                        <div class="pull-left">
+                          <h1>getServiceRegistryInfo</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">Get a service registry by graph_id and service_name</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/v1/service/registry/{graph_id}/{service_name}</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-python">Python</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X GET \
+ -H "Accept: application/json" \
+ "http://localhost/v1/service/registry/{graph_id}/{service_name}"
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.AdminServiceServiceRegistryApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminServiceServiceRegistryApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        AdminServiceServiceRegistryApi apiInstance = new AdminServiceServiceRegistryApi();
+        String graphId = graphId_example; // String | 
+        String serviceName = serviceName_example; // String | 
+
+        try {
+            GraphServiceRegistryRecord result = apiInstance.getServiceRegistryInfo(graphId, serviceName);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceRegistryApi#getServiceRegistryInfo");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+final String graphId = new String(); // String | 
+final String serviceName = new String(); // String | 
+
+try {
+    final result = await api_instance.getServiceRegistryInfo(graphId, serviceName);
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->getServiceRegistryInfo: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.AdminServiceServiceRegistryApi;
+
+public class AdminServiceServiceRegistryApiExample {
+    public static void main(String[] args) {
+        AdminServiceServiceRegistryApi apiInstance = new AdminServiceServiceRegistryApi();
+        String graphId = graphId_example; // String | 
+        String serviceName = serviceName_example; // String | 
+
+        try {
+            GraphServiceRegistryRecord result = apiInstance.getServiceRegistryInfo(graphId, serviceName);
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceRegistryApi#getServiceRegistryInfo");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+AdminServiceServiceRegistryApi *apiInstance = [[AdminServiceServiceRegistryApi alloc] init];
+String *graphId = graphId_example; //  (default to null)
+String *serviceName = serviceName_example; //  (default to null)
+
+[apiInstance getServiceRegistryInfoWith:graphId
+    serviceName:serviceName
+              completionHandler: ^(GraphServiceRegistryRecord output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
+
+// Create an instance of the API class
+var api = new GraphScopeInteractiveApiV03.AdminServiceServiceRegistryApi()
+var graphId = graphId_example; // {String} 
+var serviceName = serviceName_example; // {String} 
+
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.getServiceRegistryInfo(graphId, serviceName, callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class getServiceRegistryInfoExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new AdminServiceServiceRegistryApi();
+            var graphId = graphId_example;  // String |  (default to null)
+            var serviceName = serviceName_example;  // String |  (default to null)
+
+            try {
+                GraphServiceRegistryRecord result = apiInstance.getServiceRegistryInfo(graphId, serviceName);
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling AdminServiceServiceRegistryApi.getServiceRegistryInfo: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\AdminServiceServiceRegistryApi();
+$graphId = graphId_example; // String | 
+$serviceName = serviceName_example; // String | 
+
+try {
+    $result = $api_instance->getServiceRegistryInfo($graphId, $serviceName);
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminServiceServiceRegistryApi->getServiceRegistryInfo: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::AdminServiceServiceRegistryApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::AdminServiceServiceRegistryApi->new();
+my $graphId = graphId_example; # String | 
+my $serviceName = serviceName_example; # String | 
+
+eval {
+    my $result = $api_instance->getServiceRegistryInfo(graphId => $graphId, serviceName => $serviceName);
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminServiceServiceRegistryApi->getServiceRegistryInfo: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.AdminServiceServiceRegistryApi()
+graphId = graphId_example # String |  (default to null)
+serviceName = serviceName_example # String |  (default to null)
+
+try:
+    api_response = api_instance.get_service_registry_info(graphId, serviceName)
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminServiceServiceRegistryApi->getServiceRegistryInfo: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate AdminServiceServiceRegistryApi;
+
+pub fn main() {
+    let graphId = graphId_example; // String
+    let serviceName = serviceName_example; // String
+
+    let mut context = AdminServiceServiceRegistryApi::Context::default();
+    let result = client.getServiceRegistryInfo(graphId, serviceName, &context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+                            <div class="methodsubtabletitle">Path parameters</div>
+                            <table id="methodsubtable">
+                                <tr>
+                                  <th width="150px">Name</th>
+                                  <th>Description</th>
+                                </tr>
+                                  <tr><td style="width:150px;">graph_id*</td>
+<td>
+
+
+    <div id="d2e199_getServiceRegistryInfo_graphId">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                                  <tr><td style="width:150px;">service_name*</td>
+<td>
+
+
+    <div id="d2e199_getServiceRegistryInfo_serviceName">
+        <div class="json-schema-view">
+            <div class="primitive">
+                <span class="type">
+                    String
+                </span>
+
+            </div>
+                <div class="inner required">
+                    Required
+                </div>
+        </div>
+    </div>
+</td>
+</tr>
+
+                            </table>
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-200"></h3>
+                            <p id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-200" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceRegistry200_description = `successful operation`;
+                              var responseAdminServiceServiceRegistry200_description_break = responseAdminServiceServiceRegistry200_description.indexOf('\n');
+                              if (responseAdminServiceServiceRegistry200_description_break == -1) {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-200").text("Status: 200 - " + responseAdminServiceServiceRegistry200_description);
+                              } else {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-200").text("Status: 200 - " + responseAdminServiceServiceRegistry200_description.substring(0, responseAdminServiceServiceRegistry200_description_break));
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-200").html(responseAdminServiceServiceRegistry200_description.substring(responseAdminServiceServiceRegistry200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceRegistry-getServiceRegistryInfo-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-200-schema">
+                                <div id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "successful operation",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "$ref" : "#/components/schemas/GraphServiceRegistryRecord"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceRegistry-getServiceRegistryInfo-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-404"></h3>
+                            <p id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-404" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceRegistry404_description = `Not found`;
+                              var responseAdminServiceServiceRegistry404_description_break = responseAdminServiceServiceRegistry404_description.indexOf('\n');
+                              if (responseAdminServiceServiceRegistry404_description_break == -1) {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-404").text("Status: 404 - " + responseAdminServiceServiceRegistry404_description);
+                              } else {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-404").text("Status: 404 - " + responseAdminServiceServiceRegistry404_description.substring(0, responseAdminServiceServiceRegistry404_description_break));
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-404").html(responseAdminServiceServiceRegistry404_description.substring(responseAdminServiceServiceRegistry404_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceRegistry-getServiceRegistryInfo-404" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-404-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-404-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-404-schema">
+                                <div id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-404" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Not found",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "type" : "string",
+        "example" : "Service not found"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-404-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-404');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceRegistry-getServiceRegistryInfo-404-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-500"></h3>
+                            <p id="examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-500" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceRegistry500_description = `Internal error`;
+                              var responseAdminServiceServiceRegistry500_description_break = responseAdminServiceServiceRegistry500_description.indexOf('\n');
+                              if (responseAdminServiceServiceRegistry500_description_break == -1) {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-500").text("Status: 500 - " + responseAdminServiceServiceRegistry500_description);
+                              } else {
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-title-500").text("Status: 500 - " + responseAdminServiceServiceRegistry500_description.substring(0, responseAdminServiceServiceRegistry500_description_break));
+                                $("#examples-AdminServiceServiceRegistry-getServiceRegistryInfo-description-500").html(responseAdminServiceServiceRegistry500_description.substring(responseAdminServiceServiceRegistry500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceRegistry-getServiceRegistryInfo-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-500-schema">
+                                <div id="responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "type" : "string",
+        "example" : "Internal error"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceRegistry-getServiceRegistryInfo-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceRegistry-getServiceRegistryInfo-500-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                        </article>
+                      </div>
+                      <hr>
+                    <div id="api-AdminServiceServiceRegistry-listServiceRegistryInfo">
+                      <article id="api-AdminServiceServiceRegistry-listServiceRegistryInfo-0" data-group="User" data-name="listServiceRegistryInfo" data-version="0">
+                        <div class="pull-left">
+                          <h1>listServiceRegistryInfo</h1>
+                          <p></p>
+                        </div>
+                        <div class="pull-right"></div>
+                        <div class="clearfix"></div>
+                        <p></p>
+                        <p class="marked">List all services registry</p>
+                        <p></p>
+                        <br />
+                        <pre class="prettyprint language-html prettyprinted" data-type="get"><code><span class="pln">/v1/service/registry</span></code></pre>
+                        <p>
+                          <h3>Usage and SDK Samples</h3>
+                        </p>
+                        <ul class="nav nav-tabs nav-tabs-examples">
+                          <li class="active"><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-curl">Curl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-java">Java</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-dart">Dart</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-android">Android</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-groovy">Groovy</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-objc">Obj-C</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-javascript">JavaScript</a></li>
+                          <!--<li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-angular">Angular</a></li>-->
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-csharp">C#</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-php">PHP</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-perl">Perl</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-python">Python</a></li>
+                          <li class=""><a href="#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-rust">Rust</a></li>
+                        </ul>
+
+                        <div class="tab-content">
+                          <div class="tab-pane active" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-curl">
+                            <pre class="prettyprint"><code class="language-bsh">curl -X GET \
+ -H "Accept: application/json" \
+ "http://localhost/v1/service/registry"
+</code></pre>
+                          </div>
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-java">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.*;
+import org.openapitools.client.auth.*;
+import org.openapitools.client.model.*;
+import org.openapitools.client.api.AdminServiceServiceRegistryApi;
+
+import java.io.File;
+import java.util.*;
+
+public class AdminServiceServiceRegistryApiExample {
+    public static void main(String[] args) {
+
+        // Create an instance of the API class
+        AdminServiceServiceRegistryApi apiInstance = new AdminServiceServiceRegistryApi();
+
+        try {
+            array[GraphServiceRegistryRecord] result = apiInstance.listServiceRegistryInfo();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceRegistryApi#listServiceRegistryInfo");
+            e.printStackTrace();
+        }
+    }
+}
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-dart">
+                            <pre class="prettyprint"><code class="language-dart">import 'package:openapi/api.dart';
+
+final api_instance = DefaultApi();
+
+
+try {
+    final result = await api_instance.listServiceRegistryInfo();
+    print(result);
+} catch (e) {
+    print('Exception when calling DefaultApi->listServiceRegistryInfo: $e\n');
+}
+
+</code></pre>
+                          </div>
+
+                          <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-android">
+                            <pre class="prettyprint"><code class="language-java">import org.openapitools.client.api.AdminServiceServiceRegistryApi;
+
+public class AdminServiceServiceRegistryApiExample {
+    public static void main(String[] args) {
+        AdminServiceServiceRegistryApi apiInstance = new AdminServiceServiceRegistryApi();
+
+        try {
+            array[GraphServiceRegistryRecord] result = apiInstance.listServiceRegistryInfo();
+            System.out.println(result);
+        } catch (ApiException e) {
+            System.err.println("Exception when calling AdminServiceServiceRegistryApi#listServiceRegistryInfo");
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+                          </div>
+  <!--
+  <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-groovy">
+  <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+  </div> -->
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-objc">
+                              <pre class="prettyprint"><code class="language-cpp">
+
+// Create an instance of the API class
+AdminServiceServiceRegistryApi *apiInstance = [[AdminServiceServiceRegistryApi alloc] init];
+
+[apiInstance listServiceRegistryInfoWithCompletionHandler: 
+              ^(array[GraphServiceRegistryRecord] output, NSError* error) {
+    if (output) {
+        NSLog(@"%@", output);
+    }
+    if (error) {
+        NSLog(@"Error: %@", error);
+    }
+}];
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-javascript">
+                              <pre class="prettyprint"><code class="language-js">var GraphScopeInteractiveApiV03 = require('graph_scope_interactive_api_v0_3');
+
+// Create an instance of the API class
+var api = new GraphScopeInteractiveApiV03.AdminServiceServiceRegistryApi()
+var callback = function(error, data, response) {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log('API called successfully. Returned data: ' + data);
+  }
+};
+api.listServiceRegistryInfo(callback);
+</code></pre>
+                            </div>
+
+                            <!--<div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-angular">
+              <pre class="prettyprint language-json prettyprinted" data-type="json"><code>Coming Soon!</code></pre>
+            </div>-->
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-csharp">
+                              <pre class="prettyprint"><code class="language-cs">using System;
+using System.Diagnostics;
+using Org.OpenAPITools.Api;
+using Org.OpenAPITools.Client;
+using Org.OpenAPITools.Model;
+
+namespace Example
+{
+    public class listServiceRegistryInfoExample
+    {
+        public void main()
+        {
+
+            // Create an instance of the API class
+            var apiInstance = new AdminServiceServiceRegistryApi();
+
+            try {
+                array[GraphServiceRegistryRecord] result = apiInstance.listServiceRegistryInfo();
+                Debug.WriteLine(result);
+            } catch (Exception e) {
+                Debug.Print("Exception when calling AdminServiceServiceRegistryApi.listServiceRegistryInfo: " + e.Message );
+            }
+        }
+    }
+}
+</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-php">
+                              <pre class="prettyprint"><code class="language-php"><&#63;php
+require_once(__DIR__ . '/vendor/autoload.php');
+
+// Create an instance of the API class
+$api_instance = new OpenAPITools\Client\Api\AdminServiceServiceRegistryApi();
+
+try {
+    $result = $api_instance->listServiceRegistryInfo();
+    print_r($result);
+} catch (Exception $e) {
+    echo 'Exception when calling AdminServiceServiceRegistryApi->listServiceRegistryInfo: ', $e->getMessage(), PHP_EOL;
+}
+?></code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-perl">
+                              <pre class="prettyprint"><code class="language-perl">use Data::Dumper;
+use WWW::OPenAPIClient::Configuration;
+use WWW::OPenAPIClient::AdminServiceServiceRegistryApi;
+
+# Create an instance of the API class
+my $api_instance = WWW::OPenAPIClient::AdminServiceServiceRegistryApi->new();
+
+eval {
+    my $result = $api_instance->listServiceRegistryInfo();
+    print Dumper($result);
+};
+if ($@) {
+    warn "Exception when calling AdminServiceServiceRegistryApi->listServiceRegistryInfo: $@\n";
+}</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-python">
+                              <pre class="prettyprint"><code class="language-python">from __future__ import print_statement
+import time
+import openapi_client
+from openapi_client.rest import ApiException
+from pprint import pprint
+
+# Create an instance of the API class
+api_instance = openapi_client.AdminServiceServiceRegistryApi()
+
+try:
+    api_response = api_instance.list_service_registry_info()
+    pprint(api_response)
+except ApiException as e:
+    print("Exception when calling AdminServiceServiceRegistryApi->listServiceRegistryInfo: %s\n" % e)</code></pre>
+                            </div>
+
+                            <div class="tab-pane" id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-0-rust">
+                              <pre class="prettyprint"><code class="language-rust">extern crate AdminServiceServiceRegistryApi;
+
+pub fn main() {
+
+    let mut context = AdminServiceServiceRegistryApi::Context::default();
+    let result = client.listServiceRegistryInfo(&context).wait();
+
+    println!("{:?}", result);
+}
+</code></pre>
+                            </div>
+                          </div>
+
+                          <h2>Scopes</h2>
+                          <table>
+                            
+                          </table>
+
+                          <h2>Parameters</h2>
+
+
+
+
+
+
+                          <h2>Responses</h2>
+                            <h3 id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-200"></h3>
+                            <p id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-description-200" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceRegistry200_description = `successful operation`;
+                              var responseAdminServiceServiceRegistry200_description_break = responseAdminServiceServiceRegistry200_description.indexOf('\n');
+                              if (responseAdminServiceServiceRegistry200_description_break == -1) {
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-200").text("Status: 200 - " + responseAdminServiceServiceRegistry200_description);
+                              } else {
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-200").text("Status: 200 - " + responseAdminServiceServiceRegistry200_description.substring(0, responseAdminServiceServiceRegistry200_description_break));
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-description-200").html(responseAdminServiceServiceRegistry200_description.substring(responseAdminServiceServiceRegistry200_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceRegistry-listServiceRegistryInfo-200" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-200-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-200-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-200-schema">
+                                <div id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-schema-200" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "successful operation",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "type" : "array",
+        "items" : {
+          "$ref" : "#/components/schemas/GraphServiceRegistryRecord"
+        }
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-200-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-schema-200');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceRegistry-listServiceRegistryInfo-200-schema-data' type='hidden' value=''></input>
+                              </div>
+                            </div>
+                            <h3 id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-500"></h3>
+                            <p id="examples-AdminServiceServiceRegistry-listServiceRegistryInfo-description-500" class="marked"></p>
+                            <script>
+                              var responseAdminServiceServiceRegistry500_description = `Internal error`;
+                              var responseAdminServiceServiceRegistry500_description_break = responseAdminServiceServiceRegistry500_description.indexOf('\n');
+                              if (responseAdminServiceServiceRegistry500_description_break == -1) {
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-500").text("Status: 500 - " + responseAdminServiceServiceRegistry500_description);
+                              } else {
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-title-500").text("Status: 500 - " + responseAdminServiceServiceRegistry500_description.substring(0, responseAdminServiceServiceRegistry500_description_break));
+                                $("#examples-AdminServiceServiceRegistry-listServiceRegistryInfo-description-500").html(responseAdminServiceServiceRegistry500_description.substring(responseAdminServiceServiceRegistry500_description_break));
+                              }
+                            </script>
+
+
+                            <ul id="responses-detail-AdminServiceServiceRegistry-listServiceRegistryInfo-500" class="nav nav-tabs nav-tabs-examples" >
+                                <li class="active">
+                                  <a data-toggle="tab" href="#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-500-schema">Schema</a>
+                                </li>
+
+
+
+
+                            </ul>
+
+
+                            <div class="tab-content" id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-500-wrapper" style='margin-bottom: 10px;'>
+                              <div class="tab-pane active" id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-500-schema">
+                                <div id="responses-AdminServiceServiceRegistry-listServiceRegistryInfo-schema-500" class="exampleStyle">
+                                  <script>
+                                    $(document).ready(function() {
+                                      var schemaWrapper = {
+  "description" : "Internal error",
+  "content" : {
+    "application/json" : {
+      "schema" : {
+        "type" : "string",
+        "example" : "Internal error"
+      }
+    }
+  }
+};
+                                      var schema = findNode('schema',schemaWrapper).schema;
+                                      if (!schema) {
+                                        schema = schemaWrapper.schema;
+                                      }
+                                      if (schema == null) {
+                                        return;
+                                      }
+                                      if (schema.$ref != null) {
+                                        schema = defsParser.$refs.get(schema.$ref);
+                                        if (schema.properties != null) {
+                                          Object.keys(schema.properties).forEach( (item) => {
+                                            if (schema.properties[item].$ref != null) {
+                                              schema.properties[item] = defsParser.$refs.get(schema.properties[item].$ref);
+                                            }
+                                          });
+                                        }
+                                      } else if (schema.items != null && schema.items.$ref != null) {
+                                        schema.items = defsParser.$refs.get(schema.items.$ref);
+                                      } else {
+                                        schemaWrapper.definitions = Object.assign({}, defs);
+                                        $RefParser.dereference(schemaWrapper).catch(function(err) {
+                                          console.log(err);
+                                        });
+                                      }
+
+                                      var view = new JSONSchemaView(schema, 3);
+                                      $('#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-500-schema-data').val(JSON.stringify(schema));
+                                      var result = $('#responses-AdminServiceServiceRegistry-listServiceRegistryInfo-schema-500');
+                                      result.empty();
+                                      result.append(view.render());
+                                    });
+                                  </script>
+                                </div>
+                                <input id='responses-AdminServiceServiceRegistry-listServiceRegistryInfo-500-schema-data' type='hidden' value=''></input>
                               </div>
                             </div>
                         </article>
