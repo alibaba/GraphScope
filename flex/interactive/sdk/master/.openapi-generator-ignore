@@ -22,16 +22,23 @@
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
 
-
 README.md
 setup.py
-gs_interactive/client
-gs_interactive/models/long_text.py
-gs_interactive/models/date_type.py
-gs_interactive/models/time_stamp_type.py
-gs_interactive/configuration.py
-gs_interactive/api_client.py
+gs_interactive_admin/controllers/admin_service_graph_management_controller.py
+gs_interactive_admin/controllers/admin_service_procedure_management_controller.py
+gs_interactive_admin/controllers/graph_service_edge_management_controller.py
+gs_interactive_admin/controllers/query_service_controller.py
+gs_interactive_admin/controllers/admin_service_job_management_controller.py
+gs_interactive_admin/controllers/admin_service_service_management_controller.py
+gs_interactive_admin/controllers/graph_service_vertex_management_controller.py
+gs_interactive_admin/controllers/utils_controller.py
+gs_interactive_admin/controllers/security_controller.py
+gs_interactive_admin/controllers/admin_service_service_registry_controller.py
+gs_interactive_admin/test/
+gs_interactive_admin/encoder.py
 requirements.txt
 test-requirements.txt
-test/
 setup.cfg
+gs_interactive_admin/__init__.py
+gs_interactive_admin/__main__.py
+gs_interactive_admin/util.py
