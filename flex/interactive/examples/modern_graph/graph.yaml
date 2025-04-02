@@ -1,7 +1,9 @@
+id: 1
 name: modern_graph # then must have a modern dir under ${data} directory
 version: v0.1
-store_type: mutable_csr  # v6d, groot, gart
+store_type: mutable_csr # v6d, groot, gart
 description: A graph with 2 vertex types and 2 edge types
+remote_path: oss://graphscope/interactive/63/1742371604887
 schema:
   vertex_types:
     - type_id: 0

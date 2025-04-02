@@ -15,18 +15,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import logging
+import connexion
 from typing import Dict
 from typing import Tuple
 from typing import Union
 
-import connexion
-
-from gs_interactive_admin import util
 from gs_interactive_admin.models.job_status import JobStatus  # noqa: E501
-
-logger = logging.getLogger("interactive")
+from gs_interactive_admin import util
+from gs_interactive_admin.core.job.job_manager import get_job_manager
+import logging
 
 
 def delete_job_by_id(job_id):  # noqa: E501
@@ -39,7 +36,7 @@ def delete_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return "do some magic!"
+    return get_job_manager().delete_job_by_id(job_id)
 
 
 def get_job_by_id(job_id):  # noqa: E501
@@ -52,7 +49,9 @@ def get_job_by_id(job_id):  # noqa: E501
 
     :rtype: Union[JobStatus, Tuple[JobStatus, int], Tuple[JobStatus, int, Dict[str, str]]
     """
-    return "do some magic!"
+    logging.info("Get job by id: %s", job_id)
+    data = get_job_manager().get_job_by_id(job_id)
+    return JobStatus.from_dict(data)
 
 
 def list_jobs():  # noqa: E501
@@ -63,4 +62,6 @@ def list_jobs():  # noqa: E501
 
     :rtype: Union[List[JobStatus], Tuple[List[JobStatus], int], Tuple[List[JobStatus], int, Dict[str, str]]
     """
-    return "do some magic!"
+    ret_list = [JobStatus.from_dict(data) for data in get_job_manager().list_jobs()]
+    logging.info("List jobs: %s", ret_list)
+    return ret_list

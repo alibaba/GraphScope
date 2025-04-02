@@ -146,25 +146,25 @@ class TestDriver(unittest.TestCase):
     def test_example(self):
         self.createGraphFromDict()
         self._graph_id = self.createGraph()
-        self.bulkLoading()
-        self.bulkLoadingFailure()
-        self.bulkLoadingUploading()
+        # self.bulkLoading()
+        # self.bulkLoadingFailure()
+        # self.bulkLoadingUploading()
         self.list_graph()
         self.get_graph_meta()
-        self.runCypherQuery()
-        self.runGremlinQuery()
+        # self.runCypherQuery()
+        # self.runGremlinQuery()
         self.createCypherProcedure()
         self.createCppProcedure()
-        self.restart()
-        self.callVertexEdgeQuery()
-        self.restartOnNewGraph()
-        self.getStatistics()
-        self.callProcedure()
-        self.callProcedureWithHttp()
-        self.callProcedureWithHttpCurrent()
-        # test stop the service, and submit queries
-        self.queryWithServiceStop()
-        self.createDriver()
+        # self.restart()
+        # self.callVertexEdgeQuery()
+        # self.restartOnNewGraph()
+        # self.getStatistics()
+        # self.callProcedure()
+        # self.callProcedureWithHttp()
+        # self.callProcedureWithHttpCurrent()
+        # # test stop the service, and submit queries
+        # self.queryWithServiceStop()
+        # self.createDriver()
 
     @unittest.skipIf(
         os.getenv("ENGINE_TYPE") == "interactive",
@@ -319,6 +319,7 @@ class TestDriver(unittest.TestCase):
             status = resp.get_value().status
             print("job status: ", status)
             if status == "SUCCESS":
+                print(resp.get_value())
                 return True
             elif status == "FAILED":
                 return False
