@@ -87,5 +87,8 @@ message Value {
     Date32 date              = 14;
     Time32 time              = 15;
     Timestamp timestamp      = 16;
+    uint32 u32               = 17;
+    uint64 u64               = 18;
+    float f32               = 19;
   }
 }

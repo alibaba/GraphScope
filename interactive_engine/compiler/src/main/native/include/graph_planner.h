@@ -23,7 +23,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 
-#include "flex/proto_generated_gie/physical.pb.h"
+#include "physical.pb.h"
 
 #ifndef GRAPH_PLANNER_JNI_INVOKER
 #define GRAPH_PLANNER_JNI_INVOKER 1 // 1: JNI, 0: subprocess

@@ -17,9 +17,11 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::convert::{TryFrom, TryInto};
+use std::panic;
 
 use dyn_type::arith::{BitOperand, Exp};
 use dyn_type::object;
+use dyn_type::object::RawType;
 use dyn_type::{BorrowObject, Object};
 use ir_common::error::{ParsePbError, ParsePbResult};
 use ir_common::expr_parse::to_suffix_expr;
@@ -207,11 +209,45 @@ fn apply_arith<'a>(
     if a.eq(&Object::None) || b.eq(&Object::None) {
         return Ok(Object::None);
     }
+    let primitive_a = a.as_primitive()?;
+    let primitive_b = b.as_primitive()?;
     Ok(match arith {
-        Add => Object::Primitive(a.as_primitive()? + b.as_primitive()?),
-        Sub => Object::Primitive(a.as_primitive()? - b.as_primitive()?),
-        Mul => Object::Primitive(a.as_primitive()? * b.as_primitive()?),
-        Div => Object::Primitive(a.as_primitive()? / b.as_primitive()?),
+        Add => {
+            // catch overflow error, as the result may overflow, e.g., i32::MAX + 1
+            let res = panic::catch_unwind(|| primitive_a + primitive_b).map_err(|_| {
+                ExprEvalError::OtherErr(
+                    format!("overflow error: {:?} + {:?}", primitive_a, primitive_b).to_string(),
+                )
+            })?;
+            Object::Primitive(res)
+        }
+        Sub => {
+            // catch overflow error, as the result may overflow, e.g., i32::MIN - 1
+            let res = panic::catch_unwind(|| primitive_a - primitive_b).map_err(|e| {
+                ExprEvalError::OtherErr(
+                    format!("overflow error: {:?} - {:?}", primitive_a, primitive_b).to_string(),
+                )
+            })?;
+            Object::Primitive(res)
+        }
+        Mul => {
+            // catch overflow error, as the result may overflow, e.g., i32::MAX * 2
+            let res = panic::catch_unwind(|| primitive_a * primitive_b).map_err(|_| {
+                ExprEvalError::OtherErr(
+                    format!("overflow error: {:?} * {:?}", primitive_a, primitive_b).to_string(),
+                )
+            })?;
+            Object::Primitive(res)
+        }
+        Div => {
+            // catch overflow error, as the result may overflow, e.g., i32::MIN / -1
+            let res = panic::catch_unwind(|| primitive_a / primitive_b).map_err(|_| {
+                ExprEvalError::OtherErr(
+                    format!("overflow error: {:?} / {:?}", primitive_a, primitive_b).to_string(),
+                )
+            })?;
+            Object::Primitive(res)
+        }
         Mod => Object::Primitive(a.as_primitive()? % b.as_primitive()?),
         Exp => Object::Primitive(a.as_primitive()?.exp(b.as_primitive()?)),
         Bitand => Object::Primitive(a.as_primitive()?.bit_and(b.as_primitive()?)),
@@ -295,7 +331,9 @@ pub(crate) fn apply_logical<'a>(
         if b_opt.is_some() {
             let b = b_opt.unwrap();
             // process null values
-            if a.eq(&Object::None) || b.eq(&Object::None) {
+            // "a.eq(&Object::None)" has a potential bug, that if a is empty string "", it will be treated as None.
+            // Fix it by using raw_type() == RawType::None
+            if a.raw_type() == RawType::None || b.raw_type() == RawType::None {
                 match logical {
                     And => {
                         if (a != Object::None && !a.eval_bool::<(), NoneContext>(None)?)
@@ -678,7 +716,7 @@ impl TryFrom<common_pb::ExprOpr> for Operand {
                     Ok(Self::VarMap(vec))
                 }
                 Map(key_vals) => Operand::try_from(key_vals),
-                _ => Err(ParsePbError::ParseError("invalid operators for an Operand".to_string())),
+                _ => Err(ParsePbError::ParseError(format!("invalid operators for an Operand {:?}", item))),
             }
         } else {
             Err(ParsePbError::from("empty value provided"))
@@ -1580,5 +1618,18 @@ mod tests {
             let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
             assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), expected);
         }
+    }
+
+    #[test]
+    fn test_eval_empty_string() {
+        let map1: HashMap<NameOrId, Object> =
+            vec![(NameOrId::from("emptyProp".to_string()), Object::String("".to_string()))]
+                .into_iter()
+                .collect();
+
+        let ctxt = Vertices { vec: vec![Vertex::new(1, Some(9.into()), DynDetails::new(map1))] };
+        let case = "@0.emptyProp == \"\""; // true
+        let eval = Evaluator::try_from(str_to_expr_pb(case.to_string()).unwrap()).unwrap();
+        assert_eq!(eval.eval::<_, Vertices>(Some(&ctxt)).unwrap(), object!(true));
     }
 }

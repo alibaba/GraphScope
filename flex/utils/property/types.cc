@@ -626,9 +626,9 @@ Any ConvertStringToAny(const std::string& value, const gs::PropertyType& type) {
   } else if (type == gs::PropertyType::StringView()) {
     return gs::Any(std::string_view(value));
   } else {
-    LOG(FATAL) << "Unsupported type: " << type;
+    LOG(ERROR) << "Unsupported type: " << type.ToString();
+    return gs::Any();
   }
-  return gs::Any();
 }
 
 }  // namespace gs

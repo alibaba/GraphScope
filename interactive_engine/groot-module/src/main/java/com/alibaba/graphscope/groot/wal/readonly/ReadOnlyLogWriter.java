@@ -36,6 +36,10 @@ public class ReadOnlyLogWriter implements LogWriter {
         return offset;
     }
 
+    public Future<RecordMetadata> appendAsync(LogEntry logEntry) throws IOException {
+        return null;
+    }
+
     public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) throws IOException {
         return null;
     }

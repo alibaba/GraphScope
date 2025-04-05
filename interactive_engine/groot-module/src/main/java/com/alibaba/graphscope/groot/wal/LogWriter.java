@@ -34,6 +34,8 @@ public interface LogWriter extends AutoCloseable {
 
     long append(int partition, LogEntry logEntry) throws IOException;
 
+    public Future<RecordMetadata> appendAsync(LogEntry logEntry) throws IOException;
+
     public Future<RecordMetadata> appendAsync(int partition, LogEntry logEntry) throws IOException;
 
     void close() throws IOException;

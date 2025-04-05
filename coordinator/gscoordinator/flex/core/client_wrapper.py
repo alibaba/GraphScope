@@ -368,6 +368,8 @@ class ClientWrapper(object):
     def gremlin_service_available(self) -> bool:
         return self._client.gremlin_service_available()
 
+    def pod_available(self) -> bool:
+        return self._client.pod_available()
 
 client_wrapper = None
 

@@ -161,7 +161,7 @@ public class KafkaAppender {
                     OperationBatch batch = entry.getValue().build();
                     // logger.info("Log writer append storeId [{}], batch size: {}", storeId,
                     // batch.getOperationCount());
-                    logWriter.append(storeId, new LogEntry(ingestSnapshotId.get(), batch));
+                    logWriter.appendAsync(storeId, new LogEntry(ingestSnapshotId.get(), batch));
                 }
             } catch (Exception e) {
                 // write failed, just throw out to fail this task
@@ -256,7 +256,7 @@ public class KafkaAppender {
                         if (batch.getOperationCount() == 0) {
                             continue;
                         }
-                        logWriter.append(storeId, new LogEntry(batchSnapshotId, batch));
+                        logWriter.appendAsync(storeId, new LogEntry(batchSnapshotId, batch));
                         replayCount++;
                     }
                     ids.add(batchSnapshotId + 1);

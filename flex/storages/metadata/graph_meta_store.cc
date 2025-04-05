@@ -125,15 +125,15 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     shortest_path_among_three.params.push_back(
         {"label_name1", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid1", PropertyType::kInt64, false});
+        {"oid1", PropertyType::kString, false});
     shortest_path_among_three.params.push_back(
         {"label_name2", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid2", PropertyType::kInt64, false});
+        {"oid2", PropertyType::kString, false});
     shortest_path_among_three.params.push_back(
         {"label_name3", PropertyType::kString, true});
     shortest_path_among_three.params.push_back(
-        {"oid3", PropertyType::kInt64, false});
+        {"oid3", PropertyType::kString, false});
     shortest_path_among_three.returns.push_back(
         {"path", PropertyType::kString});
     builtin_plugins.push_back(shortest_path_among_three);
