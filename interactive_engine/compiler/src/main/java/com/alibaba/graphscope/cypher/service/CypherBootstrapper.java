@@ -17,7 +17,6 @@
 package com.alibaba.graphscope.cypher.service;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
-import com.alibaba.graphscope.common.client.write.HttpWriteClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.QueryCache;
@@ -70,8 +69,7 @@ public class CypherBootstrapper extends CommunityBootstrapper {
                         IrMetaQueryCallback.class,
                         ExecutionClient.class,
                         QueryCache.class,
-                        GraphPlanner.class,
-                        HttpWriteClient.class);
+                        GraphPlanner.class);
     }
 
     @Override
