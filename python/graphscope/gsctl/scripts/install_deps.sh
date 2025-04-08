@@ -600,9 +600,11 @@ install_libgrape_lite() {
   pushd "${tempdir}" || exit
   git clone -b ${branch} https://github.com/alibaba/libgrape-lite.git
   cd libgrape-lite
+  # Configure the minimum required version of cmake to 3.5: https://github.com/alibaba/GraphScope/actions/runs/14216252611/job/39833569906?pr=4591
   cmake . -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
-    -DBUILD_LIBGRAPELITE_TESTS=OFF
+    -DBUILD_LIBGRAPELITE_TESTS=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   make -j$(nproc)
   make install
   popd || exit
