@@ -178,10 +178,16 @@ public class GraphTypeInference {
                             dstLabels.add(k.getDstLabel());
                         });
         if (srcLabels.stream().noneMatch(dstLabels::contains)) {
-            if (childrenLabels.stream().anyMatch(srcLabels::contains)) {
+            if (childrenLabels.stream()
+                    .collect(Collectors.toSet())
+                    .equals(srcLabels.stream().collect(Collectors.toSet()))) {
                 return GraphOpt.Expand.OUT;
             }
-            return GraphOpt.Expand.IN;
+            if (childrenLabels.stream()
+                    .collect(Collectors.toSet())
+                    .equals(dstLabels.stream().collect(Collectors.toSet()))) {
+                return GraphOpt.Expand.IN;
+            }
         }
         return expand.getOpt();
     }
