@@ -19,30 +19,13 @@
 package com.alibaba.graphscope.sdk;
 
 import com.alibaba.graphscope.common.config.Configs;
-import com.alibaba.graphscope.common.ir.meta.IrMeta;
-import com.alibaba.graphscope.common.ir.meta.fetcher.IrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.fetcher.StaticIrMetaFetcher;
-import com.alibaba.graphscope.common.ir.meta.reader.IrMetaReader;
 import com.alibaba.graphscope.common.ir.planner.GraphRelOptimizer;
 import com.alibaba.graphscope.common.ir.planner.PlannerGroupManager;
 import com.alibaba.graphscope.common.ir.tools.GraphPlanner;
 import com.alibaba.graphscope.common.ir.tools.LogicalPlanFactory;
-import com.google.common.collect.ImmutableList;
 
 public class GraphPlanerInstance {
     private static GraphPlanner planner;
-    private static IrMeta cachedIrMeta;
-
-    public static synchronized IrMeta getIrMeta(
-            String schema, String stats, Configs configs, GraphPlanner planner) throws Exception {
-        if (cachedIrMeta == null) {
-            IrMetaReader reader = new PlanUtils.StringMetaReader(schema, stats, configs);
-            IrMetaFetcher metaFetcher =
-                    new StaticIrMetaFetcher(reader, ImmutableList.of(planner.getOptimizer()));
-            cachedIrMeta = metaFetcher.fetch().get();
-        }
-        return cachedIrMeta;
-    }
 
     public static synchronized GraphPlanner getInstance(Configs configs) {
         if (planner == null) {
