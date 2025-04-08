@@ -173,7 +173,7 @@ public class GraphPlanner {
 
         public PhysicalPlan planPhysical(LogicalPlan logicalPlan) {
             // build physical plan from logical plan
-            if (logicalPlan.isReturnEmpty()) {
+            if (logicalPlan.isReturnEmpty() || logicalPlan.getMode() == LogicalPlan.Mode.SCHEMA) {
                 return PhysicalPlan.createEmpty();
             } else if (logicalPlan.getMode() == LogicalPlan.Mode.WRITE_ONLY) {
                 return new RequestBuilder(logicalPlan).build();
