@@ -51,7 +51,6 @@ public class CypherBootstrapper extends CommunityBootstrapper {
     private final Dependencies externalDependencies;
     private final List<Class<?>> externalClassTypes;
     private final ExecutionClient client;
-    private final HttpWriteClient writeClient;
 
     public CypherBootstrapper(
             Configs graphConfig,
@@ -59,19 +58,11 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
             QueryCache queryCache,
-            GraphPlanner graphPlanner,
-            HttpWriteClient writeClient) {
+            GraphPlanner graphPlanner) {
         this.client = client;
-        this.writeClient = writeClient;
         this.externalDependencies =
                 createExternalDependencies(
-                        graphConfig,
-                        idGenerator,
-                        queryCallback,
-                        client,
-                        queryCache,
-                        graphPlanner,
-                        writeClient);
+                        graphConfig, idGenerator, queryCallback, client, queryCache, graphPlanner);
         this.externalClassTypes =
                 Arrays.asList(
                         Configs.class,
@@ -92,7 +83,6 @@ public class CypherBootstrapper extends CommunityBootstrapper {
                                 () -> {
                                     try {
                                         client.close();
-                                        writeClient.close();
                                     } catch (Exception e) {
                                         logger.error("close client error", e);
                                     }
@@ -110,11 +100,10 @@ public class CypherBootstrapper extends CommunityBootstrapper {
             IrMetaQueryCallback queryCallback,
             ExecutionClient client,
             QueryCache queryCache,
-            GraphPlanner graphPlanner,
-            HttpWriteClient writeClient) {
+            GraphPlanner graphPlanner) {
         Dependencies dependencies = new Dependencies();
         dependencies.satisfyDependencies(
-                configs, idGenerator, queryCallback, client, queryCache, graphPlanner, writeClient);
+                configs, idGenerator, queryCallback, client, queryCache, graphPlanner);
         return dependencies;
     }
 

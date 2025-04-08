@@ -17,6 +17,7 @@
 package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.HttpExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
 import com.alibaba.graphscope.common.client.write.HttpWriteClient;
@@ -82,8 +83,7 @@ public class GraphQueryExecutor extends FabricExecutor {
             IrMetaQueryCallback metaQueryCallback,
             ExecutionClient client,
             QueryCache queryCache,
-            GraphPlanner graphPlanner,
-            HttpWriteClient writeClient) {
+            GraphPlanner graphPlanner) {
         super(
                 config,
                 planner,
@@ -99,7 +99,11 @@ public class GraphQueryExecutor extends FabricExecutor {
         this.client = client;
         this.queryCache = queryCache;
         this.graphPlanner = graphPlanner;
-        this.writeClient = writeClient;
+        if (client instanceof HttpExecutionClient) {
+            this.writeClient = new HttpWriteClient(((HttpExecutionClient) client).getSession());
+        } else {
+            this.writeClient = null;
+        }
     }
 
     /**

@@ -17,11 +17,9 @@
 package com.alibaba.graphscope;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
-import com.alibaba.graphscope.common.client.HttpExecutionClient;
 import com.alibaba.graphscope.common.client.channel.ChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostURIChannelFetcher;
 import com.alibaba.graphscope.common.client.channel.HostsRpcChannelFetcher;
-import com.alibaba.graphscope.common.client.write.HttpWriteClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.config.GraphConfig;
@@ -112,11 +110,6 @@ public class GraphServer {
             this.gremlinServer.start();
         }
         if (!FrontendConfig.NEO4J_BOLT_SERVER_DISABLED.get(configs)) {
-            HttpWriteClient writeClient = null;
-            if (executionClient instanceof HttpExecutionClient) {
-                writeClient =
-                        new HttpWriteClient(((HttpExecutionClient) executionClient).getSession());
-            }
             GraphPlanner graphPlanner =
                     new GraphPlanner(configs, new LogicalPlanFactory.Cypher(), optimizer);
             this.cypherBootstrapper =
@@ -126,8 +119,7 @@ public class GraphServer {
                             metaQueryCallback,
                             executionClient,
                             queryCache,
-                            graphPlanner,
-                            writeClient);
+                            graphPlanner);
             Path neo4jHomePath = getNeo4jHomePath();
             this.cypherBootstrapper.start(
                     neo4jHomePath,
