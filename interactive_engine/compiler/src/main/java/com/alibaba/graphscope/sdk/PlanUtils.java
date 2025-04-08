@@ -35,6 +35,7 @@ import com.alibaba.graphscope.common.ir.tools.LogicalPlan;
 import com.alibaba.graphscope.groot.common.schema.api.GraphStatistics;
 import com.alibaba.graphscope.proto.frontend.Code;
 import com.google.common.collect.ImmutableMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,13 +62,15 @@ public class PlanUtils {
             long startTime = System.currentTimeMillis();
             Configs configs = Configs.Factory.create(configPath);
             GraphPlanner graphPlanner = GraphPlanerInstance.getInstance(configs);
-//            IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson, configs);
-//            IrMetaFetcher metaFetcher =
-//                    new StaticIrMetaFetcher(reader, ImmutableList.of(graphPlanner.getOptimizer()));
-//            IrMeta irMeta = metaFetcher.fetch().get();
-            IrMeta irMeta = GraphPlanerInstance.getIrMeta(schemaYaml, statsJson, configs, graphPlanner);
-            GraphPlanner.PlannerInstance plannerInstance =
-                    graphPlanner.instance(query, irMeta);
+            //            IrMetaReader reader = new StringMetaReader(schemaYaml, statsJson,
+            // configs);
+            //            IrMetaFetcher metaFetcher =
+            //                    new StaticIrMetaFetcher(reader,
+            // ImmutableList.of(graphPlanner.getOptimizer()));
+            //            IrMeta irMeta = metaFetcher.fetch().get();
+            IrMeta irMeta =
+                    GraphPlanerInstance.getIrMeta(schemaYaml, statsJson, configs, graphPlanner);
+            GraphPlanner.PlannerInstance plannerInstance = graphPlanner.instance(query, irMeta);
             GraphPlanner.Summary summary = plannerInstance.plan();
             LogicalPlan logicalPlan = summary.getLogicalPlan();
             PhysicalPlan<byte[]> physicalPlan = summary.getPhysicalPlan();

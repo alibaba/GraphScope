@@ -34,10 +34,7 @@ public class GraphPlanerInstance {
     private static IrMeta cachedIrMeta;
 
     public static synchronized IrMeta getIrMeta(
-            String schema,
-            String stats,
-            Configs configs,
-            GraphPlanner planner) throws Exception {
+            String schema, String stats, Configs configs, GraphPlanner planner) throws Exception {
         if (cachedIrMeta == null) {
             IrMetaReader reader = new PlanUtils.StringMetaReader(schema, stats, configs);
             IrMetaFetcher metaFetcher =
