@@ -41,6 +41,9 @@ public class YamlConfigs extends Configs {
                         "graph.planner.cbo.glogue.size",
                         (Configs configs) -> configs.get("compiler.planner.cbo.glogue.size"))
                 .put(
+                        "graph.planner.trim.class.names",
+                        (Configs configs) -> configs.get("compiler.planner.trim_class_names"))
+                .put(
                         "graph.planner.rules",
                         (Configs configs) -> {
                             String rules = configs.get("compiler.planner.rules");
