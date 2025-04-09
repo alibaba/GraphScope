@@ -19,7 +19,7 @@ BULK_LOADER=${FLEX_HOME}/build/bin/bulk_loader
 SERVER_BIN=${FLEX_HOME}/build/bin/interactive_server
 GIE_HOME=${FLEX_HOME}/../interactive_engine/
 
-# 
+#
 if [ $# -ne 3 ]; then
   echo "Receives: $# args, need 3 args"
   echo "Usage: $0 <INTERACTIVE_WORKSPACE> <GRAPH_NAME> <ENGINE_CONFIG>"
@@ -131,7 +131,7 @@ start_compiler_service(){
 run_cypher_write_test(){
     echo "run cypher write test"
     pushd ${GIE_HOME}/compiler
-    cmd="mvn test -Dtest=com.alibaba.graphscope.cypher.integration.modern.ModernGraphWriteTest"
+    cmd="mvn test -Dskip.ir.core=true -Dtest=com.alibaba.graphscope.cypher.integration.modern.ModernGraphWriteTest"
     echo "Run cypher write test with command: ${cmd}"
     ${cmd}
     info "Run cypher write test success"
