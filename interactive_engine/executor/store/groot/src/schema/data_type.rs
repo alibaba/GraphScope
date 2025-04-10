@@ -33,6 +33,11 @@ pub enum DataType {
     ListDouble = 14,
     ListString = 15,
     ListBytes = 16,
+    UInt = 17,
+    ULong = 18,
+    Date32 = 19,
+    Time32 = 20,
+    Timestamp = 21,
     Map = 100,
     Unknown = 1000,
 }
@@ -71,6 +76,11 @@ impl DataType {
             14 => DataType::ListDouble,
             15 => DataType::ListString,
             16 => DataType::ListBytes,
+            17 => DataType::UInt,
+            18 => DataType::ULong,
+            19 => DataType::Date32,
+            20 => DataType::Time32,
+            21 => DataType::Timestamp,
             _ => DataType::Unknown,
         }
     }
@@ -105,12 +115,17 @@ pub fn parse_str_to_data_type(value: &str) -> Result<DataType, String> {
         "char" => Ok(DataType::Char),
         "short" => Ok(DataType::Short),
         "int" => Ok(DataType::Int),
+        "uint" => Ok(DataType::UInt),
         "long" => Ok(DataType::Long),
+        "ulong" => Ok(DataType::ULong),
         "float" => Ok(DataType::Float),
         "double" => Ok(DataType::Double),
         "bytes" => Ok(DataType::Bytes),
         "string" => Ok(DataType::String),
         "date" => Ok(DataType::Date),
+        "date32" => Ok(DataType::Date32),
+        "time32" => Ok(DataType::Time32),
+        "timestamp" => Ok(DataType::Timestamp),
         v => {
             if v.starts_with("list<") {
                 let tmp = &v[5..v.len() - 1];
@@ -144,12 +159,17 @@ impl<'a> From<&'a str> for DataType {
             "char" => DataType::Char,
             "short" => DataType::Short,
             "int" => DataType::Int,
+            "uint" => DataType::UInt,
             "long" => DataType::Long,
+            "ulong" => DataType::ULong,
             "float" => DataType::Float,
             "double" => DataType::Double,
             "bytes" => DataType::Bytes,
             "string" => DataType::String,
             "date" => DataType::Date,
+            "date32" => DataType::Date32,
+            "time32" => DataType::Time32,
+            "timestamp" => DataType::Timestamp,
             v => {
                 if v.starts_with("list<") {
                     let tmp = &v[5..v.len() - 1];
