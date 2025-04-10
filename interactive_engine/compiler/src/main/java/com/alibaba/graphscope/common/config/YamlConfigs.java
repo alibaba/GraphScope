@@ -41,6 +41,9 @@ public class YamlConfigs extends Configs {
                         "graph.planner.cbo.glogue.size",
                         (Configs configs) -> configs.get("compiler.planner.cbo.glogue.size"))
                 .put(
+                        "graph.planner.trim.class.names",
+                        (Configs configs) -> configs.get("compiler.planner.trim_class_names"))
+                .put(
                         "graph.planner.rules",
                         (Configs configs) -> {
                             String rules = configs.get("compiler.planner.rules");
@@ -216,7 +219,10 @@ public class YamlConfigs extends Configs {
                         (Configs configs) -> configs.get("compiler.calcite_default_charset"))
                 .put(
                         "gremlin.script.language.name",
-                        (Configs configs) -> configs.get("compiler.gremlin_script_language_name"));
+                        (Configs configs) -> configs.get("compiler.gremlin_script_language_name"))
+                .put(
+                        "graph.type.inference.enabled",
+                        (Configs configs) -> configs.get("compiler.type_inference_enabled"));
         valueGetterMap = mapBuilder.build();
     }
 

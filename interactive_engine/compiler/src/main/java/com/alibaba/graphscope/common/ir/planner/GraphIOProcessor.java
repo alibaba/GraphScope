@@ -16,6 +16,8 @@
 
 package com.alibaba.graphscope.common.ir.planner;
 
+import com.alibaba.graphscope.common.config.Configs;
+import com.alibaba.graphscope.common.config.FrontendConfig;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.glogue.CountHandler;
 import com.alibaba.graphscope.common.ir.meta.glogue.DetailedExpandCost;
@@ -456,6 +458,10 @@ public class GraphIOProcessor {
         }
 
         private void checkPattern(Pattern pattern) {
+            Configs configs = (Configs) builder.getContext();
+            if (configs != null && !FrontendConfig.GRAPH_TYPE_INFERENCE_ENABLED.get(configs)) {
+                return;
+            }
             for (PatternEdge edge : pattern.getEdgeSet()) {
                 PatternVertex src = edge.getSrcVertex();
                 PatternVertex dst = edge.getDstVertex();
