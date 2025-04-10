@@ -28,6 +28,9 @@
 #include "flex/storages/metadata/metadata_store_factory.h"
 #include "flex/utils/result.h"
 #include "flex/utils/service_utils.h"
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+#include "flex/engines/http_server/kafka_wal_ingester.h"
+#endif
 
 #include <yaml-cpp/yaml.h>
 #include <boost/process.hpp>
@@ -175,6 +178,12 @@ class GraphDBService {
 
   bool check_compiler_ready() const;
 
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+  bool start_kafka_wal_ingester();
+
+  bool stop_kafka_wal_ingester();
+#endif
+
  private:
   GraphDBService() = default;
 
@@ -197,6 +206,9 @@ class GraphDBService {
   boost::process::child compiler_process_;
   // handler for metadata store
   std::shared_ptr<gs::IGraphMetaStore> metadata_store_;
+#ifdef BUILD_KAFKA_WAL_WRITER_PARSER
+  std::unique_ptr<KafkaWalIngester> kafka_wal_ingester_;
+#endif
 };
 
 }  // namespace server

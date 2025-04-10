@@ -262,3 +262,39 @@ In Interactive's execution engine, transactions such as `ReadTransaction`, `Upda
 2. If a transaction returns `false` during the `commit()` process, the error occurred prior to applying the WAL to the graph data. This type of failure could arise during the construction of the WAL or during its writing phase.
 
 3. It is important to note that errors can still occur when replaying the WAL to the graph database. Replaying might fail due to limitations in resources or due to unforeseen bugs. **However,** any errors encountered during this stage will be handled via exceptions or may result in process failure. Currently, there is no established mechanism to handle such failures. Future improvements should focus on implementing failover strategies, potentially allowing the GraphDB to continue replaying the WAL until it succeeds.
+
+## Persisting WAL to kafka
+
+Kafka-based WAL storage is also provided. Follows [kafka-quick-start](https://kafka.apache.org/quickstart).
+### Install kafka
+
+```bash
+wget https://dlcdn.apache.org/kafka/3.9.0/kafka_2.13-3.9.0.tgz
+tar -zxf kafka_2.13-3.9.0.tgz
+cd kafka_2.13-3.9.0
+```
+
+### kafka with kraft
+
+```bash
+KAFKA_CLUSTER_ID="$(bin/kafka-storage.sh random-uuid)"
+bin/kafka-storage.sh format --standalone -t $KAFKA_CLUSTER_ID -c config/kraft/reconfig-server.properties
+bin/kafka-server-start.sh config/kraft/reconfig-server.properties
+```
+
+### Create topic
+
+```bash
+bin/kafka-topics.sh --create --topic kafka-test --bootstrap-server localhost:9092
+# describe the topic
+bin/kafka-topics.sh --describe --topic kafka-test --bootstrap-server localhost:9092
+```
+
+### Test KafkaWalWriter and KafkaWalParser
+
+```bash
+cd flex && mkdir build
+cd build && cmake .. -DBUILD_TEST=ON && make -j
+./tests/hqps/kafka_test localhost:902 kafka-test
+# run the kafka test
+```

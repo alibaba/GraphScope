@@ -98,7 +98,7 @@ UpdateTransaction::UpdateTransaction(const GraphDBSession& session,
   updated_edge_data_.resize(csr_num);
 }
 
-UpdateTransaction::~UpdateTransaction() { release(); }
+UpdateTransaction::~UpdateTransaction() { Abort(); }
 
 timestamp_t UpdateTransaction::timestamp() const { return timestamp_; }
 
@@ -127,7 +127,18 @@ bool UpdateTransaction::Commit() {
   return true;
 }
 
-void UpdateTransaction::Abort() { release(); }
+void UpdateTransaction::Abort() {
+  if (timestamp_ != std::numeric_limits<timestamp_t>::max()) {
+    auto header = reinterpret_cast<WalHeader*>(arc_.GetBuffer());
+    header->length = 0;
+    header->timestamp = timestamp_;
+    header->type = 0;
+    if (!logger_.append(arc_.GetBuffer(), arc_.GetSize())) {
+      LOG(ERROR) << "Failed to append wal log";
+    }
+    release();
+  }
+}
 
 bool UpdateTransaction::AddVertex(label_t label, const Any& oid,
                                   const std::vector<Any>& props) {

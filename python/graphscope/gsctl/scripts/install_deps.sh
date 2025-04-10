@@ -868,9 +868,9 @@ install_analytical_java_dependencies() {
   fi
 }
 
-INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags")
-INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev")
-INTERACTIVE_CENTOS=("rapidjson-devel")
+INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags" "librdkafka")
+INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev" "librdkafka-dev")
+INTERACTIVE_CENTOS=("rapidjson-devel" "librdkafka-devel")
 
 install_interactive_dependencies() {
   # dependencies package
@@ -883,6 +883,7 @@ install_interactive_dependencies() {
     # hiactor is only supported on ubuntu
     install_hiactor
     install_mimalloc
+    install_cppkafka
     ${SUDO} sh -c 'echo "fs.aio-max-nr = 1048576" >> /etc/sysctl.conf'
     ${SUDO} sysctl -p /etc/sysctl.conf
   else
@@ -890,6 +891,7 @@ install_interactive_dependencies() {
     install_arrow
     install_boost
     install_mimalloc
+    install_cppkafka
   fi
   # libgrape-lite
   install_libgrape_lite "v0.3.2"
