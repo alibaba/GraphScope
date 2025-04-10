@@ -52,14 +52,16 @@ void signal_handler(int signal) {
 #ifdef BUILD_WITH_OSS
 
 void check_oss_object_not_exist(std::string& data_path,
-                                std::string& object_path,
+                                std::string& indices_object_path,
+                                std::string& statistic_object_path,
                                 gs::OSSConf& oss_conf) {
   auto pos = data_path.find("/", 6);
   if (pos == std::string::npos) {
     LOG(FATAL) << "Invalid data path: " << data_path;
   }
   oss_conf.bucket_name_ = data_path.substr(6, pos - 6);
-  object_path = data_path.substr(pos + 1);
+  indices_object_path = data_path.substr(pos + 1);
+  statistic_object_path = indices_object_path + "_statistics.json";
   oss_conf.load_conf_from_env();
   // check whether the object exists
   auto oss_reader = std::make_shared<gs::OSSRemoteStorageDownloader>(oss_conf);
@@ -67,9 +69,9 @@ void check_oss_object_not_exist(std::string& data_path,
     LOG(FATAL) << "Failed to open oss reader";
   }
   std::vector<std::string> path_list;
-  auto status = oss_reader->List(object_path, path_list);
+  auto status = oss_reader->List(indices_object_path, path_list);
   if (status.ok() && path_list.size() > 0) {
-    LOG(FATAL) << "Object already exists: " << object_path
+    LOG(FATAL) << "Object already exists: " << indices_object_path
                << ", list size: " << path_list.size()
                << ", please remove the object and try again.";
   }
@@ -78,7 +80,8 @@ void check_oss_object_not_exist(std::string& data_path,
 }
 
 int32_t upload_data_dir_to_oss(const std::filesystem::path& data_dir_path,
-                               const std::string& object_path,
+                               const std::string& indices_object_path,
+                               const std::string& statistic_object_path,
                                const gs::OSSConf& oss_conf) {
   // zip the data directory
   std::string zip_file = data_dir_path.string() + ".zip";
@@ -93,22 +96,38 @@ int32_t upload_data_dir_to_oss(const std::filesystem::path& data_dir_path,
     return -1;
   }
 
-  auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
-  if (!oss_writer || !oss_writer->Open().ok()) {
-    LOG(ERROR) << "Failed to open oss writer";
-    return -1;
+  {
+    auto oss_writer = std::make_shared<gs::OSSRemoteStorageUploader>(oss_conf);
+    if (!oss_writer || !oss_writer->Open().ok()) {
+      LOG(ERROR) << "Failed to open oss writer";
+      return -1;
+    }
+    // upload the zip file to oss
+    auto status = oss_writer->Put(zip_file, indices_object_path, false);
+    if (!status.ok()) {
+      LOG(ERROR) << "Failed to upload data to oss: " << status.ToString();
+      return -1;
+    }
+    // upload the statistic file to oss
+    auto statistics_file = data_dir_path.string() + "/statistics.json";
+    if (std::filesystem::exists(statistics_file)) {
+      status = oss_writer->Put(statistics_file, statistic_object_path, false);
+    } else {
+      LOG(ERROR) << "Statistic file not found: " << statistics_file;
+    }
+    if (!status.ok()) {
+      LOG(ERROR) << "Failed to upload statistics json to oss: "
+                 << status.ToString();
+      return -1;
+    }
+    status = oss_writer->Close();
+    if (!status.ok()) {
+      LOG(ERROR) << "Failed to close oss writer: " << status.ToString();
+      return -1;
+    }
   }
-  auto status = oss_writer->Put(zip_file, object_path, false);
-  if (!status.ok()) {
-    LOG(ERROR) << "Failed to upload data to oss: " << status.ToString();
-    return -1;
-  }
-  status = oss_writer->Close();
-  if (!status.ok()) {
-    LOG(ERROR) << "Failed to close oss writer: " << status.ToString();
-    return -1;
-  }
-  LOG(INFO) << "Successfully uploaded data to oss: " << object_path
+
+  LOG(INFO) << "Successfully uploaded data to oss: " << indices_object_path
             << ", it is in zip format";
   std::filesystem::remove(zip_file);
   std::filesystem::remove_all(data_dir_path);
@@ -166,11 +185,14 @@ int main(int argc, char** argv) {
    * If the data path is an oss path, the data will be uploaded to oss after
    * loading to a temporary directory. To improve the performance of the
    * performance, bulk_loader will zip the data directory before uploading.
-   * The data path should be in the format of oss://bucket_name/object_path
+   * The data path should be in the format of
+   * oss://bucket_name/indices_object_path, and the statistics file will be
+   * uploaded to indices_object_path + "_statistics.json"
    */
 #ifdef BUILD_WITH_OSS
   bool upload_to_oss = false;
-  std::string object_path = "";
+  std::string indices_object_path = "";
+  std::string statistics_object_path = "";
   auto oss_conf = gs::OSSConf();
 #endif
   std::string bulk_load_config_path = "";
@@ -227,7 +249,8 @@ int main(int argc, char** argv) {
   if (data_path.find("oss://") == 0) {
 #ifdef BUILD_WITH_OSS
     upload_to_oss = true;
-    check_oss_object_not_exist(data_path, object_path, oss_conf);
+    check_oss_object_not_exist(data_path, indices_object_path,
+                               statistics_object_path, oss_conf);
 #else
     LOG(ERROR) << "OSS is not supported in this build";
     return -1;
@@ -279,8 +302,13 @@ int main(int argc, char** argv) {
   LOG(INFO) << "Finished bulk loading in " << t << " seconds.";
 
 #ifdef BUILD_WITH_OSS
+  // If build_with_oss, we open the data_dir, and generate the statistic file
+  gs::MutablePropertyFragment frag;
+  frag.Open(data_dir_path.string(), 1);
+  frag.generateStatistics(data_dir_path.string());
   if (upload_to_oss) {
-    return upload_data_dir_to_oss(data_dir_path, object_path, oss_conf);
+    return upload_data_dir_to_oss(data_dir_path, indices_object_path,
+                                  statistics_object_path, oss_conf);
   }
 #endif
 

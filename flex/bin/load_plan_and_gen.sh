@@ -249,6 +249,8 @@ compile_hqps_so() {
     query_name="${last_file_name%.pb}"
   elif [[ $last_file_name == *.cc ]]; then
     query_name="${last_file_name%.cc}"
+  elif [[ $last_file_name == *.cpp ]]; then
+    query_name="${last_file_name%.cpp}"
   elif [[ $last_file_name == *.cypher ]]; then
     query_name="${last_file_name%.cypher}"
   else
