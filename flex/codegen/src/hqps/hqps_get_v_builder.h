@@ -79,10 +79,10 @@ std::pair<std::string, std::string> make_getv_opt_call_code(
   std::string var_name = ctx.GetNextGetVOptName();
   std::stringstream ss;
 
-  boost::format formater(GET_V_OPT_NO_FILTER_TEMPLATE_STR);
-  formater % var_name % internal::get_v_type_2_str(get_v_type) %
+  boost::format formatter(GET_V_OPT_NO_FILTER_TEMPLATE_STR);
+  formatter % var_name % internal::get_v_type_2_str(get_v_type) %
       label_ids_to_array_str(vertex_labels);
-  return std::make_pair(var_name, formater.str());
+  return std::make_pair(var_name, formatter.str());
 }
 
 internal::GetVType vopt_pb_to_internal(const physical::GetV::VOpt& v_opt) {
@@ -164,14 +164,14 @@ class GetVOpBuilder {
     VLOG(10) << "Before deduplicate: " << gs::to_string(vertex_labels_)
              << ", after dedup: " << gs::to_string(tmp);
     if (expr_name_.empty()) {
-      boost::format formater(GET_V_NO_FILTER_TEMPLATE_STR);
-      formater % get_v_opt_var % internal::get_v_type_2_str(v_opt_) %
+      boost::format formatter(GET_V_NO_FILTER_TEMPLATE_STR);
+      formatter % get_v_opt_var % internal::get_v_type_2_str(v_opt_) %
           label_ids_to_array_str(tmp) % next_ctx_name % append_opt %
           input_col_str % ctx_.GraphVar() % prev_ctx_name;
-      get_v_code = formater.str();
+      get_v_code = formatter.str();
       // no filter
     } else {
-      boost::format formater(GET_V_FILTER_TEMPLATE_STR);
+      boost::format formatter(GET_V_FILTER_TEMPLATE_STR);
       // with filter
       std::string expr_var_name = ctx_.GetNextExprVarName();
       std::string expr_call_str;
@@ -199,11 +199,11 @@ class GetVOpBuilder {
         }
         selectors_str = ss.str();
       }
-      formater % expr_var_name % expr_name_ % expr_call_str % selectors_str %
+      formatter % expr_var_name % expr_name_ % expr_call_str % selectors_str %
           get_v_opt_var % internal::get_v_type_2_str(v_opt_) %
           label_ids_to_array_str(tmp) % next_ctx_name % append_opt %
           input_col_str % ctx_.GraphVar() % prev_ctx_name;
-      get_v_code = formater.str();
+      get_v_code = formatter.str();
     }
     VLOG(10) << "Finish building getv code";
 
