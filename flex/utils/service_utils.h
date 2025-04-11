@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <rapidjson/pointer.h>
 #include <rapidjson/rapidjson.h>
+#include <signal.h>
 #include <sys/sysinfo.h>
 #include <sys/types.h>
 #include <unistd.h>

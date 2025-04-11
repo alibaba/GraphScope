@@ -868,9 +868,9 @@ install_analytical_java_dependencies() {
   fi
 }
 
-INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags")
-INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev")
-INTERACTIVE_CENTOS=("rapidjson-devel")
+INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags" "yaml-cpp" "protobuf")
+INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev" "libyaml-cpp-dev" "libprotobuf-dev" "libgflags-dev")
+INTERACTIVE_CENTOS=("rapidjson-devel" "glog-devel")
 
 install_interactive_dependencies() {
   # dependencies package
