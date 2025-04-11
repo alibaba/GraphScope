@@ -79,6 +79,9 @@ kill_service(){
     rm ${INTERACTIVE_WORKSPACE}/data/1 || (err "rm builtin graph failed")
     info "Kill Service success"
     rm -rf /tmp/neo4j-* || true
+    # clean the wal
+    rm -rf ${GRAPH_CSR_DATA_DIR}/wal || true
+    rm -rf ${GRAPH_CSR_DATA_DIR}/runtime || true
 }
 
 # kill service when exit
