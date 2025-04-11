@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package com.alibaba.graphscope.common.client.type;
+package com.alibaba.graphscope.common.ir.runtime.write;
 
-/**
- * listener to handle response from remote engine service
- */
-public interface ExecutionResponseListener<T> {
-    void onNext(T record);
+public class Request<T> {
+    public final Type type;
+    public final T request;
 
-    void onCompleted();
+    public Request(Type type, T request) {
+        this.type = type;
+        this.request = request;
+    }
 
-    void onError(Throwable t);
+    @Override
+    public String toString() {
+        return "Request{" + "type=" + type + ", request=" + request + '}';
+    }
 }

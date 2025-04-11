@@ -17,14 +17,15 @@
 package com.alibaba.graphscope.cypher.executor;
 
 import com.alibaba.graphscope.common.client.ExecutionClient;
+import com.alibaba.graphscope.common.client.HttpExecutionClient;
 import com.alibaba.graphscope.common.client.type.ExecutionRequest;
 import com.alibaba.graphscope.common.client.type.ExecutionResponseListener;
+import com.alibaba.graphscope.common.client.write.HttpWriteClient;
 import com.alibaba.graphscope.common.config.Configs;
 import com.alibaba.graphscope.common.config.QueryTimeoutConfig;
 import com.alibaba.graphscope.common.exception.FrontendException;
 import com.alibaba.graphscope.common.ir.meta.IrMeta;
 import com.alibaba.graphscope.common.ir.meta.procedure.StoredProcedureMeta;
-import com.alibaba.graphscope.common.ir.rex.RexProcedureCall;
 import com.alibaba.graphscope.common.ir.tools.*;
 import com.alibaba.graphscope.common.manager.IrMetaQueryCallback;
 import com.alibaba.graphscope.common.utils.ClassUtils;
@@ -67,6 +68,8 @@ public class GraphQueryExecutor extends FabricExecutor {
     private final QueryCache queryCache;
     private final GraphPlanner graphPlanner;
 
+    private final HttpWriteClient writeClient;
+
     public GraphQueryExecutor(
             FabricConfig config,
             FabricPlanner planner,
@@ -96,6 +99,11 @@ public class GraphQueryExecutor extends FabricExecutor {
         this.client = client;
         this.queryCache = queryCache;
         this.graphPlanner = graphPlanner;
+        if (client instanceof HttpExecutionClient) {
+            this.writeClient = new HttpWriteClient(((HttpExecutionClient) client).getSession());
+        } else {
+            this.writeClient = null;
+        }
     }
 
     /**
@@ -181,8 +189,31 @@ public class GraphQueryExecutor extends FabricExecutor {
                                 listener.onCompleted();
                             }
                         };
-            } else if (metaProcedureCall(planSummary.getLogicalPlan())) {
+            } else if (planSummary.getLogicalPlan().getMode() == LogicalPlan.Mode.SCHEMA) {
                 executor = StoredProcedureMeta.Mode.SCHEMA;
+            } else if (planSummary.getLogicalPlan().getMode() == LogicalPlan.Mode.WRITE_ONLY) {
+                Preconditions.checkArgument(
+                        writeClient != null,
+                        "write operations is unsupported in current execution engine");
+                executor =
+                        new GraphPlanExecutor() {
+                            @Override
+                            public void execute(
+                                    GraphPlanner.Summary summary,
+                                    IrMeta irMeta,
+                                    ExecutionResponseListener listener) {
+                                writeClient.submit(
+                                        new ExecutionRequest(
+                                                jobId,
+                                                jobName,
+                                                summary.getLogicalPlan(),
+                                                summary.getPhysicalPlan()),
+                                        listener,
+                                        irMeta,
+                                        timeoutConfig,
+                                        statusCallback.getQueryLogger());
+                            }
+                        };
             } else {
                 executor =
                         new GraphPlanExecutor() {
@@ -229,12 +260,6 @@ public class GraphQueryExecutor extends FabricExecutor {
 
     private QueryTimeoutConfig getQueryTimeoutConfig() {
         return new QueryTimeoutConfig(fabricConfig.getTransactionTimeout().toMillis());
-    }
-
-    private boolean metaProcedureCall(LogicalPlan plan) {
-        if (!(plan.getProcedureCall() instanceof RexProcedureCall)) return false;
-        RexProcedureCall procedureCall = (RexProcedureCall) plan.getProcedureCall();
-        return procedureCall.getMode() == StoredProcedureMeta.Mode.SCHEMA;
     }
 
     private void logCacheHit(QueryCache.Key key, QueryCache.Value value) {

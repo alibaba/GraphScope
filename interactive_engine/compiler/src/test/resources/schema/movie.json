@@ -30,7 +30,7 @@
             "name": "id"
           },
           "data_type": 1,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {
@@ -62,7 +62,7 @@
             "name": "id"
           },
           "data_type": 1,
-          "is_primary_key": false
+          "is_primary_key": true
         },
         {
           "key": {
