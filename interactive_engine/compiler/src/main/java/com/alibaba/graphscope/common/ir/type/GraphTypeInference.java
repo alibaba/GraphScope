@@ -135,16 +135,61 @@ public class GraphTypeInference {
             }
         }
         RelDataType oldType = getType(top);
+        RelNode newTop = top;
         if (!typeEquals(oldType, newType)) {
             updated.add(top);
-            RelNode newTop = newRel(top, newType);
+            newTop = newRel(top, newType);
+        }
+        newTop = newExpandOpt(newTop, newNeighbors);
+        if (top != newTop) {
             RelNode parent = relGraph.getParent(top);
             if (parent != null) {
                 parent.replaceInput(0, newTop);
             }
-            return newTop;
         }
-        return top;
+        return newTop;
+    }
+
+    private GraphOpt.Expand getExpandOpt(
+            GraphLogicalExpand expand, GraphSchemaType expandType, List<RelNode> children) {
+        if (expand.getOpt() != GraphOpt.Expand.BOTH) {
+            return expand.getOpt();
+        }
+        List<String> childrenLabels = Lists.newArrayList();
+        children.forEach(
+                c -> {
+                    RelDataType type = getType(c);
+                    if (type instanceof GraphSchemaType) {
+                        childrenLabels.addAll(
+                                ((GraphSchemaType) type)
+                                        .getLabelType().getLabelsEntry().stream()
+                                                .map(k -> k.getLabel())
+                                                .collect(Collectors.toList()));
+                    }
+                });
+        List<String> srcLabels = Lists.newArrayList();
+        List<String> dstLabels = Lists.newArrayList();
+        expandType
+                .getLabelType()
+                .getLabelsEntry()
+                .forEach(
+                        k -> {
+                            srcLabels.add(k.getSrcLabel());
+                            dstLabels.add(k.getDstLabel());
+                        });
+        if (srcLabels.stream().noneMatch(dstLabels::contains)) {
+            if (childrenLabels.stream()
+                    .collect(Collectors.toSet())
+                    .equals(srcLabels.stream().collect(Collectors.toSet()))) {
+                return GraphOpt.Expand.OUT;
+            }
+            if (childrenLabels.stream()
+                    .collect(Collectors.toSet())
+                    .equals(dstLabels.stream().collect(Collectors.toSet()))) {
+                return GraphOpt.Expand.IN;
+            }
+        }
+        return expand.getOpt();
     }
 
     private boolean typeEquals(RelDataType type1, RelDataType type2) {
@@ -698,6 +743,49 @@ public class GraphTypeInference {
                     pxd.getUntilCondition(),
                     pxd.getAliasName(),
                     pxd.getStartAlias());
+        }
+        return rel;
+    }
+
+    private RelNode newExpandOpt(RelNode rel, List<RelNode> children) {
+        if (rel instanceof GraphLogicalExpand) {
+            GraphLogicalExpand expand = (GraphLogicalExpand) rel;
+            GraphSchemaType expandType =
+                    (GraphSchemaType) expand.getRowType().getFieldList().get(0).getType();
+            GraphOpt.Expand newOpt = getExpandOpt(expand, expandType, children);
+            if (expand.getOpt() != newOpt) {
+                GraphLogicalExpand newExpand =
+                        GraphLogicalExpand.create(
+                                (GraphOptCluster) builder.getCluster(),
+                                ImmutableList.of(),
+                                expand.getInputs().isEmpty() ? null : expand.getInput(0),
+                                newOpt,
+                                expand.getTableConfig(),
+                                expand.getAliasName(),
+                                expand.getStartAlias(),
+                                expand.isOptional(),
+                                expand.getFilters(),
+                                expandType);
+                return newExpand;
+            }
+        } else if (rel instanceof GraphLogicalPathExpand) {
+            GraphLogicalPathExpand pxd = (GraphLogicalPathExpand) rel;
+            RelNode newExpand = newExpandOpt(pxd.getExpand(), children);
+            if (newExpand != pxd.getExpand()) {
+                return GraphLogicalPathExpand.create(
+                        (GraphOptCluster) builder.getCluster(),
+                        ImmutableList.of(),
+                        pxd.getInput(),
+                        newExpand,
+                        pxd.getGetV(),
+                        pxd.getOffset(),
+                        pxd.getFetch(),
+                        pxd.getResultOpt(),
+                        pxd.getPathOpt(),
+                        pxd.getUntilCondition(),
+                        pxd.getAliasName(),
+                        pxd.getStartAlias());
+            }
         }
         return rel;
     }

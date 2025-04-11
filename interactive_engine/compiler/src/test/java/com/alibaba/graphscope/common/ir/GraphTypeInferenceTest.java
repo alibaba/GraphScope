@@ -251,4 +251,48 @@ public class GraphTypeInferenceTest {
         }
         Assert.fail();
     }
+
+    @Test
+    public void person_likes_post_type_test() {
+        RelNode match =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a:PERSON)-[:KNOWS]-(:PERSON)-[:LIKES]-(c:POST) Return c",
+                                Utils.mockGraphBuilder("schema/ldbc.json"))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(c=[c], isAppend=[false])\n"
+                        + "  GraphLogicalSingleMatch(input=[null],"
+                        + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[POST]}],"
+                        + " alias=[c], opt=[OTHER])\n"
+                        + "  GraphLogicalExpand(tableConfig=[[EdgeLabel(LIKES, PERSON, POST)]],"
+                        + " alias=[_], opt=[OUT])\n"
+                        + "    GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[_], opt=[OTHER])\n"
+                        + "      GraphLogicalExpand(tableConfig=[{isAll=false, tables=[KNOWS]}],"
+                        + " alias=[_], opt=[BOTH])\n"
+                        + "        GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON]}],"
+                        + " alias=[a], opt=[VERTEX])\n"
+                        + "], matchOpt=[INNER])",
+                match.explain().trim());
+    }
+
+    @Test
+    public void person_likes_post_type_test_2() {
+        RelNode match =
+                com.alibaba.graphscope.cypher.antlr4.Utils.eval(
+                                "Match (a)-[:LIKES]-(c) Return c",
+                                Utils.mockGraphBuilder("schema/ldbc.json"))
+                        .build();
+        Assert.assertEquals(
+                "GraphLogicalProject(c=[c], isAppend=[false])\n"
+                    + "  GraphLogicalSingleMatch(input=[null],"
+                    + " sentence=[GraphLogicalGetV(tableConfig=[{isAll=false, tables=[PERSON, POST,"
+                    + " COMMENT]}], alias=[c], opt=[OTHER])\n"
+                    + "  GraphLogicalExpand(tableConfig=[{isAll=false, tables=[LIKES]}], alias=[_],"
+                    + " opt=[BOTH])\n"
+                    + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[PERSON, POST,"
+                    + " COMMENT]}], alias=[a], opt=[VERTEX])\n"
+                    + "], matchOpt=[INNER])",
+                match.explain().trim());
+    }
 }
