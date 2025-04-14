@@ -341,6 +341,13 @@ jobs:
            ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_ENGINE_HOME}/compiler/src/test/resources/statistics/modern_statistics.json \
           "MATCH(n) return count(n);" /tmp/physical_plan_gen_config.yaml
 
+    - name: Tests cypher write
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_cypher_write_test.sh ${INTERACTIVE_WORKSPACE} modern_graph ./interactive_config_test.yaml
+
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest

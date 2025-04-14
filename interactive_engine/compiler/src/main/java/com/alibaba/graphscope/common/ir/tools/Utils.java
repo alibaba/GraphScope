@@ -23,6 +23,8 @@ import com.alibaba.graphscope.common.ir.rel.graph.GraphLogicalPathExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalExpand;
 import com.alibaba.graphscope.common.ir.rel.graph.GraphPhysicalGetV;
 import com.alibaba.graphscope.common.ir.type.GraphLabelType;
+import com.alibaba.graphscope.common.ir.type.GraphNameOrId;
+import com.alibaba.graphscope.common.ir.type.GraphProperty;
 import com.alibaba.graphscope.common.ir.type.GraphSchemaType;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -38,6 +40,7 @@ import org.apache.calcite.rel.type.RelDataTypeField;
 import org.apache.calcite.rel.type.RelRecordType;
 import org.apache.calcite.rel.type.StructKind;
 import org.apache.calcite.sql.SqlExplainLevel;
+import org.apache.calcite.util.ImmutableBitSet;
 import org.apache.calcite.util.NlsString;
 import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Sarg;
@@ -240,5 +243,21 @@ public class Utils {
             alias = ((GraphPhysicalGetV) rel).getAliasName();
         }
         return alias;
+    }
+
+    public static ImmutableBitSet getPropertyIds(
+            GraphProperty property, GraphSchemaType schemaType) {
+        if (property.getOpt() != GraphProperty.Opt.KEY) return ImmutableBitSet.of();
+        GraphNameOrId key = property.getKey();
+        if (key.getOpt() == GraphNameOrId.Opt.ID) {
+            return ImmutableBitSet.of(key.getId());
+        }
+        for (int i = 0; i < schemaType.getFieldList().size(); ++i) {
+            RelDataTypeField field = schemaType.getFieldList().get(i);
+            if (field.getName().equals(key.getName())) {
+                return ImmutableBitSet.of(i);
+            }
+        }
+        return ImmutableBitSet.of();
     }
 }
