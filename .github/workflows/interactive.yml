@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   build-interactive:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -68,7 +68,7 @@ jobs:
 
 
   test-hqps-engine:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
@@ -421,7 +421,7 @@ jobs:
 
   # test the different combination of cmake options: -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
   test-cmake-options:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     strategy:
@@ -441,7 +441,7 @@ jobs:
         sudo make -j4
 
   test-AOCC-compilation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
@@ -469,7 +469,7 @@ jobs:
         sudo make -j4
 
   test-flex:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
