@@ -95,7 +95,7 @@ jobs:
 
   build-wheels:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v4
@@ -175,7 +175,7 @@ jobs:
 
   build-image:
     if: (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && github.repository == 'alibaba/GraphScope')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-wheels]
 
     steps:
@@ -242,7 +242,7 @@ jobs:
 
   ubuntu-python-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-wheels]
     strategy:
       fail-fast: false
@@ -298,7 +298,7 @@ jobs:
 
   centos-test:
     if: ${{ (github.ref == 'refs/heads/main' && github.repository == 'alibaba/GraphScope') || (github.event_name == 'workflow_dispatch') }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-wheels]
     container:
       image: centos:8
