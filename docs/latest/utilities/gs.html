@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Error Codes" href="error_codes.html" /><link rel="prev" title="How to Find logs" href="how_to_find_logs.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Command-line Utility gsctl - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,10 +691,10 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="command-line-utility-gsctl">
-<h1>Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#command-line-utility-gsctl" title="Permalink to this heading">¶</a></h1>
+<h1>Command-line Utility <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#command-line-utility-gsctl" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">gsctl</span></code> is a command-line utility for GraphScope. It provides a set of functionalities to make it easy to use GraphScope. These functionalities include building images and packages, managing sessions and resources, and more.</p>
 <section id="install-update-gsctl">
-<h2>Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#install-update-gsctl" title="Permalink to this heading">¶</a></h2>
+<h2>Install/Update <code class="docutils literal notranslate"><span class="pre">gsctl</span></code><a class="headerlink" href="#install-update-gsctl" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>gsctl
 <span class="c1"># or force reinstall gsctl by:</span>
 $<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>gsctl<span class="w"> </span>--force-reinstall<span class="w"> </span>-U
@@ -712,11 +711,11 @@ $<span class="w"> </span>make<span class="w"> </span>gsctl
 <p>This will install <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> in an editable mode, which means that any changes you make to the source code will be reflected in the installed version of <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>.</p>
 </section>
 <section id="commands">
-<h2>Commands<a class="headerlink" href="#commands" title="Permalink to this heading">¶</a></h2>
+<h2>Commands<a class="headerlink" href="#commands" title="Link to this heading">¶</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you can do the following things. Always remember to use <code class="docutils literal notranslate"><span class="pre">--help</span></code> on a command to get more information.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> command-line utility supports two modes of operation: utility scripts and client/server mode. You can switch between these modes using the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> and <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> commands.</p>
 <section id="utility-scripts">
-<h3>Utility Scripts<a class="headerlink" href="#utility-scripts" title="Permalink to this heading">¶</a></h3>
+<h3>Utility Scripts<a class="headerlink" href="#utility-scripts" title="Link to this heading">¶</a></h3>
 <p>Default, the <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> provide helper functions and utilities that can be run using gsctl alone.
 <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> acts as the command-line entrypoint for GraphScope. Some examples of utility scripts are:</p>
 <ul class="simple">
@@ -729,11 +728,11 @@ $<span class="w"> </span>make<span class="w"> </span>gsctl
 </ul>
 </section>
 <section id="client-server-mode">
-<h3>Client/Server Mode<a class="headerlink" href="#client-server-mode" title="Permalink to this heading">¶</a></h3>
+<h3>Client/Server Mode<a class="headerlink" href="#client-server-mode" title="Link to this heading">¶</a></h3>
 <p>To switch to the client/server mode, use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">connect</span></code> command. By default, this command connects gsctl to a launched coordinator using the configuration file located at <code class="docutils literal notranslate"><span class="pre">${HOME}/.gsctl</span></code>;  If <code class="docutils literal notranslate"><span class="pre">--coordinator-endpoint</span></code> parameter is specified, it will treat it as current context and override the configuration file.</p>
 <p>Once connected, you can use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> to communicate with the coordinator which serves the specific Flex product behind it.</p>
 <section id="change-scope">
-<h4>Change Scope<a class="headerlink" href="#change-scope" title="Permalink to this heading">¶</a></h4>
+<h4>Change Scope<a class="headerlink" href="#change-scope" title="Link to this heading">¶</a></h4>
 <p>In <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, you can run commands on a global scope or a local scope. When you connect to a coordinator, you are in the global scope. To change to local scope of a graph, run the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">use</span> <span class="pre">GRAPH</span> <span class="pre">&lt;graph_identifier&gt;</span></code> command. You can find the graph identifier with <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">ls</span></code> command.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>modern_graph
 Using<span class="w"> </span>GRAPH<span class="w"> </span>modern_graph
@@ -747,13 +746,13 @@ Using<span class="w"> </span>GLOBAL
 <p>Different scopes have different commands. Always remember to use <code class="docutils literal notranslate"><span class="pre">--help</span></code> on a command to get more information.</p>
 </section>
 <section id="close-the-connection">
-<h4>Close the Connection<a class="headerlink" href="#close-the-connection" title="Permalink to this heading">¶</a></h4>
+<h4>Close the Connection<a class="headerlink" href="#close-the-connection" title="Link to this heading">¶</a></h4>
 <p>To disconnect from the coordinator and switch back to the utility scripts mode, you can use the <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">close</span></code> command. This command closes the connection from the coordinator and allows you to use <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> as a standalone utility again.</p>
 </section>
 </section>
 </section>
 <section id="whats-the-next">
-<h2>What’s the Next<a class="headerlink" href="#whats-the-next" title="Permalink to this heading">¶</a></h2>
+<h2>What’s the Next<a class="headerlink" href="#whats-the-next" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="../flex/coordinator.html"><span class="std std-doc">FLEX Coordinator</span></a></p></li>
 <li><p><a class="reference internal" href="../development/dev_guide.html"><span class="std std-doc">Install dependencies on local environment</span></a></p></li>
@@ -843,9 +842,9 @@ Using<span class="w"> </span>GLOBAL
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

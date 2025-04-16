@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Stored Procedures" href="stored_procedures.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Using Custom Graph - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="using-custom-graph">
-<h1>Using Custom Graph<a class="headerlink" href="#using-custom-graph" title="Permalink to this heading">¶</a></h1>
+<h1>Using Custom Graph<a class="headerlink" href="#using-custom-graph" title="Link to this heading">¶</a></h1>
 <p>This guide walks you through the process of using custom graph data in GraphScope Interactive. The process comprises three main steps:</p>
 <ul class="simple">
 <li><p>Creating a new graph,</p></li>
@@ -701,7 +700,7 @@ MathJax = {
 </ul>
 <p>We use a simple graph, which contains only one kind vertices with label <code class="docutils literal notranslate"><span class="pre">person</span></code> and one kind edges with label <code class="docutils literal notranslate"><span class="pre">knows</span></code>, to demonstrate creating a new graph in Interactive.</p>
 <section id="step-1-create-a-new-graph">
-<h2>Step 1: Create a New Graph<a class="headerlink" href="#step-1-create-a-new-graph" title="Permalink to this heading">¶</a></h2>
+<h2>Step 1: Create a New Graph<a class="headerlink" href="#step-1-create-a-new-graph" title="Link to this heading">¶</a></h2>
 <p>Before starting, please make sure you are in the GLOBAL context.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>use<span class="w"> </span>GLOBAL
 </pre></div>
@@ -749,10 +748,10 @@ MathJax = {
 <p>For a comprehensive list of supported types, please refer to the <a class="reference internal" href="data_model.html"><span class="doc std std-doc">data model</span></a> page.</p>
 </section>
 <section id="step-2-import-graph-data">
-<h2>Step 2: Import Graph Data<a class="headerlink" href="#step-2-import-graph-data" title="Permalink to this heading">¶</a></h2>
+<h2>Step 2: Import Graph Data<a class="headerlink" href="#step-2-import-graph-data" title="Link to this heading">¶</a></h2>
 <p>To import your data, you need to first bind the data source and then submit a bulk loading job.</p>
 <section id="bind-data-source">
-<h3>Bind Data Source<a class="headerlink" href="#bind-data-source" title="Permalink to this heading">¶</a></h3>
+<h3>Bind Data Source<a class="headerlink" href="#bind-data-source" title="Link to this heading">¶</a></h3>
 <p>To create a new graph, you will need the original data of the graph. We currently support files in CSV format. Fortunately, we have prepared it for you, and you can find it here <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph">modern-graph</a>.
 The <code class="docutils literal notranslate"><span class="pre">import.yaml</span></code> file maps raw data fields to the schema of the “modern” graph created in Step 1. Here’s an illustrative example <code class="docutils literal notranslate"><span class="pre">import.yaml</span></code>,
 note that each vertex/edge type need at least one input for bulk loading.
@@ -816,7 +815,7 @@ wget<span class="w"> </span>https://raw.githubusercontent.com/alibaba/GraphScope
 </div>
 </section>
 <section id="create-data-loading-job">
-<h3>Create Data Loading Job<a class="headerlink" href="#create-data-loading-job" title="Permalink to this heading">¶</a></h3>
+<h3>Create Data Loading Job<a class="headerlink" href="#create-data-loading-job" title="Link to this heading">¶</a></h3>
 <p>So far, we have only created the dataource, a job config <code class="docutils literal notranslate"><span class="pre">job_config.yaml</span></code> is also needed to data import.
 A <code class="docutils literal notranslate"><span class="pre">job_config.yaml</span></code> is  also needed to specify the configuration for bulk loading.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">loading_config</span><span class="p">:</span>
@@ -848,14 +847,14 @@ A <code class="docutils literal notranslate"><span class="pre">job_config.yaml</
 </section>
 </section>
 <section id="step-3-start-the-service-with-the-new-graph">
-<h2>Step 3: Start the Service with the New Graph<a class="headerlink" href="#step-3-start-the-service-with-the-new-graph" title="Permalink to this heading">¶</a></h2>
+<h2>Step 3: Start the Service with the New Graph<a class="headerlink" href="#step-3-start-the-service-with-the-new-graph" title="Link to this heading">¶</a></h2>
 <p>After you have obtained a successful status with <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">desc</span> <span class="pre">job</span> <span class="pre">&lt;job_id&gt;</span></code>, you can now switch to the context of the <code class="docutils literal notranslate"><span class="pre">test_graph</span></code> graph.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>test_graph
 </pre></div>
 </div>
 </section>
 <section id="step-4-a-more-complicated-movies-graph-optional">
-<h2>Step 4: A More Complicated Movies Graph(optional)<a class="headerlink" href="#step-4-a-more-complicated-movies-graph-optional" title="Permalink to this heading">¶</a></h2>
+<h2>Step 4: A More Complicated Movies Graph(optional)<a class="headerlink" href="#step-4-a-more-complicated-movies-graph-optional" title="Link to this heading">¶</a></h2>
 <p>The above graph is very simple, which only contains one kind vertices and one kind edges.
 For a more complicated example, We’ll use the <a class="reference external" href="https://github.com/neo4j-graph-examples/movies/"><code class="docutils literal notranslate"><span class="pre">movies</span></code></a> graph as an example, you can download the files from our <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/movies">Github Repo</a>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://interactive-release.oss-cn-hangzhou.aliyuncs.com/dataset/movies/movies.zip
@@ -863,7 +862,7 @@ For a more complicated example, We’ll use the <a class="reference external" hr
 </div>
 <p>Try to use the following configuration files to create <code class="docutils literal notranslate"><span class="pre">movie_graph</span></code>!</p>
 <section id="movie-graph-yaml">
-<h3>movie_graph.yaml<a class="headerlink" href="#movie-graph-yaml" title="Permalink to this heading">¶</a></h3>
+<h3>movie_graph.yaml<a class="headerlink" href="#movie-graph-yaml" title="Link to this heading">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">movies</span>
 <span class="nt">schema</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">vertex_types</span><span class="p">:</span>
@@ -952,7 +951,7 @@ For a more complicated example, We’ll use the <a class="reference external" hr
 </div>
 </section>
 <section id="import-yaml">
-<h3>import.yaml<a class="headerlink" href="#import-yaml" title="Permalink to this heading">¶</a></h3>
+<h3>import.yaml<a class="headerlink" href="#import-yaml" title="Link to this heading">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">vertex_mappings</span><span class="p">:</span>
 <span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">type_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Person</span><span class="w">  </span><span class="c1"># must align with the schema</span>
 <span class="w">    </span><span class="nt">inputs</span><span class="p">:</span>
@@ -1006,7 +1005,7 @@ For a more complicated example, We’ll use the <a class="reference external" hr
 </div>
 </section>
 <section id="job-config-yaml">
-<h3>job_config.yaml<a class="headerlink" href="#job-config-yaml" title="Permalink to this heading">¶</a></h3>
+<h3>job_config.yaml<a class="headerlink" href="#job-config-yaml" title="Link to this heading">¶</a></h3>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">loading_config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">import_option</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">overwrite</span>
 <span class="w">  </span><span class="nt">format</span><span class="p">:</span>
@@ -1043,7 +1042,7 @@ For a more complicated example, We’ll use the <a class="reference external" hr
 </section>
 </section>
 <section id="try-other-graphs">
-<h2>Try other graphs<a class="headerlink" href="#try-other-graphs" title="Permalink to this heading">¶</a></h2>
+<h2>Try other graphs<a class="headerlink" href="#try-other-graphs" title="Link to this heading">¶</a></h2>
 <p>In addition to <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph, we have also prepared the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph. You can find the raw CSV files, <code class="docutils literal notranslate"><span class="pre">graph.yaml</span></code>, and <code class="docutils literal notranslate"><span class="pre">import.yaml</span></code> in the <code class="docutils literal notranslate"><span class="pre">./examples/graph_algo/</span></code> directory. You can import the <code class="docutils literal notranslate"><span class="pre">graph_algo</span></code> graph just like importing the <code class="docutils literal notranslate"><span class="pre">movies</span></code> graph. There are also some sample cypher queries, you can find them at <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/graph_algo">GraphScope/flex/interactive/examples/graph_algo</a>.</p>
 <p>If you are seeking for a more complex and larger graph, then you may try <code class="docutils literal notranslate"><span class="pre">IMDB</span></code> graph. The schema definition and import configuration are available in the <code class="docutils literal notranslate"><span class="pre">./examples/imdb/</span></code> directory.</p>
 </section>
@@ -1133,9 +1132,9 @@ For a more complicated example, We’ll use the <a class="reference external" hr
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

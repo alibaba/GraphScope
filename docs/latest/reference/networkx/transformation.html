@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Builtin algorithms" href="builtin.html" /><link rel="prev" title="Graph types" href="graphs.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Graph Transformation - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="graph-transformation">
-<span id="transformation"></span><h1>Graph Transformation<a class="headerlink" href="#graph-transformation" title="Permalink to this heading">¶</a></h1>
+<span id="transformation"></span><h1>Graph Transformation<a class="headerlink" href="#graph-transformation" title="Link to this heading">¶</a></h1>
 <p>In GraphScope, <code class="xref py py-class docutils literal notranslate"><span class="pre">nx.Graph</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">nx.DiGraph</span></code> can be created from GraphScope graph object.
 We implement a copy-on-write transformation strategy for creating from GraphScope graph.
 That is, when init a <code class="xref py py-class docutils literal notranslate"><span class="pre">nx.Graph</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">nx.DiGraph</span></code> object with GraphScope graph object,
@@ -727,7 +726,7 @@ Here is an example to show the <cite>copy-on-write</cite> transformation.</p>
 </div>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.Graph.__init__">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.Graph.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">incoming_graph_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">attr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.Graph.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize a graph with graph, edges, name, or graph attributes</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -771,7 +770,7 @@ need to use <cite>(label, id)</cite> to access.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.Graph._convert_arrow_to_dynamic">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">_convert_arrow_to_dynamic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.Graph._convert_arrow_to_dynamic" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.Graph.</span></span><span class="sig-name descname"><span class="pre">_convert_arrow_to_dynamic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.Graph._convert_arrow_to_dynamic" title="Link to this definition">¶</a></dt>
 <dd><p>Try to convert the hosted graph from arrow_property to dynamic_property.</p>
 <p class="rubric">Notes</p>
 <p>the method is implicit called by modification and graph view methods.</p>
@@ -851,9 +850,9 @@ need to use <cite>(label, id)</cite> to access.</p></li>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

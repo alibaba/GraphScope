@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.client.session - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -895,7 +894,9 @@ MathJax = {
         <span class="k">return</span> <span class="n">unload_dag</span>
 
 
-<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Session">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for interacting with GraphScope graph computation service cluster.</span>
 
 <span class="sd">    A :class:`Session` object encapsulates the environment in which :class:`Operation`</span>
@@ -954,7 +955,9 @@ MathJax = {
 <span class="sd">        &gt;&gt;&gt; s = graphscope.session(config={&#39;k8s_engine_cpu&#39;: 5, &#39;k8s_engine_mem&#39;: &#39;5Gi&#39;})</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Session.__init__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Session.__init__">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">config</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Config</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">api_client</span><span class="p">:</span> <span class="n">kube_client</span><span class="o">.</span><span class="n">ApiClient</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1260,6 +1263,7 @@ MathJax = {
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">RLock</span><span class="p">()</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">info</span><span class="p">)</span>
 
@@ -1370,7 +1374,9 @@ MathJax = {
                     <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span> <span class="o">=</span> <span class="kc">False</span>
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_heartbeat_interval_seconds</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.connected"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.connected">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Session.connected">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.connected">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">connected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if the session is still connected and available.</span>
 
 <span class="sd">        Returns: True or False</span>
@@ -1378,7 +1384,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_disconnected</span></div>
 
-<div class="viewcode-block" id="Session.close"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.close">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.close">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.close">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Closes this session.</span>
 
 <span class="sd">        This method frees all resources associated with the session.</span>
@@ -1390,6 +1399,7 @@ MathJax = {
                 <span class="bp">self</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_close</span><span class="p">()</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># noqa: C901</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
@@ -1464,7 +1474,9 @@ MathJax = {
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span> <span class="ow">or</span> <span class="s2">&quot;Operation on closed session.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Context manager</span>
-<div class="viewcode-block" id="Session.__enter__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__enter__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.__enter__">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__enter__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Context management protocol.</span>
 <span class="sd">        Returns self and register self as default session.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1472,7 +1484,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Session.__exit__"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.__exit__">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.__exit__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unregister self from the default session,</span>
 <span class="sd">        close the session and release the resources, ignore all exceptions in close().</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1482,7 +1497,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="Session.as_default"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.as_default">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.as_default">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Obtain a context manager that make this object as default session.</span>
 
 <span class="sd">        This method is used when a Session is constructed, which will immediately</span>
@@ -1501,6 +1519,7 @@ MathJax = {
         <span class="c1"># session context manager</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span> <span class="o">=</span> <span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_session</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_unregister_default</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove self from the default session stack.&quot;&quot;&quot;</span>
@@ -1548,7 +1567,9 @@ MathJax = {
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_fetches</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.run_fetches"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.run_fetches">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">run_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.run_fetches">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.run_fetches">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run_fetches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Run operations of `fetches` without the session lock.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Attempted to use a closed Session.&quot;</span><span class="p">)</span>
@@ -1569,6 +1590,7 @@ MathJax = {
                 <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
                 <span class="k">raise</span>
         <span class="k">return</span> <span class="n">fetch_handler</span><span class="o">.</span><span class="n">wrap_results</span><span class="p">(</span><span class="n">response</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">coordinator</span><span class="o">.</span><span class="n">endpoint</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1631,9 +1653,12 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
             <span class="k">raise</span>
 
-<div class="viewcode-block" id="Session.get_config"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.get_config">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_config">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get configuration of the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_api_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_client</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -1677,7 +1702,9 @@ MathJax = {
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">e</span>
 
-<div class="viewcode-block" id="Session.store_to_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.store_to_pvc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">store_to_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphIDs</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.store_to_pvc">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.store_to_pvc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">store_to_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graphIDs</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stores the given graph IDs to the given path with the given PVC.</span>
 <span class="sd">        Also, if you want to store graphs of different sessions to the same pv,</span>
@@ -1728,7 +1755,10 @@ MathJax = {
             <span class="n">pvc_name</span><span class="o">=</span><span class="n">pvc_name</span><span class="p">,</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Session.restore_from_pvc"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.restore_from_pvc">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">restore_from_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.restore_from_pvc">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.restore_from_pvc">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restore_from_pvc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pvc_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Restores the graphs from the given path in the given PVC.</span>
 <span class="sd">        Notice, before calling this function, the KUBECONFIG environment variable</span>
@@ -1774,7 +1804,10 @@ MathJax = {
         <span class="c1"># parse configmap data to the self._vineyard_object_mapping_table</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span> <span class="o">=</span> <span class="n">config_map</span><span class="o">.</span><span class="n">data</span></div>
 
-<div class="viewcode-block" id="Session.get_vineyard_object_mapping_table"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_vineyard_object_mapping_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.get_vineyard_object_mapping_table">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.get_vineyard_object_mapping_table">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vineyard_object_mapping_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the vineyard object mapping table</span>
 <span class="sd">        from the old object id to new object id</span>
@@ -1783,7 +1816,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vineyard_object_mapping_table</span></div>
 
-<div class="viewcode-block" id="Session.g"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.g">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
+
+<div class="viewcode-block" id="Session.g">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.g">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
@@ -1837,12 +1873,16 @@ MathJax = {
             <span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Session.load_from"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Session.load_from">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.load_from">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a graph within the session.</span>
 <span class="sd">        See more information in :meth:`graphscope.load_from`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">default_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">load_from</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 
     <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `sess.interactive` instead.&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">gremlin</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1852,7 +1892,9 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.interactive"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.interactive">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.interactive">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">interactive</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">with_cypher</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an interactive engine handler to execute gremlin and cypher queries.</span>
 
 <span class="sd">        It will return an instance of :class:`graphscope.interactive.query.InteractiveQuery`,</span>
@@ -1903,6 +1945,7 @@ MathJax = {
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_interactive_instance</span><span class="p">(</span><span class="n">interactive_query</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">interactive_query</span></div>
 
+
     <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphlearn` instead.&quot;</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">learning</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
@@ -1914,7 +1957,9 @@ MathJax = {
         <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Session.graphlearn"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.graphlearn">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.graphlearn">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.graphlearn">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Start a graph learning engine.</span>
 
 <span class="sd">        Args:</span>
@@ -1999,6 +2044,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_dict</span><span class="p">[</span><span class="n">graph</span><span class="o">.</span><span class="n">vineyard_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
         <span class="n">graph</span><span class="o">.</span><span class="n">_attach_learning_instance</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">g</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn_torch</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -2096,7 +2142,9 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span> <span class="o">=</span> <span class="n">mod</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_nx</span>
 
-<div class="viewcode-block" id="Session.add_lib"><a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.add_lib">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_lib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_name</span><span class="p">):</span>
+<div class="viewcode-block" id="Session.add_lib">
+<a class="viewcode-back" href="../../../reference/session.html#graphscope.Session.add_lib">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_lib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resource_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        add the specified resource to the k8s cluster from client machine.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -2111,13 +2159,17 @@ MathJax = {
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Expect a non-empty file.&quot;</span><span class="p">)</span>
         <span class="c1"># the uploaded file may be placed in the same directory</span>
         <span class="n">garfile</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">resource_name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">bytes_</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">add_lib</span><span class="p">(</span><span class="n">garfile</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span></div></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_grpc_client</span><span class="o">.</span><span class="n">add_lib</span><span class="p">(</span><span class="n">garfile</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span><span class="o">.</span><span class="n">getvalue</span><span class="p">())</span></div>
+</div>
+
 
 
 <span class="n">session</span> <span class="o">=</span> <span class="n">Session</span>
 
 
-<div class="viewcode-block" id="set_option"><a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="set_option">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.set_option.html#graphscope.set_option">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_option</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Set the value of specified options.</span>
 
 <span class="sd">    Find params detail in :class:`graphscope.Session`</span>
@@ -2175,6 +2227,7 @@ MathJax = {
     <span class="n">GSLogger</span><span class="o">.</span><span class="n">update</span><span class="p">()</span></div>
 
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">default_session</span><span class="p">(</span><span class="n">session</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Python&#39;s :code:`with` handler for defining a default session.</span>
 
@@ -2194,12 +2247,17 @@ MathJax = {
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_controller</span><span class="p">(</span><span class="n">session</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="has_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">has_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="has_default_session">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.has_default_session.html#graphscope.has_default_session">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;True if default session exists in current context.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="ow">not</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">empty</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="get_default_session"><a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">get_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
+
+<div class="viewcode-block" id="get_default_session">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.get_default_session.html#graphscope.get_default_session">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_default_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the default session for the current context.</span>
 
 <span class="sd">    Note that a new session will be created if there is no</span>
@@ -2209,6 +2267,7 @@ MathJax = {
 <span class="sd">        The default :class:`graphscope.Session`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_default_session_stack</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">get_session_by_id</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
@@ -2259,7 +2318,9 @@ MathJax = {
 <span class="n">_default_session_stack</span> <span class="o">=</span> <span class="n">_DefaultSessionStack</span><span class="p">()</span>  <span class="c1"># pylint: disable=protected-access</span>
 
 
-<div class="viewcode-block" id="g"><a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
+<div class="viewcode-block" id="g">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.g.html#graphscope.g">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">g</span><span class="p">(</span>
     <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">oid_type</span><span class="o">=</span><span class="s2">&quot;int64&quot;</span><span class="p">,</span>
     <span class="n">vid_type</span><span class="o">=</span><span class="s2">&quot;uint64&quot;</span><span class="p">,</span>
@@ -2304,6 +2365,7 @@ MathJax = {
     <span class="p">)</span></div>
 
 
+
 <span class="nd">@deprecated</span><span class="p">(</span><span class="s2">&quot;Please use `graphscope.interactive` instead.&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">gremlin</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;This method is going to be deprecated in the future.</span>
@@ -2335,7 +2397,9 @@ MathJax = {
     <span class="k">return</span> <span class="n">sess</span><span class="o">.</span><span class="n">interactive</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">params</span><span class="p">,</span> <span class="n">with_cypher</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="graphlearn"><a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="graphlearn">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.graphlearn.html#graphscope.graphlearn">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">graphlearn</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gen_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a graph learning engine.</span>
 
 <span class="sd">    See params detail in :meth:`graphscope.Session.graphlearn`</span>
@@ -2359,6 +2423,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">graphlearn</span><span class="p">(</span>
         <span class="n">graph</span><span class="p">,</span> <span class="n">nodes</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">gen_labels</span>
     <span class="p">)</span>  <span class="c1"># pylint: disable=protected-access</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">graphlearn_torch</span><span class="p">(</span>
@@ -2428,9 +2493,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

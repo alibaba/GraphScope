@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="How to Test" href="how_to_test.html" /><link rel="prev" title="Development Guide" href="dev_guide.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Code Style Guide - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,32 +691,32 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="code-style-guide">
-<h1>Code Style Guide<a class="headerlink" href="#code-style-guide" title="Permalink to this heading">¶</a></h1>
+<h1>Code Style Guide<a class="headerlink" href="#code-style-guide" title="Link to this heading">¶</a></h1>
 <p>This document provides the coding style guidelines for GraphScope’s codebase, which includes C++, Python, Rust, Java, and shell scripts.
 Adhering to consistent coding standards across the codebase promotes maintainability, readability, and code quality.</p>
 <section id="c-style">
-<h2>C++ Style<a class="headerlink" href="#c-style" title="Permalink to this heading">¶</a></h2>
+<h2>C++ Style<a class="headerlink" href="#c-style" title="Link to this heading">¶</a></h2>
 <p>We follow the <a class="reference external" href="https://google.github.io/styleguide/cppguide.html">Google C++ Style Guide</a> for coding standards in C++.</p>
 </section>
 <section id="python-style">
-<h2>Python Style<a class="headerlink" href="#python-style" title="Permalink to this heading">¶</a></h2>
+<h2>Python Style<a class="headerlink" href="#python-style" title="Link to this heading">¶</a></h2>
 <p>We follow the <a class="reference external" href="https://black.readthedocs.io/en/stable/the_black_code_style/current_style.html">black</a> code style for Python coding standards.</p>
 </section>
 <section id="rust-style">
-<h2>Rust Style<a class="headerlink" href="#rust-style" title="Permalink to this heading">¶</a></h2>
+<h2>Rust Style<a class="headerlink" href="#rust-style" title="Link to this heading">¶</a></h2>
 <p>We follow the <a class="reference external" href="https://github.com/rust-lang/style-team/blob/master/guide/guide.md">rust-lang code style</a>,
 with the GraphScope custom <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/rustfmt.toml">configuration</a> for coding standards in Rust.</p>
 </section>
 <section id="java-style">
-<h2>Java Style<a class="headerlink" href="#java-style" title="Permalink to this heading">¶</a></h2>
+<h2>Java Style<a class="headerlink" href="#java-style" title="Link to this heading">¶</a></h2>
 <p>we follow the <a class="reference external" href="https://google.github.io/styleguide/javaguide.html">Google Java Style Guide</a> for coding standards in Java.</p>
 </section>
 <section id="script-style">
-<h2>Script Style<a class="headerlink" href="#script-style" title="Permalink to this heading">¶</a></h2>
+<h2>Script Style<a class="headerlink" href="#script-style" title="Link to this heading">¶</a></h2>
 <p>We follow the <a class="reference external" href="https://google.github.io/styleguide/shellguide.html">Google Shell Style Guide</a> for coding standards in shell script.</p>
 </section>
 <section id="style-linter-and-checker">
-<h2>Style Linter and Checker<a class="headerlink" href="#style-linter-and-checker" title="Permalink to this heading">¶</a></h2>
+<h2>Style Linter and Checker<a class="headerlink" href="#style-linter-and-checker" title="Link to this heading">¶</a></h2>
 <p>GraphScope uses different linters and checkers for each language to enforce code style rules:</p>
 <ul class="simple">
 <li><p>C++: <a class="reference external" href="https://releases.llvm.org/8.0.0/tools/clang/docs/ClangFormat.html">clang-format-8</a> and <a class="reference external" href="https://github.com/cpplint/cpplint">cpplint</a></p></li>
@@ -853,9 +852,9 @@ $<span class="w"> </span>java<span class="w"> </span>-jar<span class="w"> </span
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

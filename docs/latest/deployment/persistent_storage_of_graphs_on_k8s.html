@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploy GraphScope with helm" href="deploy_graphscope_with_helm.html" /><link rel="prev" title="Deploy with Existing Vineyard Cluster" href="deploy_with_existing_vineyard_cluster.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Persistent storage of graphs on the Kubernetes cluster - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,17 +691,17 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="persistent-storage-of-graphs-on-the-kubernetes-cluster">
-<h1>Persistent storage of graphs on the Kubernetes cluster<a class="headerlink" href="#persistent-storage-of-graphs-on-the-kubernetes-cluster" title="Permalink to this heading">¶</a></h1>
+<h1>Persistent storage of graphs on the Kubernetes cluster<a class="headerlink" href="#persistent-storage-of-graphs-on-the-kubernetes-cluster" title="Link to this heading">¶</a></h1>
 <p>If you want to persistently store specific graphs that have been calculated over a long period of time on the Kubernetes cluster and restore them later, this document provides step-by-step instructions on how to do this with the Kubernetes PersistentVolumes.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>You have a Kubernetes cluster on hand. If you don’t have a Kubernetes cluster, please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">Prepare a Kubernetes cluster</span></a> for details.</p></li>
 <li><p>You have the <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> Python library installed. If you don’t have installed it, please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client"><span class="std std-ref">Install GraphScope Client</span></a> for details.</p></li>
 </ul>
 </section>
 <section id="create-a-pv-and-pvc">
-<h2>Create a pv and pvc<a class="headerlink" href="#create-a-pv-and-pvc" title="Permalink to this heading">¶</a></h2>
+<h2>Create a pv and pvc<a class="headerlink" href="#create-a-pv-and-pvc" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>create<span class="w"> </span>namespace<span class="w"> </span>graphscope-system
 </pre></div>
 </div>
@@ -747,7 +746,7 @@ MathJax = {
 </div>
 </section>
 <section id="store-graphs-to-the-pvc">
-<h2>Store graphs to the pvc<a class="headerlink" href="#store-graphs-to-the-pvc" title="Permalink to this heading">¶</a></h2>
+<h2>Store graphs to the pvc<a class="headerlink" href="#store-graphs-to-the-pvc" title="Link to this heading">¶</a></h2>
 <p>After the above preparations are completed, you can deploy the graphscope cluster as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -854,7 +853,7 @@ MathJax = {
 </div>
 </section>
 <section id="restore-graphs-from-the-pvc">
-<h2>Restore graphs from the pvc<a class="headerlink" href="#restore-graphs-from-the-pvc" title="Permalink to this heading">¶</a></h2>
+<h2>Restore graphs from the pvc<a class="headerlink" href="#restore-graphs-from-the-pvc" title="Link to this heading">¶</a></h2>
 <p>Remember the vineyard ids printed above and the pvc name and then you can restore the graphs from the pvc as follows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
@@ -919,7 +918,7 @@ MathJax = {
 </div>
 </section>
 <section id="clean-up">
-<h2>Clean up<a class="headerlink" href="#clean-up" title="Permalink to this heading">¶</a></h2>
+<h2>Clean up<a class="headerlink" href="#clean-up" title="Link to this heading">¶</a></h2>
 <p>If you don’t need the graphs anymore, you can delete the pvc and pv as follows.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pvc<span class="w"> </span>graphscope-pvc<span class="w"> </span>-n<span class="w"> </span>graphscope-system
 $<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> </span>pv<span class="w"> </span>graphscope-pv
@@ -1003,9 +1002,9 @@ $<span class="w"> </span>kubectl<span class="w"> </span>delete<span class="w"> <
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

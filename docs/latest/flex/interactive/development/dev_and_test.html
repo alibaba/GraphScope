@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><link rel="next" title="Java SDK Reference" href="java/java_sdk.html" /><link rel="prev" title="Development guide" href="../dev_guide.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Dev and Test - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -692,14 +691,14 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="dev-and-test">
-<h1>Dev and Test<a class="headerlink" href="#dev-and-test" title="Permalink to this heading">¶</a></h1>
+<h1>Dev and Test<a class="headerlink" href="#dev-and-test" title="Link to this heading">¶</a></h1>
 <p>This document describes the organization of the source code for Interactive and provides instructions on how to build <code class="docutils literal notranslate"><span class="pre">Interactive</span></code> from source and run tests.</p>
 <section id="dev-environment">
-<h2>Dev Environment<a class="headerlink" href="#dev-environment" title="Permalink to this heading">¶</a></h2>
+<h2>Dev Environment<a class="headerlink" href="#dev-environment" title="Link to this heading">¶</a></h2>
 <p>Before building <code class="docutils literal notranslate"><span class="pre">Interactive</span></code> from the source code, you need to set up a development environment with various dependencies.
 Here, we provide two options: installing all dependencies on the local machine or building it within the provided Docker image.</p>
 <section id="install-deps-on-local">
-<h3>Install Deps on Local<a class="headerlink" href="#install-deps-on-local" title="Permalink to this heading">¶</a></h3>
+<h3>Install Deps on Local<a class="headerlink" href="#install-deps-on-local" title="Link to this heading">¶</a></h3>
 <p>Interactive source code should be compatible with and installable on most modern Linux distributions, including Debian, RedHat, and Ubuntu (tested on Ubuntu 22.04), on both x86 and ARM platforms. If you encounter any issues during compilation or installation on your system, please open an issue on our <a class="reference external" href="https://github.com/alibaba/graphscope">Github Repo</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -711,7 +710,7 @@ Here, we provide two options: installing all dependencies on the local machine o
 </div>
 </section>
 <section id="develop-on-docker-container">
-<h3>Develop on Docker Container<a class="headerlink" href="#develop-on-docker-container" title="Permalink to this heading">¶</a></h3>
+<h3>Develop on Docker Container<a class="headerlink" href="#develop-on-docker-container" title="Link to this heading">¶</a></h3>
 <p>We provided a docker image <code class="docutils literal notranslate"><span class="pre">graphscope-dev</span></code> with all tools and dependencies included.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:latest
 </pre></div>
@@ -720,10 +719,10 @@ Here, we provide two options: installing all dependencies on the local machine o
 </section>
 </section>
 <section id="understanding-the-codebase">
-<h2>Understanding the Codebase<a class="headerlink" href="#understanding-the-codebase" title="Permalink to this heading">¶</a></h2>
+<h2>Understanding the Codebase<a class="headerlink" href="#understanding-the-codebase" title="Link to this heading">¶</a></h2>
 <p>Interactive is composed of two parts, the execution engine and frontend compiler.</p>
 <section id="interactive-query-engine">
-<h3>Interactive Query Engine<a class="headerlink" href="#interactive-query-engine" title="Permalink to this heading">¶</a></h3>
+<h3>Interactive Query Engine<a class="headerlink" href="#interactive-query-engine" title="Link to this heading">¶</a></h3>
 <p>The Interactive Query Engine code is organized in the <code class="docutils literal notranslate"><span class="pre">flex</span></code> folder as follows:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">codegen</span></code>: The binary <code class="docutils literal notranslate"><span class="pre">gen_code_from_plan</span></code> is built from this repository, capable of generating C++ code from a physical plan.</p></li>
@@ -754,24 +753,24 @@ Here, we provide two options: installing all dependencies on the local machine o
 </ul>
 </section>
 <section id="dependency-graph">
-<h3>Dependency Graph<a class="headerlink" href="#dependency-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Dependency Graph<a class="headerlink" href="#dependency-graph" title="Link to this heading">¶</a></h3>
 <p>Interactive follows the lego-like building concept of GraphScope Flex, comprising multiple modules. A dependency graph illustrates the relationships among these modules, although only a subset of third-party dependencies is included for clarity.</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../../../_images/flex_interactive_dep_graph.png"><img alt="Dependency Graph between modules" src="../../../_images/flex_interactive_dep_graph.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Dependency Graph between modules</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Dependency Graph between modules</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="compiler">
-<h3>Compiler<a class="headerlink" href="#compiler" title="Permalink to this heading">¶</a></h3>
+<h3>Compiler<a class="headerlink" href="#compiler" title="Link to this heading">¶</a></h3>
 <p>The Compiler is crucial in Interactive as it converts graph queries written in graph query languages (Cypher/Gremlin) into physical query plans using GAIA IR.
 The Compiler code is found in <code class="docutils literal notranslate"><span class="pre">interactive_engine/compiler</span></code>.
 For additional details on the Compiler, refer to <a class="reference internal" href="../../../interactive_engine/design_of_gie.html"><span class="std std-doc">this documentation</span></a></p>
 </section>
 </section>
 <section id="build-interactive">
-<h2>Build Interactive<a class="headerlink" href="#build-interactive" title="Permalink to this heading">¶</a></h2>
+<h2>Build Interactive<a class="headerlink" href="#build-interactive" title="Link to this heading">¶</a></h2>
 <p>First, build the Interactive Query Engine.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/GraphScope<span class="w"> </span><span class="c1"># or replace with your own forked repo</span>
 <span class="nb">cd</span><span class="w"> </span>GraphScope<span class="w"> </span>
@@ -788,7 +787,7 @@ mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> 
 </pre></div>
 </div>
 <section id="cmake-options">
-<h3>CMake options<a class="headerlink" href="#cmake-options" title="Permalink to this heading">¶</a></h3>
+<h3>CMake options<a class="headerlink" href="#cmake-options" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">BUILD_TEST</span></code>: Indicates whether to build tests.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">BUILD_DOC</span></code>: Indicates whether to build Flex documentation.</p></li>
@@ -799,7 +798,7 @@ mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> 
 </section>
 </section>
 <section id="testing">
-<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this heading">¶</a></h2>
+<h2>Testing<a class="headerlink" href="#testing" title="Link to this heading">¶</a></h2>
 <p>Numerous test cases have been created for Interactive, which can be referenced in the GitHub workflow<a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/.github/workflows/interactive.yml">interactive.yaml</a>.
 Below is a basic test case for validating the accuracy of the SDK and interactive admin service.</p>
 <p>Initially, a directory needs to be established as the Interactive workspace, then proceed to create a new graph named <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code> and import data into the graph.</p>
@@ -894,24 +893,24 @@ bash<span class="w"> </span>hqps_admin_test.sh<span class="w"> </span><span clas
 </div>
 </section>
 <section id="starting-service-manually">
-<h2>Starting Service Manually<a class="headerlink" href="#starting-service-manually" title="Permalink to this heading">¶</a></h2>
+<h2>Starting Service Manually<a class="headerlink" href="#starting-service-manually" title="Link to this heading">¶</a></h2>
 <p>The main entrance for Interactive is <code class="docutils literal notranslate"><span class="pre">interactive_server</span></code>.</p>
 <section id="enable-adminservice">
-<h3>Enable AdminService<a class="headerlink" href="#enable-adminservice" title="Permalink to this heading">¶</a></h3>
+<h3>Enable AdminService<a class="headerlink" href="#enable-adminservice" title="Link to this heading">¶</a></h3>
 <p>To start admin service in development, use the command line argument <code class="docutils literal notranslate"><span class="pre">--enable-admin-service</span> <span class="pre">true</span></code>. <code class="docutils literal notranslate"><span class="pre">${ENGINE_CONFIG}</span></code> specifies the configuration for interactive query engine, see <a class="reference external" href="https://graphscope.io/docs/flex/interactive/configuration">engine-configuration</a>. <code class="docutils literal notranslate"><span class="pre">${WORKSPACE}</span></code> points to the directory where interactive related data is maintained.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span>
 </pre></div>
 </div>
 </section>
 <section id="start-compiler-service">
-<h3>Start Compiler Service<a class="headerlink" href="#start-compiler-service" title="Permalink to this heading">¶</a></h3>
+<h3>Start Compiler Service<a class="headerlink" href="#start-compiler-service" title="Link to this heading">¶</a></h3>
 <p>The Compiler service could be started as a subprocess of the AdminService. This ensures that when switching graphs in the AdminService, the Compiler service also switches to the corresponding graph’s schema. This is the default behavior in the current Interactive.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/interactive_server<span class="w"> </span>-c<span class="w"> </span><span class="si">${</span><span class="nv">ENGINE_CONFIG</span><span class="si">}</span><span class="w"> </span>-w<span class="w"> </span><span class="si">${</span><span class="nv">WORKSPACE</span><span class="si">}</span><span class="w"> </span>--enable-admin-service<span class="w"> </span><span class="nb">true</span><span class="w"> </span>--start-compiler<span class="w"> </span><span class="nb">true</span>
 </pre></div>
 </div>
 </section>
 <section id="error-code">
-<h3>Error Code<a class="headerlink" href="#error-code" title="Permalink to this heading">¶</a></h3>
+<h3>Error Code<a class="headerlink" href="#error-code" title="Link to this heading">¶</a></h3>
 <p>Runtime errors are categorized, assigned an error code, and included in the HTTP response body (only for non-200 HTTP responses).
 The mapping between status codes and HTTP codes is shown in the table below.</p>
 <div class="table-wrapper colwidths-auto docutils container">
@@ -969,7 +968,7 @@ The mapping between status codes and HTTP codes is shown in the table below.</p>
 </div>
 </section>
 <section id="transactions">
-<h3>Transactions<a class="headerlink" href="#transactions" title="Permalink to this heading">¶</a></h3>
+<h3>Transactions<a class="headerlink" href="#transactions" title="Link to this heading">¶</a></h3>
 <p>In Interactive’s execution engine, transactions such as <code class="docutils literal notranslate"><span class="pre">ReadTransaction</span></code>, <code class="docutils literal notranslate"><span class="pre">UpdateTransaction</span></code>, and <code class="docutils literal notranslate"><span class="pre">InsertTransaction</span></code> are employed to maintain data consistency and integrity throughout operations. Each transaction can either succeed or fail, and it is important to understand the transactional guarantees provided by Interactive:</p>
 <ol class="arabic simple">
 <li><p>For every transaction, we first write the Write-Ahead Log (WAL) to persistent storage before applying it to the graph data. This ensures a reliable record of the transaction steps.</p></li>
@@ -1073,9 +1072,9 @@ The mapping between status codes and HTTP codes is shown in the table below.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

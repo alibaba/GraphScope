@@ -1,5 +1,6 @@
 <map id="gs::IdIndexer&lt; KEY_T, INDEX_T &gt;" name="gs::IdIndexer&lt; KEY_T, INDEX_T &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="106,109,251,151"/>
-<area shape="rect" id="node2" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer.html" title=" " alt="" coords="5,5,168,47"/>
-<area shape="rect" id="node3" href="$structgs_1_1GHash.html" title=" " alt="" coords="193,13,351,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="272,71,417,112"/>
+<area shape="rect" id="node2" href="$classgs_1_1IdIndexerBase.html" title=" " alt="" coords="13,5,161,47"/>
+<area shape="rect" id="node3" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer.html" title=" " alt="" coords="5,71,168,112"/>
+<area shape="rect" id="node4" href="$structgs_1_1GHash.html" title=" " alt="" coords="7,137,166,163"/>
 </map>

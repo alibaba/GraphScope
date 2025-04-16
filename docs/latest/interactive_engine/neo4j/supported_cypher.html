@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Using LLM as an Assistant in GIE" href="llm_assistant.html" /><link rel="prev" title="GIE for Cypher" href="cypher_sdk.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Cypher Support - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="cypher-support">
-<h1>Cypher Support<a class="headerlink" href="#cypher-support" title="Permalink to this heading">¶</a></h1>
+<h1>Cypher Support<a class="headerlink" href="#cypher-support" title="Link to this heading">¶</a></h1>
 <p>This document outlines the current capabilities of GIE in supporting Neo4j’s Cypher queries and
 compares them to the <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/syntax/">syntax</a> specified in Neo4j.
 While our goal is to comply with Neo4j’s syntax, GIE currently has some limitations.
@@ -702,12 +701,12 @@ Therefore, functionalities associated with writing, such as adding vertices/edge
 We further highlight planned features that we intend to offer in the near future.
 While all terminologies, including data types, operators, and keywords in clauses, are case-insensitive in this document, we use capital and lowercase letters for the terminologies of Neo4j and GIE, respectively, to ensure clarity.</p>
 <section id="data-types">
-<h2>Data Types<a class="headerlink" href="#data-types" title="Permalink to this heading">¶</a></h2>
+<h2>Data Types<a class="headerlink" href="#data-types" title="Link to this heading">¶</a></h2>
 <p>As <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/values-and-types">Neo4j</a>, we have provided support for
 data value of types in the categories of <strong>property</strong>, <strong>structural</strong> and <strong>constructed</strong>.
 However, the specific data types that we support are slightly modified from those in Cypher to ensure compatibility with our storage system. Further details will be elaborated upon.</p>
 <section id="property-types">
-<h3>Property Types<a class="headerlink" href="#property-types" title="Permalink to this heading">¶</a></h3>
+<h3>Property Types<a class="headerlink" href="#property-types" title="Link to this heading">¶</a></h3>
 <p>The available data types stored in the vertices (equivalent of nodes in Cypher) and edges (equivalent of relationships in Cypher), known as property types, are divided into several categories including Boolean, Integer, Float, String, Bytes, Placeholder and Temporal. These property types are extensively utilized and can be commonly utilized in queries and as parameters – making them the most commonly used data types.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -779,7 +778,7 @@ However, the specific data types that we support are slightly modified from thos
 </div>
 </section>
 <section id="structural-types">
-<h3>Structural types<a class="headerlink" href="#structural-types" title="Permalink to this heading">¶</a></h3>
+<h3>Structural types<a class="headerlink" href="#structural-types" title="Link to this heading">¶</a></h3>
 <p>In a graph, Structural Types are the first-class citizens and are comprised of the following:</p>
 <ul class="simple">
 <li><p>Vertex: It encodes the information of a particular vertex in the graph. The information includes the id, label, and a map of properties. However, it is essential to note that multiple labels in a vertex are currently unsupported in GIE.</p></li>
@@ -820,7 +819,7 @@ However, the specific data types that we support are slightly modified from thos
 </div>
 </section>
 <section id="constructed-types">
-<h3>Constructed Types<a class="headerlink" href="#constructed-types" title="Permalink to this heading">¶</a></h3>
+<h3>Constructed Types<a class="headerlink" href="#constructed-types" title="Link to this heading">¶</a></h3>
 <p>Constructed types mainly include the categories of Array and Map.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -851,7 +850,7 @@ However, the specific data types that we support are slightly modified from thos
 </section>
 </section>
 <section id="operators">
-<h2>Operators<a class="headerlink" href="#operators" title="Permalink to this heading">¶</a></h2>
+<h2>Operators<a class="headerlink" href="#operators" title="Link to this heading">¶</a></h2>
 <p>We list GIE’s support of the operators in the categories of Aggregation, Property, Mathematical,
 Comparison, String and Boolean. Examples and functionalities of these operators are the same
 as in <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/syntax/operators/">Neo4j</a>.
@@ -1280,14 +1279,14 @@ Note that some Aggregator operators, such as <code class="docutils literal notra
 </div>
 </section>
 <section id="clause">
-<h2>Clause<a class="headerlink" href="#clause" title="Permalink to this heading">¶</a></h2>
+<h2>Clause<a class="headerlink" href="#clause" title="Link to this heading">¶</a></h2>
 <p>A notable limitation for now is that we do not
 allow specifying multiple <code class="docutils literal notranslate"><span class="pre">MATCH</span></code> clauses in <strong>one</strong> query. For example,
 the following code will not compile:</p>
-<div class="highlight-Cypher notranslate"><div class="highlight"><pre><span></span>MATCH (a) -[]-&gt; (b)
-WITH a, b
-MATCH (a) -[]-&gt; () -[]-&gt; (b)  # second MATCH clause
-RETURN a, b;
+<div class="highlight-Cypher notranslate"><div class="highlight"><pre><span></span><span class="k">MATCH</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="o">-[]-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+<span class="k">WITH</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="w"> </span><span class="o">-[]-&gt;</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="o">-[]-&gt;</span><span class="w"> </span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="w">  </span><span class="err">#</span><span class="w"> </span><span class="n">second</span><span class="w"> </span><span class="k">MATCH</span><span class="w"> </span><span class="n">clause</span>
+<span class="k">RETURN</span><span class="w"> </span><span class="n">a</span><span class="p">,</span><span class="w"> </span><span class="n">b</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Besides, we support <code class="docutils literal notranslate"><span class="pre">OPTIONAL</span> <span class="pre">MATCH</span></code>. For example,
@@ -1462,9 +1461,9 @@ the following query can be supported:</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

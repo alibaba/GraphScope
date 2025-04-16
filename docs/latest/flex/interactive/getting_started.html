@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Using Custom Graph" href="custom_graph_data.html" /><link rel="prev" title="Installation" href="installation.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Getting Started - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,10 +691,10 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="getting-started">
-<h1>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h1>
+<h1>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h1>
 <p>Welcome to GraphScope Interactive! This guide will walk you through the process of setting up and running your first queries with our system.</p>
 <section id="preparation">
-<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this heading">¶</a></h2>
+<h2>Preparation<a class="headerlink" href="#preparation" title="Link to this heading">¶</a></h2>
 <p>Make sure <code class="docutils literal notranslate"><span class="pre">GraphScope</span> <span class="pre">Interactive</span></code> is installed before proceeding on. If not, please follow <a class="reference internal" href="installation.html"><span class="doc std std-doc">installation</span></a> to install the latest release.</p>
 <ul class="simple">
 <li><p><strong>Administrative tool</strong>: GraphScope Interactive offers an administrative tool of <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> to help manage the Interactive service. For an in-depth guide on how to use this tool, please visit the page of <a class="reference internal" href="#"><span class="xref myst">administrative tool</span></a> (TODO: add documentation for gsctl).</p></li>
@@ -705,11 +704,11 @@ MathJax = {
 </ul>
 </section>
 <section id="install-interactive">
-<h2>Install Interactive<a class="headerlink" href="#install-interactive" title="Permalink to this heading">¶</a></h2>
+<h2>Install Interactive<a class="headerlink" href="#install-interactive" title="Link to this heading">¶</a></h2>
 <p>See <a class="reference internal" href="installation.html"><span class="std std-doc">Installation Guide</span></a> for instructions on how to install and deploy Interactive.</p>
 </section>
 <section id="connect-to-interactive-service">
-<h2>Connect to Interactive Service<a class="headerlink" href="#connect-to-interactive-service" title="Permalink to this heading">¶</a></h2>
+<h2>Connect to Interactive Service<a class="headerlink" href="#connect-to-interactive-service" title="Link to this heading">¶</a></h2>
 <p>You could connect the <code class="docutils literal notranslate"><span class="pre">coordinator</span></code> via <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>connect<span class="w"> </span>--coordinator-endpoint<span class="w"> </span>http://127.0.0.1:8080
 <span class="c1"># change the port number if you have customized the coordinator port.</span>
@@ -717,7 +716,7 @@ MathJax = {
 </div>
 </section>
 <section id="check-service-status">
-<h2>Check Service Status<a class="headerlink" href="#check-service-status" title="Permalink to this heading">¶</a></h2>
+<h2>Check Service Status<a class="headerlink" href="#check-service-status" title="Link to this heading">¶</a></h2>
 <p>After connecting to the Interactive Service, you can now view what we have initially for you.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>ls<span class="w"> </span>-l
 </pre></div>
@@ -730,26 +729,26 @@ gsctl<span class="w"> </span>service<span class="w"> </span>status<span class="w
 <p>As seen from the output, the Interactive service is already running on the built-in graph.</p>
 </section>
 <section id="submit-cypher-queries">
-<h2>Submit Cypher Queries<a class="headerlink" href="#submit-cypher-queries" title="Permalink to this heading">¶</a></h2>
+<h2>Submit Cypher Queries<a class="headerlink" href="#submit-cypher-queries" title="Link to this heading">¶</a></h2>
 <p>GraphScope Interactive seamlessly integrates with the Neo4j ecosystem. You can establish a connection to the Interactive service using Neo4j’s Bolt connector and execute Cypher queries. Our implementation of Cypher queries aligns with the standards set by the <a class="reference external" href="http://www.opencypher.org/">openCypher</a> project. For a detailed overview of the supported Cypher queries, please visit <a class="reference external" href="https://graphscope.io/docs/latest/interactive_engine/neo4j/supported_cypher">supported_cypher</a>.</p>
 <p>Follow the instructions in <a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html"><span class="doc std std-doc">Connect-to-cypher-service</span></a> to connect to the Cypher service using either the Python client or cypher-shell.</p>
 <p>To submit a simple query using <code class="docutils literal notranslate"><span class="pre">cypher-shell</span></code>:</p>
 <section id="download-cypher-shell">
-<h3>Download <code class="docutils literal notranslate"><span class="pre">cypher-shell</span></code><a class="headerlink" href="#download-cypher-shell" title="Permalink to this heading">¶</a></h3>
+<h3>Download <code class="docutils literal notranslate"><span class="pre">cypher-shell</span></code><a class="headerlink" href="#download-cypher-shell" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://dist.neo4j.org/cypher-shell/cypher-shell-4.4.19.zip
 unzip<span class="w"> </span>cypher-shell-4.4.19.zip<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>cypher-shell
 </pre></div>
 </div>
 </section>
 <section id="connect-to-the-service">
-<h3>Connect to the Service<a class="headerlink" href="#connect-to-the-service" title="Permalink to this heading">¶</a></h3>
+<h3>Connect to the Service<a class="headerlink" href="#connect-to-the-service" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./cypher-shell
 <span class="c1"># or -a neo4j://localhost:&lt;port&gt; to connect to the customized port</span>
 </pre></div>
 </div>
 </section>
 <section id="run-a-simple-query">
-<h3>Run a Simple Query<a class="headerlink" href="#run-a-simple-query" title="Permalink to this heading">¶</a></h3>
+<h3>Run a Simple Query<a class="headerlink" href="#run-a-simple-query" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>@neo4j&gt;<span class="w"> </span>MATCH<span class="w"> </span><span class="o">(</span>n<span class="o">)</span><span class="w"> </span>RETURN<span class="w"> </span>n<span class="w"> </span>LIMIT<span class="w"> </span><span class="m">10</span><span class="p">;</span>
 </pre></div>
 </div>
@@ -757,14 +756,14 @@ unzip<span class="w"> </span>cypher-shell-4.4.19.zip<span class="w"> </span><spa
 </section>
 </section>
 <section id="close-the-connection">
-<h2>Close the connection<a class="headerlink" href="#close-the-connection" title="Permalink to this heading">¶</a></h2>
+<h2>Close the connection<a class="headerlink" href="#close-the-connection" title="Link to this heading">¶</a></h2>
 <p>If you want to disconnect to coordinator, just type</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>close
 </pre></div>
 </div>
 </section>
 <section id="destroy-the-interactive-instance">
-<h2>Destroy the Interactive Instance<a class="headerlink" href="#destroy-the-interactive-instance" title="Permalink to this heading">¶</a></h2>
+<h2>Destroy the Interactive Instance<a class="headerlink" href="#destroy-the-interactive-instance" title="Link to this heading">¶</a></h2>
 <p>If you want to shutdown and uninstall the Interactive instance,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>destroy<span class="w"> </span>--type<span class="w"> </span>interactive
 </pre></div>
@@ -855,9 +854,9 @@ unzip<span class="w"> </span>cypher-shell-4.4.19.zip<span class="w"> </span><spa
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

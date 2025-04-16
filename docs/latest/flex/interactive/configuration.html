@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Data Model" href="data_model.html" /><link rel="prev" title="Stored Procedures" href="stored_procedures.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,9 +691,9 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="configuration">
-<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h1>
+<h1>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h1>
 <section id="configurable-items-for-deploying-interactive-with-gsctl">
-<h2>Configurable Items for Deploying Interactive with gsctl<a class="headerlink" href="#configurable-items-for-deploying-interactive-with-gsctl" title="Permalink to this heading">¶</a></h2>
+<h2>Configurable Items for Deploying Interactive with gsctl<a class="headerlink" href="#configurable-items-for-deploying-interactive-with-gsctl" title="Link to this heading">¶</a></h2>
 <p>When deploying Interactive using <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, various items can be configured. For a given configurable item named <code class="docutils literal notranslate"><span class="pre">item-name</span></code>, you can set its value as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span><span class="o">[</span>--item-name<span class="o">=</span>value<span class="o">]</span>
 </pre></div>
@@ -751,7 +750,7 @@ MathJax = {
 <!-- | gremlin-port       | None    | The port of the gremlin service       | v0.3          | -->
 <!-- *Note: The default value for `gremlin-port` is `None`, meaning the Gremlin service will not be initiated by default. -->
 <section id="ports">
-<h3>Ports<a class="headerlink" href="#ports" title="Permalink to this heading">¶</a></h3>
+<h3>Ports<a class="headerlink" href="#ports" title="Link to this heading">¶</a></h3>
 <p>By default, Interactive will launch the following services on these ports:</p>
 <ul class="simple">
 <li><p>Coordinator Service: 8080</p></li>
@@ -772,11 +771,11 @@ gsctl instance deploy --type interactive --coordinator-port 8081 --admin-port 77
 ``` -->
 </section>
 <section id="service-configuration">
-<h3>Service Configuration<a class="headerlink" href="#service-configuration" title="Permalink to this heading">¶</a></h3>
+<h3>Service Configuration<a class="headerlink" href="#service-configuration" title="Link to this heading">¶</a></h3>
 <p>By default, <code class="docutils literal notranslate"><span class="pre">Interactive</span></code> will initialize the service with its default settings.
 However, GraphScope Interactive is designed to be flexible and adaptable to your specific needs. This means you can tailor the service’s behavior using custom configurations.</p>
 <section id="customizing-interactive-engine-service-configuration">
-<h4>Customizing Interactive Engine Service Configuration<a class="headerlink" href="#customizing-interactive-engine-service-configuration" title="Permalink to this heading">¶</a></h4>
+<h4>Customizing Interactive Engine Service Configuration<a class="headerlink" href="#customizing-interactive-engine-service-configuration" title="Link to this heading">¶</a></h4>
 <p>To customize the service’s settings, you can provide a YAML configuration file <code class="docutils literal notranslate"><span class="pre">interactive_config.yaml</span></code>. This file allows you to specify various parameters, from directory paths to log levels, ensuring the service aligns with your requirements. To use a custom configuration, simply pass the YAML file to the command as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span>--config<span class="w"> </span>./interactive_config.yaml
 </pre></div>
@@ -786,7 +785,7 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 <p>Please be aware that you’re not required to configure every option. Simply adjust the settings that are relevant to your needs. Any options left unconfigured will automatically adopt their default values, as detailed in the following sections.</p>
 </div>
 <section id="sample-configuration">
-<h5>Sample Configuration<a class="headerlink" href="#sample-configuration" title="Permalink to this heading">¶</a></h5>
+<h5>Sample Configuration<a class="headerlink" href="#sample-configuration" title="Link to this heading">¶</a></h5>
 <p>Here’s a glimpse of what a typical YAML configuration file might look like:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">log_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">INFO</span><span class="w"> </span><span class="c1"># default INFO, available(INFO,WARNING,ERROR,FATAL)</span>
 <span class="nt">verbose_level</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w"> </span><span class="c1"># default 0, should be a int in range [0,10]. 10 will verbose all logs</span>
@@ -806,7 +805,7 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 </section>
 </section>
 <section id="sharded-service">
-<h4>Sharded Service<a class="headerlink" href="#sharded-service" title="Permalink to this heading">¶</a></h4>
+<h4>Sharded Service<a class="headerlink" href="#sharded-service" title="Link to this heading">¶</a></h4>
 <p>The core query engine of Interactive is developed using <a class="reference external" href="https://github.com/alibaba/hiactor">hiactor</a> which is based on <a class="reference external" href="https://github.com/scylladb/seastar">Seastar</a>. Seastar operates on a Share-nothing SMP architecture, where each core functions autonomously, without sharing memory, data structures, or CPU resources. Each Seastar core is commonly referred to as a shard.</p>
 <p>Leveraging the future-promise API and a Cooperative micro-task scheduler, the sharded service significantly boosts performance and throughput. However, this setup can also lead to potential issues: an incoming request might experience delays even if some shards are idle, due to the shard scheduling algorithm potentially routing it to a busy shard. This can be problematic in Interactive, which typically hosts two services—<code class="docutils literal notranslate"><span class="pre">QueryService</span></code> and <code class="docutils literal notranslate"><span class="pre">AdminService</span></code>. Crucially, <code class="docutils literal notranslate"><span class="pre">AdminService</span></code> must remain responsive even when <code class="docutils literal notranslate"><span class="pre">QueryService</span></code> is under heavy load.</p>
 <p>As discussed in <a class="reference external" href="https://github.com/alibaba/GraphScope/discussions/4409">discussion-4409</a>, one potential solution is to allocate different shards for handling distinct requests. This approach presents three scenarios:</p>
@@ -821,7 +820,7 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 </div>
 <p>By changing to <code class="docutils literal notranslate"><span class="pre">sharding_mode:</span> <span class="pre">cooperative</span></code>, you can fully utilize all the computational power for the QueryService.</p>
 <section id="available-configurations">
-<h5>Available Configurations<a class="headerlink" href="#available-configurations" title="Permalink to this heading">¶</a></h5>
+<h5>Available Configurations<a class="headerlink" href="#available-configurations" title="Link to this heading">¶</a></h5>
 <p>In this following table, we use the <code class="docutils literal notranslate"><span class="pre">.</span></code> notation to represent the hierarchy within the <code class="docutils literal notranslate"><span class="pre">YAML</span></code> structure.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -904,7 +903,7 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
 </section>
 </section>
 <section id="todos">
-<h4>TODOs<a class="headerlink" href="#todos" title="Permalink to this heading">¶</a></h4>
+<h4>TODOs<a class="headerlink" href="#todos" title="Link to this heading">¶</a></h4>
 <p>We currently only allow service configuration during instance deployment. In the near future, we will support:</p>
 <ul class="simple">
 <li><p>Graph-level configurations</p></li>
@@ -1001,9 +1000,9 @@ However, GraphScope Interactive is designed to be flexible and adaptable to your
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

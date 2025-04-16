@@ -1,7 +1,9 @@
 <map id="gs::TypedImmutableCsrBase&lt; EDATA_T &gt;" name="gs::TypedImmutableCsrBase&lt; EDATA_T &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="126,155,333,196"/>
-<area shape="rect" id="node4" href="$classgs_1_1ImmutableCsr.html" title=" " alt="" coords="5,251,229,278"/>
-<area shape="rect" id="node5" href="$classgs_1_1SingleImmutableCsr.html" title=" " alt="" coords="254,244,431,285"/>
-<area shape="rect" id="node2" href="$classgs_1_1TypedCsrBase.html" title=" " alt="" coords="118,80,341,107"/>
-<area shape="rect" id="node3" href="$classgs_1_1CsrBase.html" title=" " alt="" coords="180,5,279,32"/>
+<area shape="rect" id="node1" title=" " alt="" coords="423,86,629,127"/>
+<area shape="rect" id="node4" href="$classgs_1_1ImmutableCsr.html" title=" " alt="" coords="687,5,892,32"/>
+<area shape="rect" id="node5" href="$classgs_1_1SingleImmutableCsr.html" title=" " alt="" coords="701,57,878,98"/>
+<area shape="rect" id="node6" href="$classgs_1_1ImmutableCsr.html" title=" " alt="" coords="677,123,901,149"/>
+<area shape="rect" id="node7" href="$classgs_1_1SingleImmutableCsr.html" title=" " alt="" coords="701,174,878,215"/>
+<area shape="rect" id="node2" href="$classgs_1_1TypedCsrBase.html" title=" " alt="" coords="152,93,375,120"/>
+<area shape="rect" id="node3" href="$classgs_1_1CsrBase.html" title=" " alt="" coords="5,93,104,120"/>
 </map>

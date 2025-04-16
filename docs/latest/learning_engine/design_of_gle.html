@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Graph Sampling" href="graph_sampling.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Design of GLE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,11 +691,11 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="design-of-gle">
-<h1>Design of GLE<a class="headerlink" href="#design-of-gle" title="Permalink to this heading">¶</a></h1>
+<h1>Design of GLE<a class="headerlink" href="#design-of-gle" title="Link to this heading">¶</a></h1>
 <p>GLE (Graph Learning Engine) is a distributed framework to develop and implement graph neural networks at a large scale. GLE has been successfully applied in various scenarios such as network security, knowledge graph, and search recommendation. It facilitates sampling on batch graphs and enables offline or incremental GNN model training. GLE provides graph sampling operations with both Python and C++ interfaces, and a GSL (Graph Sampling Language) interface that is similar to Gremlin. GLE provides model development paradigms and processes for GNN models, and is compatible with TensorFlow and PyTorch. It offers data layer and model layer interfaces, as well as several model examples.</p>
 <p><img alt="graphlearn architecture" src="../_images/gle_arch.png" /></p>
 <section id="model-paradigms">
-<h2>Model Paradigms<a class="headerlink" href="#model-paradigms" title="Permalink to this heading">¶</a></h2>
+<h2>Model Paradigms<a class="headerlink" href="#model-paradigms" title="Link to this heading">¶</a></h2>
 <p>Most GNNs algorithms follow the computational paradigm of message passing or neighbor aggregation, and some frameworks and papers divide the message passing process into aggregate, update, etc. However, in practice, the computational process required by different GNNs algorithms is not exactly the same.</p>
 <p>In practical industrial applications, the size of the graph is relatively large and the features on the nodes and edges of the graph are complex (there may be both discrete and continuous features), so it is not possible to perform message passing/neighbor aggregation directly on the original graph. A feasible and efficient approach is based on the idea of sampling, where a subgraph is first sampled from the graph and then computed based on the subgraph. After sampling out the subgraph, the node and edge features of that subgraph are preprocessed and uniformly processed into vectors, and then the computation of efficient message passing can be performed based on that subgraph.</p>
 <p>To summarize, we summarize the paradigm of GNNs into 3 stages: subgraph sampling, feature preprocessing, and message passing.</p>
@@ -708,16 +707,16 @@ MathJax = {
 <p>According to the difference of neighbor sampling operator in subgraph sampling and NN operator in message passing, we organize the subgraph into EgoGraph or SubGraph format. EgoGraph consists of central object ego and its fixed-size neighbors, which is a dense organization format. SubGraph is a more general subgraph organization format, consisting of nodes, edges features and edge index (a two-dimensional array consisting of row index and column index of edges), generally using full neighbor. The conv layer based on SubGraph generally uses the sparse NN operator. EgoGraph refers to a subgraph composed of ego (central node) and k-hop neighbors; SubGraph refers to a generalized subgraph represented by nodes, edges and edge_index.</p>
 <p>Next, we introduce two different computational paradigms based on EgoGraph and SubGraph.</p>
 <section id="egograph-based-node-centric-aggregation">
-<h3>EgoGraph-based node-centric aggregation<a class="headerlink" href="#egograph-based-node-centric-aggregation" title="Permalink to this heading">¶</a></h3>
+<h3>EgoGraph-based node-centric aggregation<a class="headerlink" href="#egograph-based-node-centric-aggregation" title="Link to this heading">¶</a></h3>
 <p>EgoGraph consists of ego and neighbors, and the message aggregation path is determined by the potential relationship between ego and neighbors. k-hop neighbors only need to aggregate the messages of k+1-hop neighbors, and the whole message passing process is carried out along the directed meta-path from neighbors to themselves. In this approach, the number of sampled neighbor hops and the number of layers of the neural network need to be exactly the same. The following figure illustrates the computation of a 2-hop neighbor model of GNNs. The vector of original nodes is noted as h(0); the first layer forward process needs to aggregate 2-hop neighbors to 1-hop neighbors and 1-hop neighbors to itself, the types of different hop neighbors may be different, so the first layer needs two different conv layers (for homogeneous graphs, these two conv layers are the same), and the features of nodes after the first layer are updated to h(1) as the input of the second layer; at the second layer, it needs to aggregate the h(1) of 1-hop neighbors to update the ego node features, and the final output node features h(2) as the embedding of the final output ego node.</p>
 <p><img alt="egograph" src="../_images/egolayer.png" /></p>
 </section>
 <section id="subgraph-based-graph-message-passing">
-<h3>SubGraph-based graph message passing<a class="headerlink" href="#subgraph-based-graph-message-passing" title="Permalink to this heading">¶</a></h3>
+<h3>SubGraph-based graph message passing<a class="headerlink" href="#subgraph-based-graph-message-passing" title="Link to this heading">¶</a></h3>
 <p>Unlike EgoGraph, SubGraph contains the edge_index of the graph topology, so the message passing path (forward computation path) can be determined directly by the edge_index, and the implementation of the conv layer can be done directly by the edge_index and the nodes/edges data. In addition, SubGraph is fully compatible with the Data in PyG, so the model part of PyG can be reused.</p>
 </section>
 <section id="pipeline-for-learning">
-<h3>Pipeline for Learning<a class="headerlink" href="#pipeline-for-learning" title="Permalink to this heading">¶</a></h3>
+<h3>Pipeline for Learning<a class="headerlink" href="#pipeline-for-learning" title="Link to this heading">¶</a></h3>
 <p>A GNN training/prediction task usually consists of the following steps.</p>
 <p><img alt="pipeline" src="../_images/gle_pipeline.png" /></p>
 <p>The first step in using GraphLearn is to prepare the graph data according to the application scenario. Graph data exists in the form of a vertex table and an edge table, and an application scenario will usually involve multiple types of vertices and edges. These can be added one by one using the interface provided by GraphLearn. The construction of graph data is a critical part of the process as it determines the upper limit of algorithm learning. It is important to generate reasonable edge data and choose appropriate features that are consistent with business goals.</p>
@@ -805,9 +804,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

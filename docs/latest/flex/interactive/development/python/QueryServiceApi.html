@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>gs_interactive.QueryServiceApi - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="gs-interactive-queryserviceapi">
-<h1>gs_interactive.QueryServiceApi<a class="headerlink" href="#gs-interactive-queryserviceapi" title="Permalink to this heading">¶</a></h1>
+<h1>gs_interactive.QueryServiceApi<a class="headerlink" href="#gs-interactive-queryserviceapi" title="Link to this heading">¶</a></h1>
 <p>All URIs are relative to <em>{INTERACTIVE_ADMIN_ENDPOINT}</em></p>
 <p>Although Interactive supports multiple graphs in storage level, the query service currently could only runs on a single graph.
 This means that at any given time, only one graph can provide query services.
@@ -719,7 +718,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 </div>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="callprocedure">
-<h1><strong>CallProcedure</strong><a class="headerlink" href="#callprocedure" title="Permalink to this heading">¶</a></h1>
+<h1><strong>CallProcedure</strong><a class="headerlink" href="#callprocedure" title="Link to this heading">¶</a></h1>
 <blockquote>
 <div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[CollectiveResults] call_procedure(graph_id, params)</p>
 </div></blockquote>
@@ -727,7 +726,7 @@ If you attempt to submit a query to a graph that is not currently running, we wi
 The output format for the query is define by the <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/interactive_engine/executor/ir/proto/results.proto">results.proto</a>.</p>
 <p>For the creation of stored procedure please refer to <a class="reference internal" href="../../stored_procedures.html"><span class="std std-doc">CypherStoredProcedure</span></a> and <a class="reference internal" href="../stored_procedure/cpp_procedure.html"><span class="std std-doc">CppStoredProcedure</span></a>.</p>
 <section id="example">
-<h2>Example<a class="headerlink" href="#example" title="Permalink to this heading">¶</a></h2>
+<h2>Example<a class="headerlink" href="#example" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create graph..</span>
 <span class="c1"># create procedure</span>
 
@@ -749,7 +748,7 @@ The output format for the query is define by the <a class="reference external" h
 </div>
 </section>
 <section id="parameters">
-<h2>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h2>
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -775,22 +774,22 @@ The output format for the query is define by the <a class="reference external" h
 </div>
 </section>
 <section id="return-type">
-<h2>Return type<a class="headerlink" href="#return-type" title="Permalink to this heading">¶</a></h2>
+<h2>Return type<a class="headerlink" href="#return-type" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[<strong>CollectiveResults</strong>]</p>
 </section>
 <section id="authorization">
-<h2>Authorization<a class="headerlink" href="#authorization" title="Permalink to this heading">¶</a></h2>
+<h2>Authorization<a class="headerlink" href="#authorization" title="Link to this heading">¶</a></h2>
 <p>No authorization required</p>
 </section>
 <section id="http-request-headers">
-<h2>HTTP request headers<a class="headerlink" href="#http-request-headers" title="Permalink to this heading">¶</a></h2>
+<h2>HTTP request headers<a class="headerlink" href="#http-request-headers" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Content-Type</strong>: text/plain</p></li>
 <li><p><strong>Accept</strong>: text/plain</p></li>
 </ul>
 </section>
 <section id="http-response-details">
-<h2>HTTP response details<a class="headerlink" href="#http-response-details" title="Permalink to this heading">¶</a></h2>
+<h2>HTTP response details<a class="headerlink" href="#http-response-details" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -815,14 +814,14 @@ The output format for the query is define by the <a class="reference external" h
 </section>
 </section>
 <section class="tex2jax_ignore mathjax_ignore" id="callprocedureoncurrentgraph">
-<h1><strong>CallProcedureOnCurrentGraph</strong><a class="headerlink" href="#callprocedureoncurrentgraph" title="Permalink to this heading">¶</a></h1>
+<h1><strong>CallProcedureOnCurrentGraph</strong><a class="headerlink" href="#callprocedureoncurrentgraph" title="Link to this heading">¶</a></h1>
 <blockquote>
 <div><p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[CollectiveResults] call_procedure_current(params)</p>
 </div></blockquote>
 <p>run queries on the running graph</p>
 <p>Submit a query to the running graph.</p>
 <section id="id1">
-<h2>Example<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h2>
+<h2>Example<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># create graph..</span>
 <span class="c1"># create procedure</span>
 
@@ -844,7 +843,7 @@ The output format for the query is define by the <a class="reference external" h
 </div>
 </section>
 <section id="id2">
-<h2>Parameters<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<h2>Parameters<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -865,22 +864,22 @@ The output format for the query is define by the <a class="reference external" h
 </div>
 </section>
 <section id="id3">
-<h2>Return type<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<h2>Return type<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
 <p><a class="reference internal" href="result.html"><span class="std std-doc">Result</span></a>[<strong>CollectiveResults</strong>]</p>
 </section>
 <section id="id4">
-<h2>Authorization<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h2>
+<h2>Authorization<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h2>
 <p>No authorization required</p>
 </section>
 <section id="id5">
-<h2>HTTP request headers<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<h2>HTTP request headers<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Content-Type</strong>: text/plain</p></li>
 <li><p><strong>Accept</strong>: text/plain</p></li>
 </ul>
 </section>
 <section id="id6">
-<h2>HTTP response details<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h2>
+<h2>HTTP response details<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
 <thead>
@@ -939,9 +938,9 @@ The output format for the query is define by the <a class="reference external" h
       
     </aside>
   </div>
-</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>

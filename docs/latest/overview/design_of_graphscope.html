@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Positioning of GraphScope" href="positioning.html" /><link rel="prev" title="Graph Learning Workloads" href="graph_learning_workloads.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Design of GraphScope - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,11 +691,11 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="design-of-graphscope">
-<h1>Design of GraphScope<a class="headerlink" href="#design-of-graphscope" title="Permalink to this heading">¶</a></h1>
+<h1>Design of GraphScope<a class="headerlink" href="#design-of-graphscope" title="Link to this heading">¶</a></h1>
 <p>Real-life graph computation applications are often more complex than the workloads we’ve seen so far, which highlights the need for a flexible and intelligent design for the graph processing system.
 In this section, we will introduce the modular design of GraphScope and how it addresses the diverse needs of graph computation workloads.</p>
 <section id="motivation">
-<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">¶</a></h2>
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h2>
 <p>As graph data and its applications continue to grow rapidly,
 numerous graph processing systems have been developed.
 However, existing systems often focus on a specific type of graph computation,
@@ -709,7 +708,7 @@ buying, selling, or reviewing relationships.</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/gs-example.png"><img alt="An example in e-commerce." src="../_images/gs-example.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">An example in e-commerce</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">An example in e-commerce</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>To identify suspicious users and transactions in the transaction graph, an anti-fraud workflow may include the following steps:</p>
@@ -739,7 +738,7 @@ featuring a layered and disaggregated architecture,
 offering a comprehensive and efficient platform for large-scale graph computations.</p>
 </section>
 <section id="unified-graph-computing-platform">
-<h2>Unified Graph Computing Platform<a class="headerlink" href="#unified-graph-computing-platform" title="Permalink to this heading">¶</a></h2>
+<h2>Unified Graph Computing Platform<a class="headerlink" href="#unified-graph-computing-platform" title="Link to this heading">¶</a></h2>
 <p>GraphScope is a comprehensive, production-ready system for end-to-end analysis of large-scale graph data.
 To achieve this, various components must interact seamlessly,
 including cluster management (deployment) software, graph storage (for input, output, and intermediate results),
@@ -747,11 +746,11 @@ distributed execution engines, language constructs, and development tools.</p>
 <figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/gs-workflow.png"><img alt="GraphScope workflow." src="../_images/gs-workflow.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">GraphScope workflow</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">GraphScope workflow</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <section id="application-layer">
-<h3>Application layer<a class="headerlink" href="#application-layer" title="Permalink to this heading">¶</a></h3>
+<h3>Application layer<a class="headerlink" href="#application-layer" title="Link to this heading">¶</a></h3>
 <p>Graph processing often requires customized applications for each specific task.
 These tasks may include interactive queries in Gremlin, Cypher, or GQL,
 graph analytics with iterative computations like pagerank,
@@ -770,7 +769,7 @@ This approach enables GraphScope to seamlessly integrate multiple
 graph execution engines within a single unified platform, as described below.</p>
 </section>
 <section id="execution-engine-layer">
-<h3>Execution engine layer<a class="headerlink" href="#execution-engine-layer" title="Permalink to this heading">¶</a></h3>
+<h3>Execution engine layer<a class="headerlink" href="#execution-engine-layer" title="Link to this heading">¶</a></h3>
 <p>The GraphScope execution layer comprises three engines: GraphScope Interactive Engine (GIE),
 GraphScope Analytics Engine (GAE), and GraphScope Learning Engine (GLE).
 These engines provide interactive, analytical, and graph-based machine learning functionalities, respectively.
@@ -784,7 +783,7 @@ including any combination of analytics, interactive, and graph neural network (G
 Furthermore, the engines can be deployed separately and work standalone for specific tasks.</p>
 </section>
 <section id="storage-layer">
-<h3>Storage layer<a class="headerlink" href="#storage-layer" title="Permalink to this heading">¶</a></h3>
+<h3>Storage layer<a class="headerlink" href="#storage-layer" title="Link to this heading">¶</a></h3>
 <p>GraphScope defines a unified storage interface for accessing and managing graph data.
 This interface allows the storage layer to be flexible and extensible,
 enabling easy integration with different storage backends. GraphScope includes various graph stores, such as vineyard,
@@ -802,7 +801,7 @@ while the engine layer can be used transparently without any modifications.</p>
 </section>
 </section>
 <section id="disaggregated-design-for-diverse-graph-applications">
-<h2>Disaggregated Design for Diverse Graph Applications<a class="headerlink" href="#disaggregated-design-for-diverse-graph-applications" title="Permalink to this heading">¶</a></h2>
+<h2>Disaggregated Design for Diverse Graph Applications<a class="headerlink" href="#disaggregated-design-for-diverse-graph-applications" title="Link to this heading">¶</a></h2>
 <p>GraphScope utilizes a disaggregated design,
 enabling users to deploy GraphScope with only selected components to simplify deployment and cater to their specific needs.
 For instance, if a user only needs to run community detection on a social network graph,
@@ -812,7 +811,7 @@ engine layer, and storage layer. Users can choose components from these three la
 This flexible design allows GraphScope to be deployed and optimized for various graph computation scenarios.</p>
 <p>Next, we highlight some featured deployments of GraphScope.</p>
 <section id="graphscope-for-bi-analysis">
-<h3>GraphScope for BI analysis<a class="headerlink" href="#graphscope-for-bi-analysis" title="Permalink to this heading">¶</a></h3>
+<h3>GraphScope for BI analysis<a class="headerlink" href="#graphscope-for-bi-analysis" title="Link to this heading">¶</a></h3>
 <p>Users for BI analysis are typically business analysts who interactively query and analyze data via a WebUI.
 In this scenario, concurrency is not a primary concern, but low latency for complex queries is crucial.
 GraphScope operates as an interactive query answering service over an evolving graph.
@@ -828,7 +827,7 @@ With this combination, GraphScope provides a high-performance and interactive qu
 <p><a class="reference internal" href="#../interactive_engine/tutorial_ldbc_gremlin.md"><span class="xref myst">Read more about GraphScope for traversal queries</span></a></p>
 </section>
 <section id="graphscope-for-high-qps-queries">
-<h3>GraphScope for high QPS queries<a class="headerlink" href="#graphscope-for-high-qps-queries" title="Permalink to this heading">¶</a></h3>
+<h3>GraphScope for high QPS queries<a class="headerlink" href="#graphscope-for-high-qps-queries" title="Link to this heading">¶</a></h3>
 <p>In some service scenarios, such as recommendation or searching,
 graph queries arrive at an extremely high rate.
 GraphScope can handle these scenarios by deploying a similar set of components as in the BI scenario.
@@ -841,7 +840,7 @@ One may notice that the deployment of GraphScope for high QPS queries is similar
 However, the universal optimizer generates different plans and dispatches them to different backends according to the distinct workload characteristics.</p>
 </section>
 <section id="graphscope-for-graph-analytics">
-<h3>GraphScope for graph analytics<a class="headerlink" href="#graphscope-for-graph-analytics" title="Permalink to this heading">¶</a></h3>
+<h3>GraphScope for graph analytics<a class="headerlink" href="#graphscope-for-graph-analytics" title="Link to this heading">¶</a></h3>
 <p>GraphScope is both performant and easy-to-use for graph analytical jobs.
 In this scenario, applications are provided as iterative algorithms in the built-in library or customized by the users.
 The algorithms can be implemented using FLASH-style API, Pregel API, or GRAPE native API.
@@ -853,7 +852,7 @@ To achieve high performance, deployments for this scenario typically choose an i
 <p><a class="reference internal" href="#graphscope_for_graph_analytics.md"><span class="xref myst">Read more about GraphScope for analytics</span></a></p>
 </section>
 <section id="graphscope-for-learning">
-<h3>GraphScope for learning<a class="headerlink" href="#graphscope-for-learning" title="Permalink to this heading">¶</a></h3>
+<h3>GraphScope for learning<a class="headerlink" href="#graphscope-for-learning" title="Link to this heading">¶</a></h3>
 <p>GNNs have been effectively utilized in numerous real-world applications,
 such as e-commerce recommendation systems and financial risk control platforms, where billion-scale graphs are prevalent.
 The learning engine in GraphScope (GLE) efficiently supports distributed GNN training on large-scale graphs in these industrial scenarios.
@@ -953,9 +952,9 @@ allowing each to be independently scaled to achieve the best end-to-end throughp
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

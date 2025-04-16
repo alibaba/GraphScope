@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>gs_interactive.client.result - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -710,13 +709,17 @@ MathJax = {
 <span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Result"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Result</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+<div class="viewcode-block" id="Result">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Result</span><span class="p">(</span><span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a generic class that wraps the result of an operation,</span>
 <span class="sd">    It contains the status of the operation and the value returned by the operation.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Result.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">T</span><span class="p">):</span>
+<div class="viewcode-block" id="Result.__init__">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">T</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new Result object with the specified status and value.</span>
 
@@ -727,69 +730,98 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">, value: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Result: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">, value: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
 
-<div class="viewcode-block" id="Result.is_ok"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.is_ok">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Result.is_ok">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.is_ok">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether the operation is successful.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">is_ok</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Result.is_error"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.is_error">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Result.is_error">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.is_error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_error</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether the operation is failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">is_error</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Result.get_value"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_value">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Result.get_value">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_value">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the value returned by the operation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span></div>
 
-<div class="viewcode-block" id="Result.get_status"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Result.get_status">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_status">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status of the operation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span></div>
 
-<div class="viewcode-block" id="Result.get_status_message"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_status_message">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_status_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Result.get_status_message">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.get_status_message">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_status_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the detail message of the status.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">message</span></div>
 
-<div class="viewcode-block" id="Result.ok"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.ok">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Result.ok">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.ok">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A static method to create a successful result.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="n">Status</span><span class="o">.</span><span class="n">ok</span><span class="p">(),</span> <span class="n">value</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Result.error"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.error">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Result.error">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.error">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">error</span><span class="p">(</span><span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">,</span> <span class="n">msg</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A static method to create a failed result.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">msg</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Result.from_exception"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.from_exception">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Result.from_exception">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.from_exception">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_exception</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">ApiException</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A static method create a Result object from an ApiException.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="n">Status</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">exception</span><span class="p">),</span> <span class="kc">None</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Result.from_response"><a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.from_response">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Result.from_response">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/result.html#gs_interactive.client.result.Result.from_response">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">ApiResponse</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A static method create a Result object from an successful ApiResponse.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="n">Status</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">),</span> <span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">Result</span><span class="p">(</span><span class="n">Status</span><span class="o">.</span><span class="n">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">),</span> <span class="n">response</span><span class="o">.</span><span class="n">data</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
         </article>
       </div>
@@ -825,9 +857,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

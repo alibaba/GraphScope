@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.framework.app - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -829,7 +828,9 @@ MathJax = {
     <span class="k">return</span> <span class="n">_not_compatible_for</span>
 
 
-<div class="viewcode-block" id="AppAssets"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">AppAssets</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+<div class="viewcode-block" id="AppAssets">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppAssets</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents an app asset node in a DAG that holds the bytes of the gar resource.</span>
 
 <span class="sd">    Assets includes an algorithm name, and gar (for user defined algorithm),</span>
@@ -849,7 +850,9 @@ MathJax = {
         <span class="s2">&quot;labeled_vertex_property&quot;</span><span class="p">,</span>
     <span class="p">]</span>
 
-<div class="viewcode-block" id="AppAssets.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmake_extra_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AppAssets.__init__">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmake_extra_options</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Init assets of the algorithm.</span>
 
 <span class="sd">        Args:</span>
@@ -885,6 +888,7 @@ MathJax = {
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">create_app</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;graphscope.framework.app.AppAssets &lt;type: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_type</span><span class="si">}</span><span class="s2">, algo: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_algo</span><span class="si">}</span><span class="s2">, context: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_context_type</span><span class="si">}</span><span class="s2">&gt;&quot;</span>
@@ -978,7 +982,9 @@ MathJax = {
             <span class="n">s</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_gar</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-<div class="viewcode-block" id="AppAssets.is_compatible"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.is_compatible">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="AppAssets.is_compatible">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppAssets.is_compatible">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_compatible</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Determine if this algorithm can run on this type of graph.</span>
 
 <span class="sd">        Args:</span>
@@ -1002,13 +1008,17 @@ MathJax = {
             <span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiate an App and do queries over it.&quot;&quot;&quot;</span>
         <span class="n">app_</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">AppDAGNode</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">app_</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="AppDAGNode"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">AppDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AppDAGNode">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.AppDAGNode">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">AppDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents a app node in a DAG.</span>
 
 <span class="sd">    In GraphScope, an app node binding a concrete graph node that query executed on.</span>
@@ -1110,7 +1120,10 @@ MathJax = {
         <span class="k">return</span> <span class="n">UnloadedApp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="App"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+<div class="viewcode-block" id="App">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">App</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An application that can run on graphs and produce results.</span>
 
 <span class="sd">    Analytical engine will build the app dynamic library when instantiate a app instance.</span>
@@ -1118,7 +1131,9 @@ MathJax = {
 <span class="sd">    previous ones.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="App.__init__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<div class="viewcode-block" id="App.__init__">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">app_node</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span> <span class="o">=</span> <span class="n">app_node</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">session</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
@@ -1128,6 +1143,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="n">unload_app</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_saved_signature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -1151,15 +1167,19 @@ MathJax = {
     <span class="k">def</span><span class="w"> </span><span class="nf">_unload</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
 
-<div class="viewcode-block" id="App.__del__"><a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__del__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="App.__del__">
+<a class="viewcode-back" href="../../../reference/app.html#graphscope.framework.app.App.__del__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unload app. Both on engine side and python side. Set the key to None.&quot;&quot;&quot;</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
             <span class="k">pass</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_app_node</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span></div>
+
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">UnloadedApp</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
@@ -1172,7 +1192,9 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">dag</span><span class="o">.</span><span class="n">add_op</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="load_app"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">load_app</span><span class="p">(</span><span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="load_app">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.framework.app.load_app.html#graphscope.framework.app.load_app">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_app</span><span class="p">(</span><span class="n">gar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">algo</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Load an app from gar.</span>
 
 <span class="sd">    Args:</span>
@@ -1224,6 +1246,7 @@ MathJax = {
         <span class="k">return</span> <span class="n">AppAssets</span><span class="p">(</span><span class="n">algo</span><span class="p">,</span> <span class="s2">&quot;vertex_data&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">InvalidArgumentError</span><span class="p">(</span><span class="s2">&quot;Wrong type with </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">gar</span><span class="p">))</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -1259,9 +1282,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

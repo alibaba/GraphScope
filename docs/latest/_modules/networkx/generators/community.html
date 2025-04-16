@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>networkx.generators.community - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -702,7 +701,9 @@ MathJax = {
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="caveman_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.caveman_graph.html#graphscope.nx.generators.community.caveman_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+<div class="viewcode-block" id="caveman_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.caveman_graph.html#graphscope.nx.generators.community.caveman_graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a caveman graph of `l` cliques of size `k`.</span>
 
 <span class="sd">    Parameters</span>
@@ -748,7 +749,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="connected_caveman_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html#graphscope.nx.generators.community.connected_caveman_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">connected_caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+
+<div class="viewcode-block" id="connected_caveman_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.connected_caveman_graph.html#graphscope.nx.generators.community.connected_caveman_graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">connected_caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a connected caveman graph of `l` cliques of size `k`.</span>
 
 <span class="sd">    The connected caveman graph is formed by creating `n` cliques of size</span>
@@ -801,7 +805,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="relaxed_caveman_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html#graphscope.nx.generators.community.relaxed_caveman_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<div class="viewcode-block" id="relaxed_caveman_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.relaxed_caveman_graph.html#graphscope.nx.generators.community.relaxed_caveman_graph">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">relaxed_caveman_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a relaxed caveman graph.</span>
 
@@ -852,7 +859,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="random_partition_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.random_partition_graph.html#graphscope.nx.generators.community.random_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<div class="viewcode-block" id="random_partition_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.random_partition_graph.html#graphscope.nx.generators.community.random_partition_graph">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">random_partition_graph</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the random partition graph with a partition of sizes.</span>
 
@@ -930,7 +940,10 @@ MathJax = {
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="planted_partition_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html#graphscope.nx.generators.community.planted_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+
+<div class="viewcode-block" id="planted_partition_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.planted_partition_graph.html#graphscope.nx.generators.community.planted_partition_graph">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">planted_partition_graph</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the planted l-partition graph.</span>
 
@@ -985,7 +998,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">random_partition_graph</span><span class="p">([</span><span class="n">k</span><span class="p">]</span> <span class="o">*</span> <span class="n">l</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="gaussian_random_partition_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html#graphscope.nx.generators.community.gaussian_random_partition_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
+
+<div class="viewcode-block" id="gaussian_random_partition_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.gaussian_random_partition_graph.html#graphscope.nx.generators.community.gaussian_random_partition_graph">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">6</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">gaussian_random_partition_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a Gaussian random partition graph.</span>
 
@@ -1061,7 +1077,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">random_partition_graph</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">p_in</span><span class="p">,</span> <span class="n">p_out</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="n">seed</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="n">directed</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ring_of_cliques"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html#graphscope.nx.generators.community.ring_of_cliques">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">ring_of_cliques</span><span class="p">(</span><span class="n">num_cliques</span><span class="p">,</span> <span class="n">clique_size</span><span class="p">):</span>
+
+<div class="viewcode-block" id="ring_of_cliques">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.ring_of_cliques.html#graphscope.nx.generators.community.ring_of_cliques">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ring_of_cliques</span><span class="p">(</span><span class="n">num_cliques</span><span class="p">,</span> <span class="n">clique_size</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines a &quot;ring of cliques&quot; graph.</span>
 
 <span class="sd">    A ring of cliques graph is consisting of cliques, connected through single</span>
@@ -1116,7 +1135,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="windmill_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.windmill_graph.html#graphscope.nx.generators.community.windmill_graph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">windmill_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
+
+<div class="viewcode-block" id="windmill_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.windmill_graph.html#graphscope.nx.generators.community.windmill_graph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">windmill_graph</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a windmill graph.</span>
 <span class="sd">    A windmill graph is a graph of `n` cliques each of size `k` that are all</span>
 <span class="sd">    joined at one node.</span>
@@ -1168,7 +1190,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="stochastic_block_model"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html#graphscope.nx.generators.community.stochastic_block_model">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+<div class="viewcode-block" id="stochastic_block_model">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.stochastic_block_model.html#graphscope.nx.generators.community.stochastic_block_model">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">stochastic_block_model</span><span class="p">(</span>
     <span class="n">sizes</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">nodelist</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">selfloops</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sparse</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">):</span>
@@ -1337,6 +1362,7 @@ MathJax = {
     <span class="k">return</span> <span class="n">g</span></div>
 
 
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_zipf_rv_below</span><span class="p">(</span><span class="n">gamma</span><span class="p">,</span> <span class="n">xmin</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a random value chosen from the bounded Zipf distribution.</span>
 
@@ -1481,7 +1507,9 @@ MathJax = {
     <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">ExceededMaxIterations</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="LFR_benchmark_graph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html#graphscope.nx.generators.community.LFR_benchmark_graph">[docs]</a><span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
+<div class="viewcode-block" id="LFR_benchmark_graph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.generators.community.LFR_benchmark_graph.html#graphscope.nx.generators.community.LFR_benchmark_graph">[docs]</a>
+<span class="nd">@py_random_state</span><span class="p">(</span><span class="mi">11</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">LFR_benchmark_graph</span><span class="p">(</span>
     <span class="n">n</span><span class="p">,</span>
     <span class="n">tau1</span><span class="p">,</span>
@@ -1742,6 +1770,7 @@ MathJax = {
                     <span class="n">G</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
             <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="s2">&quot;community&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
     <span class="k">return</span> <span class="n">G</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -1777,9 +1806,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

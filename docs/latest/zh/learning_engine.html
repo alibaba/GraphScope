@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="常见问题" href="frequently_asked_questions.html" /><link rel="prev" title="图交互式分析引擎" href="interactive_engine.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>图学习引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -372,7 +371,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="id1">
-<h1>图学习引擎<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h1>
+<h1>图学习引擎<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h1>
 <p>GraphScope中的图学习引擎 (<strong>GLE</strong>) 是面向大规模图神经网络的研发和应用而设计的一款分布式框架。
 它从实际问题出发，提炼和抽象了一套适合于当下图神经网络模型的编程范式， 并已经成功应用在阿里巴巴
 内部的诸如搜索推荐、网络安全、知识图谱等众多场景。
@@ -380,7 +379,7 @@ GL注重可移植和可扩展，对于开发者更为友好，为了应对GNN在
 基于GL，开发者可以实现一种GNN算法，或者面向实际场景定制化一种图算子，例如图采样。</p>
 <p>接下来，我们通过一个入门教程介绍如何使用 <strong>GLE</strong> 来构建用户自己的CNN模型。</p>
 <section id="id2">
-<h2>图学习模型<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<h2>图学习模型<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <p>图学习算法的实现目前主要有两种方式。第一种是直接以全图为计算对象，
 原始的GCN，GAT等算法都是这种实现思路，一般会直接用邻接矩阵进行计算。
 然而这种方法在大规模图上会消耗大量内存，导致无法高效训练甚至无法训练。
@@ -394,7 +393,7 @@ GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习�
 和PyTorch。目前我们实现了基于TensorFlow的模型，基于PyTorch的模型正在开发中。</p>
 <img alt="../_images/learning_model.png" class="align-center" src="../_images/learning_model.png" />
 <section id="id3">
-<h3>数据模型<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h3>
+<h3>数据模型<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <p><strong>GLE</strong> 采用采样子图再计算的方式构建和训练模型。我们首先介绍一下基本的数据模型。</p>
 <p><code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 是图学习算法编程的基本数据对象。它由一个batch的种子点或者边(称为’ego’)
 以及他们的’感受野’(多跳邻居)组成。<code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 由图采样和查询到的数据组成，我们实现
@@ -404,7 +403,7 @@ GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习�
 <img alt="../_images/egograph.png" class="align-center" src="../_images/egograph.png" />
 </section>
 <section id="id4">
-<h3>编码器<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h3>
+<h3>编码器<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <p>所有的图学习模型可以抽象为使用编码器将 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code> 编码成最终的点、边或者子图的
 向量。<strong>GLE</strong> 首先利用特征编码器来编码原始的点和边上的特征，然后将特征编码器编码后的
 原始向量用不同的图编码器进行编码，得到最终的输出。对于大多数GNN模型，图编码器
@@ -415,7 +414,7 @@ GNNs, 知识图谱模型，图嵌入算法等，并且和主流的深度学习�
 </section>
 </section>
 <section id="id5">
-<h2>自定义算法<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<h2>自定义算法<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
 <p>这篇文档我们将介绍如何用 <strong>GLE</strong> 提供的基本API配合深度学习引擎(如TensorFlow)来构建图学习算法。
 我们以图神经网络里最流行的GCN模型做为示例来说明。</p>
 <p>通常来说，实现一个算法需要下面四个步骤：</p>
@@ -444,7 +443,7 @@ GNNs需要聚合邻居信息, 我们抽象了 <code class="docutils literal notr
 </ul>
 <p>下面我们按照上面介绍的4个步骤来介绍如何实现一个GCN模型。</p>
 <section id="id6">
-<h3>采样<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<h3>采样<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <p>我们使用Cora数据集以点分类任务做为示例。我们提供了一个简单的数据转换脚本 <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> 来
 将原始Cora转换成 <strong>GLE</strong> 需要的格式。运行完这个脚本后你可以得到下面5个文件
 node_table, edge_table_with_self_loop, train_table, val_table and test_table。
@@ -506,7 +505,7 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 成 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 返回。</p>
 </section>
 <section id="id7">
-<h3>图数据流<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<h3>图数据流<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <p>在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里我们使用封装的 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 来把 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 转换成对应的 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>,
 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 包含一个数据流迭代器和若干 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
@@ -523,7 +522,7 @@ node_table, edge_table_with_self_loop, train_table, val_table and test_table。
 <p>你可以从 <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code> 获取和前面 <code class="docutils literal notranslate"><span class="pre">EgoGraph</span></code> 对应的 <code class="docutils literal notranslate"><span class="pre">EgoTensor</span></code>。</p>
 </section>
 <section id="id8">
-<h3>模型<a class="headerlink" href="#id8" title="Permalink to this heading">¶</a></h3>
+<h3>模型<a class="headerlink" href="#id8" title="Link to this heading">¶</a></h3>
 <p>接下来，首先使用特征编码器来编码原始特征。这里我们使用 <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code>，即返回自身即可，因为
 Cora的特征已经是处理过的向量格式了。对于既有离散特征由于连续特征的情况，可以使用 <code class="docutils literal notranslate"><span class="pre">WideNDeepEncoder</span></code>。
 更多encoder请参考 <a class="reference external" href="https://github.com/alibaba/graph-learn/blob/graphscope/graphlearn/python/model/tf/encoders/feature_encoder.py">feature encoder</a>。
@@ -548,7 +547,7 @@ Cora的特征已经是处理过的向量格式了。对于既有离散特征由�
 </div>
 </section>
 <section id="id9">
-<h3>损失函数和训练过程<a class="headerlink" href="#id9" title="Permalink to this heading">¶</a></h3>
+<h3>损失函数和训练过程<a class="headerlink" href="#id9" title="Link to this heading">¶</a></h3>
 <p>对于Cora点分类模型，我们选择对应的TensorFlow里的分类损失函数即可。
 然后在 <code class="docutils literal notranslate"><span class="pre">build</span></code> 函数里将编码器和损失函数组织起来，最终返回一个数据迭代器和损失函数。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">GCN</span><span class="p">(</span><span class="n">gle</span><span class="o">.</span><span class="n">LearningBasedModel</span><span class="p">):</span>
@@ -678,9 +677,9 @@ sample-based GCN and GAT等模型，你可以参考相似的模型代码做为�
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

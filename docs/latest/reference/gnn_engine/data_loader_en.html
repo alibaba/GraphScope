@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Data Source - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,12 +691,12 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="data-source">
-<h1>Data Source<a class="headerlink" href="#data-source" title="Permalink to this heading">¶</a></h1>
+<h1>Data Source<a class="headerlink" href="#data-source" title="Link to this heading">¶</a></h1>
 <p>This document is used to explain the data format supported by GraphLearn
 and the API to describe and parse it.</p>
 </section>
 <section id="data-format">
-<h1>1 Data format<a class="headerlink" href="#data-format" title="Permalink to this heading">¶</a></h1>
+<h1>1 Data format<a class="headerlink" href="#data-format" title="Link to this heading">¶</a></h1>
 <p>Graph data can be divided into <strong>vertex data</strong> and <strong>edge data</strong>.
 Generally, vertex data contains <strong>vertex ID</strong> and <strong>attribute</strong>,
 describing an entity. Edge data contains <strong>source vertex ID</strong> and
@@ -718,7 +717,7 @@ vertex or edge containing attributes, weights, and labels. For vertex
 data sources and edge data sources, these three can co-exist or
 partially exist at the same time.</p>
 <section id="basic-format">
-<h2>1.1 Basic format<a class="headerlink" href="#basic-format" title="Permalink to this heading">¶</a></h2>
+<h2>1.1 Basic format<a class="headerlink" href="#basic-format" title="Link to this heading">¶</a></h2>
 <p>The basic vertex data only contains the ID of a vertex. The type of ID
 is bigint and each ID uniquely represents one vertex. However, in many
 cases vertices with only IDs are far from enough. Therefore, they can
@@ -751,7 +750,7 @@ independently, without attaching attributes, weights, and labels.</p>
 </div>
 </section>
 <section id="attribute-format-attributed">
-<h2>1.2 Attribute format（ATTRIBUTED）<a class="headerlink" href="#attribute-format-attributed" title="Permalink to this heading">¶</a></h2>
+<h2>1.2 Attribute format（ATTRIBUTED）<a class="headerlink" href="#attribute-format-attributed" title="Link to this heading">¶</a></h2>
 <p>The attribute format is used to express the attribute information of a
 vertex or an edge. In general, vertices have attributes by default
 (otherwise only the edge table is sufficient). The attribute has only
@@ -810,7 +809,7 @@ specify <strong>ATTRIBUTED</strong> to inform the system in the API description.
 </div>
 </section>
 <section id="weight-format-weighted">
-<h2>1.3 Weight format（WEIGHTED）<a class="headerlink" href="#weight-format-weighted" title="Permalink to this heading">¶</a></h2>
+<h2>1.3 Weight format（WEIGHTED）<a class="headerlink" href="#weight-format-weighted" title="Link to this heading">¶</a></h2>
 <p>The weight format is used to express a vertex or an edge with weight.
 Similar to attributes, the weight has only one column, which is of type
 <strong>float</strong>. When the data format has weights, it is necessary to display
@@ -863,7 +862,7 @@ the specified <strong>WEIGHTED</strong> to inform the system, in the API descrip
 </div>
 </section>
 <section id="label-format-labeled">
-<h2>1.4 Label format（LABELED）<a class="headerlink" href="#label-format-labeled" title="Permalink to this heading">¶</a></h2>
+<h2>1.4 Label format（LABELED）<a class="headerlink" href="#label-format-labeled" title="Link to this heading">¶</a></h2>
 <p>The label format is used to express the situation where the vertices or
 edges are labeled. The label has only one column, which is of type int.
 When the data format has labels, it is necessary to display and specify
@@ -916,7 +915,7 @@ When the data format has labels, it is necessary to display and specify
 </div>
 </section>
 <section id="putting-together">
-<h2>1.5 Putting together<a class="headerlink" href="#putting-together" title="Permalink to this heading">¶</a></h2>
+<h2>1.5 Putting together<a class="headerlink" href="#putting-together" title="Link to this heading">¶</a></h2>
 <p>ID is required for the vertex and edge data source, while weight, label,
 and attribute are optional information. When there are one or more of
 <strong>WEIGHTED, ATTRIBUTED, and LABELED</strong> at the same time in the data
@@ -990,7 +989,7 @@ orders</strong> as specified in the above tables.</p>
 </section>
 </section>
 <section id="data-source-type">
-<h1>2 Data source type<a class="headerlink" href="#data-source-type" title="Permalink to this heading">¶</a></h1>
+<h1>2 Data source type<a class="headerlink" href="#data-source-type" title="Link to this heading">¶</a></h1>
 <p>The system abstracts the data access layer to allow easy connection to
 multiple types of data sources. Currently, it supports LocalFileSystem.
 If it is used on the Alibaba Cloud PAI platform, you can directly read
@@ -1057,7 +1056,7 @@ corresponding to the information name in the first column, separated by
 scripts. See the next chapter “<a class="reference external" href="graph_object_cn.md">graph object</a>”
 for details.</p>
 <section id="alibaba-cloud-maxcompute-data-table">
-<h2>2.2 Alibaba Cloud MaxCompute data table<a class="headerlink" href="#alibaba-cloud-maxcompute-data-table" title="Permalink to this heading">¶</a></h2>
+<h2>2.2 Alibaba Cloud MaxCompute data table<a class="headerlink" href="#alibaba-cloud-maxcompute-data-table" title="Link to this heading">¶</a></h2>
 <p>The data format of MaxCompute data table is described as follow, where
 column name is not required.</p>
 <div class="table-wrapper docutils container">
@@ -1109,7 +1108,7 @@ can be one or more.</p>
 </section>
 </section>
 <section id="user-api">
-<h1>3 User API<a class="headerlink" href="#user-api" title="Permalink to this heading">¶</a></h1>
+<h1>3 User API<a class="headerlink" href="#user-api" title="Link to this heading">¶</a></h1>
 <p>## 3.1 Decoder type <code class="docutils literal notranslate"><span class="pre">Decoder</span></code> type is used to described the
 aforementioned data format as follows.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Decoder</span><span class="p">(</span><span class="n">weighted</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">labeled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">attr_types</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">attr_delimiter</span><span class="o">=</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
@@ -1311,9 +1310,9 @@ to <a class="reference external" href="graph_object_en.md">graph_object</a> for 
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="graphscope.session" href="generated/graphscope.session.html" /><link rel="prev" title="Python API Reference" href="python_index.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Session - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,12 +691,12 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="session">
-<span id="id1"></span><h1>Session<a class="headerlink" href="#session" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Session<a class="headerlink" href="#session" title="Link to this heading">¶</a></h1>
 <section id="session-object">
-<h2>Session object<a class="headerlink" href="#session-object" title="Permalink to this heading">¶</a></h2>
+<h2>Session object<a class="headerlink" href="#session-object" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="graphscope.Session">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">graphscope.</span></span><span class="sig-name descname"><span class="pre">Session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session" title="Link to this definition">¶</a></dt>
 <dd><p>A class for interacting with GraphScope graph computation service cluster.</p>
 <p>A <a class="reference internal" href="#graphscope.Session" title="graphscope.Session"><code class="xref py py-class docutils literal notranslate"><span class="pre">Session</span></code></a> object encapsulates the environment in which <code class="xref py py-class docutils literal notranslate"><span class="pre">Operation</span></code>
 objects are executed/evaluated.</p>
@@ -756,21 +755,21 @@ you can find all params detail in <a class="reference internal" href="#graphscop
 </ul>
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.__enter__">
-<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__enter__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__enter__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__enter__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__enter__" title="Link to this definition">¶</a></dt>
 <dd><p>Context management protocol.
 Returns self and register self as default session.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.__exit__">
-<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__exit__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__exit__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exc_tb</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__exit__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__exit__" title="Link to this definition">¶</a></dt>
 <dd><p>Unregister self from the default session,
 close the session and release the resources, ignore all exceptions in close().</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__init__" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Config</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_client</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ApiClient</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Construct a new GraphScope session.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -960,13 +959,13 @@ to ensure there’s no such an active client.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.add_lib">
-<span class="sig-name descname"><span class="pre">add_lib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.add_lib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.add_lib" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_lib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">resource_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.add_lib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.add_lib" title="Link to this definition">¶</a></dt>
 <dd><p>add the specified resource to the k8s cluster from client machine.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.as_default">
-<span class="sig-name descname"><span class="pre">as_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.as_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.as_default" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">as_default</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.as_default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.as_default" title="Link to this definition">¶</a></dt>
 <dd><p>Obtain a context manager that make this object as default session.</p>
 <p>This method is used when a Session is constructed, which will immediately
 install self as a default session.</p>
@@ -982,7 +981,7 @@ install self as a default session.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.close" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.close" title="Link to this definition">¶</a></dt>
 <dd><p>Closes this session.</p>
 <p>This method frees all resources associated with the session.</p>
 <p>Note that closing will ignore SIGINT and SIGTERM signal and recover later.</p>
@@ -990,20 +989,20 @@ install self as a default session.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.connected">
-<span class="sig-name descname"><span class="pre">connected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.connected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.connected" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">connected</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.connected"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.connected" title="Link to this definition">¶</a></dt>
 <dd><p>Check if the session is still connected and available.</p>
 <p>Returns: True or False</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.Session.engine_config">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine_config</span></span><a class="headerlink" href="#graphscope.Session.engine_config" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">engine_config</span></span><a class="headerlink" href="#graphscope.Session.engine_config" title="Link to this definition">¶</a></dt>
 <dd><p>Show the engine configuration associated with session in json format.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.g">
-<span class="sig-name descname"><span class="pre">g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.g"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.g" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">g</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">incoming_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'int64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vid_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'uint64'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generate_eid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain_oid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'global'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compact_edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_perfect_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="graph.html#graphscope.framework.graph.Graph" title="graphscope.framework.graph.Graph"><span class="pre">Graph</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><span class="pre">GraphDAGNode</span></a></span></span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.g"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.g" title="Link to this definition">¶</a></dt>
 <dd><p>Construct a GraphScope graph object on the default session.</p>
 <p>It will launch and set a session to default when there is no default session found.</p>
 <p>See params detail in <a class="reference internal" href="graph.html#graphscope.framework.graph.GraphDAGNode" title="graphscope.framework.graph.GraphDAGNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.framework.graph.GraphDAGNode</span></code></a></p>
@@ -1028,13 +1027,13 @@ install self as a default session.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.get_config">
-<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.get_config" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_config</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.get_config"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.get_config" title="Link to this definition">¶</a></dt>
 <dd><p>Get configuration of the session.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.get_vineyard_object_mapping_table">
-<span class="sig-name descname"><span class="pre">get_vineyard_object_mapping_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.get_vineyard_object_mapping_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.get_vineyard_object_mapping_table" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_vineyard_object_mapping_table</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.get_vineyard_object_mapping_table"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.get_vineyard_object_mapping_table" title="Link to this definition">¶</a></dt>
 <dd><p>Get the vineyard object mapping table
 from the old object id to new object id
 during storing and restoring graph to pvc
@@ -1043,7 +1042,7 @@ on the kubernetes cluster.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.graphlearn">
-<span class="sig-name descname"><span class="pre">graphlearn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.graphlearn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.graphlearn" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">graphlearn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.graphlearn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.graphlearn" title="Link to this definition">¶</a></dt>
 <dd><p>Start a graph learning engine.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1097,13 +1096,13 @@ GNN training. The detail is explained in the examples below.</p></li>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="graphscope.Session.info">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">info</span></span><a class="headerlink" href="#graphscope.Session.info" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">info</span></span><a class="headerlink" href="#graphscope.Session.info" title="Link to this definition">¶</a></dt>
 <dd><p>Show all resource info associated with session in json format.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.interactive">
-<span class="sig-name descname"><span class="pre">interactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_cypher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.interactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.interactive" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">interactive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">with_cypher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.interactive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.interactive" title="Link to this definition">¶</a></dt>
 <dd><p>Get an interactive engine handler to execute gremlin and cypher queries.</p>
 <p>It will return an instance of <a class="reference internal" href="interactive.html#graphscope.interactive.query.InteractiveQuery" title="graphscope.interactive.query.InteractiveQuery"><code class="xref py py-class docutils literal notranslate"><span class="pre">graphscope.interactive.query.InteractiveQuery</span></code></a>,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># close and recreate InteractiveQuery.</span>
@@ -1136,14 +1135,14 @@ GNN training. The detail is explained in the examples below.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.load_from">
-<span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.load_from" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">load_from</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.load_from"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.load_from" title="Link to this definition">¶</a></dt>
 <dd><p>Load a graph within the session.
 See more information in <code class="xref py py-meth docutils literal notranslate"><span class="pre">graphscope.load_from()</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.restore_from_pvc">
-<span class="sig-name descname"><span class="pre">restore_from_pvc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvc_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.restore_from_pvc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.restore_from_pvc" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">restore_from_pvc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvc_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.restore_from_pvc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.restore_from_pvc" title="Link to this definition">¶</a></dt>
 <dd><p>Restores the graphs from the given path in the given PVC.
 Notice, before calling this function, the KUBECONFIG environment variable
 should be set to the path of your kubeconfig file.</p>
@@ -1162,13 +1161,13 @@ should be set to the path of your kubeconfig file.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.run_fetches">
-<span class="sig-name descname"><span class="pre">run_fetches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fetches</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.run_fetches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.run_fetches" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">run_fetches</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fetches</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.run_fetches"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.run_fetches" title="Link to this definition">¶</a></dt>
 <dd><p>Run operations of <cite>fetches</cite> without the session lock.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="graphscope.Session.store_to_pvc">
-<span class="sig-name descname"><span class="pre">store_to_pvc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graphIDs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvc_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.store_to_pvc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.store_to_pvc" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">store_to_pvc</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graphIDs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pvc_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/graphscope/client/session.html#Session.store_to_pvc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#graphscope.Session.store_to_pvc" title="Link to this definition">¶</a></dt>
 <dd><p>Stores the given graph IDs to the given path with the given PVC.
 Also, if you want to store graphs of different sessions to the same pv,
 you’d better to create different pvc for different sessions at first.</p>
@@ -1199,7 +1198,7 @@ Supported types:
 
 </section>
 <section id="session-functions">
-<h2>Session Functions<a class="headerlink" href="#session-functions" title="Permalink to this heading">¶</a></h2>
+<h2>Session Functions<a class="headerlink" href="#session-functions" title="Link to this heading">¶</a></h2>
 <div class="table-wrapper autosummary longtable docutils container">
 <table class="autosummary longtable docutils align-default">
 <tbody>
@@ -1325,9 +1324,9 @@ Supported types:
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

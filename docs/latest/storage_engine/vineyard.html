@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="GraphAr: Standard Graph Data File Format" href="graphar.html" /><link rel="prev" title="Groot: Persistent Graph Store" href="groot.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>In-memory immutable graphs on Vineyard - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,20 +691,20 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="in-memory-immutable-graphs-on-vineyard">
-<h1>In-memory immutable graphs on Vineyard<a class="headerlink" href="#in-memory-immutable-graphs-on-vineyard" title="Permalink to this heading">¶</a></h1>
+<h1>In-memory immutable graphs on Vineyard<a class="headerlink" href="#in-memory-immutable-graphs-on-vineyard" title="Link to this heading">¶</a></h1>
 <p><a class="reference external" href="https://v6d.io/">Vineyard</a> is a distributed immutable in-memory data manager that is used as
 the storage backend for immutable graphs in GraphScope. Vineyard provides zero-copy
 data sharing using memory mapping, and different compute engines in GraphScope
 can run on the same vineyard cluster to efficiently share the graph data.</p>
 <section id="graphs-in-vineyard">
-<h2>Graphs in Vineyard<a class="headerlink" href="#graphs-in-vineyard" title="Permalink to this heading">¶</a></h2>
+<h2>Graphs in Vineyard<a class="headerlink" href="#graphs-in-vineyard" title="Link to this heading">¶</a></h2>
 <p>Vineyard supports immutable property graphs and abstracts it as the <a class="reference external" href="https://github.com/v6d-io/v6d/blob/main/modules/graph/fragment/arrow_fragment.vineyard-mod"><code class="docutils literal notranslate"><span class="pre">vineyard::ArrowFragment</span></code></a>
 class, which consists of a CSR for edges and uses tables to store edge and vertex properties.
 Upon the <code class="docutils literal notranslate"><span class="pre">ArrowFragment</span></code>, vineyard abstracts distributed graph as <code class="docutils literal notranslate"><span class="pre">vineyard::ArrowFragmentGroup</span></code>
 which consists of a set of fragments that spread across the cluster.</p>
 </section>
 <section id="loading-graphs-to-vineyard">
-<h2>Loading Graphs to Vineyard<a class="headerlink" href="#loading-graphs-to-vineyard" title="Permalink to this heading">¶</a></h2>
+<h2>Loading Graphs to Vineyard<a class="headerlink" href="#loading-graphs-to-vineyard" title="Link to this heading">¶</a></h2>
 <p>Vineyard can be deployed as a standalone service or launched along with GraphScope.
 A command-line tool <code class="docutils literal notranslate"><span class="pre">vineyard-graph-loader</span></code> is provided to load fragments into
 vineyard. It first accepts an optional argument <code class="docutils literal notranslate"><span class="pre">--socket</span> <span class="pre">&lt;vineyard-ipc-socket&gt;</span></code>,
@@ -817,7 +816,7 @@ specify the edge files and vertex files, e.g.,</p>
 </ul>
 </section>
 <section id="using-loaded-graphs">
-<h2>Using Loaded Graphs<a class="headerlink" href="#using-loaded-graphs" title="Permalink to this heading">¶</a></h2>
+<h2>Using Loaded Graphs<a class="headerlink" href="#using-loaded-graphs" title="Link to this heading">¶</a></h2>
 <p>After being loaded into vineyard, the loaded fragment can be accessed using
 vineyard’s IPCClient:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">WriteOut</span><span class="p">(</span><span class="n">vineyard</span><span class="o">::</span><span class="n">Client</span><span class="o">&amp;</span><span class="w"> </span><span class="n">client</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">grape</span><span class="o">::</span><span class="n">CommSpec</span><span class="o">&amp;</span><span class="w"> </span><span class="n">comm_spec</span><span class="p">,</span>
@@ -954,9 +953,9 @@ vineyard’s IPCClient:</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

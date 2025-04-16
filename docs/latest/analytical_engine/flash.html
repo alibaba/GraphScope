@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="NetworkX Compatibility" href="networkx_compatibility.html" /><link rel="prev" title="Ingress: Incrementalize Graph Algorithms" href="ingress.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Programming Model: FLASH - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,22 +691,22 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="programming-model-flash">
-<h1>Programming Model: FLASH<a class="headerlink" href="#programming-model-flash" title="Permalink to this heading">¶</a></h1>
+<h1>Programming Model: FLASH<a class="headerlink" href="#programming-model-flash" title="Link to this heading">¶</a></h1>
 <p>FLASH is a distributed programming model for programming a broad spectrum of graph algorithms, including clustering, centrality, traversal, matching, mining, etc. FLASH follows the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric</a> philosophy, but it moves a step further for stronger expressiveness by providing flexible control flow, the operations on arbitrary vertex sets and beyond-neighborhood communication. FLASH makes diverse complex graph algorithms easy to write at the distributed runtime. The algorithms expressed in FLASH take only a few lines of code, and provide a satisfactory performance.</p>
 <section id="motivation">
-<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">¶</a></h2>
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h2>
 <p>The majority of recent graph processing frameworks only focus on a handful of fix-point graph algorithms such as breadth-first search, PageRank, shortest path, etc. It leaves the distributed computation of a large variety of graph algorithms suffering from low efficiency, limited expressiveness, or high implementation complexity with existing frameworks. The well-known vertex-centric implementation of a graph algorithm follows a common iterative, single-phased and value-propagation-based (short of ISVP) pattern: the algorithm runs iteratively until convergence, and in each iteration, all vertices receive messages from their neighbors to update their own states, then they send the updated states as messages to the neighbors for the next iteration. Such high-level abstraction brings productivity to some extent to users, however, at the sacrifice of expressiveness. This abstraction, while designed specifically for the ISVP algorithms, is almost infeasible to be applied to a large variety of algorithms that are not of the kind. At the same time, modern graph scenarios bring in the needs of more advanced and complex graph algorithms, which poses a big challenge for existing graph processing frameworks.</p>
 <p>After investigating representative distributed graph algorithms, including many non-ISVP ones, we have distilled three requirements that are critical for programming them efficiently and productively in a distributed context, namely (1) flexible control flow; (2) operations on vertex subsets; and (3) beyond-neighborhood communication. However, existing graph frameworks all fall short in meeting these requirements. Therefore, there is a need to design a new programming model which fulfills all of the three requirements, and supports to program in a distributed context.</p>
 </section>
 <section id="the-flash-programming-model">
-<h2>The FLASH Programming Model<a class="headerlink" href="#the-flash-programming-model" title="Permalink to this heading">¶</a></h2>
+<h2>The FLASH Programming Model<a class="headerlink" href="#the-flash-programming-model" title="Link to this heading">¶</a></h2>
 <section id="overview">
-<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h3>
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h3>
 <p>The FLASH programming model is based on <a class="reference external" href="https://github.com/jshun/ligra">Ligra</a> to inherit its support for the requirements of flexible control flow and operations on vertex subsets. By further enabling beyond-neighborhood communication, FLASH improves the expressiveness for programming a diverse variety of graph algorithms. Since Ligra is a single-machine parallel library, FLASH makes an extension to the distributed context, for which it must handle communication, synchronization, data races and task scheduling. To do so, a middleware called FlashWare is proposed that hides all the above details for distribution, and provides the capability to apply multiple system optimizations automatically and adaptively at the runtime.</p>
 <p>We have implemented 70+ graph algorithms with FLASH for 40+ different commonly used applications, and we can now program much more succinct codes using the FLASH programming interfaces, which also helps productivity. The evaluation results demonstrate FLASH’s capability of expressing many advanced algorithms (takes up to 92% less lines of code), while providing a satisfactory performance at the same time.</p>
 </section>
 <section id="flash-api">
-<h3>FLASH API<a class="headerlink" href="#flash-api" title="Permalink to this heading">¶</a></h3>
+<h3>FLASH API<a class="headerlink" href="#flash-api" title="Link to this heading">¶</a></h3>
 <p>FLASH is a functional programming model specific for distributed graph processing. It follows the Bulk Synchronous Parallel (BSP) computing paradigm with each of the primary functions constitutes a single superstep. It utilizes the <em>VertexSubset</em> type which represents a set of vertices of the graph <em>G</em>, containing a set of indices for all vertices in this set. The properties of vertices are maintained only once for a graph, shared by all <em>VertexSubset</em>s. The following describes the APIs of FLASH based on <em>VertexSubset</em>.</p>
 <ul class="simple">
 <li><p><em>VSize</em>: This function returns the size of a <em>VertexSubset</em>.</p></li>
@@ -738,7 +737,7 @@ If a chosen edge passes the condition checking <em>F</em>, the map function <em>
 <p>Other auxiliary APIs are provided by FLASH for conveniently conducting set operations (including <em>Union</em>, <em>Minus</em>, <em>Intersect</em>, <em>Add</em>, <em>Contain</em>, etc.), traversing all vertices in a set (<em>Traverse</em>), getting the data value of a single vertex (<em>GetV</em>) and so on.</p>
 </section>
 <section id="strong-expressiveness">
-<h3>Strong Expressiveness<a class="headerlink" href="#strong-expressiveness" title="Permalink to this heading">¶</a></h3>
+<h3>Strong Expressiveness<a class="headerlink" href="#strong-expressiveness" title="Link to this heading">¶</a></h3>
 <p>Besides expressing existing vertex-centric algorithms, FLASH provides the possibility of expressing more advanced algorithms. It is the first distributed graph processing model that satisfies all of the three critical requirements for programming non-ISVP algorithms.</p>
 <ul class="simple">
 <li><p>(1) FLASH allows the users to define the arbitrary control flow by combining the primitives, thus it can naturally support multi-phased algorithms. In traditional vertex-centric models, these algorithms are supported in an awkward way since they only allow to provide a single user-defined function.</p></li>
@@ -748,19 +747,19 @@ If a chosen edge passes the condition checking <em>F</em>, the map function <em>
 </section>
 </section>
 <section id="implementation">
-<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this heading">¶</a></h2>
+<h2>Implementation<a class="headerlink" href="#implementation" title="Link to this heading">¶</a></h2>
 <section id="architecture">
-<h3>Architecture<a class="headerlink" href="#architecture" title="Permalink to this heading">¶</a></h3>
+<h3>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h3>
 <p>The architecture of FLASH contains several main components, as shown in the following figure. The first is a code generator which takes the high-level FLASH APIs as input, and generates execution code to be run on the second component named FlashWare, which is a middleware designed and optimized for the FLASH model and is implemented based on the fundamental modules of GraphScope. The FlashWare executes the code produced by the code generator on the distributed runtime, utilizing the ability of parallel computing and communication ability of GraphScope.</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/flash.png"><img alt="The FLASH architecture" src="../_images/flash.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">The FLASH architecture.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">The FLASH architecture.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="optimizations">
-<h3>Optimizations<a class="headerlink" href="#optimizations" title="Permalink to this heading">¶</a></h3>
+<h3>Optimizations<a class="headerlink" href="#optimizations" title="Link to this heading">¶</a></h3>
 <p>Some optimizations are introduced in the implementation of the FLASH model:</p>
 <ul class="simple">
 <li><p>(1) During graph processing, the type of an active set may be dense or sparse, FLASH could dispatch different computation kernels for different types of the active set: the push mode for sparse active sets and the pull mode for dense active sets. This auto-switch scheme is proved to be useful for real-world graphs. Also, FLASH ’s dual mode processing is optional: users may choose to execute in only one mode through calling EdgeMapDense/EdgeMapSparse, instead of EdgeMap.</p></li>
@@ -771,7 +770,7 @@ If a chosen edge passes the condition checking <em>F</em>, the map function <em>
 </section>
 </section>
 <section id="built-in-algorithms">
-<h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this heading">¶</a></h2>
+<h2>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Link to this heading">¶</a></h2>
 <p>We have implemented 70+ graph algorithms with FLASH for 40+ different common problems, including clustering, centrality, traversal, matching, mining, etc. In addition, we are continuously adding more algorithms in FLASH, and we encourage the users to develop their own algorithms with the FLASH model. The built-in algorithms with the FLASH model in GraphScope includes:</p>
 <ul class="simple">
 <li><p><strong>Centrality</strong>: betweenness centrality, katz centrality, eigenvector centrality, harmonic centrality, closeness centrality</p></li>
@@ -870,9 +869,9 @@ If a chosen edge passes the condition checking <em>F</em>, the map function <em>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

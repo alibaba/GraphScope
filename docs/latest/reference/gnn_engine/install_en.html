@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Install from pip - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="install-from-pip">
-<h1>Install from pip<a class="headerlink" href="#install-from-pip" title="Permalink to this heading">¶</a></h1>
+<h1>Install from pip<a class="headerlink" href="#install-from-pip" title="Link to this heading">¶</a></h1>
 <p>We build the wheel package with<code class="docutils literal notranslate"><span class="pre">g++</span> <span class="pre">5.4.0</span></code> and <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">2.7</span></code> on
 <code class="docutils literal notranslate"><span class="pre">Ubuntu</span> <span class="pre">16.04</span></code>. If you have the same environment, you can download and
 install directly. Otherwise, please refer to the section ‘build from
@@ -702,40 +701,40 @@ based on <strong>TensorFlow 1.12</strong>. To run the example models, please ins
 development can modify the source code slightly and remove the relevant
 part of <code class="docutils literal notranslate"><span class="pre">import</span> <span class="pre">*tf*</span></code> in the <code class="docutils literal notranslate"><span class="pre">__init__.py</span></code> file.</p>
 <section id="get-wheel-package">
-<h2>Get wheel package<a class="headerlink" href="#get-wheel-package" title="Permalink to this heading">¶</a></h2>
+<h2>Get wheel package<a class="headerlink" href="#get-wheel-package" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>http://graph-learn-whl.oss-cn-zhangjiakou.aliyuncs.com/graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
 </section>
 <section id="install-using-pip">
-<h2>Install using pip<a class="headerlink" href="#install-using-pip" title="Permalink to this heading">¶</a></h2>
+<h2>Install using pip<a class="headerlink" href="#install-using-pip" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>graphlearn-0.1-cp27-cp27mu-linux_x86_64.whl
 </pre></div>
 </div>
 </section>
 <section id="install-tensorflow">
-<h2>Install TensorFlow<a class="headerlink" href="#install-tensorflow" title="Permalink to this heading">¶</a></h2>
+<h2>Install TensorFlow<a class="headerlink" href="#install-tensorflow" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.12.0
 </pre></div>
 </div>
 </section>
 </section>
 <section id="build-from-source">
-<h1>Build from source<a class="headerlink" href="#build-from-source" title="Permalink to this heading">¶</a></h1>
+<h1>Build from source<a class="headerlink" href="#build-from-source" title="Link to this heading">¶</a></h1>
 <section id="install-git">
-<h2>Install git<a class="headerlink" href="#install-git" title="Permalink to this heading">¶</a></h2>
+<h2>Install git<a class="headerlink" href="#install-git" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>git-all
 </pre></div>
 </div>
 </section>
 <section id="install-dependent-libraries">
-<h2>Install dependent libraries<a class="headerlink" href="#install-dependent-libraries" title="Permalink to this heading">¶</a></h2>
+<h2>Install dependent libraries<a class="headerlink" href="#install-dependent-libraries" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>autoconf<span class="w"> </span>automake<span class="w"> </span>libtool<span class="w"> </span>cmake<span class="w"> </span>python-numpy
 </pre></div>
 </div>
 </section>
 <section id="compile">
-<h2>Compile<a class="headerlink" href="#compile" title="Permalink to this heading">¶</a></h2>
+<h2>Compile<a class="headerlink" href="#compile" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/graph-learn.git
 <span class="nb">cd</span><span class="w"> </span>graph-learn
 git<span class="w"> </span>submodule<span class="w"> </span>update<span class="w"> </span>--init
@@ -745,13 +744,13 @@ make<span class="w"> </span>python
 </div>
 </section>
 <section id="install">
-<h2>Install<a class="headerlink" href="#install" title="Permalink to this heading">¶</a></h2>
+<h2>Install<a class="headerlink" href="#install" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>dist/your_wheel_name.whl
 </pre></div>
 </div>
 </section>
 <section id="run-test">
-<h2>Run test<a class="headerlink" href="#run-test" title="Permalink to this heading">¶</a></h2>
+<h2>Run test<a class="headerlink" href="#run-test" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>env.sh
 ./test_cpp_ut.sh
 ./test_python_ut.sh
@@ -760,7 +759,7 @@ make<span class="w"> </span>python
 </section>
 </section>
 <section id="docker-image">
-<h1>Docker image<a class="headerlink" href="#docker-image" title="Permalink to this heading">¶</a></h1>
+<h1>Docker image<a class="headerlink" href="#docker-image" title="Link to this heading">¶</a></h1>
 <p>You can download our docker image to run <strong>GL</strong> projects.</p>
 <p>CPU version:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">docker</span> <span class="n">pull</span> <span class="n">registry</span><span class="o">.</span><span class="n">cn</span><span class="o">-</span><span class="n">zhangjiakou</span><span class="o">.</span><span class="n">aliyuncs</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">pai</span><span class="o">-</span><span class="n">image</span><span class="o">/</span><span class="n">graph</span><span class="o">-</span><span class="n">learn</span><span class="p">:</span><span class="n">v0</span><span class="mf">.1</span><span class="o">-</span><span class="n">cpu</span>
@@ -839,9 +838,9 @@ checkout this <a class="reference external" href="../docker_image/README.md">doc
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

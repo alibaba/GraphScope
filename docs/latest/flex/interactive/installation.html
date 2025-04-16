@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Getting Started" href="getting_started.html" /><link rel="prev" title="Overview" href="overview.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Installation - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,17 +691,17 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="installation">
-<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<h1>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h1>
 <p>Interactive relies solely on Docker and does not have a strong dependency on the operating system, so in theory, a single installation package could be applicable to all systems. In practical tests, we have successfully tested it on Ubuntu and macOS, as well as on ARM64 and x86_64 architectures.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><strong>Docker Installation</strong>: Ensure you have Docker installed and configured on a Mac or Linux machine. If you haven’t installed Docker yet, you can find the installation guide <a class="reference external" href="https://docs.docker.com/get-docker/">here</a>.</p></li>
 <li><p><strong>Python Installation</strong>: Interactive requires <code class="docutils literal notranslate"><span class="pre">Python</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">3.8</span></code> and <code class="docutils literal notranslate"><span class="pre">pip</span></code> &gt;= <code class="docutils literal notranslate"><span class="pre">19.3</span></code>.</p></li>
 </ul>
 </section>
 <section id="install-and-deploy-interactive">
-<h2>Install and Deploy Interactive<a class="headerlink" href="#install-and-deploy-interactive" title="Permalink to this heading">¶</a></h2>
+<h2>Install and Deploy Interactive<a class="headerlink" href="#install-and-deploy-interactive" title="Link to this heading">¶</a></h2>
 <p>We offer a command line tool called <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>, which allows you to install, start, and manage Interactive services.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -749,7 +748,7 @@ To access the service from another host via the network, replace `127.0.0.1` wit
 <p>To explore the usage of GraphScope Interactive, please follow <a class="reference internal" href="getting_started.html"><span class="doc std std-doc">getting_started</span></a>.</p>
 </section>
 <section id="service-accessibility">
-<h2>Service Accessibility<a class="headerlink" href="#service-accessibility" title="Permalink to this heading">¶</a></h2>
+<h2>Service Accessibility<a class="headerlink" href="#service-accessibility" title="Link to this heading">¶</a></h2>
 <p>The Interactive service is deployed using containers, and is exposed through port mapping. If you want to access it on the machine where the service is located, just use the local connection endpoint printed by <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">deploy</span></code>. If you want to connect to the service from another machine over the network, make sure the port exposed by the Interactive service is open to the public internet and not blocked by security policies or firewalls.</p>
 </section>
 </section>
@@ -827,9 +826,9 @@ To access the service from another host via the network, replace `127.0.0.1` wit
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

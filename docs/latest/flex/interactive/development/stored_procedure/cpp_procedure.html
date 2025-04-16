@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Deployment" href="../../deployment.html" /><link rel="prev" title="Interactive RESTFul API" href="../restful_api.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Create c++ Stored Procedures on GraphScope Interactive - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/panels.css?v=0f22cee4" />
@@ -692,15 +691,15 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="create-c-stored-procedures-on-graphscope-interactive">
-<h1>Create c++ Stored Procedures on GraphScope Interactive<a class="headerlink" href="#create-c-stored-procedures-on-graphscope-interactive" title="Permalink to this heading">¶</a></h1>
+<h1>Create c++ Stored Procedures on GraphScope Interactive<a class="headerlink" href="#create-c-stored-procedures-on-graphscope-interactive" title="Link to this heading">¶</a></h1>
 <p>Apart from adapting <a class="reference internal" href="../../stored_procedures.html"><span class="std std-doc">Cypher query as stored procedure</span></a>, Interactive supports implementing stored procedure via c++ code, by calling the interfaces provided by Graph Database Engine.</p>
 <section id="getting-started">
-<h2>Getting Started.<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
+<h2>Getting Started.<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
 <p>We take a example to demonstrate how to create a stored procedure in c++.
 In this example, we implement a procedure which returns the total number of vertices.</p>
 <p>Before proceed, make sure you have installed and launched Interactive as describe in <a class="reference internal" href="../../getting_started.html"><span class="std std-doc">Getting Started</span></a>, and environment variables are correctly exported.</p>
 <section id="define-a-c-stored-procedure">
-<h3>Define a C++ Stored Procedure<a class="headerlink" href="#define-a-c-stored-procedure" title="Permalink to this heading">¶</a></h3>
+<h3>Define a C++ Stored Procedure<a class="headerlink" href="#define-a-c-stored-procedure" title="Link to this heading">¶</a></h3>
 <p>A C++ stored procedure should be defined in a file, for example <code class="docutils literal notranslate"><span class="pre">count_vertices.cc</span></code>.</p>
 <div class="highlight-c++ notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;flex/engines/graph_db/app/app_base.h&quot;</span>
 <span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;flex/engines/graph_db/database/graph_db_session.h&quot;</span>
@@ -762,13 +761,13 @@ In this example, we implement a procedure which returns the total number of vert
 </div>
 </section>
 <section id="register-and-call-the-stored-procedure">
-<h3>Register and Call the stored procedure<a class="headerlink" href="#register-and-call-the-stored-procedure" title="Permalink to this heading">¶</a></h3>
+<h3>Register and Call the stored procedure<a class="headerlink" href="#register-and-call-the-stored-procedure" title="Link to this heading">¶</a></h3>
 <p>With the above <code class="docutils literal notranslate"><span class="pre">CountVertices</span></code> procedure defined, we could create a stored procedure with <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> or use Interactive Python/Java SDKs.</p>
 <section id="gsctl">
-<h4>gsctl<a class="headerlink" href="#gsctl" title="Permalink to this heading">¶</a></h4>
+<h4>gsctl<a class="headerlink" href="#gsctl" title="Link to this heading">¶</a></h4>
 <p>With Interactive deployed, you can register a C++ stored procedure similarly to <a class="reference internal" href="../../stored_procedures.html"><span class="std std-doc">creating a Cypher stored procedure</span></a>.</p>
 <section id="define-the-yaml">
-<h5>Define the YAML<a class="headerlink" href="#define-the-yaml" title="Permalink to this heading">¶</a></h5>
+<h5>Define the YAML<a class="headerlink" href="#define-the-yaml" title="Link to this heading">¶</a></h5>
 <p>When defined, C++ stored procedures’ YAML differ from Cypher procedures only in the <code class="docutils literal notranslate"><span class="pre">type</span></code> field, i.e., <code class="docutils literal notranslate"><span class="pre">cpp</span></code> versus <code class="docutils literal notranslate"><span class="pre">cypher</span></code>. Users can include the stored procedure’s implementation directly in the YAML file.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test_procedure</span>
 <span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ths</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">test</span><span class="nv"> </span><span class="s">procedure&quot;</span>
@@ -842,7 +841,7 @@ In this example, we implement a procedure which returns the total number of vert
 </section>
 </section>
 <section id="python-sdk">
-<h4>Python SDK<a class="headerlink" href="#python-sdk" title="Permalink to this heading">¶</a></h4>
+<h4>Python SDK<a class="headerlink" href="#python-sdk" title="Link to this heading">¶</a></h4>
 <p>With <a class="reference internal" href="../python/python_sdk.html"><span class="std std-doc">Interactive Python SDK</span></a> Installed, you could easily create the stored procedure via the following code.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.client.driver</span><span class="w"> </span><span class="kn">import</span> <span class="n">Driver</span>
@@ -875,7 +874,7 @@ In this example, we implement a procedure which returns the total number of vert
 <p>For more tails about Python SDK Interface, please refer to <a class="reference internal" href="../python/ProcedureManagementApi.html"><span class="std std-doc">Java SDK Procedure API</span></a>.</p>
 </section>
 <section id="java-sdk">
-<h4>Java SDK<a class="headerlink" href="#java-sdk" title="Permalink to this heading">¶</a></h4>
+<h4>Java SDK<a class="headerlink" href="#java-sdk" title="Link to this heading">¶</a></h4>
 <p>With <a class="reference internal" href="#../python/java_sdk.md"><span class="xref myst">Interactive Java SDK</span></a> Installed, you could easily create the stored procedure via the following code.</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">com.alibaba.graphscope.interactive.client.Driver</span><span class="p">;</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">com.alibaba.graphscope.interactive.client.Session</span><span class="p">;</span>
@@ -932,7 +931,7 @@ In this example, we implement a procedure which returns the total number of vert
 </section>
 </section>
 <section id="create-a-stored-procedure">
-<h2>Create a Stored Procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
+<h2>Create a Stored Procedure<a class="headerlink" href="#create-a-stored-procedure" title="Link to this heading">¶</a></h2>
 <p>First, switch to the graph where you want to create the procedure. We will use the built-in graph as an example. For instructions on creating your own graph, please refer to <a class="reference internal" href="../../custom_graph_data.html"><span class="std std-doc">Use Custom Graph</span></a>.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>gs_interactive_default_graph<span class="w"> </span>
 </pre></div>
@@ -947,16 +946,16 @@ In this example, we implement a procedure which returns the total number of vert
 </div>
 </section>
 <section id="graph-database-engine">
-<h2>Graph Database Engine<a class="headerlink" href="#graph-database-engine" title="Permalink to this heading">¶</a></h2>
+<h2>Graph Database Engine<a class="headerlink" href="#graph-database-engine" title="Link to this heading">¶</a></h2>
 <p>Interactive follow the design of Transaction, user should either make use of <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/read_transaction.h"><code class="docutils literal notranslate"><span class="pre">ReadTransaction</span></code></a>, <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/insert_transaction.h"><code class="docutils literal notranslate"><span class="pre">InsertTraction</span></code></a> or <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/flex/engines/graph_db/database/update_transaction.h"><code class="docutils literal notranslate"><span class="pre">UpdateTransaction</span></code></a>.</p>
 <p>We recommend you to read though the code of <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/engines/graph_db">GraphDB</a> for more detail, if you want to
 write a stored procedure with best performance. If you encounter any problems, feel free to contact us by submit issue or create discussions.</p>
 </section>
 <section id="query-input-and-output">
-<h2>Query Input and Output<a class="headerlink" href="#query-input-and-output" title="Permalink to this heading">¶</a></h2>
+<h2>Query Input and Output<a class="headerlink" href="#query-input-and-output" title="Link to this heading">¶</a></h2>
 <p>Interactive natively support two kind of protocols for param encoding and result decoding, <code class="docutils literal notranslate"><span class="pre">Encoder/Decoder</span></code> and <code class="docutils literal notranslate"><span class="pre">CypherApp</span></code>.</p>
 <section id="encoder-decoder">
-<h3>Encoder/Decoder<a class="headerlink" href="#encoder-decoder" title="Permalink to this heading">¶</a></h3>
+<h3>Encoder/Decoder<a class="headerlink" href="#encoder-decoder" title="Link to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">Encoder/Decoder</span></code> based method provides the best performance. The serialization/deserialization could be customized by the user.
 In this serialization protocol, User need to take care of the param encoding and decoding himself.
 For example, the example procedure above <code class="docutils literal notranslate"><span class="pre">count_vertices.cc</span></code> use Encoder/Decoder to encode the input and decode the output.</p>
@@ -1028,7 +1027,7 @@ For example, the example procedure above <code class="docutils literal notransla
 </section>
 </section>
 <section id="programming-interface">
-<h2>Programming Interface<a class="headerlink" href="#programming-interface" title="Permalink to this heading">¶</a></h2>
+<h2>Programming Interface<a class="headerlink" href="#programming-interface" title="Link to this heading">¶</a></h2>
 <p>To create an efficient procedure that meets your needs, it’s essential to understand the programming interface and the Interactive storage interface. We recommend reading the <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex">source code</a> of Interactive, and you can also access the generated API documentation <a class="reference external" href="https://graphscope.io/docs/reference/flex/">here</a>.</p>
 </section>
 </section>
@@ -1123,9 +1122,9 @@ For example, the example procedure above <code class="docutils literal notransla
       
     </aside>
   </div>
-</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>

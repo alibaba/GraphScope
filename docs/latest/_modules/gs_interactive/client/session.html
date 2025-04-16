@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>gs_interactive.client.session - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -1041,7 +1040,9 @@ MathJax = {
         <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
 
-<div class="viewcode-block" id="Session"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.Session">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">(</span>
+<div class="viewcode-block" id="Session">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.Session">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Session</span><span class="p">(</span>
     <span class="n">VertexInterface</span><span class="p">,</span>
     <span class="n">EdgeInterface</span><span class="p">,</span>
     <span class="n">GraphInterface</span><span class="p">,</span>
@@ -1053,13 +1054,18 @@ MathJax = {
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="DefaultSession"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">DefaultSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DefaultSession">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DefaultSession</span><span class="p">(</span><span class="n">Session</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The default session implementation for Interactive SDK.</span>
 <span class="sd">    It provides the implementation of all service APIs.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DefaultSession.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">admin_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stored_proc_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="DefaultSession.__init__">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">admin_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stored_proc_uri</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new session using the specified admin_uri and stored_proc_uri.</span>
 
@@ -1069,7 +1075,7 @@ MathJax = {
 <span class="sd">                If not provided,the uri will be read from the service status.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_admin_uri</span> <span class="o">=</span> <span class="n">admin_uri</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">(</span><span class="n">Configuration</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">admin_uri</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">(</span><span class="n">Configuration</span><span class="p">(</span><span class="n">hosts</span><span class="o">=</span><span class="n">admin_uri</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_graph_api</span> <span class="o">=</span> <span class="n">AdminServiceGraphManagementApi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_job_api</span> <span class="o">=</span> <span class="n">AdminServiceJobManagementApi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="p">)</span>
@@ -1088,10 +1094,11 @@ MathJax = {
             <span class="n">splitted</span> <span class="o">=</span> <span class="n">admin_uri</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)</span>
             <span class="n">splitted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">service_port</span><span class="p">)</span>
             <span class="n">stored_proc_uri</span> <span class="o">=</span> <span class="s2">&quot;:&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitted</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_query_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">(</span><span class="n">Configuration</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="n">stored_proc_uri</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_query_client</span> <span class="o">=</span> <span class="n">ApiClient</span><span class="p">(</span><span class="n">Configuration</span><span class="p">(</span><span class="n">hosts</span><span class="o">=</span><span class="n">stored_proc_uri</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_query_api</span> <span class="o">=</span> <span class="n">QueryServiceApi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_client</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_edge_api</span> <span class="o">=</span> <span class="n">GraphServiceEdgeManagementApi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_client</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vertex_api</span> <span class="o">=</span> <span class="n">GraphServiceVertexManagementApi</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_query_client</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_client</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
@@ -1104,7 +1111,9 @@ MathJax = {
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_admin_uri</span>
 
     <span class="c1"># implementations of the methods from the interfaces</span>
-<div class="viewcode-block" id="DefaultSession.add_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_vertex">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_vertex</span><span class="p">(</span>
+<div class="viewcode-block" id="DefaultSession.add_vertex">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_vertex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">vertex_edge_request</span><span class="p">:</span> <span class="n">VertexEdgeRequest</span><span class="p">,</span>
@@ -1121,7 +1130,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_vertex</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_vertex">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">delete_vertex_request</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
@@ -1144,7 +1156,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_vertex">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_vertex</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_vertex">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_vertex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of vertex.&quot;</span><span class="p">)],</span>
@@ -1165,7 +1180,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.update_vertex"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_vertex</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.update_vertex">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_vertex</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">vertex_request</span><span class="p">:</span> <span class="n">VertexEdgeRequest</span><span class="p">,</span>
@@ -1183,7 +1201,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.add_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_edge">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_edge</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.add_edge">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.add_edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1199,7 +1220,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_edge</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_edge">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">delete_edge_request</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
@@ -1222,7 +1246,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_edge">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_edge</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_edge">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">edge_label</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The label name of edge.&quot;</span><span class="p">)],</span>
@@ -1257,7 +1284,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.update_edge"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_edge</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.update_edge">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_edge</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">edge_request</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EdgeRequest</span><span class="p">]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1273,7 +1303,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.create_graph"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_graph">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">CreateGraphRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CreateGraphResponse</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.create_graph">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph</span><span class="p">:</span> <span class="n">CreateGraphRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CreateGraphResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a new graph with the specified graph request.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1284,7 +1317,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_graph_schema"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_schema">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_schema</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_graph_schema">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_schema">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_schema</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The id of graph to get&quot;</span><span class="p">)],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">GetGraphSchemaResponse</span><span class="p">]:</span>
@@ -1303,7 +1339,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_graph_meta"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_meta">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_meta</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_graph_meta">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_meta">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_meta</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The id of graph to get&quot;</span><span class="p">)],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">GetGraphResponse</span><span class="p">]:</span>
@@ -1318,7 +1357,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_graph_statistics"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_statistics">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_statistics</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_graph_statistics">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_graph_statistics">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_graph_statistics</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The id of graph to get&quot;</span><span class="p">)],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">GetGraphStatisticsResponse</span><span class="p">]:</span>
@@ -1333,7 +1375,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_graph"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_graph">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_graph</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_graph">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_graph</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The id of graph to delete&quot;</span><span class="p">)],</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
@@ -1348,7 +1393,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.list_graphs"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_graphs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_graphs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GetGraphResponse</span><span class="p">]]:</span>
+
+<div class="viewcode-block" id="DefaultSession.list_graphs">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_graphs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_graphs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GetGraphResponse</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all graphs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1359,7 +1407,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.bulk_loading"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.bulk_loading">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_loading</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.bulk_loading">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.bulk_loading">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">bulk_loading</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="n">StrictStr</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;The id of graph to load&quot;</span><span class="p">)],</span>
         <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span><span class="p">,</span>
@@ -1384,7 +1435,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.create_vertex_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_vertex_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_vertex_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.create_vertex_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_vertex_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_vertex_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">create_vertex_type</span><span class="p">:</span> <span class="n">CreateVertexType</span><span class="p">,</span>
@@ -1402,7 +1456,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_vertex_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_vertex_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_vertex_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_vertex_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_vertex_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">type_name</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
@@ -1420,7 +1477,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.update_vertex_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_vertex_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.update_vertex_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_vertex_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_vertex_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">update_vertex_type</span><span class="p">:</span> <span class="n">CreateVertexType</span><span class="p">,</span>
@@ -1438,7 +1498,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.create_edge_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_edge_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_edge_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.create_edge_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_edge_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_edge_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">create_edge_type</span><span class="p">:</span> <span class="n">CreateEdgeType</span><span class="p">,</span>
@@ -1456,7 +1519,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_edge_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_edge_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_edge_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_edge_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_edge_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">type_name</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
@@ -1476,7 +1542,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.update_edge_type"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge_type">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_edge_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.update_edge_type">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_edge_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_edge_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span>
         <span class="n">update_edge_type</span><span class="p">:</span> <span class="n">CreateEdgeType</span><span class="p">,</span>
@@ -1494,7 +1563,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_snapshot_status"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_snapshot_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_snapshot_status</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_snapshot_status">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_snapshot_status">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_snapshot_status</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">snapshot_id</span><span class="p">:</span> <span class="n">StrictInt</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SnapshotStatus</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1510,7 +1582,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.create_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_procedure">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">create_procedure</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.create_procedure">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.create_procedure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">procedure</span><span class="p">:</span> <span class="n">CreateProcedureRequest</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CreateProcedureResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1526,7 +1601,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.delete_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_procedure">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">delete_procedure</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.delete_procedure">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.delete_procedure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">procedure_id</span><span class="p">:</span> <span class="n">StrictStr</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1542,7 +1620,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.list_procedures"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_procedures">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_procedures</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.list_procedures">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_procedures">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_procedures</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">GetProcedureResponse</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1556,7 +1637,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.update_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_procedure">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">update_procedure</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.update_procedure">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.update_procedure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">update_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">proc_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">procedure</span><span class="p">:</span> <span class="n">UpdateProcedureRequest</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1571,7 +1655,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_procedure">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_procedure</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.get_procedure">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_procedure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">procedure_id</span><span class="p">:</span> <span class="n">StrictStr</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">GetProcedureResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1587,7 +1674,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.call_procedure"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.call_procedure">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">QueryRequest</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CollectiveResults</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1614,7 +1704,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.call_procedure_current"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_current">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_current</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">QueryRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CollectiveResults</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.call_procedure_current">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_current">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_current</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="n">QueryRequest</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">CollectiveResults</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the current graph.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1637,7 +1730,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.call_procedure_raw"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_raw">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.call_procedure_raw">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_raw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the specified graph with raw bytes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1655,7 +1751,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.call_procedure_current_raw"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_current_raw">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_current_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.call_procedure_current_raw">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.call_procedure_current_raw">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">call_procedure_current_raw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Call a procedure in the current graph with raw bytes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1671,7 +1770,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_service_status"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_service_status">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_service_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">ServiceStatus</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.get_service_status">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_service_status">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_service_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">ServiceStatus</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status of the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1682,7 +1784,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.start_service"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.start_service">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">start_service</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.start_service">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.start_service">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start_service</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">start_service_request</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span>
             <span class="n">Optional</span><span class="p">[</span><span class="n">StartServiceRequest</span><span class="p">],</span>
@@ -1701,7 +1806,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.stop_service"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.stop_service">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.stop_service">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.stop_service">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stop_service</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Stop the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1715,7 +1823,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.restart_service"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.restart_service">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">restart_service</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.restart_service">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.restart_service">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">restart_service</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Restart the service.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1726,7 +1837,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.get_job"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_job">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">JobStatus</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.get_job">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.get_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">JobStatus</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status of a job with the specified job id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1738,7 +1852,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.list_jobs"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_jobs">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">list_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">JobResponse</span><span class="p">]]:</span>
+
+<div class="viewcode-block" id="DefaultSession.list_jobs">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.list_jobs">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">list_jobs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">JobResponse</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        List all jobs.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1749,7 +1866,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.cancel_job"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.cancel_job">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">cancel_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.cancel_job">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.cancel_job">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">cancel_job</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">job_id</span><span class="p">:</span> <span class="n">StrictStr</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Cancel a job with the specified job id.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1761,7 +1881,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.upload_file"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.upload_file">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">upload_file</span><span class="p">(</span>
+
+<div class="viewcode-block" id="DefaultSession.upload_file">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.upload_file">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_file</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">filestorage</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">StrictBytes</span><span class="p">,</span> <span class="n">StrictStr</span><span class="p">]]</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">UploadFileResponse</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1781,6 +1904,7 @@ MathJax = {
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;got exception: &quot;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">from_exception</span><span class="p">(</span><span class="n">e</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">trim_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">path</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">if</span> <span class="n">path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;@&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="n">path</span>
@@ -1861,7 +1985,9 @@ MathJax = {
                 <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Can not mix uploading file and not uploading file&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">ok</span><span class="p">(</span><span class="n">schema_mapping</span><span class="p">)</span>
 
-<div class="viewcode-block" id="DefaultSession.upload_and_replace_input_inplace"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.upload_and_replace_input_inplace">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">upload_and_replace_input_inplace</span><span class="p">(</span>
+<div class="viewcode-block" id="DefaultSession.upload_and_replace_input_inplace">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.upload_and_replace_input_inplace">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">upload_and_replace_input_inplace</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">SchemaMapping</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1889,7 +2015,10 @@ MathJax = {
                             <span class="n">edge_mapping</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">get_value</span><span class="p">()</span><span class="o">.</span><span class="n">file_path</span>
         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">ok</span><span class="p">(</span><span class="n">schema_mapping</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="DefaultSession.try_upload_files"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.try_upload_files">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">try_upload_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">SchemaMapping</span><span class="p">]:</span>
+
+<div class="viewcode-block" id="DefaultSession.try_upload_files">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.try_upload_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">try_upload_files</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema_mapping</span><span class="p">:</span> <span class="n">SchemaMapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Result</span><span class="p">[</span><span class="n">SchemaMapping</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Try to upload the input files if they are specified with a starting @</span>
 <span class="sd">        for input files in schema_mapping. Replace the path to the uploaded file with the</span>
@@ -1935,7 +2064,10 @@ MathJax = {
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;new schema_mapping: &quot;</span><span class="p">,</span> <span class="n">upload_res</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">Result</span><span class="o">.</span><span class="n">ok</span><span class="p">(</span><span class="n">upload_res</span><span class="o">.</span><span class="n">get_value</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="DefaultSession.ensure_param_str"><a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.ensure_param_str">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">ensure_param_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+
+<div class="viewcode-block" id="DefaultSession.ensure_param_str">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/session.html#gs_interactive.client.session.DefaultSession.ensure_param_str">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ensure_param_str</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Ensure the param is a string, otherwise raise an exception</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1949,7 +2081,9 @@ MathJax = {
                 <span class="o">+</span> <span class="s2">&quot;, param: &quot;</span>
                 <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
             <span class="p">)</span>
-        <span class="k">return</span> <span class="n">param</span></div></div>
+        <span class="k">return</span> <span class="n">param</span></div>
+</div>
+
 </pre></div>
         </article>
       </div>
@@ -1985,9 +2119,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Tutorial: Training a Node Classification Model (PyG) on Your Local Machine - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,11 +691,11 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="tutorial-training-a-node-classification-model-pyg-on-your-local-machine">
-<h1>Tutorial: Training a Node Classification Model (PyG) on Your Local Machine<a class="headerlink" href="#tutorial-training-a-node-classification-model-pyg-on-your-local-machine" title="Permalink to this heading">¶</a></h1>
+<h1>Tutorial: Training a Node Classification Model (PyG) on Your Local Machine<a class="headerlink" href="#tutorial-training-a-node-classification-model-pyg-on-your-local-machine" title="Link to this heading">¶</a></h1>
 <p>This tutorial presents an end-to-end example that illustrates how GraphScope
 trains the GraphSAGE model (implemented in PyG) for a node classification task.</p>
 <section id="load-graph">
-<h2>Load Graph<a class="headerlink" href="#load-graph" title="Permalink to this heading">¶</a></h2>
+<h2>Load Graph<a class="headerlink" href="#load-graph" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
@@ -717,7 +716,7 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
 </div>
 </section>
 <section id="define-the-evaluation-function">
-<h2>Define the evaluation function<a class="headerlink" href="#define-the-evaluation-function" title="Permalink to this heading">¶</a></h2>
+<h2>Define the evaluation function<a class="headerlink" href="#define-the-evaluation-function" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
     <span class="n">evaluator</span> <span class="o">=</span> <span class="n">Evaluator</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">dataset_name</span><span class="p">)</span>
@@ -748,7 +747,7 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
 </div>
 </section>
 <section id="launch-the-learning-engine">
-<h2>Launch the Learning Engine<a class="headerlink" href="#launch-the-learning-engine" title="Permalink to this heading">¶</a></h2>
+<h2>Launch the Learning Engine<a class="headerlink" href="#launch-the-learning-engine" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">glt_graph</span> <span class="o">=</span> <span class="n">gs</span><span class="o">.</span><span class="n">graphlearn_torch</span><span class="p">(</span>
     <span class="n">g</span><span class="p">,</span>
     <span class="n">edges</span><span class="o">=</span><span class="p">[</span>
@@ -781,7 +780,7 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
 </div>
 </section>
 <section id="create-neighbor-loaderfor-training-testing-and-validation">
-<h2>Create neighbor loaderfor training, testing and validation<a class="headerlink" href="#create-neighbor-loaderfor-training-testing-and-validation" title="Permalink to this heading">¶</a></h2>
+<h2>Create neighbor loaderfor training, testing and validation<a class="headerlink" href="#create-neighbor-loaderfor-training-testing-and-validation" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 <span class="c1"># Create distributed neighbor loader on remote server for training.</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-- Creating training dataloader ...&quot;</span><span class="p">)</span>
@@ -828,7 +827,7 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
 </div>
 </section>
 <section id="define-the-pyg-graphsage-model-and-optimizer">
-<h2>Define the PyG GraphSage Model and optimizer<a class="headerlink" href="#define-the-pyg-graphsage-model-and-optimizer" title="Permalink to this heading">¶</a></h2>
+<h2>Define the PyG GraphSage Model and optimizer<a class="headerlink" href="#define-the-pyg-graphsage-model-and-optimizer" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-- Initializing model and optimizer ...&quot;</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">GraphSAGE</span><span class="p">(</span>
     <span class="n">in_channels</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>
@@ -841,7 +840,7 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
 </div>
 </section>
 <section id="train-and-test">
-<h2>Train and test<a class="headerlink" href="#train-and-test" title="Permalink to this heading">¶</a></h2>
+<h2>Train and test<a class="headerlink" href="#train-and-test" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;-- Start training and testing ...&quot;</span><span class="p">)</span>
 <span class="n">epochs</span> <span class="o">=</span> <span class="mi">10</span>
 <span class="n">dataset_name</span> <span class="o">=</span> <span class="s2">&quot;ogbn-arxiv&quot;</span>
@@ -928,9 +927,9 @@ trains the GraphSAGE model (implemented in PyG) for a node classification task.<
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

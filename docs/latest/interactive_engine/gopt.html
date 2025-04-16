@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Graph Planner Interface by JNI and RESTful API" href="graph_planner.html" /><link rel="prev" title="Using LLM as an Assistant in GIE" href="neo4j/llm_assistant.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>GOpt: A Graph-Native Query Optimization Framework - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,12 +691,12 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="gopt-a-graph-native-query-optimization-framework">
-<h1>GOpt: A Graph-Native Query Optimization Framework<a class="headerlink" href="#gopt-a-graph-native-query-optimization-framework" title="Permalink to this heading">¶</a></h1>
+<h1>GOpt: A Graph-Native Query Optimization Framework<a class="headerlink" href="#gopt-a-graph-native-query-optimization-framework" title="Link to this heading">¶</a></h1>
 <section id="introducing-gopt">
-<h2>Introducing GOpt<a class="headerlink" href="#introducing-gopt" title="Permalink to this heading">¶</a></h2>
+<h2>Introducing GOpt<a class="headerlink" href="#introducing-gopt" title="Link to this heading">¶</a></h2>
 <p>GOpt is a graph-native query optimizer designed to accelerate query execution. It excels in handling hybrid scenarios that combine complex graph pattern matching with relational operations on large graphs. GOpt is not aware of the underlying storage data and focuses solely on computation on top of the data, which makes it easy and fast to be integrated into other graph or relational databases.</p>
 <section id="core-features">
-<h3>Core Features<a class="headerlink" href="#core-features" title="Permalink to this heading">¶</a></h3>
+<h3>Core Features<a class="headerlink" href="#core-features" title="Link to this heading">¶</a></h3>
 <ol class="arabic simple">
 <li><p><strong>Property Graph Modeling</strong>: Automatically infers and completes user-provided ambiguous queries for more accurate optimization.</p></li>
 <li><p><strong>Language Support</strong>: Supports standard <a class="reference external" href="https://tinkerpop.apache.org/gremlin.html">Gremlin</a> and <a class="reference external" href="https://neo4j.com/docs/cypher-manual/current/introduction/">Cypher</a> languages, with upcoming <a class="reference external" href="https://www.gqlstandards.org/">GQL</a> support.</p></li>
@@ -707,12 +706,12 @@ MathJax = {
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/system_overview.png"><img alt="system_overview" src="../_images/system_overview.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">GOpt System Overview</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">GOpt System Overview</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="why-gopt">
-<h3>Why GOpt<a class="headerlink" href="#why-gopt" title="Permalink to this heading">¶</a></h3>
+<h3>Why GOpt<a class="headerlink" href="#why-gopt" title="Link to this heading">¶</a></h3>
 <ol class="arabic">
 <li><p><strong>High Performance</strong></p>
 <p>GOpt is designed and implemented based on years of academic research, with key techniques published in prestigious systems conferences. Our experiments, as documented in our <a class="reference external" href="https://arxiv.org/abs/2401.17786">papers</a>, demonstrate that GOpt outperforms most graph and relational databases in both standard (<a class="reference external" href="https://ldbcouncil.org/">LDBC</a>) and real-world (Alibaba) graph workloads.</p>
@@ -727,14 +726,14 @@ MathJax = {
 </section>
 </section>
 <section id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
 <section id="quick-start">
-<h3>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this heading">¶</a></h3>
+<h3>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h3>
 <p>GOpt is embeddable and serverless, available as a standalone package occupying just a few tens of MB in a JAR file. It can be quickly integrated into other systems as project dependency via Apache Maven. We have already integrated GOpt into the Neo4j system. Here, you can quickly experience the optimization effects that GOpt brings to Neo4j.</p>
 <section id="deployment">
-<h4>Deployment<a class="headerlink" href="#deployment" title="Permalink to this heading">¶</a></h4>
+<h4>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">¶</a></h4>
 <section id="local-setup">
-<h5>Local Setup<a class="headerlink" href="#local-setup" title="Permalink to this heading">¶</a></h5>
+<h5>Local Setup<a class="headerlink" href="#local-setup" title="Link to this heading">¶</a></h5>
 <p>We have prepared a <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j.tar.gz</span></code> package. You can quickly obtain it through the following link:
 <a class="reference external" href="https://graphscope.oss-cn-beijing.aliyuncs.com/gopt_data/gopt-on-neo4j.tar.gz">Download GOpt for Neo4j</a></p>
 <p>After unzipping the package, you will get the following artifacts:</p>
@@ -761,7 +760,7 @@ MathJax = {
 <p>You can now try running Neo4j with GOpt on your local machine. Note that the Neo4j version we use is 4.4.9. Ensure your local machine has all the necessary environments for <a class="reference external" href="https://github.com/neo4j/neo4j/tree/4.4">Neo4j-4.4.9</a>. If you do not have a complete development environment, you may prefer to use the <a class="reference internal" href="#docker-setup"><span class="xref myst">Docker setup</span></a>.</p>
 </section>
 <section id="docker-setup">
-<h5>Docker Setup<a class="headerlink" href="#docker-setup" title="Permalink to this heading">¶</a></h5>
+<h5>Docker Setup<a class="headerlink" href="#docker-setup" title="Link to this heading">¶</a></h5>
 <p>If you do not have a complete development environment, we have also prepared a corresponding Docker environment. The Docker image contains all the contents of <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j.tar.gz</span></code> as well as all the necessary environment dependencies. You can start it with a single command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>run<span class="w"> </span>-it<span class="w"> </span>registry.cn-hongkong.aliyuncs.com/graphscope/gopt-on-neo4j:latest<span class="w"> </span>bash
 </pre></div>
@@ -769,18 +768,18 @@ MathJax = {
 </section>
 </section>
 <section id="importing-data">
-<h4>Importing Data<a class="headerlink" href="#importing-data" title="Permalink to this heading">¶</a></h4>
+<h4>Importing Data<a class="headerlink" href="#importing-data" title="Link to this heading">¶</a></h4>
 <p>Use the Neo4j importing tools to load your data into the Neo4j database. Here we use <code class="docutils literal notranslate"><span class="pre">movie</span></code> dataset as an example, which has the following property graph model:</p>
 <figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/movie_schema.png"><img alt="movie_schema" src="../_images/movie_schema.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Movie Data Model</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Movie Data Model</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="../_images/movie_data.png"><img alt="movie_data" src="../_images/movie_data.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Nodes and Relationships in the Movie Dataset</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Nodes and Relationships in the Movie Dataset</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Follow the instructions of <a class="reference external" href="https://neo4j.com/docs/operations-manual/4.4/tools/neo4j-admin/">neo4j-admin</a> to load the movie dataset, the original CSV files have been included in the <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j</span></code> artifacts under the directory <code class="docutils literal notranslate"><span class="pre">import/movie</span></code>.</p>
@@ -800,7 +799,7 @@ MathJax = {
 </div>
 </section>
 <section id="configuration">
-<h4>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading">¶</a></h4>
+<h4>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h4>
 <p>We integrate GOpt configuration into the Neo4j standard config file <code class="docutils literal notranslate"><span class="pre">conf/neo4j.conf</span></code> as follows:</p>
 <ul class="simple">
 <li><p><strong>graph.planner.rules</strong>: Registers graph relational rules into the GOpt optimizer framework.</p></li>
@@ -819,7 +818,7 @@ MathJax = {
 </div>
 </section>
 <section id="starting-neo4j-service">
-<h4>Starting Neo4j Service<a class="headerlink" href="#starting-neo4j-service" title="Permalink to this heading">¶</a></h4>
+<h4>Starting Neo4j Service<a class="headerlink" href="#starting-neo4j-service" title="Link to this heading">¶</a></h4>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/neo4j<span class="w"> </span>start
 
 <span class="c1"># wait until neo4j service started</span>
@@ -837,10 +836,10 @@ Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<
 </div>
 </section>
 <section id="analyzing-queries">
-<h4>Analyzing Queries<a class="headerlink" href="#analyzing-queries" title="Permalink to this heading">¶</a></h4>
+<h4>Analyzing Queries<a class="headerlink" href="#analyzing-queries" title="Link to this heading">¶</a></h4>
 <p>To experience the optimization effects of GOpt, you can run various types of queries and observe the detailed profiling results. GOpt integrates Neo4j’s Profile tool to display estimated counts for each operation. By comparing these estimates with the actual row counts, you can verify the accuracy of GOpt’s cardinality estimation.</p>
 <section id="ambiguous-pattern">
-<h5>Ambiguous Pattern<a class="headerlink" href="#ambiguous-pattern" title="Permalink to this heading">¶</a></h5>
+<h5>Ambiguous Pattern<a class="headerlink" href="#ambiguous-pattern" title="Link to this heading">¶</a></h5>
 <p>Execute queries where type constraints are not explicitly defined.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Profile<span class="w"> </span>Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>b<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>c<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>a<span class="o">)</span><span class="w"> </span>Return<span class="w"> </span>a,<span class="w"> </span>b,<span class="w"> </span>c<span class="p">;</span>
 </pre></div>
@@ -849,7 +848,7 @@ Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<
 <figure class="align-default" id="id4">
 <a class="reference internal image-reference" href="../_images/triangle_pattern_profile.png"><img alt="triangle_pattern_profile" src="../_images/triangle_pattern_profile.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Ambiguous Pattern Profiling Results</span><a class="headerlink" href="#id4" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Ambiguous Pattern Profiling Results</span><a class="headerlink" href="#id4" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>An important point to note is that if the data model does not contain the pattern specified in the query, GOpt can provide timely errors during the compiling phase through static analysis prior to actual data execution. For instance, If GOpt’s static analysis determines that there are no outgoing edges associated with <code class="docutils literal notranslate"><span class="pre">Movie</span></code> in the data model, it will promptly raise an error.</p>
@@ -859,12 +858,12 @@ Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<
 <figure class="align-default" id="id5">
 <a class="reference internal image-reference" href="../_images/type_error_profile.png"><img alt="type_error_profile" src="../_images/type_error_profile.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Pattern with Type Error Profiling Results</span><a class="headerlink" href="#id5" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Pattern with Type Error Profiling Results</span><a class="headerlink" href="#id5" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="graph-pattern-matching">
-<h5>Graph Pattern Matching<a class="headerlink" href="#graph-pattern-matching" title="Permalink to this heading">¶</a></h5>
+<h5>Graph Pattern Matching<a class="headerlink" href="#graph-pattern-matching" title="Link to this heading">¶</a></h5>
 <p>Find all square patterns.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Profile<span class="w"> </span>Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>d<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>d<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>
 Where<span class="w"> </span>a&lt;&gt;d<span class="w"> </span>AND<span class="w"> </span>b&lt;&gt;c
@@ -875,12 +874,12 @@ Return<span class="w"> </span>a,<span class="w"> </span>b,<span class="w"> </spa
 <figure class="align-default" id="id6">
 <a class="reference internal image-reference" href="../_images/square_pattern_profile.png"><img alt="square_pattern_profile" src="../_images/square_pattern_profile.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Square Pattern Profiling Results</span><a class="headerlink" href="#id6" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Square Pattern Profiling Results</span><a class="headerlink" href="#id6" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="hybrid-graph-relational">
-<h5>Hybrid Graph Relational<a class="headerlink" href="#hybrid-graph-relational" title="Permalink to this heading">¶</a></h5>
+<h5>Hybrid Graph Relational<a class="headerlink" href="#hybrid-graph-relational" title="Link to this heading">¶</a></h5>
 <p>Based on the provided filtering conditions, the optimizer seamlessly integrates graph-native algorithm with the traditional relational rule <code class="docutils literal notranslate"><span class="pre">FilterPushDown</span></code>, which results in a distinct execution order from that of query-2.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Profile<span class="w"> </span>Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>d<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>b<span class="o">)</span>,<span class="w"> </span><span class="o">(</span>d<span class="o">)</span>-<span class="o">[]</span>-&gt;<span class="o">(</span>c<span class="o">)</span>
 Where<span class="w"> </span>d.name<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Kean&#39;</span><span class="w"> </span>AND<span class="w"> </span>a&lt;&gt;d<span class="w"> </span>AND<span class="w"> </span>b&lt;&gt;c
@@ -890,12 +889,12 @@ Return<span class="w"> </span>a,<span class="w"> </span>b,<span class="w"> </spa
 <figure class="align-default" id="id7">
 <a class="reference internal image-reference" href="../_images/square_pattern_with_filter_profile.png"><img alt="square_pattern_with_filter_profile" src="../_images/square_pattern_with_filter_profile.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Square Pattern with Filtering Profiling Results</span><a class="headerlink" href="#id7" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Square Pattern with Filtering Profiling Results</span><a class="headerlink" href="#id7" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="st-path">
-<h5>ST Path<a class="headerlink" href="#st-path" title="Permalink to this heading">¶</a></h5>
+<h5>ST Path<a class="headerlink" href="#st-path" title="Link to this heading">¶</a></h5>
 <p>Find the count of all simple paths between two given vertices. GOpt provides specific optimizations for ST-Path queries. For long paths between a given start and endpoint, it selects an appropriate split point based on cardinality estimation to reduce data expansion in a single direction. This is a feature not available in the native Neo4j planner.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Profile<span class="w"> </span>Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span>-<span class="o">[</span>:ACTED_IN*5..6<span class="o">]</span>-<span class="o">(</span>b<span class="o">)</span>
 Where<span class="w"> </span>a.name<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Kean&#39;</span><span class="w"> </span>AND<span class="w"> </span>b.name<span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Top Gun&#39;</span>
@@ -905,14 +904,14 @@ Return<span class="w"> </span>count<span class="o">(</span>a<span class="o">)</s
 <figure class="align-default" id="id8">
 <a class="reference internal image-reference" href="../_images/st_path_profile.png"><img alt="st_path_profile" src="../_images/st_path_profile.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">ST-Path Pattern Profiling Results</span><a class="headerlink" href="#id8" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">ST-Path Pattern Profiling Results</span><a class="headerlink" href="#id8" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 </section>
 </section>
 <section id="installation">
-<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h3>
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h3>
 <p>We offer two versions of the GOpt JAR package, each approximately 35MB in size:</p>
 <ul class="simple">
 <li><p><strong>gopt-core</strong>: Includes the core functionality of GOpt and uses the GraphBuilderSDK to build GOpt inputs.</p></li>
@@ -940,14 +939,14 @@ Return<span class="w"> </span>count<span class="o">(</span>a<span class="o">)</s
 </section>
 </section>
 <section id="tutorial">
-<h2>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this heading">¶</a></h2>
+<h2>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading">¶</a></h2>
 <p>In the <a class="reference internal" href="#getting-started"><span class="xref myst">Getting Started</span></a> section, we explored some basic features of GOpt. In this section, we will guide you through advanced features of GOpt and demonstrate how to leverage these capabilities to optimize your system, including:</p>
 <ul class="simple">
 <li><p><strong>GOpt Benchmark Tools</strong>: This guide provides detailed instructions on utilizing the benchmark tool to evaluate GOpt’s performance on more complex queries with larger datasets.</p></li>
 <li><p><strong>Integration of GOpt into Other Systems</strong>: Using Neo4j as a case study, we provide comprehensive details on integrating GOpt into other systems at different levels.</p></li>
 </ul>
 <section id="benchmark-tools">
-<h3>Benchmark Tools<a class="headerlink" href="#benchmark-tools" title="Permalink to this heading">¶</a></h3>
+<h3>Benchmark Tools<a class="headerlink" href="#benchmark-tools" title="Link to this heading">¶</a></h3>
 <p>We provide a benchmark tool for running complex pattern queries on larger datasets. Our benchmark tool includes three components:</p>
 <ul class="simple">
 <li><p><strong>Dataset</strong>: We have pre-prepared the LDBC data with sf=1 in the artifacts <code class="docutils literal notranslate"><span class="pre">gopt-on-neo4j</span></code>, under <code class="docutils literal notranslate"><span class="pre">data</span></code> directory.</p></li>
@@ -962,7 +961,7 @@ Return<span class="w"> </span>count<span class="o">(</span>a<span class="o">)</s
 </ul>
 <p>You can now experience our one-click benchmarking feature.</p>
 <section id="steps">
-<h4>Steps<a class="headerlink" href="#steps" title="Permalink to this heading">¶</a></h4>
+<h4>Steps<a class="headerlink" href="#steps" title="Link to this heading">¶</a></h4>
 <ol class="arabic">
 <li><p>First, stop the running service</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>bin/neo4j<span class="w"> </span>stop
@@ -1024,14 +1023,14 @@ Match<span class="w"> </span><span class="o">(</span>a<span class="o">)</span><s
 </section>
 </section>
 <section id="integration-of-gopt">
-<h3>Integration of GOpt<a class="headerlink" href="#integration-of-gopt" title="Permalink to this heading">¶</a></h3>
+<h3>Integration of GOpt<a class="headerlink" href="#integration-of-gopt" title="Link to this heading">¶</a></h3>
 <p>Detailed integration instructions for GOpt will be provided in the following sections. Stay tuned for more information.</p>
 </section>
 </section>
 <section id="design-of-gopt">
-<h2>Design of GOpt<a class="headerlink" href="#design-of-gopt" title="Permalink to this heading">¶</a></h2>
+<h2>Design of GOpt<a class="headerlink" href="#design-of-gopt" title="Link to this heading">¶</a></h2>
 <section id="motivation">
-<h3>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">¶</a></h3>
+<h3>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h3>
 <p>In large-scale graph querying scenarios, one core technique that can significantly influence performance is the optimizer. As graph data and its applications continue to grow rapidly, numerous graph processing systems equipped with native optimizers have been developed. However, these optimization methods tend to excessively focus on either graph-specific or relational-specific approaches. This narrow focus fails to holistically address queries involving both graph and relational data, leading to suboptimal performance.
 To address this issue, GOpt is designed as follows:</p>
 <ol class="arabic simple">
@@ -1042,14 +1041,14 @@ To address this issue, GOpt is designed as follows:</p>
 <figure class="align-default" id="id9">
 <a class="reference internal image-reference" href="../_images/design_of_gopt.png"><img alt="design_of_gopt" src="../_images/design_of_gopt.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Design of GOpt</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Design of GOpt</span><a class="headerlink" href="#id9" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="detailed-introduction">
-<h3>Detailed Introduction<a class="headerlink" href="#detailed-introduction" title="Permalink to this heading">¶</a></h3>
+<h3>Detailed Introduction<a class="headerlink" href="#detailed-introduction" title="Link to this heading">¶</a></h3>
 <section id="rules">
-<h4>Rules<a class="headerlink" href="#rules" title="Permalink to this heading">¶</a></h4>
+<h4>Rules<a class="headerlink" href="#rules" title="Link to this heading">¶</a></h4>
 <p>Rules play a pivotal role in GOpt’s optimization framework, enabling efficient and effective query transformations. Below is an outline of some key rules implemented in GOpt:</p>
 <p><strong>ScanEarlyStopRule</strong>: Pushes the limit operation down to the scan node. During the scan process, the scan stops as soon as the specified limit count is reached.</p>
 <p><strong>ScanExpandFusionRule</strong>: This rule transforms edge expansion into edge scan wherever possible. For example, consider the following Cypher query:</p>
@@ -1180,9 +1179,9 @@ To address this issue, GOpt is designed as follows:</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

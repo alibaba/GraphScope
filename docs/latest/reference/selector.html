@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Operation" href="operation.html" /><link rel="prev" title="Context" href="context.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Selector - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,23 +691,23 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="selector">
-<span id="id1"></span><h1>Selector<a class="headerlink" href="#selector" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Selector<a class="headerlink" href="#selector" title="Link to this heading">¶</a></h1>
 <p>Selectors are strs, or key-value pairs that used for <a class="reference internal" href="networkx/graphs.html#graph"><span class="std std-ref">Graph</span></a>, or <a class="reference internal" href="context.html#context"><span class="std std-ref">Context</span></a>. Selectors are intended to be used to specify a subset of data of objects, they cannot only retrieve the results of algorithms, but also elements on
 the graph itself. The syntax of selectors slightly differ from each other For different kinds of graphs or contexts. Since we have 5 kinds of context, let’s talk about them one by one.</p>
 <section id="selectors-in-different-context">
-<h2>Selectors in different context<a class="headerlink" href="#selectors-in-different-context" title="Permalink to this heading">¶</a></h2>
+<h2>Selectors in different context<a class="headerlink" href="#selectors-in-different-context" title="Link to this heading">¶</a></h2>
 <p>The basic components of selector is <cite>v</cite>, <cite>e</cite>, and <cite>r</cite>, means vertex, edge and result, respectively.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Selectors on edges is not supported yet, but will be supported in next releases.</p>
 </div>
 <section id="tensorcontext">
-<h3>TensorContext<a class="headerlink" href="#tensorcontext" title="Permalink to this heading">¶</a></h3>
+<h3>TensorContext<a class="headerlink" href="#tensorcontext" title="Link to this heading">¶</a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">TensorContext</span></code> holds a tensor inside the engine. In this case, selectors doesn’t matter,
 instead, we have an <cite>axis</cite> keyword that used to retrieve datas in the tensor respect to axis.</p>
 </section>
 <section id="vertexdatacontext">
-<h3>VertexDataContext<a class="headerlink" href="#vertexdatacontext" title="Permalink to this heading">¶</a></h3>
+<h3>VertexDataContext<a class="headerlink" href="#vertexdatacontext" title="Link to this heading">¶</a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexDataContext</span></code> is used by algorithms that compatible graph is a simple graph,
 i.e. no labels and property, and result of the algorithms has the form that
 have exactly one data on every vertex, such as <a class="reference internal" href="app.html#graphscope.sssp" title="graphscope.sssp"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphscope.sssp()</span></code></a>, <a class="reference internal" href="app.html#graphscope.pagerank" title="graphscope.pagerank"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphscope.pagerank()</span></code></a>
@@ -743,7 +742,7 @@ Let’s see what selectors of <code class="xref py py-class docutils literal not
 </div></blockquote>
 </section>
 <section id="labeledvertexdatacontext">
-<h3>LabeledVertexDataContext<a class="headerlink" href="#labeledvertexdatacontext" title="Permalink to this heading">¶</a></h3>
+<h3>LabeledVertexDataContext<a class="headerlink" href="#labeledvertexdatacontext" title="Link to this heading">¶</a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledVertexDataContext</span></code> is used by algorithms that compatible graphs is a property graph,
 i.e. There are several labels in the graph, and each label has several properties, And results of
 such algorithms would take the form that has one data on each vertex label.
@@ -781,7 +780,7 @@ But the results has no property, only have labels.</p>
 </div></blockquote>
 </section>
 <section id="vertexpropertycontext">
-<h3>VertexPropertyContext<a class="headerlink" href="#vertexpropertycontext" title="Permalink to this heading">¶</a></h3>
+<h3>VertexPropertyContext<a class="headerlink" href="#vertexpropertycontext" title="Link to this heading">¶</a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">VertexPropertyContext</span></code> is used by algorithms that compatible graph is a simple graph,
 i.e. no labels and property, and results of algorithms can have multiple datas (properties) on each vertex,
 such as <a class="reference internal" href="app.html#graphscope.hits" title="graphscope.hits"><code class="xref py py-func docutils literal notranslate"><span class="pre">graphscope.hits()</span></code></a>.</p>
@@ -816,7 +815,7 @@ such as <a class="reference internal" href="app.html#graphscope.hits" title="gra
 </div></blockquote>
 </section>
 <section id="labeledvertexpropertycontext">
-<h3>LabeledVertexPropertyContext<a class="headerlink" href="#labeledvertexpropertycontext" title="Permalink to this heading">¶</a></h3>
+<h3>LabeledVertexPropertyContext<a class="headerlink" href="#labeledvertexpropertycontext" title="Link to this heading">¶</a></h3>
 <p><code class="xref py py-class docutils literal notranslate"><span class="pre">LabeledVertexPropertyContext</span></code> is used by algorithms that compatible graphs is a property graph.
 i.e. There are several labels in the graph, and each label has several properties.
 And results of the algorithms would has the form that each label can have multiple datas (a.k.a. property).</p>
@@ -854,10 +853,10 @@ And results of the algorithms would has the form that each label can have multip
 </section>
 </section>
 <section id="methods-that-use-selectors">
-<h2>Methods that use selectors<a class="headerlink" href="#methods-that-use-selectors" title="Permalink to this heading">¶</a></h2>
+<h2>Methods that use selectors<a class="headerlink" href="#methods-that-use-selectors" title="Link to this heading">¶</a></h2>
 <p>The form of the selector is slightly different in different methods,</p>
 <section id="one-dimensional-results">
-<h3>One-dimensional results<a class="headerlink" href="#one-dimensional-results" title="Permalink to this heading">¶</a></h3>
+<h3>One-dimensional results<a class="headerlink" href="#one-dimensional-results" title="Link to this heading">¶</a></h3>
 <p>Methods that return one-dimensional results are:</p>
 <blockquote>
 <div><ul class="simple">
@@ -879,7 +878,7 @@ And results of the algorithms would has the form that each label can have multip
 </div>
 </section>
 <section id="multi-dimensional-results">
-<h3>Multi-dimensional results<a class="headerlink" href="#multi-dimensional-results" title="Permalink to this heading">¶</a></h3>
+<h3>Multi-dimensional results<a class="headerlink" href="#multi-dimensional-results" title="Link to this heading">¶</a></h3>
 <p>To retrieve multi-dimensional results, we must assign a key for each selector.
 Also, Each Key must be unique for a given selector.</p>
 <p>Methods that will return multi-dimensional results are:</p>
@@ -904,7 +903,7 @@ Also, Each Key must be unique for a given selector.</p>
 </section>
 </section>
 <section id="vertex-range">
-<h2>Vertex Range<a class="headerlink" href="#vertex-range" title="Permalink to this heading">¶</a></h2>
+<h2>Vertex Range<a class="headerlink" href="#vertex-range" title="Link to this heading">¶</a></h2>
 <p>Optional, user may also want to retrieve only a subset of data specified by selector.
 Those method above can take a optional <cite>vertex_range</cite> argument, which works like slicing,
 user can specify a <cite>begin</cite> and an <cite>end</cite> value, then only vertex inside the range will be selected.</p>
@@ -1003,9 +1002,9 @@ user can specify a <cite>begin</cite> and an <cite>end</cite> value, then only v
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Configuration" href="configuration.html" /><link rel="prev" title="Using Custom Graph" href="custom_graph_data.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Stored Procedures - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,14 +691,14 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="stored-procedures">
-<h1>Stored Procedures<a class="headerlink" href="#stored-procedures" title="Permalink to this heading">¶</a></h1>
+<h1>Stored Procedures<a class="headerlink" href="#stored-procedures" title="Link to this heading">¶</a></h1>
 <p>Stored procedures in GraphScope Interactive offer a powerful way to encapsulate and reuse complex graph operations. This document provides a guide on how to compile, enable, and manage these procedures. We will take movies graph for example.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Before executing the following code, please ensure that you are in the context of the builtin graph <code class="docutils literal notranslate"><span class="pre">gs_interactive_default_graph</span></code>: <code class="docutils literal notranslate"><span class="pre">gsctl</span> <span class="pre">use</span> <span class="pre">GRAPH</span> <span class="pre">gs_interactive_default_graph</span></code>.</p>
 </div>
 <section id="define-a-stored-procedure">
-<h2>Define a Stored Procedure<a class="headerlink" href="#define-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
+<h2>Define a Stored Procedure<a class="headerlink" href="#define-a-stored-procedure" title="Link to this heading">¶</a></h2>
 <p>To compile a stored procedure, first define it with a YAML file named <code class="docutils literal notranslate"><span class="pre">procedure.yaml</span></code>, which defines a stored procedure that searches for <code class="docutils literal notranslate"><span class="pre">softwares</span></code> created by the person with the provided name. The person’s name has been parameterized as <code class="docutils literal notranslate"><span class="pre">$personName</span></code>.</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">test_procedure</span>
 <span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Ths</span><span class="nv"> </span><span class="s">is</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">test</span><span class="nv"> </span><span class="s">procedure&quot;</span>
@@ -716,7 +715,7 @@ MathJax = {
 </ul>
 </section>
 <section id="create-a-stored-procedure">
-<h2>Create a Stored Procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h2>
+<h2>Create a Stored Procedure<a class="headerlink" href="#create-a-stored-procedure" title="Link to this heading">¶</a></h2>
 <p>Then create the procedure with <code class="docutils literal notranslate"><span class="pre">gsctl</span></code>:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>create<span class="w"> </span>storedproc<span class="w"> </span>-f<span class="w"> </span>./procedure.yaml
 </pre></div>
@@ -728,14 +727,14 @@ MathJax = {
 </div>
 </section>
 <section id="delete-a-stored-procedures">
-<h2>Delete a Stored Procedures<a class="headerlink" href="#delete-a-stored-procedures" title="Permalink to this heading">¶</a></h2>
+<h2>Delete a Stored Procedures<a class="headerlink" href="#delete-a-stored-procedures" title="Link to this heading">¶</a></h2>
 <p>To delete a single stored procedures, simply using:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>delete<span class="w"> </span>storedproc<span class="w"> </span>test_procedure
 </pre></div>
 </div>
 </section>
 <section id="viewing-stored-procedures">
-<h2>Viewing Stored Procedures<a class="headerlink" href="#viewing-stored-procedures" title="Permalink to this heading">¶</a></h2>
+<h2>Viewing Stored Procedures<a class="headerlink" href="#viewing-stored-procedures" title="Link to this heading">¶</a></h2>
 <p>To view a single stored procedure,</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>desc<span class="w"> </span>storedproc<span class="w"> </span>test_procedure
 </pre></div>
@@ -746,9 +745,9 @@ MathJax = {
 </div>
 </section>
 <section id="querying-stored-procedures">
-<h2>Querying Stored Procedures<a class="headerlink" href="#querying-stored-procedures" title="Permalink to this heading">¶</a></h2>
+<h2>Querying Stored Procedures<a class="headerlink" href="#querying-stored-procedures" title="Link to this heading">¶</a></h2>
 <section id="call-the-stored-procedure-via-interactive-sdk">
-<h3>Call the Stored Procedure via Interactive SDK<a class="headerlink" href="#call-the-stored-procedure-via-interactive-sdk" title="Permalink to this heading">¶</a></h3>
+<h3>Call the Stored Procedure via Interactive SDK<a class="headerlink" href="#call-the-stored-procedure-via-interactive-sdk" title="Link to this heading">¶</a></h3>
 <p>You can call the stored procedure via Interactive Python SDK. (Make sure environment variables are set correctly, see <a class="reference internal" href="installation.html#install-and-deploy-interactive"><span class="std std-ref">Deploy Interactive</span></a>).</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_ADMIN_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:7777
 <span class="nb">export</span><span class="w"> </span><span class="nv">INTERACTIVE_STORED_PROC_ENDPOINT</span><span class="o">=</span>http://127.0.0.1:10000
@@ -772,7 +771,7 @@ MathJax = {
 </div>
 </section>
 <section id="call-the-stored-procedure-via-neo4j-native-tools">
-<h3>Call the Stored Procedure via Neo4j-native Tools<a class="headerlink" href="#call-the-stored-procedure-via-neo4j-native-tools" title="Permalink to this heading">¶</a></h3>
+<h3>Call the Stored Procedure via Neo4j-native Tools<a class="headerlink" href="#call-the-stored-procedure-via-neo4j-native-tools" title="Link to this heading">¶</a></h3>
 <p>You can also call the stored procedure via neo4j-native tools, like <code class="docutils literal notranslate"><span class="pre">cypher-shell</span></code>, <code class="docutils literal notranslate"><span class="pre">neo4j-driver</span></code>. Please refer to <a class="reference internal" href="../../interactive_engine/neo4j/cypher_sdk.html"><span class="doc std std-doc">this document</span></a> for connecting to cypher service.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./cypher-shell<span class="w"> </span>-a<span class="w"> </span><span class="si">${</span><span class="nv">INTERACTIVE_CYPHER_ENDPOINT</span><span class="si">}</span>
 </pre></div>
@@ -784,35 +783,35 @@ MathJax = {
 </section>
 </section>
 <section id="builtin-procedures">
-<h2>Builtin Procedures<a class="headerlink" href="#builtin-procedures" title="Permalink to this heading">¶</a></h2>
+<h2>Builtin Procedures<a class="headerlink" href="#builtin-procedures" title="Link to this heading">¶</a></h2>
 <p>To enhance the user experience in Interactive, we have integrated built-in stored procedures. These procedures facilitate both commonly executed queries and those that, while complex and challenging to devise, are essential and frequently utilized. To access these features, simply input the correct procedure name and the necessary parameters.</p>
 <section id="count-vertices">
-<h3>count_vertices<a class="headerlink" href="#count-vertices" title="Permalink to this heading">¶</a></h3>
+<h3>count_vertices<a class="headerlink" href="#count-vertices" title="Link to this heading">¶</a></h3>
 <p>This procedure returns the count of vertices for a specified label.</p>
 <div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">count_vertices</span><span class="p">(</span><span class="n">vertex_label_name</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="parameters">
-<h4>Parameters<a class="headerlink" href="#parameters" title="Permalink to this heading">¶</a></h4>
+<h4>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">vertex_label_name</span></code>: The name of the vertex label to be counted.</p></li>
 </ul>
 </section>
 <section id="returns">
-<h4>Returns<a class="headerlink" href="#returns" title="Permalink to this heading">¶</a></h4>
+<h4>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">count</span></code>: The total number of vertices.</p></li>
 </ul>
 </section>
 </section>
 <section id="k-hop-neighbors">
-<h3>k_hop_neighbors<a class="headerlink" href="#k-hop-neighbors" title="Permalink to this heading">¶</a></h3>
+<h3>k_hop_neighbors<a class="headerlink" href="#k-hop-neighbors" title="Link to this heading">¶</a></h3>
 <p>This finds all vertices that can be reached from a starting vertex within <code class="docutils literal notranslate"><span class="pre">k</span></code> hops.</p>
 <div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">k_neighbors</span><span class="p">(</span><span class="n">src_vertex_label_name</span><span class="p">,</span><span class="w"> </span><span class="n">src_vertex_pk</span><span class="p">,</span><span class="w"> </span><span class="n">k</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="id1">
-<h4>Parameters<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h4>
+<h4>Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">src_vertex_label_name</span></code>: The label of the starting vertex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">src_vertex_pk</span></code>: The primary key identifying the starting vertex.</p></li>
@@ -820,7 +819,7 @@ MathJax = {
 </ul>
 </section>
 <section id="id2">
-<h4>Returns<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h4>
+<h4>Returns<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">label_name</span></code>: The label of each reachable vertex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">vertex_pk</span></code>: The primary key of each reachable vertex.</p></li>
@@ -828,13 +827,13 @@ MathJax = {
 </section>
 </section>
 <section id="shortest-path-among-three">
-<h3>shortest_path_among_three<a class="headerlink" href="#shortest-path-among-three" title="Permalink to this heading">¶</a></h3>
+<h3>shortest_path_among_three<a class="headerlink" href="#shortest-path-among-three" title="Link to this heading">¶</a></h3>
 <p>This finds the shortest path connecting three specified vertices.</p>
 <div class="highlight-cypher notranslate"><div class="highlight"><pre><span></span><span class="k">CALL</span><span class="w"> </span><span class="n">shortest_path_among_three</span><span class="p">(</span><span class="n">label_1</span><span class="p">,</span><span class="w"> </span><span class="n">pk_1</span><span class="p">,</span><span class="w"> </span><span class="n">label_2</span><span class="p">,</span><span class="w"> </span><span class="n">pk_2</span><span class="p">,</span><span class="w"> </span><span class="n">label_3</span><span class="p">,</span><span class="w"> </span><span class="n">pk_3</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="id3">
-<h4>Parameters<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h4>
+<h4>Parameters<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">label_1</span></code>: The label of the first vertex.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pk_1</span></code>: The primary key of the first vertex.</p></li>
@@ -845,14 +844,14 @@ MathJax = {
 </ul>
 </section>
 <section id="id4">
-<h4>Returns<a class="headerlink" href="#id4" title="Permalink to this heading">¶</a></h4>
+<h4>Returns<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h4>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">path</span></code>: The shortest path, represented as a string.</p></li>
 </ul>
 </section>
 </section>
 <section id="pagerank">
-<h3>pagerank<a class="headerlink" href="#pagerank" title="Permalink to this heading">¶</a></h3>
+<h3>pagerank<a class="headerlink" href="#pagerank" title="Link to this heading">¶</a></h3>
 <p>Calculate the PageRank values for a subgraph of the current graph.</p>
 <div class="highlight-note notranslate"><div class="highlight"><pre><span></span>Currently, we only support calculating PageRank on a subgraph with a single type of vertex and a single type of relationship.
 </pre></div>
@@ -969,9 +968,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

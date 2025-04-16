@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Deploy with Existing Vineyard Cluster" href="deploy_with_existing_vineyard_cluster.html" /><link rel="prev" title="Install GraphScope on Local" href="install_on_local.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Deploy on K8s Cluster - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,28 +691,28 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="deploy-on-k8s-cluster">
-<h1>Deploy on K8s Cluster<a class="headerlink" href="#deploy-on-k8s-cluster" title="Permalink to this heading">¶</a></h1>
+<h1>Deploy on K8s Cluster<a class="headerlink" href="#deploy-on-k8s-cluster" title="Link to this heading">¶</a></h1>
 <p>To processing large-scale graph in a distributed environment, GraphScope is designed to be deployed on a Kubernetes(K8s) cluster.</p>
 <p>As shown in the figure, you could deploy and manage the workloads of GraphScope through a python client, which communicates with the
 GraphScope engines on the K8s cluster through a gRPC service.</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/k8s.png"><img alt="GraphScope on K8s" src="../_images/k8s.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">GraphScope on K8s.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">GraphScope on K8s.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>A cluster on k8s contains a pod running the coordinator, and a <code class="docutils literal notranslate"><span class="pre">deployment</span></code> of GraphScope engines.</p>
 <p>The coordinator in GraphScope is the endpoint of the backend. It manages the connections from python client via grpc, and takes responsibility for applying or releasing the pods for interactive, analytical and learning engines.</p>
 <p>This document describes how to deploy GraphScope on a K8s cluster.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Linux or macOS.</p></li>
 <li><p>Python 3.7 ~ 3.11.</p></li>
 </ul>
 </section>
 <section id="install-graphscope-client">
-<h2>Install GraphScope Client<a class="headerlink" href="#install-graphscope-client" title="Permalink to this heading">¶</a></h2>
+<h2>Install GraphScope Client<a class="headerlink" href="#install-graphscope-client" title="Link to this heading">¶</a></h2>
 <p>Different from the standalone mode, you only need to install the client package of GraphScope.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>graphscope-client
 </pre></div>
@@ -728,7 +727,7 @@ GraphScope engines on the K8s cluster through a gRPC service.</p>
 </div>
 </section>
 <section id="prepare-a-kubernetes-cluster">
-<h2>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Link to this heading">¶</a></h2>
 <p>To deploy GraphScope on Kubernetes, you must have a kubernetes cluster.</p>
 <div class="admonition tip">
 <p class="admonition-title">Tip</p>
@@ -750,7 +749,7 @@ standalone Kubernetes server and client.</p>
 <figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/minikube_status.png"><img alt="Minikube Status" src="../_images/minikube_status.png" style="width: 60%;" /></a>
 <figcaption>
-<p><span class="caption-text">minikube status</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">minikube status</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The output should show that the cluster is running, and the kubectl context is set to the minikube context.
@@ -792,9 +791,9 @@ Once started, minikube generates a <a class="reference external" href="https://k
 </div>
 </section>
 <section id="deploying-graphscope">
-<h2>Deploying GraphScope<a class="headerlink" href="#deploying-graphscope" title="Permalink to this heading">¶</a></h2>
+<h2>Deploying GraphScope<a class="headerlink" href="#deploying-graphscope" title="Link to this heading">¶</a></h2>
 <section id="launch-with-default-parameters">
-<h3>Launch with default parameters<a class="headerlink" href="#launch-with-default-parameters" title="Permalink to this heading">¶</a></h3>
+<h3>Launch with default parameters<a class="headerlink" href="#launch-with-default-parameters" title="Link to this heading">¶</a></h3>
 <p>The engines of GraphScope are distributed as a docker image. The graphscope python client will pull the image if they are not present. If you run GraphScope on a k8s cluster, make sure the cluster is able to access the public registry.</p>
 <p>A session encapsulates the control and state of the GraphScope engines. It serves as the entrance in the python client to GraphScope. A session allows you to deploy and connect GraphScope on a k8s cluster.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
@@ -806,9 +805,9 @@ Once started, minikube generates a <a class="reference external" href="https://k
 <p>As shown above, a session can easily launch a cluster on k8s.</p>
 </section>
 <section id="frequently-used-parameters">
-<h3>Frequently used parameters<a class="headerlink" href="#frequently-used-parameters" title="Permalink to this heading">¶</a></h3>
+<h3>Frequently used parameters<a class="headerlink" href="#frequently-used-parameters" title="Link to this heading">¶</a></h3>
 <section id="customize-image-uri">
-<h4>Customize image URI<a class="headerlink" href="#customize-image-uri" title="Permalink to this heading">¶</a></h4>
+<h4>Customize image URI<a class="headerlink" href="#customize-image-uri" title="Link to this heading">¶</a></h4>
 <p>Considering that you may want to use a different tag other than the default, or deploy in an intranet environment without internet access, they might need to customize the image URIs.</p>
 <p>You can configure the image URIs for the engines using a set of image-related parameters. The default configurations are as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span>
@@ -821,7 +820,7 @@ Once started, minikube generates a <a class="reference external" href="https://k
 <p>see more details in <a class="reference external" href="https://graphscope.io/docs/reference/session.html#session">Session</a>.</p>
 </section>
 <section id="specify-the-number-of-workers">
-<h4>Specify the number of workers<a class="headerlink" href="#specify-the-number-of-workers" title="Permalink to this heading">¶</a></h4>
+<h4>Specify the number of workers<a class="headerlink" href="#specify-the-number-of-workers" title="Link to this heading">¶</a></h4>
 <p>GraphScope is designed to handle extremely large-scale graphs that cannot fit in the memory of a single worker.
 To process such graphs, you can increase the number of workers, as well as the CPU and memories of workers.</p>
 <p>To achieve this, use the <code class="docutils literal notranslate"><span class="pre">num_workers</span></code> parameter:</p>
@@ -835,7 +834,7 @@ To process such graphs, you can increase the number of workers, as well as the C
 </div>
 </section>
 <section id="provide-a-kubeconfig-file-other-than-default">
-<h4>Provide a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file other than default<a class="headerlink" href="#provide-a-kubeconfig-file-other-than-default" title="Permalink to this heading">¶</a></h4>
+<h4>Provide a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file other than default<a class="headerlink" href="#provide-a-kubeconfig-file-other-than-default" title="Link to this heading">¶</a></h4>
 <p>If you want to deploy on a preexisting cluster with a <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file located in a non-default location,
 they can manually specify the path to the <code class="docutils literal notranslate"><span class="pre">kubeconfig</span></code> file as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">k8s_client_config</span><span class="o">=</span><span class="s1">&#39;/path/to/config&#39;</span><span class="p">)</span>
@@ -843,7 +842,7 @@ they can manually specify the path to the <code class="docutils literal notransl
 </div>
 </section>
 <section id="mount-volumes">
-<h4>Mount volumes<a class="headerlink" href="#mount-volumes" title="Permalink to this heading">¶</a></h4>
+<h4>Mount volumes<a class="headerlink" href="#mount-volumes" title="Link to this heading">¶</a></h4>
 <p>Sometimes you may want to use their dataset on the local disk, in this case, we provide options to mount a host directory to the cluster.</p>
 <p>Assume we want to mount <code class="docutils literal notranslate"><span class="pre">~/test_data</span></code> in the host machine to <code class="docutils literal notranslate"><span class="pre">/testingdata</span></code> in pods, we can define a <code class="docutils literal notranslate"><span class="pre">dict</span></code> as follows, then pass it as <code class="docutils literal notranslate"><span class="pre">k8s_volumes</span></code> in session constructor.</p>
 <p>Note that the host path is relative to the kubernetes node, that is, if you have a cluster created by a VM driver, then you need to copy that directory to the minikube VM, or mount that path to minikube VM. See more details <a class="reference external" href="https://minikube.sigs.k8s.io/docs/handbook/mount/">here</a>.</p>
@@ -876,7 +875,7 @@ they can manually specify the path to the <code class="docutils literal notransl
 </section>
 </section>
 <section id="inspect-the-deployment">
-<h3>Inspect the deployment<a class="headerlink" href="#inspect-the-deployment" title="Permalink to this heading">¶</a></h3>
+<h3>Inspect the deployment<a class="headerlink" href="#inspect-the-deployment" title="Link to this heading">¶</a></h3>
 <p>The launch time of GraphScope depends on the time it takes to pull the necessary Docker images.
 The pulling time is influenced by the network conditions.
 Once the images are pulled, you can expect GraphScope to be up and running in less than 10 seconds.</p>
@@ -888,7 +887,7 @@ Once the images are pulled, you can expect GraphScope to be up and running in le
 <figure class="align-default" id="id3">
 <a class="reference internal image-reference" href="../_images/kubectl_get_po_gs.png"><img alt="Pods of GraphScope" src="../_images/kubectl_get_po_gs.png" style="width: 60%;" /></a>
 <figcaption>
-<p><span class="caption-text">Pods of GraphScope</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Pods of GraphScope</span><a class="headerlink" href="#id3" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Wait until all pods are running before proceeding.</p>
@@ -899,7 +898,7 @@ Check out the <a class="reference internal" href="../overview/getting_started.ht
 </section>
 </section>
 <section id="cleaning-up">
-<h2>Cleaning Up<a class="headerlink" href="#cleaning-up" title="Permalink to this heading">¶</a></h2>
+<h2>Cleaning Up<a class="headerlink" href="#cleaning-up" title="Link to this heading">¶</a></h2>
 <p>When you have finished using GraphScope, you can remove the deployment by executing the following command.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sess</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 </pre></div>
@@ -1010,9 +1009,9 @@ minikube<span class="w"> </span>delete
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

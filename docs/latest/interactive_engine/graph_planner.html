@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="A Generic Benchmark Tool" href="benchmark_tool.html" /><link rel="prev" title="GOpt: A Graph-Native Query Optimization Framework" href="gopt.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Graph Planner Interface by JNI and RESTful API - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,13 +691,13 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="graph-planner-interface-by-jni-and-restful-api">
-<h1>Graph Planner Interface by JNI and RESTful API<a class="headerlink" href="#graph-planner-interface-by-jni-and-restful-api" title="Permalink to this heading">¶</a></h1>
+<h1>Graph Planner Interface by JNI and RESTful API<a class="headerlink" href="#graph-planner-interface-by-jni-and-restful-api" title="Link to this heading">¶</a></h1>
 <p><code class="docutils literal notranslate"><span class="pre">GraphPlanner</span></code> is the primary entry point for GOpt’s query optimization and physical plan generation. Originally, it was tightly integrated into the Frontend service, where it optimized Cypher queries received via the Bolt protocol and generated execution plans for various backend engines.</p>
 <p>To enhance its flexibility and ease of integration, <code class="docutils literal notranslate"><span class="pre">GraphPlanner</span></code> is now available as a standalone module, free from any dependencies on other Frontend modules. It supports both JNI and RESTful API interfaces, enabling lightweight and straightforward integration into diverse systems. Whether you are working on a native application or web-based services, <code class="docutils literal notranslate"><span class="pre">GraphPlanner</span></code> can seamlessly integrate into your architecture, providing efficient query optimization and physical plan generation across a wide range of use cases.</p>
 <section id="jni-api">
-<h2>JNI API<a class="headerlink" href="#jni-api" title="Permalink to this heading">¶</a></h2>
+<h2>JNI API<a class="headerlink" href="#jni-api" title="Link to this heading">¶</a></h2>
 <section id="interface-overview">
-<h3>Interface Overview<a class="headerlink" href="#interface-overview" title="Permalink to this heading">¶</a></h3>
+<h3>Interface Overview<a class="headerlink" href="#interface-overview" title="Link to this heading">¶</a></h3>
 <p>We provide a c++ wrapper implementation <code class="docutils literal notranslate"><span class="pre">GraphPlannerWrapper</span></code> for the JNI interface. Here is a brief explanation of the logical interface provided by the <code class="docutils literal notranslate"><span class="pre">c++</span></code> class.</p>
 <p>Constructor:</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cm">/**</span>
@@ -731,10 +730,10 @@ MathJax = {
 </div>
 </section>
 <section id="getting-started">
-<h3>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h3>
+<h3>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h3>
 <p>Follow the steps below to get started with the Graph Planner interface for c++ invocation.</p>
 <section id="step-1-build-the-project">
-<h4>Step 1: Build the Project<a class="headerlink" href="#step-1-build-the-project" title="Permalink to this heading">¶</a></h4>
+<h4>Step 1: Build the Project<a class="headerlink" href="#step-1-build-the-project" title="Link to this heading">¶</a></h4>
 <p>Navigate to the project directory and build the package using Maven:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>interactive_engine
 mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> </span>-DskipTests<span class="w"> </span>-Pgraph-planner-jni
@@ -742,7 +741,7 @@ mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> 
 </div>
 </section>
 <section id="step-2-locate-and-extract-the-package">
-<h4>Step 2: Locate and Extract the Package<a class="headerlink" href="#step-2-locate-and-extract-the-package" title="Permalink to this heading">¶</a></h4>
+<h4>Step 2: Locate and Extract the Package<a class="headerlink" href="#step-2-locate-and-extract-the-package" title="Link to this heading">¶</a></h4>
 <p>After the build completes, a tarball named <code class="docutils literal notranslate"><span class="pre">graph-planner-jni.tar.gz</span></code> will be available in the <code class="docutils literal notranslate"><span class="pre">assembly/target</span></code> directory. Extract the contents of the tarball:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>assembly/target
 tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
@@ -751,7 +750,7 @@ tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
 </div>
 </section>
 <section id="step-3-run-the-example-binary">
-<h4>Step 3: Run the Example Binary<a class="headerlink" href="#step-3-run-the-example-binary" title="Permalink to this heading">¶</a></h4>
+<h4>Step 3: Run the Example Binary<a class="headerlink" href="#step-3-run-the-example-binary" title="Link to this heading">¶</a></h4>
 <p>To demonstrate the usage of the JNI interface, an example binary <code class="docutils literal notranslate"><span class="pre">test_graph_planner</span></code> is provided. Use the following command to execute it:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># bin/test_graph_planner &lt;java class path&gt; &lt;jna lib path&gt; &lt;graph schema path&gt; &lt;graph statistics path&gt; &lt;query&gt; &lt;config path&gt;</span>
 bin/test_graph_planner<span class="w"> </span>libs<span class="w"> </span>native<span class="w"> </span>./conf/graph.yaml<span class="w"> </span>./conf/modern_statistics.json<span class="w"> </span><span class="s2">&quot;MATCH (n) RETURN n, COUNT(n);&quot;</span><span class="w"> </span>./conf/gs_interactive_hiactor.yaml
@@ -850,12 +849,12 @@ bin/test_graph_planner<span class="w"> </span>libs<span class="w"> </span>native
 </section>
 </section>
 <section id="restful-api">
-<h2>Restful API<a class="headerlink" href="#restful-api" title="Permalink to this heading">¶</a></h2>
+<h2>Restful API<a class="headerlink" href="#restful-api" title="Link to this heading">¶</a></h2>
 <p>We provide an alternative method to expose the interface as a RESTful API. Follow the steps below to access the interface via REST.</p>
 <section id="id1">
-<h3>Getting Started<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h3>
+<h3>Getting Started<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
 <section id="id2">
-<h4>Step 1: Build the Project<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h4>
+<h4>Step 1: Build the Project<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h4>
 <p>To build the project, run the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>interactive_engine
 <span class="c1"># Use &#39;-Dskip.native=true&#39; to skip compiling C++ native code</span>
@@ -864,7 +863,7 @@ mvn<span class="w"> </span>clean<span class="w"> </span>package<span class="w"> 
 </div>
 </section>
 <section id="id3">
-<h4>Step 2: Locate and Extract the Package<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h4>
+<h4>Step 2: Locate and Extract the Package<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h4>
 <p>Once the build completes, a tarball named graph-planner-jni.tar.gz will be available in the assembly/target directory. Extract the contents as follows:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>assembly/target
 tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
@@ -873,14 +872,14 @@ tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
 </div>
 </section>
 <section id="step-3-start-the-graph-planner-restful-service">
-<h4>Step 3: Start the Graph Planner RESTful Service<a class="headerlink" href="#step-3-start-the-graph-planner-restful-service" title="Permalink to this heading">¶</a></h4>
+<h4>Step 3: Start the Graph Planner RESTful Service<a class="headerlink" href="#step-3-start-the-graph-planner-restful-service" title="Link to this heading">¶</a></h4>
 <p>To start the service, run the following command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>java<span class="w"> </span>-cp<span class="w"> </span><span class="s2">&quot;.:./libs/*&quot;</span><span class="w"> </span>com.alibaba.graphscope.sdk.restful.GraphPlannerService<span class="w"> </span>--spring.config.location<span class="o">=</span>./conf/application.yaml
 </pre></div>
 </div>
 </section>
 <section id="step-4-access-the-restful-api-by-curl">
-<h4>Step 4: Access the RESTful API by <code class="docutils literal notranslate"><span class="pre">Curl</span></code><a class="headerlink" href="#step-4-access-the-restful-api-by-curl" title="Permalink to this heading">¶</a></h4>
+<h4>Step 4: Access the RESTful API by <code class="docutils literal notranslate"><span class="pre">Curl</span></code><a class="headerlink" href="#step-4-access-the-restful-api-by-curl" title="Link to this heading">¶</a></h4>
 <p>To send a request to the RESTful API, use the following <code class="docutils literal notranslate"><span class="pre">curl</span></code> command:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8080/api/compilePlan<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -910,7 +909,7 @@ tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
 <p>You can decode these values into the required structures.</p>
 </section>
 <section id="step-4-access-the-restful-api-by-java-sdk">
-<h4>Step 4: Access the RESTful API by <code class="docutils literal notranslate"><span class="pre">Java</span></code> Sdk<a class="headerlink" href="#step-4-access-the-restful-api-by-java-sdk" title="Permalink to this heading">¶</a></h4>
+<h4>Step 4: Access the RESTful API by <code class="docutils literal notranslate"><span class="pre">Java</span></code> Sdk<a class="headerlink" href="#step-4-access-the-restful-api-by-java-sdk" title="Link to this heading">¶</a></h4>
 <p>Alternatively, if you are a java-side user, we provide a java sdk example to guide you how to access the restful API and decode the response :</p>
 <div class="highlight-java notranslate"><div class="highlight"><pre><span></span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">Exception</span><span class="w"> </span><span class="p">{</span>
 <span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">args</span><span class="p">.</span><span class="na">length</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">4</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -1068,9 +1067,9 @@ tar<span class="w"> </span>xvzf<span class="w"> </span>graph-planner-jni.tar.gz
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Persistent storage of graphs on the Kubernetes cluster" href="persistent_storage_of_graphs_on_k8s.html" /><link rel="prev" title="Deploy on K8s Cluster" href="deploy_graphscope_on_self_managed_k8s.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Deploy with Existing Vineyard Cluster - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,12 +691,12 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="deploy-with-existing-vineyard-cluster">
-<h1>Deploy with Existing Vineyard Cluster<a class="headerlink" href="#deploy-with-existing-vineyard-cluster" title="Permalink to this heading">¶</a></h1>
+<h1>Deploy with Existing Vineyard Cluster<a class="headerlink" href="#deploy-with-existing-vineyard-cluster" title="Link to this heading">¶</a></h1>
 <p>If you have already deployed a vineyard cluster, you can easily deploy GraphScope on the existing cluster and reuse the vineyard data such as graph with several GraphScope sessions. This will allow you to load a graph to the existing vineyard cluster and then reuse it with multiple GraphScope sessions, without the need to deploy a separate vineyard cluster for each session</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/default_session.png"><img alt="GraphScope default session" src="../_images/default_session.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Create a default GraphScope session</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Create a default GraphScope session</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>If you create a default GraphScope session, all engines including Vineyard are bundled in the same pod, so that they can be deployed on
@@ -705,14 +704,14 @@ any node within the Kubernetes cluster. However, this creates a closed Vineyard 
 <figure class="align-default" id="id2">
 <a class="reference internal image-reference" href="../_images/session_with_vineyard_cluster.png"><img alt="GraphScope sessions connect to an existing vineyard cluster" src="../_images/session_with_vineyard_cluster.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">Connecting GraphScope sessions to an existing vineyard cluster for data sharing</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">Connecting GraphScope sessions to an existing vineyard cluster for data sharing</span><a class="headerlink" href="#id2" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>The figure above shows that GraphScope sessions can share the data in the same vineyard cluster as the engines in different sessions are deployed on the same node within the Kubernetes cluster and connected to the same vineyard socket. Multiple sessions can reuse the same graph as long as the vineyard cluster is alive. This is a common use pattern of vineyard on Kubernetes.</p>
 <p>If you don’t want to reserve the vineyard cluster for a long time, you can store the graphs in the vineyard cluster in the persistent storage, and then load the data from the persistent storage to the vineyard cluster when you need it. For more details, please refer to <a class="reference internal" href="persistent_storage_of_graphs_on_k8s.html"><span class="std std-doc">Persistent storage of graphs on the Kubernetes cluster</span></a>.</p>
 <p>Next provides step-by-step instructions on how to do this.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <p>Before you begin, make sure you have the following:</p>
 <ul class="simple">
 <li><p>Linux or macOS.</p></li>
@@ -720,7 +719,7 @@ any node within the Kubernetes cluster. However, this creates a closed Vineyard 
 </ul>
 </section>
 <section id="install-graphscope-client">
-<h2>Install GraphScope Client<a class="headerlink" href="#install-graphscope-client" title="Permalink to this heading">¶</a></h2>
+<h2>Install GraphScope Client<a class="headerlink" href="#install-graphscope-client" title="Link to this heading">¶</a></h2>
 <p>The deployment of GraphScope is managed by python API, please make sure you have already installed the GraphScope python package.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>graphscope-client
 </pre></div>
@@ -728,12 +727,12 @@ any node within the Kubernetes cluster. However, this creates a closed Vineyard 
 <p>Refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#install-graphscope-client"><span class="std std-ref">Install GraphScope Client</span></a> for details.</p>
 </section>
 <section id="prepare-a-kubernetes-cluster">
-<h2>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Prepare a Kubernetes cluster<a class="headerlink" href="#prepare-a-kubernetes-cluster" title="Link to this heading">¶</a></h2>
 <p>If you don’t have a Kubernetes cluster by hand, we recommend using <a class="reference external" href="https://minikube.sigs.k8s.io/docs/start/">minikube</a>.</p>
 <p>Please refer to <a class="reference internal" href="deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">Prepare a Kubernetes cluster</span></a> for details.</p>
 </section>
 <section id="deploy-a-vineyard-cluster">
-<h2>Deploy a Vineyard Cluster<a class="headerlink" href="#deploy-a-vineyard-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy a Vineyard Cluster<a class="headerlink" href="#deploy-a-vineyard-cluster" title="Link to this heading">¶</a></h2>
 <p>To simplify the deployment of vineyard cluster, you need to install the vineyard package.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>vineyard
 </pre></div>
@@ -769,7 +768,7 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 </div>
 </section>
 <section id="the-lifecycle-of-a-vineyard-cluster">
-<h2>The lifecycle of a vineyard cluster<a class="headerlink" href="#the-lifecycle-of-a-vineyard-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>The lifecycle of a vineyard cluster<a class="headerlink" href="#the-lifecycle-of-a-vineyard-cluster" title="Link to this heading">¶</a></h2>
 <p>If you deploy the vineyard cluster with the vineyardctl API, it will persist until you manually delete it. The vineyard cluster will not be affected by quitting the GraphScope session. You can delete the vineyard cluster with the following command:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">vineyard</span>
 <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">delete</span><span class="o">.</span><span class="n">vineyard_deployment</span><span class="p">()</span>
@@ -778,7 +777,7 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 <p>However, if you do not deploy the vineyard cluster beforehand, it will be created when you create a GraphScope session with the specified vineyard deployment name and namespace. The vineyard cluster will be deleted when you close the GraphScope session.</p>
 </section>
 <section id="load-the-dataset-to-the-kubernetes-cluster">
-<h2>Load the dataset to the Kubernetes cluster<a class="headerlink" href="#load-the-dataset-to-the-kubernetes-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Load the dataset to the Kubernetes cluster<a class="headerlink" href="#load-the-dataset-to-the-kubernetes-cluster" title="Link to this heading">¶</a></h2>
 <p>Depending on how the Kubernetes cluster was created, you may need to take different steps to make your dataset available within the cluster. If the cluster was not created using minikube, you will need to either copy the dataset to the nodes of the Kubernetes cluster or mount it onto them. On the other hand, if the cluster was created using minikube, you can directly mount the dataset to the minikube VM, without the need for further copying or mounting operations.</p>
 <p>Download the dataset to the local machine.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/GraphScope/gstest.git
@@ -794,7 +793,7 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 </div>
 </section>
 <section id="load-a-graph-to-the-existing-vineyard-cluster">
-<h2>Load a graph to the existing vineyard cluster<a class="headerlink" href="#load-a-graph-to-the-existing-vineyard-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Load a graph to the existing vineyard cluster<a class="headerlink" href="#load-a-graph-to-the-existing-vineyard-cluster" title="Link to this heading">¶</a></h2>
 <p>You can create a GraphScope session and then specify the <code class="docutils literal notranslate"><span class="pre">k8s_namespace</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_deployment</span></code> to which vineyard cluster you want to connect. Then load a graph to the existing vineyard cluster as follows. Once the graph is loaded, you can obtain its vineyard ID to reload it with another GraphScope session.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
@@ -831,7 +830,7 @@ vineyardd-sample-5db59987f-vr2fg<span class="w">   </span><span class="m">1</spa
 </div>
 </section>
 <section id="connect-to-the-existing-vineyard-cluster-with-another-graphscope-session">
-<h2>Connect to the existing vineyard cluster with another GraphScope session<a class="headerlink" href="#connect-to-the-existing-vineyard-cluster-with-another-graphscope-session" title="Permalink to this heading">¶</a></h2>
+<h2>Connect to the existing vineyard cluster with another GraphScope session<a class="headerlink" href="#connect-to-the-existing-vineyard-cluster-with-another-graphscope-session" title="Link to this heading">¶</a></h2>
 <p>Create a new GraphScope session and specify the <code class="docutils literal notranslate"><span class="pre">k8s_namespace</span></code> and <code class="docutils literal notranslate"><span class="pre">k8s_vineyard_deployment</span></code> to the vineyard
 cluster the last GraphScope session connected to. Also, you need to remember the vineyard id of the graph and
 then load the graph with the vineyard id in the new GraphScope session.</p>
@@ -863,7 +862,7 @@ then load the graph with the vineyard id in the new GraphScope session.</p>
 <p>If you see the output above, that means you have successfully reused the existing graph within the vineyard cluster using a new GraphScope session. Then you can run various graph algorithms on it.</p>
 </section>
 <section id="cleaning-up">
-<h2>Cleaning up<a class="headerlink" href="#cleaning-up" title="Permalink to this heading">¶</a></h2>
+<h2>Cleaning up<a class="headerlink" href="#cleaning-up" title="Link to this heading">¶</a></h2>
 <p>Delete the Vineyard cluster by</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># the default vineyard deployment name is `vineyardd-sample` and namespace is `vineyard-system`, if you don&#39;t specify the arguments when you create the vineyard cluster, you can delete it as follows </span>
 <span class="n">vineyard</span><span class="o">.</span><span class="n">deploy</span><span class="o">.</span><span class="n">vineyardctl</span><span class="o">.</span><span class="n">delete</span><span class="o">.</span><span class="n">vineyard_deployment</span><span class="p">()</span>
@@ -962,9 +961,9 @@ then load the graph with the vineyard id in the new GraphScope session.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

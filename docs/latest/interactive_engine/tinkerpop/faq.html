@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Neo4j Ecosystem" href="../neo4j_eco.html" /><link rel="prev" title="Supported Gremlin Steps" href="supported_gremlin_steps.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>FAQs for GIE Gremlin Usage - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,9 +691,9 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="faqs-for-gie-gremlin-usage">
-<h1>FAQs for GIE Gremlin Usage<a class="headerlink" href="#faqs-for-gie-gremlin-usage" title="Permalink to this heading">¶</a></h1>
+<h1>FAQs for GIE Gremlin Usage<a class="headerlink" href="#faqs-for-gie-gremlin-usage" title="Link to this heading">¶</a></h1>
 <section id="compatibility-with-tinkerpop">
-<h2>Compatibility with TinkerPop<a class="headerlink" href="#compatibility-with-tinkerpop" title="Permalink to this heading">¶</a></h2>
+<h2>Compatibility with TinkerPop<a class="headerlink" href="#compatibility-with-tinkerpop" title="Link to this heading">¶</a></h2>
 <p>GIE supports the property graph model and Gremlin traversal language defined by Apache TinkerPop,
 and provides a Gremlin WebSockets server that supports TinkerPop version 3.4.
 In addition to the original Gremlin queries, we further introduce some syntactic sugars to allow
@@ -713,7 +712,7 @@ more succinct expression. However, because of the distributed nature and practic
 </ul>
 </section>
 <section id="property-graph-constraints">
-<h2>Property Graph Constraints<a class="headerlink" href="#property-graph-constraints" title="Permalink to this heading">¶</a></h2>
+<h2>Property Graph Constraints<a class="headerlink" href="#property-graph-constraints" title="Link to this heading">¶</a></h2>
 <p>The current release of GIE supports two graph stores: one leverages <a class="reference external" href="https://v6d.io/">Vineyard</a> to supply an in-memory store for immutable
 graph data, and the other, called <a class="reference internal" href="#../storage_engine/groot.md"><span class="xref myst">groot</span></a>, is developed on top of <a class="reference external" href="https://rocksdb.org/">RocksDB</a> that also provides real-time write and data consistency via <a class="reference external" href="https://en.wikipedia.org/wiki/Snapshot_isolation">snapshot isolation</a>. Both stores support graph data being partitioned across multiple servers. By design, the following constraints are introduced (on both stores):</p>
 <ul class="simple">
@@ -726,7 +725,7 @@ as well as user-defined primary keys (for vertex).</p></li>
 </ul>
 </section>
 <section id="whats-the-difference-between-inner-id-and-property-id">
-<h2>What’s the difference between Inner ID and Property ID ?<a class="headerlink" href="#whats-the-difference-between-inner-id-and-property-id" title="Permalink to this heading">¶</a></h2>
+<h2>What’s the difference between Inner ID and Property ID ?<a class="headerlink" href="#whats-the-difference-between-inner-id-and-property-id" title="Link to this heading">¶</a></h2>
 <p>The main difference between Inner ID and Property ID is that Inner ID is a system-assigned identifier used internally by the graph engine for efficient data storage and retrieval, while Property ID is a user-defined property within a specific entity type.</p>
 <p>For example, in the LDBC (Linked Data Benchmark Council) schema, we have an entity type called ‘PERSON’, which has its own list of properties, consisting of ‘id’, ‘name’ and ‘birthday’. In the actual storage, we maintain key-value pairs for each instance of entity type ‘PERSON’, and internally maintain a unique ID to differentiate each such instance. The unique ID in this context is referred to as the Inner ID, and the ‘id’ in the attribute list is the Property ID.</p>
 <p>GIE Gremlin provides different approaches to query a vertex instance by its Inner ID or Property ID, similar to:</p>
@@ -747,7 +746,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </ul>
 </section>
 <section id="how-to-use-path-expand-in-gie-gremlin">
-<h2>How to use path expand in GIE Gremlin ?<a class="headerlink" href="#how-to-use-path-expand-in-gie-gremlin" title="Permalink to this heading">¶</a></h2>
+<h2>How to use path expand in GIE Gremlin ?<a class="headerlink" href="#how-to-use-path-expand-in-gie-gremlin" title="Link to this heading">¶</a></h2>
 <p>With path_expand, users can define their desired path pattern concretely and further define corresponding characteristics based on that path. For example, if an entity of type ‘PERSON’ wants to find instances that can be reached by 3-hops, in traditional Gremlin, it can only be represented as <code class="docutils literal notranslate"><span class="pre">g.V().hasLabel('PERSON').both().both().both()</span></code>. With path_expand, it can be represented more concisely as <code class="docutils literal notranslate"><span class="pre">g.V().hasLabel('PERSON').both('3..4').endV()</span></code>, where <code class="docutils literal notranslate"><span class="pre">both('3..4')</span></code> represents the path pattern, and <code class="docutils literal notranslate"><span class="pre">'3..4'</span></code> specifies the range of hops as [3, 4).</p>
 <p>We can further define characteristics of the path pattern using path_expand. For example, if an entity of type ‘PERSON’ wants to find instances that can be reached by 3-hops, while ensuring that the path is a simple path (no repeated vertices or edges), it can be represented as:</p>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.both</span><span class="o">(</span><span class="s1">&#39;3..4&#39;</span><span class="o">)</span><span class="nc">.with</span><span class="o">(</span><span class="s1">&#39;PATH_OPT&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;SIMPLE&#39;</span><span class="o">)</span><span class="nc">.endV</span><span class="o">()</span>
@@ -756,7 +755,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <p>You can refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#pathexpand">PathExpand</a> for more examples and usage of path_expand.</p>
 </section>
 <section id="how-to-filter-data-in-gie-gremlin-like-sql">
-<h2>How to filter data in GIE Gremlin like SQL ?<a class="headerlink" href="#how-to-filter-data-in-gie-gremlin-like-sql" title="Permalink to this heading">¶</a></h2>
+<h2>How to filter data in GIE Gremlin like SQL ?<a class="headerlink" href="#how-to-filter-data-in-gie-gremlin-like-sql" title="Link to this heading">¶</a></h2>
 <p>With <code class="docutils literal notranslate"><span class="pre">expr</span></code>, We can support SQL-like expressions in GIE Gremlin. For example, if we want to find all ‘PERSON’ instances with either the name ‘marko’ or the age ‘27’, we can represent it as follows:</p>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.where</span><span class="o">(</span><span class="nt">expr</span><span class="o">(</span><span class="s1">&#39;@.name=\&quot;marko\&quot; || @.age = 27&#39;</span><span class="o">))</span>
 </pre></div>
@@ -779,10 +778,10 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <p>We have addressed the limitations and shortcomings of Gremlin in filter expression by using <code class="docutils literal notranslate"><span class="pre">expr</span></code>, for more usage, please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#expression">Expression</a>.</p>
 </section>
 <section id="how-to-aggregate-data-in-gie-gremlin-like-sql">
-<h2>How to aggregate data in GIE Gremlin like SQL?<a class="headerlink" href="#how-to-aggregate-data-in-gie-gremlin-like-sql" title="Permalink to this heading">¶</a></h2>
+<h2>How to aggregate data in GIE Gremlin like SQL?<a class="headerlink" href="#how-to-aggregate-data-in-gie-gremlin-like-sql" title="Link to this heading">¶</a></h2>
 <p>We further extend the <code class="docutils literal notranslate"><span class="pre">group</span></code> operator in Gremlin to support multi-column grouping operations, similar to those in SQL.</p>
 <section id="group-by-multiple-keys">
-<h3>group by multiple keys<a class="headerlink" href="#group-by-multiple-keys" title="Permalink to this heading">¶</a></h3>
+<h3>group by multiple keys<a class="headerlink" href="#group-by-multiple-keys" title="Link to this heading">¶</a></h3>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.groupCount</span><span class="o">()</span><span class="nc">.by</span><span class="o">(</span><span class="s1">&#39;name&#39;</span><span class="o">,</span><span class="w"> </span><span class="s1">&#39;age&#39;</span><span class="o">)</span>
 </pre></div>
 </div>
@@ -800,7 +799,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </div>
 </section>
 <section id="group-by-multiple-values">
-<h3>group by multiple values:<a class="headerlink" href="#group-by-multiple-values" title="Permalink to this heading">¶</a></h3>
+<h3>group by multiple values:<a class="headerlink" href="#group-by-multiple-values" title="Link to this heading">¶</a></h3>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span>
 <span class="w">  </span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span>
 <span class="w">  </span><span class="nc">.group</span><span class="o">()</span>
@@ -823,9 +822,9 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </section>
 </section>
 <section id="how-to-optimize-gremlin-queries-for-performance-in-gie">
-<h2>How to optimize Gremlin queries for performance in GIE?<a class="headerlink" href="#how-to-optimize-gremlin-queries-for-performance-in-gie" title="Permalink to this heading">¶</a></h2>
+<h2>How to optimize Gremlin queries for performance in GIE?<a class="headerlink" href="#how-to-optimize-gremlin-queries-for-performance-in-gie" title="Link to this heading">¶</a></h2>
 <section id="use-appropriate-indexing">
-<h3>Use appropriate indexing<a class="headerlink" href="#use-appropriate-indexing" title="Permalink to this heading">¶</a></h3>
+<h3>Use appropriate indexing<a class="headerlink" href="#use-appropriate-indexing" title="Link to this heading">¶</a></h3>
 <p>GIE supports various indexing options such as vertex label index, primary key index, and edge label index. Properly defining and using indexes can significantly improve query performance.</p>
 <p>For example, in the LDBC schema, we define the property ID as the primary key for the entity type ‘PERSON’ and maintain the corresponding primary key index in the storage. This allows us to directly index specific ‘PERSON’ instances using &lt;Label, Property ID&gt;, without scanning all vertices and filtering based on property key-value. This can be expressed in a Gremlin query as follows:</p>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.hasLabel</span><span class="o">(</span><span class="s1">&#39;PERSON&#39;</span><span class="o">)</span><span class="nc">.has</span><span class="o">(</span><span class="s1">&#39;id&#39;</span><span class="o">,</span><span class="w"> </span><span class="nt">propertyIdValue</span><span class="o">)</span>
@@ -840,7 +839,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 </section>
 </section>
 <section id="how-to-use-subgraph-in-gie-gremlin">
-<h2>How to use subgraph in GIE Gremlin ?<a class="headerlink" href="#how-to-use-subgraph-in-gie-gremlin" title="Permalink to this heading">¶</a></h2>
+<h2>How to use subgraph in GIE Gremlin ?<a class="headerlink" href="#how-to-use-subgraph-in-gie-gremlin" title="Link to this heading">¶</a></h2>
 <p>Subgraph in GIE is edge-induced, which means it is formed by selecting a subset of edges from a larger graph, along with their incident vertices.</p>
 <p>Therefore, You can only perform subgraph operations after edge-output operators like E(), outE(), inE() or bothE(). Here’s an example:</p>
 <div class="highlight-scss notranslate"><div class="highlight"><pre><span></span><span class="nt">g</span><span class="nc">.V</span><span class="o">()</span><span class="nc">.outE</span><span class="o">()</span><span class="nc">.limit</span><span class="o">(</span><span class="nt">10</span><span class="o">)</span><span class="nc">.subgraph</span><span class="o">(</span><span class="s1">&#39;sub_graph&#39;</span><span class="o">)</span><span class="nc">.count</span><span class="o">()</span>
@@ -849,7 +848,7 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
 <p>Please refer to <a class="reference external" href="https://github.com/alibaba/GraphScope/blob/main/docs/interactive_engine/tinkerpop/supported_gremlin_steps.md#subgraph">Subgraph</a> for more usage.</p>
 </section>
 <section id="suggestions-about-parallelism-settings-for-queries">
-<h2>Suggestions About Parallelism Settings for Queries<a class="headerlink" href="#suggestions-about-parallelism-settings-for-queries" title="Permalink to this heading">¶</a></h2>
+<h2>Suggestions About Parallelism Settings for Queries<a class="headerlink" href="#suggestions-about-parallelism-settings-for-queries" title="Link to this heading">¶</a></h2>
 <p>We support per-query settings for query parallelism, using the syntax <code class="docutils literal notranslate"><span class="pre">g.with('pegasus.worker.num',</span> <span class="pre">$worker_num)</span></code>. The maximum parallelism is bound by the number of machine cores. In our engine’s scheduling, we employ a first-come, first-served strategy.</p>
 <p>If your query workloads is high-QPS, consisting of numerous small queries such as querying attributes or neighbor points from a single source vertex, we recommend lowering <code class="docutils literal notranslate"><span class="pre">worker_num</span></code> to 1. This adjustment allows the engine to allocate sufficient workers to handle these various small queries concurrently.</p>
 <p>Conversely, if you are dealing with costly large queries that start from large number of source vertices and involve complex operations, we suggest increasing <code class="docutils literal notranslate"><span class="pre">worker_num</span></code> (e.g., 16 or 32). This way, the engine can enhance query parallelism and improve overall query efficiency for each query.</p>
@@ -943,9 +942,9 @@ unique inner id <code class="docutils literal notranslate"><span class="pre">123
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

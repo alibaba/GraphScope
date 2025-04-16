@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>networkx.classes.function - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -736,12 +735,17 @@ MathJax = {
 <span class="p">]</span>
 
 
-<div class="viewcode-block" id="nodes"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes.html#graphscope.nx.classes.function.nodes">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">nodes</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+<div class="viewcode-block" id="nodes">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes.html#graphscope.nx.classes.function.nodes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">nodes</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an iterator over the graph nodes.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="edges"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edges.html#graphscope.nx.classes.function.edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="edges">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.edges.html#graphscope.nx.classes.function.edges">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an edge view of edges incident to nodes in nbunch.</span>
 
 <span class="sd">    Return all edges if nbunch is unspecified or nbunch=None.</span>
@@ -751,29 +755,44 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">nbunch</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="degree"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree.html#graphscope.nx.classes.function.degree">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="degree">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree.html#graphscope.nx.classes.function.degree">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">degree</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a degree view of single node or of nbunch of nodes.</span>
 <span class="sd">    If nbunch is omitted, then return degrees of *all* nodes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">nbunch</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="neighbors"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.neighbors.html#graphscope.nx.classes.function.neighbors">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+
+<div class="viewcode-block" id="neighbors">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.neighbors.html#graphscope.nx.classes.function.neighbors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of nodes connected to node n.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="number_of_nodes"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_nodes.html#graphscope.nx.classes.function.number_of_nodes">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">number_of_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="number_of_nodes">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_nodes.html#graphscope.nx.classes.function.number_of_nodes">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">number_of_nodes</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of nodes in the graph.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="number_of_edges"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_edges.html#graphscope.nx.classes.function.number_of_edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">number_of_edges</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="number_of_edges">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.number_of_edges.html#graphscope.nx.classes.function.number_of_edges">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">number_of_edges</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the number of edges in the graph.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="density"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html#graphscope.nx.classes.function.density">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">density</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="density">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.density.html#graphscope.nx.classes.function.density">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">density</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Returns the density of a graph.</span>
 
 <span class="sd">    The density for undirected graphs is</span>
@@ -808,7 +827,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">d</span></div>
 
 
-<div class="viewcode-block" id="degree_histogram"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html#graphscope.nx.classes.function.degree_histogram">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">degree_histogram</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="degree_histogram">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.degree_histogram.html#graphscope.nx.classes.function.degree_histogram">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">degree_histogram</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a list of the frequency of each degree value.</span>
 
 <span class="sd">    Parameters</span>
@@ -831,9 +853,13 @@ MathJax = {
     <span class="k">return</span> <span class="p">[</span><span class="n">counts</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)]</span></div>
 
 
-<div class="viewcode-block" id="is_directed"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_directed.html#graphscope.nx.classes.function.is_directed">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="is_directed">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_directed.html#graphscope.nx.classes.function.is_directed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_directed</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return True if graph is directed.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">is_directed</span><span class="p">()</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">frozen</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -841,7 +867,9 @@ MathJax = {
     <span class="k">raise</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;Frozen graph can&#39;t be modified&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="freeze"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.freeze.html#graphscope.nx.classes.function.freeze">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+<div class="viewcode-block" id="freeze">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.freeze.html#graphscope.nx.classes.function.freeze">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Modify graph to prevent further change by adding or removing</span>
 <span class="sd">    nodes or edges.</span>
 
@@ -890,7 +918,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">G</span></div>
 
 
-<div class="viewcode-block" id="is_frozen"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html#graphscope.nx.classes.function.is_frozen">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_frozen</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="is_frozen">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_frozen.html#graphscope.nx.classes.function.is_frozen">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_frozen</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if graph is frozen.</span>
 
 <span class="sd">    Parameters</span>
@@ -908,7 +939,10 @@ MathJax = {
         <span class="k">return</span> <span class="kc">False</span></div>
 
 
-<div class="viewcode-block" id="add_star"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_star.html#graphscope.nx.classes.function.add_star">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_star</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_star</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+
+<div class="viewcode-block" id="add_star">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_star.html#graphscope.nx.classes.function.add_star">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_star</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_star</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a star to Graph G_to_add_to.</span>
 
 <span class="sd">    The first node in `nodes_for_star` is the middle of the star.</span>
@@ -943,7 +977,10 @@ MathJax = {
     <span class="n">G_to_add_to</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="add_path"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_path.html#graphscope.nx.classes.function.add_path">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_path</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_path</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+
+<div class="viewcode-block" id="add_path">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_path.html#graphscope.nx.classes.function.add_path">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_path</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_path</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a path to the Graph G_to_add_to.</span>
 
 <span class="sd">    Parameters</span>
@@ -975,7 +1012,10 @@ MathJax = {
     <span class="n">G_to_add_to</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">pairwise</span><span class="p">(</span><span class="n">chain</span><span class="p">((</span><span class="n">first_node</span><span class="p">,),</span> <span class="n">nlist</span><span class="p">)),</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="add_cycle"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_cycle.html#graphscope.nx.classes.function.add_cycle">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">add_cycle</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_cycle</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+
+<div class="viewcode-block" id="add_cycle">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.add_cycle.html#graphscope.nx.classes.function.add_cycle">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_cycle</span><span class="p">(</span><span class="n">G_to_add_to</span><span class="p">,</span> <span class="n">nodes_for_cycle</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Add a cycle to the Graph G_to_add_to.</span>
 
 <span class="sd">    Parameters</span>
@@ -1009,7 +1049,10 @@ MathJax = {
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="subgraph"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.subgraph.html#graphscope.nx.classes.function.subgraph">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">subgraph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="p">):</span>
+
+<div class="viewcode-block" id="subgraph">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.subgraph.html#graphscope.nx.classes.function.subgraph">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">subgraph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the subgraph induced on nodes in nbunch.</span>
 
 <span class="sd">    Parameters</span>
@@ -1030,6 +1073,7 @@ MathJax = {
 <span class="sd">    subgraph(G) calls G.subgraph()</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">G</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="n">nbunch</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">induced_subgraph</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">nbunch</span><span class="p">):</span>
@@ -1191,7 +1235,9 @@ MathJax = {
     <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">graphviews</span><span class="o">.</span><span class="n">subgraph_view</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">hide_nodes</span><span class="p">,</span> <span class="n">hide_edges</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="to_directed"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_directed.html#graphscope.nx.classes.function.to_directed">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+<div class="viewcode-block" id="to_directed">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_directed.html#graphscope.nx.classes.function.to_directed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a directed view of the graph `graph`.</span>
 
 <span class="sd">    Identical to graph.to_directed(as_view=True)</span>
@@ -1201,7 +1247,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">to_directed</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="to_undirected"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_undirected.html#graphscope.nx.classes.function.to_undirected">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+
+<div class="viewcode-block" id="to_undirected">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.to_undirected.html#graphscope.nx.classes.function.to_undirected">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an undirected view of the graph `graph`.</span>
 
 <span class="sd">    Identical to graph.to_undirected(as_view=True)</span>
@@ -1211,7 +1260,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="create_empty_copy"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.create_empty_copy.html#graphscope.nx.classes.function.create_empty_copy">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">create_empty_copy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">with_data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<div class="viewcode-block" id="create_empty_copy">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.create_empty_copy.html#graphscope.nx.classes.function.create_empty_copy">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">create_empty_copy</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">with_data</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a copy of the graph G with all of the edges removed.</span>
 
 <span class="sd">    Parameters</span>
@@ -1234,7 +1286,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">H</span></div>
 
 
-<div class="viewcode-block" id="info"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.info.html#graphscope.nx.classes.function.info">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="info">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.info.html#graphscope.nx.classes.function.info">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Return a summary of information for the graph G or a single node n.</span>
 
 <span class="sd">    The summary includes the number of nodes and edges, or neighbours for a single</span>
@@ -1277,6 +1332,7 @@ MathJax = {
     <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot;Neighbors: &quot;</span>
     <span class="n">info</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nbr</span><span class="p">)</span> <span class="k">for</span> <span class="n">nbr</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">n</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">info</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">set_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -1544,7 +1600,9 @@ MathJax = {
     <span class="k">return</span> <span class="p">{</span><span class="n">x</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">name</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">edges</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]}</span>
 
 
-<div class="viewcode-block" id="all_neighbors"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.all_neighbors.html#graphscope.nx.classes.function.all_neighbors">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">all_neighbors</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<div class="viewcode-block" id="all_neighbors">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.all_neighbors.html#graphscope.nx.classes.function.all_neighbors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">all_neighbors</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns all of the neighbors of a node in the graph.</span>
 
 <span class="sd">    If the graph is directed returns predecessors as well as successors.</span>
@@ -1569,7 +1627,10 @@ MathJax = {
     <span class="k">return</span> <span class="n">values</span></div>
 
 
-<div class="viewcode-block" id="non_neighbors"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_neighbors.html#graphscope.nx.classes.function.non_neighbors">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">non_neighbors</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+
+<div class="viewcode-block" id="non_neighbors">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_neighbors.html#graphscope.nx.classes.function.non_neighbors">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">non_neighbors</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the non-neighbors of the node in the graph.</span>
 
 <span class="sd">    Parameters</span>
@@ -1589,7 +1650,10 @@ MathJax = {
     <span class="k">return</span> <span class="p">(</span><span class="n">nnode</span> <span class="k">for</span> <span class="n">nnode</span> <span class="ow">in</span> <span class="n">graph</span> <span class="k">if</span> <span class="n">nnode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">nbors</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="non_edges"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_edges.html#graphscope.nx.classes.function.non_edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">non_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
+
+<div class="viewcode-block" id="non_edges">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.non_edges.html#graphscope.nx.classes.function.non_edges">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">non_edges</span><span class="p">(</span><span class="n">graph</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the non-existent edges in the graph.</span>
 
 <span class="sd">    Parameters</span>
@@ -1614,7 +1678,10 @@ MathJax = {
                 <span class="k">yield</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="common_neighbors"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.common_neighbors.html#graphscope.nx.classes.function.common_neighbors">[docs]</a><span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="common_neighbors">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.common_neighbors.html#graphscope.nx.classes.function.common_neighbors">[docs]</a>
+<span class="nd">@not_implemented_for</span><span class="p">(</span><span class="s2">&quot;directed&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">common_neighbors</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns the common neighbors of two nodes in a graph.</span>
 
@@ -1652,7 +1719,10 @@ MathJax = {
     <span class="k">return</span> <span class="p">(</span><span class="n">w</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">u</span><span class="p">]</span> <span class="k">if</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">G</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="ow">and</span> <span class="n">w</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="is_weighted"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_weighted.html#graphscope.nx.classes.function.is_weighted">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_weighted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="is_weighted">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_weighted.html#graphscope.nx.classes.function.is_weighted">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_weighted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if `G` has weighted edges.</span>
 
 <span class="sd">    Parameters</span>
@@ -1705,7 +1775,10 @@ MathJax = {
     <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">weight</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="is_negatively_weighted"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html#graphscope.nx.classes.function.is_negatively_weighted">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_negatively_weighted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
+
+<div class="viewcode-block" id="is_negatively_weighted">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_negatively_weighted.html#graphscope.nx.classes.function.is_negatively_weighted">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_negatively_weighted</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">edge</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if `G` has negatively weighted edges.</span>
 
 <span class="sd">    Parameters</span>
@@ -1758,7 +1831,10 @@ MathJax = {
     <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">weight</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">edges</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="is_empty"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_empty.html#graphscope.nx.classes.function.is_empty">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="is_empty">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.is_empty.html#graphscope.nx.classes.function.is_empty">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_empty</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if `G` has no edges.</span>
 
 <span class="sd">    Parameters</span>
@@ -1781,7 +1857,10 @@ MathJax = {
     <span class="k">return</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
 
 
-<div class="viewcode-block" id="nodes_with_selfloops"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html#graphscope.nx.classes.function.nodes_with_selfloops">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">nodes_with_selfloops</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
+
+<div class="viewcode-block" id="nodes_with_selfloops">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.nodes_with_selfloops.html#graphscope.nx.classes.function.nodes_with_selfloops">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">nodes_with_selfloops</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an iterator over nodes with self loops.</span>
 
 <span class="sd">    A node with a self loop has an edge with both ends adjacent</span>
@@ -1808,7 +1887,10 @@ MathJax = {
     <span class="k">return</span> <span class="p">(</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="selfloop_edges"><a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.selfloop_edges.html#graphscope.nx.classes.function.selfloop_edges">[docs]</a><span class="k">def</span><span class="w"> </span><span class="nf">selfloop_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="selfloop_edges">
+<a class="viewcode-back" href="../../../reference/networkx/generated/graphscope.nx.classes.function.selfloop_edges.html#graphscope.nx.classes.function.selfloop_edges">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">selfloop_edges</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keys</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns an iterator over selfloop edges.</span>
 
 <span class="sd">    A selfloop edge has the same node at both ends.</span>
@@ -1905,6 +1987,7 @@ MathJax = {
                 <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span><span class="p">,</span> <span class="n">nbrs</span> <span class="ow">in</span> <span class="n">G</span><span class="o">.</span><span class="n">adj</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nbrs</span><span class="p">)</span></div>
+
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">number_of_selfloops</span><span class="p">(</span><span class="n">G</span><span class="p">):</span>
@@ -2026,9 +2109,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

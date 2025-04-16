@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Development guide" href="dev_guide.html" /><link rel="prev" title="Data Model" href="data_model.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Data Import Configuration - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,14 +691,14 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="data-import-configuration">
-<h1>Data Import Configuration<a class="headerlink" href="#data-import-configuration" title="Permalink to this heading">¶</a></h1>
+<h1>Data Import Configuration<a class="headerlink" href="#data-import-configuration" title="Link to this heading">¶</a></h1>
 <p>In our guide on <a class="reference internal" href="custom_graph_data.html"><span class="std std-doc">using custom graph data</span></a>, we introduced the basics of importing graph data using a simple YAML configuration. This section delves deeper, providing a thorough exploration of the extensive configuration options available for data import.</p>
 <section id="supported-data-source">
-<h2>Supported data source<a class="headerlink" href="#supported-data-source" title="Permalink to this heading">¶</a></h2>
+<h2>Supported data source<a class="headerlink" href="#supported-data-source" title="Link to this heading">¶</a></h2>
 <p>Currently we only support import data to graph from local <code class="docutils literal notranslate"><span class="pre">csv</span></code> files or <code class="docutils literal notranslate"><span class="pre">odps</span></code> table. See configuration <code class="docutils literal notranslate"><span class="pre">loading_config.data_source.scheme</span></code>.</p>
 </section>
 <section id="column-mapping">
-<h2>Column mapping<a class="headerlink" href="#column-mapping" title="Permalink to this heading">¶</a></h2>
+<h2>Column mapping<a class="headerlink" href="#column-mapping" title="Link to this heading">¶</a></h2>
 <p>When importing vertex and edge data into a graph, users must define how the raw data maps to the graph’s schema.
 This can be done using a YAML configuration, as shown:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">column</span><span class="p">:</span>
@@ -710,16 +709,16 @@ This can be done using a YAML configuration, as shown:</p>
 </div>
 <p>The column mapping requirements differ based on the data source:</p>
 <section id="import-from-csv">
-<h3>Import from CSV<a class="headerlink" href="#import-from-csv" title="Permalink to this heading">¶</a></h3>
+<h3>Import from CSV<a class="headerlink" href="#import-from-csv" title="Link to this heading">¶</a></h3>
 <p>You can provide either <code class="docutils literal notranslate"><span class="pre">index</span></code>, <code class="docutils literal notranslate"><span class="pre">name</span></code>, or both. If both <code class="docutils literal notranslate"><span class="pre">index</span></code> and <code class="docutils literal notranslate"><span class="pre">name</span></code> are specified, we will check whether they matches.</p>
 </section>
 <section id="import-from-odps-table">
-<h3>Import from ODPS Table<a class="headerlink" href="#import-from-odps-table" title="Permalink to this heading">¶</a></h3>
+<h3>Import from ODPS Table<a class="headerlink" href="#import-from-odps-table" title="Link to this heading">¶</a></h3>
 <p>You just need to specify the name of the <code class="docutils literal notranslate"><span class="pre">column</span></code>, since the name is guaranteed to be unique in a odps table. The <code class="docutils literal notranslate"><span class="pre">index</span></code> is disregarded.</p>
 </section>
 </section>
 <section id="sample-configuration-for-loading-modern-graph-from-csv-files">
-<h2>Sample Configuration for loading “Modern” Graph from csv files<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-csv-files" title="Permalink to this heading">¶</a></h2>
+<h2>Sample Configuration for loading “Modern” Graph from csv files<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-csv-files" title="Link to this heading">¶</a></h2>
 <p>To illustrate, let’s examine the <code class="docutils literal notranslate"><span class="pre">modern_graph_import.yaml</span></code> file. This configuration is designed for importing the “modern” graph and showcases the full range of configuration possibilities. We’ll dissect each configuration item in the sections that follow.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -820,7 +819,7 @@ This can be done using a YAML configuration, as shown:</p>
 </div>
 </section>
 <section id="sample-configuration-for-loading-modern-graph-from-odps-tables">
-<h2>Sample configuration for loading “Modern Graph” from odps tables<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-odps-tables" title="Permalink to this heading">¶</a></h2>
+<h2>Sample configuration for loading “Modern Graph” from odps tables<a class="headerlink" href="#sample-configuration-for-loading-modern-graph-from-odps-tables" title="Link to this heading">¶</a></h2>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">graph</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dd_graph</span>
 <span class="nt">loading_config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">data_source</span><span class="p">:</span>
@@ -906,7 +905,7 @@ This can be done using a YAML configuration, as shown:</p>
 </div>
 </section>
 <section id="configuration-breakdown">
-<h2>Configuration Breakdown<a class="headerlink" href="#configuration-breakdown" title="Permalink to this heading">¶</a></h2>
+<h2>Configuration Breakdown<a class="headerlink" href="#configuration-breakdown" title="Link to this heading">¶</a></h2>
 <p>The table below offers a detailed breakdown of each configuration item. In this table, we use the “.” notation to represent the hierarchy within the YAML structure.</p>
 <div class="table-wrapper colwidths-auto docutils container">
 <table class="docutils align-default">
@@ -1137,7 +1136,7 @@ This can be done using a YAML configuration, as shown:</p>
 </table>
 </div>
 <section id="loading-configurations">
-<h3>Loading Configurations<a class="headerlink" href="#loading-configurations" title="Permalink to this heading">¶</a></h3>
+<h3>Loading Configurations<a class="headerlink" href="#loading-configurations" title="Link to this heading">¶</a></h3>
 <p>The <strong>loading_config</strong> section defines the primary settings for data loading. This includes specifying the data source, its format, and other metadata.</p>
 <ul class="simple">
 <li><p>loading_config.data_source.location: This is the path to the data source within the container. It’s essential to ensure this location is mapped from the host machine when initializing the service.</p></li>
@@ -1157,7 +1156,7 @@ This can be done using a YAML configuration, as shown:</p>
 </ul>
 </section>
 <section id="vertex-mappings">
-<h3>Vertex Mappings<a class="headerlink" href="#vertex-mappings" title="Permalink to this heading">¶</a></h3>
+<h3>Vertex Mappings<a class="headerlink" href="#vertex-mappings" title="Link to this heading">¶</a></h3>
 <p>The <strong>vertex_mappings</strong> section outlines how raw data maps to graph vertices based on the defined schema.</p>
 <ul class="simple">
 <li><p>vertex_mappings.type_name: Specifies the name of the vertex type.</p></li>
@@ -1172,7 +1171,7 @@ This can be done using a YAML configuration, as shown:</p>
 </ul>
 </section>
 <section id="edge-mappings">
-<h3>Edge Mappings<a class="headerlink" href="#edge-mappings" title="Permalink to this heading">¶</a></h3>
+<h3>Edge Mappings<a class="headerlink" href="#edge-mappings" title="Link to this heading">¶</a></h3>
 <p>The <strong>edge_mappings</strong> section details how raw data maps to graph edges as per the schema.</p>
 <ul class="simple">
 <li><p>edge_mappings.type_triplet: A triplet that uniquely defines an edge.</p>
@@ -1292,9 +1291,9 @@ This can be done using a YAML configuration, as shown:</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

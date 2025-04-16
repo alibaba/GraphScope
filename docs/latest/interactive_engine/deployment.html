@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Apache TinkerPop Ecosystem" href="tinkerpop_eco.html" /><link rel="prev" title="Getting Started" href="getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Standalone Deployment for GIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,13 +691,13 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="standalone-deployment-for-gie">
-<h1>Standalone Deployment for GIE<a class="headerlink" href="#standalone-deployment-for-gie" title="Permalink to this heading">¶</a></h1>
+<h1>Standalone Deployment for GIE<a class="headerlink" href="#standalone-deployment-for-gie" title="Link to this heading">¶</a></h1>
 <p>We have demonstrated <a class="reference internal" href="getting_started.html"><span class="std std-doc">how to execute interactive queries</span></a> easily by installing GraphScope via <code class="docutils literal notranslate"><span class="pre">pip</span></code> on a local machine. However, in real-life applications, graphs are often too large to fit on a single machine. In such cases, GraphScope can be deployed on a cluster, such as a <a class="reference internal" href="#../deploy_graphscope_on_self_managed_k8s.md"><span class="xref myst">self-managed k8s cluster</span></a>, for processing large-scale graphs. But you may wonder, “what if I only need the GIE engine and not the whole package of GraphScope?” This tutorial will walk you through the process of standalone deployment of GIE on a self-managed k8s cluster.</p>
 <p>Throughout the tutorial, we assume all machines are running Linux system.
 We do not guarantee that it works as smoothly as Linux on the other platform.
 For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
 <section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">¶</a></h2>
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Kubernetes Cluster</p></li>
 <li><p>Python &gt;= 3.9</p></li>
@@ -708,7 +707,7 @@ For your reference, we’ve tested the tutorial on Ubuntu 20.04.</p>
 <p>In case you doesn’t have one, you could refer to the instruction of <a class="reference internal" href="../deployment/deploy_graphscope_on_self_managed_k8s.html#prepare-a-kubernetes-cluster"><span class="std std-ref">create kubernetes cluster</span></a>.</p>
 </section>
 <section id="deploy-your-first-gie-service">
-<h2>Deploy Your First GIE Service<a class="headerlink" href="#deploy-your-first-gie-service" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy Your First GIE Service<a class="headerlink" href="#deploy-your-first-gie-service" title="Link to this heading">¶</a></h2>
 <p>The easiest way to deploy GIE standalone is by using Helm, which is a package manager for K8s that simplifies the
 deployment and management of applications. To deploy GIE standalone using Helm, you can follow these steps:</p>
 <ul>
@@ -788,13 +787,13 @@ and modify the <code class="docutils literal notranslate"><span class="pre">host
 </ul>
 </section>
 <section id="remove-the-gie-service">
-<h2>Remove the GIE Service<a class="headerlink" href="#remove-the-gie-service" title="Permalink to this heading">¶</a></h2>
+<h2>Remove the GIE Service<a class="headerlink" href="#remove-the-gie-service" title="Link to this heading">¶</a></h2>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">   </span>helm<span class="w"> </span>uninstall<span class="w"> </span><span class="o">[</span>YOUR_RELEASE_NAME<span class="o">]</span>
 </pre></div>
 </div>
 </section>
 <section id="using-your-own-data">
-<h2>Using Your Own Data<a class="headerlink" href="#using-your-own-data" title="Permalink to this heading">¶</a></h2>
+<h2>Using Your Own Data<a class="headerlink" href="#using-your-own-data" title="Link to this heading">¶</a></h2>
 <p>Currently, a single instance of GIE can only handle one set of graph data. This means that you must
 indicate which raw data should be uploaded into GIE’s graph store, and all subsequent queries made
 through the GIE instance will pertain to the uploaded graph.</p>
@@ -872,7 +871,7 @@ to <code class="docutils literal notranslate"><span class="pre">int64_t</span></
 </div>
 </section>
 <section id="deploy-on-a-cluster">
-<h2>Deploy on a Cluster<a class="headerlink" href="#deploy-on-a-cluster" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy on a Cluster<a class="headerlink" href="#deploy-on-a-cluster" title="Link to this heading">¶</a></h2>
 <p>In K8s, it’s convenient to deploy GIE in a cluster with multiple machines.
 You don’t need to be aware of the physical machines, but simply configure the number of executors
 to make GIE scalable. These GIE executors will be seamlessly assigned by K8s to the physical machines.</p>
@@ -888,7 +887,7 @@ in a distributed file system like <code class="docutils literal notranslate"><sp
 the above <code class="docutils literal notranslate"><span class="pre">data_path</span></code> to use the <code class="docutils literal notranslate"><span class="pre">hdfs://</span></code> scheme.</p>
 </section>
 <section id="other-useful-configurations">
-<h2>Other Useful Configurations<a class="headerlink" href="#other-useful-configurations" title="Permalink to this heading">¶</a></h2>
+<h2>Other Useful Configurations<a class="headerlink" href="#other-useful-configurations" title="Link to this heading">¶</a></h2>
 <p>Extra configurations can be set as:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>helm<span class="w"> </span>install<span class="w"> </span><span class="o">[</span>YOUR_RELEASE_NAME<span class="o">]</span><span class="w"> </span>graphscope/gie-standalone<span class="w"> </span>--set<span class="w"> </span><span class="o">[</span>key1<span class="o">]=[</span>value1<span class="o">]</span>,<span class="o">[</span>key2<span class="o">]=[</span>value2<span class="o">]</span>
 </pre></div>
@@ -1017,9 +1016,9 @@ the above <code class="docutils literal notranslate"><span class="pre">data_path
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

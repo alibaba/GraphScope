@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="图交互式分析引擎" href="interactive_engine.html" /><link rel="prev" title="图的变换操作" href="graph_transformation.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>图分析引擎 - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -372,14 +371,14 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="id1">
-<h1>图分析引擎<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h1>
+<h1>图分析引擎<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h1>
 <p>GraphScope 的图分析引擎继承了 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">GRAPE</a> ，
 该系统于 SIGMOD2017 上首次提出并获得最佳论文奖。</p>
 <p>与以往的系统的不同，GRAPE 支持将串行图算法自动并行化。在 GRAPE 中，
 只需进行很小的更改即可轻松地将串行算法即插即用，使其并行化的运行在分布式环境，并高效地处理大规模图数据。
 除了易于编程外，GRAPE 还被设计为高效且可拓展的系统，可灵活应对现实中图应用多变的规模、多样性和复杂性。</p>
 <section id="id2">
-<h2>内置算法<a class="headerlink" href="#id2" title="Permalink to this heading">¶</a></h2>
+<h2>内置算法<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h2>
 <p>GraphScope 图分析引擎内置了许多常用的图分析算法，包括连通性分析算法、路径分析算法、社区检测和中心度计算等类型。</p>
 <p>内置算法可以在图上轻松调用。例如，</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
@@ -432,7 +431,7 @@ MathJax = {
 <p>算法的支持列表会随着不断增加持续更新中。</p>
 </section>
 <section id="id3">
-<h2>对计算结果的处理<a class="headerlink" href="#id3" title="Permalink to this heading">¶</a></h2>
+<h2>对计算结果的处理<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h2>
 <p>当完成一次图计算，计算结果会被包装成 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 类，保存在分布式集群的内存中。</p>
 <p>用户可能希望将结果传到客户端进行处理，或是写入云中某位置或分布式文件系统。GraphScope 支持用户通过以下方法来获取结果数据。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># 转化为相应数据类型</span>
@@ -482,7 +481,7 @@ MathJax = {
 <p>可以查看 <a class="reference internal" href="../reference/context.html#context"><span class="std std-ref">Context</span></a> 和 <a class="reference internal" href="../reference/selector.html#selector"><span class="std std-ref">Selector</span></a> 获取更多细节。</p>
 </section>
 <section id="pie">
-<h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Permalink to this heading">¶</a></h2>
+<h2>使用 PIE 编程模型自定义算法<a class="headerlink" href="#pie" title="Link to this heading">¶</a></h2>
 <p>如果内置算法无法满足需求，用户可以编写自己的算法。用户可以通过 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 在纯 Python 模式
 下使用 <a class="reference external" href="https://dl.acm.org/doi/10.1145/3282488">PIE</a> 编程模型编写算法。</p>
 <a class="reference internal image-reference" href="../_images/pie.png"><img alt="Workflow of PIE" class="align-center" src="../_images/pie.png" style="width: 600px;" /></a>
@@ -573,7 +572,7 @@ MathJax = {
 在这种情况下，经典的 Dijkstra 算法及其增量版本就可以用于在集群上的大规模图数据计算。</p>
 </section>
 <section id="pregel">
-<h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Permalink to this heading">¶</a></h2>
+<h2>使用 Pregel 编程模型自定义算法<a class="headerlink" href="#pregel" title="Link to this heading">¶</a></h2>
 <p>除了基于子图的 PIE 模型之外，<code class="docutils literal notranslate"><span class="pre">graphscope</span></code> 也支持以顶点为中心的 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 编程模型。
 您可以通过实现以下算法类来在 <code class="docutils literal notranslate"><span class="pre">Pregel</span></code> 模型中开发算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.analytical.udf.decorators</span><span class="w"> </span><span class="kn">import</span> <span class="n">pregel</span>
@@ -632,7 +631,7 @@ MathJax = {
 </div>
 </section>
 <section id="math-h">
-<h2>自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数<a class="headerlink" href="#math-h" title="Permalink to this heading">¶</a></h2>
+<h2>自定义算法中使用 <code class="docutils literal notranslate"><span class="pre">math.h</span></code> 中的函数<a class="headerlink" href="#math-h" title="Link to this heading">¶</a></h2>
 <p>GraphScope 支持用户在自定义算法中通过 <code class="code docutils literal notranslate"><span class="pre">context.math</span></code> 上的接口来使用定义在 <code class="code docutils literal notranslate"><span class="pre">math.h</span></code> 中的 C 函数,
 例如，下列代码，</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@staticmethod</span>
@@ -648,7 +647,7 @@ MathJax = {
 </div>
 </section>
 <section id="id5">
-<h2>运行自定义算法<a class="headerlink" href="#id5" title="Permalink to this heading">¶</a></h2>
+<h2>运行自定义算法<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h2>
 <p>运行自定义算法，用户需要在定义算法后调用算法。</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_p2p_network</span>
@@ -679,11 +678,11 @@ MathJax = {
 </div>
 </section>
 <section id="java">
-<h2>运行Java编写的算法<a class="headerlink" href="#java" title="Permalink to this heading">¶</a></h2>
+<h2>运行Java编写的算法<a class="headerlink" href="#java" title="Link to this heading">¶</a></h2>
 <p>GraphScope 支持用户编写Java的PIE app，并且运行在图分析引擎上。我们首先通过一个简单的例子来演示如果在GraphScope
 图分析引擎上运行一个Java的图算法(bfs)，然后我们将展示如果实现并运行自定义的Java图算法。</p>
 <section id="id6">
-<h3>运行示例的Java算法<a class="headerlink" href="#id6" title="Permalink to this heading">¶</a></h3>
+<h3>运行示例的Java算法<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
 <p>我们提供了一些经典图分析算法的示例实现，通过下面展示的例子，你可以尝试在GraphScope的图分析引擎上试着运行他们。首先你需要从下载我们提供的示例app的合集
 <cite>grape-demo.jar &lt;https://github.com/GraphScope/gstest/blob/master/jars/grape-demo-0.17.0-shaded.jar&gt;_</cite>，无需任何更改你就可以在
 GraphScope图分析引擎上运行这些示例算法。</p>
@@ -712,7 +711,7 @@ GraphScope图分析引擎上运行这些示例算法。</p>
 </div>
 </section>
 <section id="id7">
-<h3>使用Java编写用户自定义的图算法<a class="headerlink" href="#id7" title="Permalink to this heading">¶</a></h3>
+<h3>使用Java编写用户自定义的图算法<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
 <p>为了编写Java实现的图算法，用户需要借助于 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code>。请参考 <a class="reference internal" href="../reference/gae_java/about.html#gae-java-sdk-about"><span class="std std-ref">About Grape JDK</span></a> 来将 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 安装到你的本地环境上。</p>
 <p>安装完成后，你需要将 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 的依赖添加到你的maven项目依赖中。用户应当注意在 <code class="docutils literal notranslate"><span class="pre">grape-jdk</span></code> 的依赖配置上应当添加 classifier <em>shaded</em> ，来确保
 所有必要的依赖都被包括到。</p>
@@ -931,9 +930,9 @@ python3<span class="w"> </span>java-app-runner.py<span class="w"> </span>--app<s
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

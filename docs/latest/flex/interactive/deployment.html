@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Glossary" href="glossary.html" /><link rel="prev" title="Create c++ Stored Procedures on GraphScope Interactive" href="development/stored_procedure/cpp_procedure.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Deployment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,9 +691,9 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="deployment">
-<h1>Deployment<a class="headerlink" href="#deployment" title="Permalink to this heading">¶</a></h1>
+<h1>Deployment<a class="headerlink" href="#deployment" title="Link to this heading">¶</a></h1>
 <section id="deploy-with-docker">
-<h2>Deploy with Docker<a class="headerlink" href="#deploy-with-docker" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy with Docker<a class="headerlink" href="#deploy-with-docker" title="Link to this heading">¶</a></h2>
 <p>Interactive is packaged as a Docker image and can be easily deployed with <code class="docutils literal notranslate"><span class="pre">docker</span></code>, <code class="docutils literal notranslate"><span class="pre">python3</span> <span class="pre">&gt;=3.8</span></code>, and <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">&gt;=19.3</span></code> installed on your system. You will use a command-line tool called <code class="docutils literal notranslate"><span class="pre">gsctl</span></code> to install, start, and manage Interactive services.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>gsctl
 <span class="c1"># Deploy the interactive service in local mode</span>
@@ -702,7 +701,7 @@ gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="
 </pre></div>
 </div>
 <section id="customizing-ports">
-<h3>Customizing Ports<a class="headerlink" href="#customizing-ports" title="Permalink to this heading">¶</a></h3>
+<h3>Customizing Ports<a class="headerlink" href="#customizing-ports" title="Link to this heading">¶</a></h3>
 <p>By default, Interactive launches various services on these ports: Coordinator Service on <code class="docutils literal notranslate"><span class="pre">8080</span></code>, Interactive Meta Service on <code class="docutils literal notranslate"><span class="pre">7777</span></code>, Interactive Cypher service on <code class="docutils literal notranslate"><span class="pre">7687</span></code>, and Stored Procedure Service on <code class="docutils literal notranslate"><span class="pre">10000</span></code>. These ports can be customized.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span>--coordinator-port<span class="w"> </span><span class="m">8081</span><span class="w"> </span>--admin-port<span class="w"> </span><span class="m">7778</span><span class="w"> </span><span class="se">\ </span>
 <span class="w">                </span>--cypher-port<span class="w"> </span><span class="m">7688</span><span class="w"> </span>--storedproc-port<span class="w"> </span><span class="m">10001</span>
@@ -713,14 +712,14 @@ gsctl<span class="w"> </span>instance<span class="w"> </span>deploy<span class="
 </section>
 </section>
 <section id="deploy-with-helm">
-<h2>Deploy with Helm<a class="headerlink" href="#deploy-with-helm" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy with Helm<a class="headerlink" href="#deploy-with-helm" title="Link to this heading">¶</a></h2>
 <p>TODO</p>
 </section>
 <section id="deploy-from-source-code">
-<h2>Deploy from Source Code<a class="headerlink" href="#deploy-from-source-code" title="Permalink to this heading">¶</a></h2>
+<h2>Deploy from Source Code<a class="headerlink" href="#deploy-from-source-code" title="Link to this heading">¶</a></h2>
 <p>This section describes how to package and deploy Interactive from the source for a customized version.</p>
 <section id="packing-interactive-from-source">
-<h3>Packing Interactive from Source<a class="headerlink" href="#packing-interactive-from-source" title="Permalink to this heading">¶</a></h3>
+<h3>Packing Interactive from Source<a class="headerlink" href="#packing-interactive-from-source" title="Link to this heading">¶</a></h3>
 <p>Interactive is packaged as a Docker image. Ensure you have <a class="reference external" href="https://www.docker.com/">Docker</a> installed, then clone the repository and build the Interactive Runtime Image.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/alibaba/GraphScope.git<span class="w"> </span><span class="c1"># Or clone your fork</span>
 <span class="nb">cd</span><span class="w"> </span>GraphScope/k8s
@@ -734,7 +733,7 @@ python3<span class="w"> </span>./gsctl.py<span class="w"> </span>flexbuild<span 
 </div>
 </section>
 <section id="deploying-customized-built-interactive">
-<h3>Deploying Customized Built Interactive<a class="headerlink" href="#deploying-customized-built-interactive" title="Permalink to this heading">¶</a></h3>
+<h3>Deploying Customized Built Interactive<a class="headerlink" href="#deploying-customized-built-interactive" title="Link to this heading">¶</a></h3>
 <p><code class="docutils literal notranslate"><span class="pre">gsctl</span></code> supports deploying an Interactive instance with a customized image.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>gsctl.py<span class="w"> </span>instance<span class="w"> </span>deploy<span class="w"> </span>--type<span class="w"> </span>interactive<span class="w"> </span>--image-registry<span class="w"> </span>graphscope<span class="w"> </span>--image-tag<span class="w"> </span>latest
 </pre></div>
@@ -742,7 +741,7 @@ python3<span class="w"> </span>./gsctl.py<span class="w"> </span>flexbuild<span 
 </section>
 </section>
 <section id="pushing-to-your-own-registry">
-<h2>Pushing to Your Own Registry<a class="headerlink" href="#pushing-to-your-own-registry" title="Permalink to this heading">¶</a></h2>
+<h2>Pushing to Your Own Registry<a class="headerlink" href="#pushing-to-your-own-registry" title="Link to this heading">¶</a></h2>
 <p>You can push the image to your own registry for access from other machines.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>docker<span class="w"> </span>tag<span class="w"> </span>graphscope/interactive:latest<span class="w"> </span><span class="o">{</span>YOUR_IMAGE_REGISTRY<span class="o">}</span>/interactive:<span class="o">{</span>TAG<span class="o">}</span>
 docker<span class="w"> </span>push<span class="w"> </span><span class="o">{</span>YOUR_IMAGE_REGISTRY<span class="o">}</span>/interactive:latest
@@ -751,7 +750,7 @@ python3<span class="w"> </span>gsctl.py<span class="w"> </span>instance<span cla
 </div>
 </section>
 <section id="connecting-and-using">
-<h2>Connecting and Using<a class="headerlink" href="#connecting-and-using" title="Permalink to this heading">¶</a></h2>
+<h2>Connecting and Using<a class="headerlink" href="#connecting-and-using" title="Link to this heading">¶</a></h2>
 <p>Refer to <a class="reference internal" href="getting_started.html"><span class="std std-doc">Getting Started</span></a> for instructions on using Interactive. For detailed usage, consult the <a class="reference internal" href="development/java/java_sdk.html"><span class="std std-doc">Java SDK Documentation</span></a> and <a class="reference internal" href="development/python/python_sdk.html"><span class="std std-doc">Python SDK Documentation</span></a>.</p>
 </section>
 </section>
@@ -838,9 +837,9 @@ python3<span class="w"> </span>gsctl.py<span class="w"> </span>instance<span cla
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

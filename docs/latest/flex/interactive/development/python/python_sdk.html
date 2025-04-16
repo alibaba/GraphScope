@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><link rel="next" title="Python SDK Reference" href="python_sdk_ref.html" /><link rel="prev" title="Java SDK Reference" href="../java/java_sdk.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Python SDK Guide - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/panels.css?v=0f22cee4" />
@@ -692,20 +691,20 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="python-sdk-guide">
-<h1>Python SDK Guide<a class="headerlink" href="#python-sdk-guide" title="Permalink to this heading">¶</a></h1>
+<h1>Python SDK Guide<a class="headerlink" href="#python-sdk-guide" title="Link to this heading">¶</a></h1>
 <p>The Interactive Python SDK guide is designed to assist developers in integrating the Interactive service into their Python applications. This SDK allows users to seamlessly connect to Interactive and harness its powerful features for graph management, stored procedure management, and query execution.</p>
 <section id="requirements">
-<h2>Requirements.<a class="headerlink" href="#requirements" title="Permalink to this heading">¶</a></h2>
+<h2>Requirements.<a class="headerlink" href="#requirements" title="Link to this heading">¶</a></h2>
 <p>Python &gt;= 3.8</p>
 </section>
 <section id="installation-usage">
-<h2>Installation &amp; Usage<a class="headerlink" href="#installation-usage" title="Permalink to this heading">¶</a></h2>
+<h2>Installation &amp; Usage<a class="headerlink" href="#installation-usage" title="Link to this heading">¶</a></h2>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>If you want to isolate the installation from your local Python environment, you might consider using a virtual environment <a class="reference external" href="https://virtualenv.pypa.io/">virtualenv</a> to create a new one.”</p>
 </div>
 <section id="pip-install">
-<h3>pip install<a class="headerlink" href="#pip-install" title="Permalink to this heading">¶</a></h3>
+<h3>pip install<a class="headerlink" href="#pip-install" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>gs_interactive
 </pre></div>
 </div>
@@ -715,7 +714,7 @@ MathJax = {
 </div>
 </section>
 <section id="setuptools">
-<h3>Setuptools<a class="headerlink" href="#setuptools" title="Permalink to this heading">¶</a></h3>
+<h3>Setuptools<a class="headerlink" href="#setuptools" title="Link to this heading">¶</a></h3>
 <p>Install via <a class="reference external" href="http://pypi.python.org/pypi/setuptools">Setuptools</a>.</p>
 <div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python3<span class="w"> </span>setup.py<span class="w"> </span>build_proto
 python3<span class="w"> </span>setup.py<span class="w"> </span>install<span class="w"> </span>--user
@@ -728,12 +727,12 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install<span clas
 </div>
 </section>
 <section id="tests">
-<h3>Tests<a class="headerlink" href="#tests" title="Permalink to this heading">¶</a></h3>
+<h3>Tests<a class="headerlink" href="#tests" title="Link to this heading">¶</a></h3>
 <p>Execute <code class="docutils literal notranslate"><span class="pre">pytest</span></code> to run the tests.</p>
 </section>
 </section>
 <section id="getting-started">
-<h2>Getting Started<a class="headerlink" href="#getting-started" title="Permalink to this heading">¶</a></h2>
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading">¶</a></h2>
 <p>First, install and start the interactive service via <a class="reference internal" href="../../getting_started.html"><span class="std std-doc">Interactive Getting Started</span></a>, and you will get the all the endpoints for the Interactive service.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>You<span class="w"> </span>can<span class="w"> </span>connect<span class="w"> </span>to<span class="w"> </span>Interactive<span class="w"> </span>service<span class="w"> </span>with<span class="w"> </span>Interactive<span class="w"> </span>SDK,<span class="w"> </span>with<span class="w"> </span>following<span class="w"> </span>environment<span class="w"> </span>variables<span class="w"> </span>declared.
 
@@ -750,7 +749,7 @@ python3<span class="w"> </span>setup.py<span class="w"> </span>install<span clas
 </div>
 <p>Remember to export these environment variables.</p>
 <section id="connect-and-submit-a-query">
-<h3>Connect and submit a query<a class="headerlink" href="#connect-and-submit-a-query" title="Permalink to this heading">¶</a></h3>
+<h3>Connect and submit a query<a class="headerlink" href="#connect-and-submit-a-query" title="Link to this heading">¶</a></h3>
 <p>Before connecting to the Interactive Service and submitting queries via the Python SDK, ensure that the service is running on the intended graph.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>gsctl<span class="w"> </span>use<span class="w"> </span>GRAPH<span class="w"> </span>&lt;graph_name&gt;
 gsctl<span class="w"> </span>service<span class="w"> </span>status
@@ -770,7 +769,7 @@ gsctl<span class="w"> </span>service<span class="w"> </span>status
 </div>
 </section>
 <section id="create-a-new-graph">
-<h3>Create a new graph<a class="headerlink" href="#create-a-new-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Create a new graph<a class="headerlink" href="#create-a-new-graph" title="Link to this heading">¶</a></h3>
 <p>To create a new graph, user need to specify the name, description, vertex types and edges types.
 For the detail data model of the graph, please refer to <a class="reference internal" href="../../data_model.html"><span class="doc std std-doc">Data Model</span></a>.</p>
 <p>In this example, we will create a simple graph with only one vertex type <code class="docutils literal notranslate"><span class="pre">persson</span></code>, and one edge type named <code class="docutils literal notranslate"><span class="pre">knows</span></code>.</p>
@@ -858,7 +857,7 @@ However, converting <code class="docutils literal notranslate"><span class="pre"
 </div>
 </section>
 <section id="import-data-to-the-graph">
-<h3>Import data to the graph<a class="headerlink" href="#import-data-to-the-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Import data to the graph<a class="headerlink" href="#import-data-to-the-graph" title="Link to this heading">¶</a></h3>
 <p>After a new graph is created, you may want to import data into the newly created graph.
 For the detail configuration of data import, please refer to <a class="reference internal" href="../../data_import.html"><span class="doc std std-doc">Data Import Configuration</span></a>.</p>
 <p>For example, you can import the local csv files into the <code class="docutils literal notranslate"><span class="pre">test_graph</span></code>. Note that, currently only csv files are supported now. The raw data of <code class="docutils literal notranslate"><span class="pre">test_graph</span></code> is available at <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/flex/interactive/examples/modern_graph">GraphScope Interactive Github repo</a>, and you can download them with the following command.</p>
@@ -947,7 +946,7 @@ Remember to add <code class="docutils literal notranslate"><span class="pre">&#6
 <code class="docutils literal notranslate"><span class="pre">Session.bulkLoading()</span></code> will submit an data loading job to the service, and we can query the status of the job via <code class="docutils literal notranslate"><span class="pre">Session.getJobStatus()</span></code>, and wait until the job has compleleted successfully.</p>
 </section>
 <section id="create-a-stored-procedure">
-<h3>Create a stored procedure<a class="headerlink" href="#create-a-stored-procedure" title="Permalink to this heading">¶</a></h3>
+<h3>Create a stored procedure<a class="headerlink" href="#create-a-stored-procedure" title="Link to this heading">¶</a></h3>
 <p>Stored procedures can be registered into GraphScope Interactive to encapsulate and reuse complex graph operations. Interactive support both <code class="docutils literal notranslate"><span class="pre">cypher</span></code> and <code class="docutils literal notranslate"><span class="pre">c++</span></code> queries as stored procedures.
 With the following code, you will create a procedure named <code class="docutils literal notranslate"><span class="pre">testProcedure</span></code> which is defined via a <code class="docutils literal notranslate"><span class="pre">cypher</span></code> query.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create Graph </span>
@@ -971,7 +970,7 @@ With the following code, you will create a procedure named <code class="docutils
 <p>The procedure could not be invoked now, since currently interactive service has not been switched to the newly created <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>. We need to start the service on <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>.</p>
 </section>
 <section id="start-the-query-service-on-the-new-graph">
-<h3>Start the query service on the new graph<a class="headerlink" href="#start-the-query-service-on-the-new-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Start the query service on the new graph<a class="headerlink" href="#start-the-query-service-on-the-new-graph" title="Link to this heading">¶</a></h3>
 <p>Although Interactive supports multiple graphs in terms of logic and storage, it can only serve on one graph at a time. This means that at any given moment, only one graph is available to provide query service. So we need to switch to the newly created <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code> with following code.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">resp</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">start_service</span><span class="p">(</span>
     <span class="n">start_service_request</span><span class="o">=</span><span class="n">StartServiceRequest</span><span class="p">(</span><span class="n">graph_id</span><span class="o">=</span><span class="n">graph_id</span><span class="p">)</span>
@@ -982,7 +981,7 @@ With the following code, you will create a procedure named <code class="docutils
 </div>
 </section>
 <section id="submit-queries-to-the-new-graph">
-<h3>Submit queries to the new graph<a class="headerlink" href="#submit-queries-to-the-new-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Submit queries to the new graph<a class="headerlink" href="#submit-queries-to-the-new-graph" title="Link to this heading">¶</a></h3>
 <p>After starting query service on the new graph, we are now able to submit queries to <code class="docutils literal notranslate"><span class="pre">modern_graph</span></code>.</p>
 <!-- #### Submit gremlin queries
 
@@ -1009,7 +1008,7 @@ while True:
 print(ret)
 ``` -->
 <section id="submit-cypher-queries">
-<h4>Submit cypher queries<a class="headerlink" href="#submit-cypher-queries" title="Permalink to this heading">¶</a></h4>
+<h4>Submit cypher queries<a class="headerlink" href="#submit-cypher-queries" title="Link to this heading">¶</a></h4>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">query</span> <span class="o">=</span> <span class="s2">&quot;MATCH (n) RETURN COUNT(n);&quot;</span>
 <span class="k">with</span> <span class="n">driver</span><span class="o">.</span><span class="n">getNeo4jSession</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
     <span class="n">resp</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">query</span><span class="p">)</span>
@@ -1020,7 +1019,7 @@ print(ret)
 </section>
 </section>
 <section id="delete-the-graph">
-<h3>Delete the graph<a class="headerlink" href="#delete-the-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Delete the graph<a class="headerlink" href="#delete-the-graph" title="Link to this heading">¶</a></h3>
 <p>Finally, we can delete the graph. The graph data and stored procedure bound to the graph will also be deleted.
 Currently Interactive forbid deleting a graph which is currently serving in the service, so to delete graph, stop the service first.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># stop the service first, note that graph_id is optional.</span>
@@ -1129,9 +1128,9 @@ Currently Interactive forbid deleting a graph which is currently serving in the 
       
     </aside>
   </div>
-</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>

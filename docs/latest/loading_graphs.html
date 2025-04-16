@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Graph Analytics Workloads" href="overview/graph_analytics_workloads.html" /><link rel="prev" title="Getting Started" href="overview/getting_started.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Loading Graphs - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="_static/css/panels.css?v=0f22cee4" />
@@ -692,12 +691,12 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="loading-graphs">
-<span id="id1"></span><h1>Loading Graphs<a class="headerlink" href="#loading-graphs" title="Permalink to this heading">¶</a></h1>
+<span id="id1"></span><h1>Loading Graphs<a class="headerlink" href="#loading-graphs" title="Link to this heading">¶</a></h1>
 <p>GraphScope models graph data as
 <a class="reference external" href="https://github.com/tinkerpop/blueprints/wiki/Property-Graph-Model">Property Graph</a>,
 in which the edges/vertices are labeled and each label may have many properties.</p>
 <section id="load-built-in-datasets">
-<h2>Load Built-in Datasets<a class="headerlink" href="#load-built-in-datasets" title="Permalink to this heading">¶</a></h2>
+<h2>Load Built-in Datasets<a class="headerlink" href="#load-built-in-datasets" title="Link to this heading">¶</a></h2>
 <p>GraphScope comes with a set of popular datasets, and utility functions to load them into memory,
 makes it easy for user to get started.
 Here’s an example:</p>
@@ -717,7 +716,7 @@ Here’s an example:</p>
 <p>You can view all available datasets in <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/python/graphscope/dataset">here</a> , and get details description and usage in those source files.</p>
 </section>
 <section id="loading-your-own-datasets">
-<h2>Loading Your Own Datasets<a class="headerlink" href="#loading-your-own-datasets" title="Permalink to this heading">¶</a></h2>
+<h2>Loading Your Own Datasets<a class="headerlink" href="#loading-your-own-datasets" title="Link to this heading">¶</a></h2>
 <p>However, it’s more common that user need to load there own data and do some analysis.
 To load a property graph to GraphScope, we provide a method <cite>g()</cite> defined in <cite>Session</cite>.</p>
 <p>To build a property graph on GraphScope, we firstly create an empty graph using <code class="docutils literal notranslate"><span class="pre">g()</span></code>.</p>
@@ -738,7 +737,7 @@ To load a property graph to GraphScope, we provide a method <cite>g()</cite> def
 <p>These methods helps users to construct the schema of the property graph iteratively.</p>
 <p>We will use files in <code class="file docutils literal notranslate"><span class="pre">ldbc_sample</span></code> through this tutorial. You can get the files in <a class="reference external" href="https://github.com/GraphScope/gstest/tree/master/ldbc_sample">here</a>. And you can inspect the graph schema by using <cite>print(graph.schema)</cite>.</p>
 <section id="adding-vertices">
-<h3>Adding Vertices<a class="headerlink" href="#adding-vertices" title="Permalink to this heading">¶</a></h3>
+<h3>Adding Vertices<a class="headerlink" href="#adding-vertices" title="Link to this heading">¶</a></h3>
 <p>We can add a kind of vertices to graph, the method has the following parameters:</p>
 <p><code class="docutils literal notranslate"><span class="pre">vertices</span></code>: A location for the vertex data source, which can be a file location, or a numpy, etc. See more details in <a class="reference internal" href="reference/graph.html#loader-object"><span class="std std-ref">Loader object</span></a>.</p>
 <p>A simple example:</p>
@@ -786,7 +785,7 @@ will be added as properties. If it equals to a empty list <code class="docutils 
 </div>
 </section>
 <section id="adding-edges">
-<h3>Adding Edges<a class="headerlink" href="#adding-edges" title="Permalink to this heading">¶</a></h3>
+<h3>Adding Edges<a class="headerlink" href="#adding-edges" title="Link to this heading">¶</a></h3>
 <p>Next, let’s take a look on the parameters for loading edges.</p>
 <p><code class="docutils literal notranslate"><span class="pre">edges</span></code>: The location indicating where to read the data. e.g.,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -827,10 +826,10 @@ will be added as properties. If it equals to a empty list <code class="docutils 
 </section>
 </section>
 <section id="advanced-usages">
-<h2>Advanced Usages<a class="headerlink" href="#advanced-usages" title="Permalink to this heading">¶</a></h2>
+<h2>Advanced Usages<a class="headerlink" href="#advanced-usages" title="Link to this heading">¶</a></h2>
 <p>Here are some advanced usages to deal with homogeneous graphs or very complex graphs.</p>
 <section id="deduce-vertex-labels-when-not-ambiguous">
-<h3>Deduce vertex labels when not ambiguous<a class="headerlink" href="#deduce-vertex-labels-when-not-ambiguous" title="Permalink to this heading">¶</a></h3>
+<h3>Deduce vertex labels when not ambiguous<a class="headerlink" href="#deduce-vertex-labels-when-not-ambiguous" title="Link to this heading">¶</a></h3>
 <p>If there is only one kind of vertices in a graph, the vertex label can be omitted.
 GraphScope will infer the source and destination vertex label to that very label.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -841,7 +840,7 @@ GraphScope will infer the source and destination vertex label to that very label
 </div>
 </section>
 <section id="deduce-vertex-from-edges">
-<h3>Deduce vertex from edges<a class="headerlink" href="#deduce-vertex-from-edges" title="Permalink to this heading">¶</a></h3>
+<h3>Deduce vertex from edges<a class="headerlink" href="#deduce-vertex-from-edges" title="Link to this heading">¶</a></h3>
 <p>If user add edges with unseen <code class="docutils literal notranslate"><span class="pre">src_label</span></code> or <code class="docutils literal notranslate"><span class="pre">dst_label</span></code>, graphscope will extract an vertex table from the given labels from the edge data.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
 <span class="c1"># Deduce vertex label `person` from the source and destination endpoints of edges.</span>
@@ -855,7 +854,7 @@ GraphScope will infer the source and destination vertex label to that very label
 </div>
 </section>
 <section id="multiple-relations">
-<h3>Multiple relations<a class="headerlink" href="#multiple-relations" title="Permalink to this heading">¶</a></h3>
+<h3>Multiple relations<a class="headerlink" href="#multiple-relations" title="Link to this heading">¶</a></h3>
 <p>In some cases, an edge label may connect two kinds of vertices. For example, in a
 graph, two kinds of edges are labeled with <cite>likes</cite> but represents two relations.
 i.e., <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>comment</cite> and <cite>person</cite> -&gt; <cite>likes</cite> &lt;- <cite>post</cite>.</p>
@@ -875,7 +874,7 @@ but with different source and destination labels.</p>
 </div>
 </section>
 <section id="specify-data-types-of-properties-manually">
-<h3>Specify data types of properties manually<a class="headerlink" href="#specify-data-types-of-properties-manually" title="Permalink to this heading">¶</a></h3>
+<h3>Specify data types of properties manually<a class="headerlink" href="#specify-data-types-of-properties-manually" title="Link to this heading">¶</a></h3>
 <p>GraphScope will deduce data types from input files, and it works as expected in most cases.
 However, sometimes user may want to determine the data types as well, e.g.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">()</span>
@@ -886,7 +885,7 @@ However, sometimes user may want to determine the data types as well, e.g.</p>
 e.g., in this case, the property <code class="docutils literal notranslate"><span class="pre">length</span></code> will have type <code class="docutils literal notranslate"><span class="pre">int</span></code> rather than the default <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>. The options of the types are <code class="docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">double</span></code>, or <code class="docutils literal notranslate"><span class="pre">str</span></code>.</p>
 </section>
 <section id="other-parameters-of-graph">
-<h3>Other parameters of graph<a class="headerlink" href="#other-parameters-of-graph" title="Permalink to this heading">¶</a></h3>
+<h3>Other parameters of graph<a class="headerlink" href="#other-parameters-of-graph" title="Link to this heading">¶</a></h3>
 <p>The class <code class="docutils literal notranslate"><span class="pre">Graph</span></code> has three meta options, which are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">oid_type</span></code>, can be <code class="docutils literal notranslate"><span class="pre">int64_t</span></code> or <code class="docutils literal notranslate"><span class="pre">string</span></code>. Default to <code class="docutils literal notranslate"><span class="pre">int64_t</span></code> in consideration of efficiency. But if the ID column can’t be represented by <code class="docutils literal notranslate"><span class="pre">int64_t</span></code>, then we should use <code class="docutils literal notranslate"><span class="pre">string</span></code>.</p></li>
@@ -895,7 +894,7 @@ e.g., in this case, the property <code class="docutils literal notranslate"><spa
 </ul>
 </section>
 <section id="putting-them-together">
-<h3>Putting them Together<a class="headerlink" href="#putting-them-together" title="Permalink to this heading">¶</a></h3>
+<h3>Putting them Together<a class="headerlink" href="#putting-them-together" title="Link to this heading">¶</a></h3>
 <p>Let’s make this example complete.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">graph</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">g</span><span class="p">(</span><span class="n">oid_type</span><span class="o">=</span><span class="s1">&#39;int64_t&#39;</span><span class="p">,</span> <span class="n">directed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">generate_eid</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/person_0_0.csv&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;person&#39;</span><span class="p">)</span>
@@ -913,12 +912,12 @@ e.g., in this case, the property <code class="docutils literal notranslate"><spa
 </section>
 </section>
 <section id="loading-from-pandas-or-numpy">
-<h2>Loading From Pandas or Numpy<a class="headerlink" href="#loading-from-pandas-or-numpy" title="Permalink to this heading">¶</a></h2>
+<h2>Loading From Pandas or Numpy<a class="headerlink" href="#loading-from-pandas-or-numpy" title="Link to this heading">¶</a></h2>
 <p>The data source aforementioned is an object of <span class="xref std std-ref">Loader</span>. A loader wraps a location or the data itself.
 GraphScope supports load a graph from pandas dataframes or numpy ndarrays, making it easy to construct a graph right in the python console.</p>
 <p>Apart from the loader, the other fields like properties, label, etc. are the same as examples above.</p>
 <section id="from-pandas">
-<h3>From Pandas<a class="headerlink" href="#from-pandas" title="Permalink to this heading">¶</a></h3>
+<h3>From Pandas<a class="headerlink" href="#from-pandas" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <span class="n">df_v</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;/home/ldbc_sample/comment_0_0.csv&#39;</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">)</span>
@@ -932,7 +931,7 @@ GraphScope supports load a graph from pandas dataframes or numpy ndarrays, makin
 </div>
 </section>
 <section id="from-numpy">
-<h3>From Numpy<a class="headerlink" href="#from-numpy" title="Permalink to this heading">¶</a></h3>
+<h3>From Numpy<a class="headerlink" href="#from-numpy" title="Link to this heading">¶</a></h3>
 <p>Note that each array is a column, we pass it like as COO matrix format to the loader.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 
@@ -945,7 +944,7 @@ GraphScope supports load a graph from pandas dataframes or numpy ndarrays, makin
 </section>
 </section>
 <section id="loader-variants">
-<h2>Loader Variants<a class="headerlink" href="#loader-variants" title="Permalink to this heading">¶</a></h2>
+<h2>Loader Variants<a class="headerlink" href="#loader-variants" title="Link to this heading">¶</a></h2>
 <p>When a loader wraps a location, it may only contains a str.
 The string follows the standard of URI. When receiving a request for loading graph from a location,
 <code class="docutils literal notranslate"><span class="pre">graphscope</span></code> will parse the URI and invoke corresponding loader according to the schema.</p>
@@ -968,9 +967,9 @@ The only methods user need to override is <code class="docutils literal notransl
 <code class="docutils literal notranslate"><span class="pre">_initiate_upload</span></code> and <code class="docutils literal notranslate"><span class="pre">_fetch_range</span></code>. In the end user need to use <code class="docutils literal notranslate"><span class="pre">fsspec.register_implementation('protocol_name',</span> <span class="pre">'protocol_file_system')</span></code> to register corresponding resolver.</p>
 </section>
 <section id="techniques-targeting-at-large-graph">
-<h2>Techniques targeting at large graph<a class="headerlink" href="#techniques-targeting-at-large-graph" title="Permalink to this heading">¶</a></h2>
+<h2>Techniques targeting at large graph<a class="headerlink" href="#techniques-targeting-at-large-graph" title="Link to this heading">¶</a></h2>
 <section id="tips-for-reduce-memory-consumption-of-graphs">
-<h3>Tips for reduce memory consumption of graphs<a class="headerlink" href="#tips-for-reduce-memory-consumption-of-graphs" title="Permalink to this heading">¶</a></h3>
+<h3>Tips for reduce memory consumption of graphs<a class="headerlink" href="#tips-for-reduce-memory-consumption-of-graphs" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><dl class="simple">
 <dt>Tune the parameter of graph constructor <cite>sess.g()</cite></dt><dd><ul>
@@ -1084,9 +1083,9 @@ The only methods user need to override is <code class="docutils literal notransl
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="_static/doctools.js?v=888ff710"></script>
-    <script src="_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="_static/documentation_options.js?v=8a448e45"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="_static/copybutton.js?v=f281be69"></script>

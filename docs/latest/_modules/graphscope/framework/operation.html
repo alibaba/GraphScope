@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.framework.operation - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -710,7 +709,9 @@ MathJax = {
 <span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.proto</span><span class="w"> </span><span class="kn">import</span> <span class="n">op_def_pb2</span>
 
 
-<div class="viewcode-block" id="Operation"><a class="viewcode-back" href="../../../reference/operation.html#graphscope.framework.operation.Operation">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation">
+<a class="viewcode-back" href="../../../reference/operation.html#graphscope.framework.operation.Operation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Operation</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Represents a dag op that performs computation on tensors.</span>
 
 <span class="sd">    For example :code:`g2 = g1.add_vertices(&quot;path&quot;)` create an :code:`Operation` of type</span>
@@ -721,7 +722,9 @@ MathJax = {
 <span class="sd">    :code`op.eval()` or passing it to :code:`session.run`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Operation.__init__"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html#graphscope.framework.operation.Operation.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Operation.__init__">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.__init__.html#graphscope.framework.operation.Operation.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session_id</span><span class="p">,</span>
         <span class="n">op_type</span><span class="p">,</span>
@@ -773,6 +776,7 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span> <span class="o">=</span> <span class="kc">False</span></div>
 
+
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">key</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Unique key for each :code:`op_def_pb2.OpDef`&quot;&quot;&quot;</span>
@@ -817,7 +821,9 @@ MathJax = {
     <span class="k">def</span><span class="w"> </span><span class="nf">is_leaf_op</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_leaf</span>
 
-<div class="viewcode-block" id="Operation.eval"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html#graphscope.framework.operation.Operation.eval">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation.eval">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.eval.html#graphscope.framework.operation.Operation.eval">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate by :code:`sess.run`.</span>
 
 <span class="sd">        Args:</span>
@@ -835,12 +841,16 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_evaluated</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">res</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="nf">add_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_parents</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="o">.</span><span class="n">parents</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">op</span><span class="o">.</span><span class="n">key</span><span class="p">])</span>
 
-<div class="viewcode-block" id="Operation.as_op_def"><a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html#graphscope.framework.operation.Operation.as_op_def">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">as_op_def</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Operation.as_op_def">
+<a class="viewcode-back" href="../../../reference/generated/graphscope.framework.operation.Operation.as_op_def.html#graphscope.framework.operation.Operation.as_op_def">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_op_def</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_op_def</span><span class="p">())</span>
@@ -854,6 +864,7 @@ MathJax = {
     <span class="k">def</span><span class="w"> </span><span class="nf">to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get json represented op.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">MessageToJson</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_op_def</span><span class="p">)</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -889,9 +900,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

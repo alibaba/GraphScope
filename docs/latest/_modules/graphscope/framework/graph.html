@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.framework.graph - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -905,7 +904,9 @@ MathJax = {
         <span class="p">)</span>
 
 
-<div class="viewcode-block" id="GraphDAGNode"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">GraphDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">GraphInterface</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphDAGNode">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">GraphDAGNode</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">,</span> <span class="n">GraphInterface</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class represents a graph node in a DAG.</span>
 
 <span class="sd">    In GraphScope, all operations that generate a new graph will return</span>
@@ -934,7 +935,9 @@ MathJax = {
 <span class="sd">        &gt;&gt;&gt; del g1</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="GraphDAGNode.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.__init__">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">session</span><span class="p">,</span>
         <span class="n">incoming_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -1012,6 +1015,7 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">v_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1157,7 +1161,9 @@ MathJax = {
         <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">GraphDAGNode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="n">op</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span>
 
-<div class="viewcode-block" id="GraphDAGNode.add_vertices"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_vertices">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_vertices</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.add_vertices">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_vertices">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_vertices</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add vertices to the graph, and return a new graph.</span>
@@ -1232,7 +1238,10 @@ MathJax = {
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
-<div class="viewcode-block" id="GraphDAGNode.add_edges"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_edges">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_edges</span><span class="p">(</span>
+
+<div class="viewcode-block" id="GraphDAGNode.add_edges">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_edges">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_edges</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">edges</span><span class="p">,</span>
         <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_e&quot;</span><span class="p">,</span>
@@ -1395,7 +1404,10 @@ MathJax = {
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="n">parent</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
-<div class="viewcode-block" id="GraphDAGNode.consolidate_columns"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.consolidate_columns">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">consolidate_columns</span><span class="p">(</span>
+
+<div class="viewcode-block" id="GraphDAGNode.consolidate_columns">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.consolidate_columns">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">consolidate_columns</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">columns</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
@@ -1443,6 +1455,7 @@ MathJax = {
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_backtrack_graph_dag_node_by_op_key</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">key</span> <span class="o">==</span> <span class="n">key</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
@@ -1452,7 +1465,9 @@ MathJax = {
                 <span class="k">return</span> <span class="n">graph_dag_node</span>
             <span class="n">graph_dag_node</span> <span class="o">=</span> <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span>
 
-<div class="viewcode-block" id="GraphDAGNode.add_column"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_column">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
+<div class="viewcode-block" id="GraphDAGNode.add_column">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.add_column">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the results as a column to the graph. Modification rules are given by the selector.</span>
 
 <span class="sd">        Args:</span>
@@ -1482,6 +1497,7 @@ MathJax = {
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="n">graph_dag_node</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_unload</span><span class="p">())</span>
@@ -1496,7 +1512,9 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">UnloadedGraph</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span><span class="p">)</span>
 
-<div class="viewcode-block" id="GraphDAGNode.project"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.project">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span>
+<div class="viewcode-block" id="GraphDAGNode.project">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.GraphDAGNode.project">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
         <span class="n">edges</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
@@ -1548,10 +1566,14 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_use_perfect_hash</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="n">graph_dag_node</span><span class="o">.</span><span class="n">_base_graph</span> <span class="o">=</span> <span class="bp">self</span>
-        <span class="k">return</span> <span class="n">graph_dag_node</span></div></div>
+        <span class="k">return</span> <span class="n">graph_dag_node</span></div>
+</div>
 
 
-<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Graph</span><span class="p">(</span><span class="n">GraphInterface</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Graph</span><span class="p">(</span><span class="n">GraphInterface</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class for representing metadata of a graph in the GraphScope.</span>
 
 <span class="sd">    A :class:`Graph` object holds the metadata of a graph, such as key, schema, and the graph is directed or not.</span>
@@ -1574,7 +1596,9 @@ MathJax = {
 <span class="sd">        &gt;&gt;&gt; print(graph.schema)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Graph.__init__"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="Graph.__init__">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">graph_node</span><span class="p">,</span>
     <span class="p">):</span>
@@ -1600,6 +1624,7 @@ MathJax = {
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_interactive_instance_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span> <span class="o">=</span> <span class="p">[]</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">update_from_graph_def</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">graph_def</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">graph_def</span><span class="o">.</span><span class="n">graph_type</span> <span class="o">==</span> <span class="n">graph_def_pb2</span><span class="o">.</span><span class="n">ARROW_FLATTENED</span><span class="p">:</span>
@@ -1724,7 +1749,9 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">session_id</span>
 
-<div class="viewcode-block" id="Graph.detach"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.detach">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph.detach">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.detach">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">detach</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Detaching a graph makes it being left in vineyard even when the varaible for</span>
 <span class="sd">        this :class:`Graph` object leaves the lexical scope.</span>
 
@@ -1732,9 +1759,13 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_detached</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Graph.loaded"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.loaded">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.loaded">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.loaded">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loaded</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;True if current graph has been loaded in the session.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;status&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;active&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">v_str</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="sa">f</span><span class="s2">&quot;VERTEX: </span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_v_labels</span><span class="p">])</span>
@@ -1782,11 +1813,16 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">_project_to_simple</span><span class="p">(</span><span class="n">v_prop</span><span class="p">,</span> <span class="n">e_prop</span><span class="p">)</span>
         <span class="p">)</span>
 
-<div class="viewcode-block" id="Graph.add_column"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_column">[docs]</a>    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_column</span><span class="p">)</span>
+<div class="viewcode-block" id="Graph.add_column">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_column">[docs]</a>
+    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_column</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_column</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">add_column</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">selector</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Graph.to_numpy"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_numpy">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.to_numpy">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_numpy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Select some elements of the graph and output to numpy.</span>
 
 <span class="sd">        Args:</span>
@@ -1799,7 +1835,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_unmodified</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Graph.to_dataframe"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_dataframe">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.to_dataframe">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_dataframe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Select some elements of the graph and output as a pandas.DataFrame</span>
 
 <span class="sd">        Args:</span>
@@ -1814,7 +1853,10 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">selector</span><span class="p">,</span> <span class="n">vertex_range</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.to_directed"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_directed">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.to_directed">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_directed">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a directed representation of the graph.</span>
 
 <span class="sd">        Returns:</span>
@@ -1826,7 +1868,10 @@ MathJax = {
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_directed</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="Graph.to_undirected"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_undirected">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.to_undirected">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.to_undirected">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an undirected representation of the digraph.</span>
 
 <span class="sd">        Returns:</span>
@@ -1838,6 +1883,7 @@ MathJax = {
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">to_undirected</span><span class="p">())</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_directed</span>
@@ -1872,7 +1918,9 @@ MathJax = {
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">sess</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span>
 
-<div class="viewcode-block" id="Graph.load_from"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.load_from">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Graph.load_from">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.load_from">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">load_from</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">uri</span><span class="p">,</span> <span class="n">sess</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Load a ArrowProperty graph from a certain data source. The data source</span>
 <span class="sd">        can be vineyard serialized files, graphar serialized files, or other data</span>
@@ -1928,7 +1976,10 @@ MathJax = {
             <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">deserialize_graph</span><span class="p">(</span><span class="n">uri_str</span><span class="p">,</span> <span class="n">sess</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">sess</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">op</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Graph.save_to"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.save_to">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">save_to</span><span class="p">(</span>
+
+<div class="viewcode-block" id="Graph.save_to">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.save_to">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save_to</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">path</span><span class="p">,</span>
         <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;serialization&quot;</span><span class="p">,</span>
@@ -2027,7 +2078,10 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown format: </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="nb">format</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.add_vertices"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_vertices">[docs]</a>    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.add_vertices">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_vertices">[docs]</a>
+    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_vertices</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">properties</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vid_field</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s2">&quot;Graph&quot;</span><span class="p">,</span> <span class="n">GraphDAGNode</span><span class="p">]:</span>
@@ -2037,7 +2091,10 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">add_vertices</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="n">vid_field</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.add_edges"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_edges">[docs]</a>    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_edges</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.add_edges">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.add_edges">[docs]</a>
+    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">add_edges</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_edges</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">edges</span><span class="p">,</span>
@@ -2056,7 +2113,10 @@ MathJax = {
             <span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.consolidate_columns"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.consolidate_columns">[docs]</a>    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">consolidate_columns</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.consolidate_columns">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.consolidate_columns">[docs]</a>
+    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">consolidate_columns</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">consolidate_columns</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
@@ -2069,7 +2129,10 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">consolidate_columns</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="n">columns</span><span class="p">,</span> <span class="n">result_column</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.project"><a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.project">[docs]</a>    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">project</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.project">
+<a class="viewcode-back" href="../../../reference/graph.html#graphscope.framework.graph.Graph.project">[docs]</a>
+    <span class="nd">@apply_docstring</span><span class="p">(</span><span class="n">GraphDAGNode</span><span class="o">.</span><span class="n">project</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">project</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">vertices</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="kc">None</span><span class="p">]],</span>
@@ -2078,6 +2141,7 @@ MathJax = {
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">loaded</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;The graph is not loaded&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_graph_node</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">edges</span><span class="p">))</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_attach_interactive_instance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Store the instance when a new interactive instance is started.</span>
@@ -2108,6 +2172,7 @@ MathJax = {
             <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>  <span class="c1"># pylint: disable=broad-except</span>
                 <span class="n">logger</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s2">&quot;Failed to close interactive instances&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_learning_instance_list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">UnloadedGraph</span><span class="p">(</span><span class="n">DAGNode</span><span class="p">):</span>
@@ -2153,9 +2218,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

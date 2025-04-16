@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Customized Algorithms" href="customized_algorithms.html" /><link rel="prev" title="NetworkX Compatibility" href="networkx_compatibility.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Built-in Algorithms - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="built-in-algorithms">
-<h1>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Permalink to this heading">¶</a></h1>
+<h1>Built-in Algorithms<a class="headerlink" href="#built-in-algorithms" title="Link to this heading">¶</a></h1>
 <p>The graph analytical engine (GAE) of GraphScope offers many built-in algorithms, which enable users to analyze their graph data with least effort. The built-in algorithms covers a wide range of applications, such as the shortest path, community detection, clustering, etc. The built-in algorithms are implemented with the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/programming_model_pie.html">PIE programming model</a> and highly optimized for the best performance, and users can use them in the out-of-box manner.</p>
 <p>Here is the full list of supported built-in algorithms:</p>
 <ul class="simple">
@@ -721,31 +720,31 @@ MathJax = {
 <li><p><a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#wcc">WCC</a></p></li>
 </ul>
 <section id="all-pairs-shortest-path-length">
-<h2>All Pairs Shortest Path Length<a class="headerlink" href="#all-pairs-shortest-path-length" title="Permalink to this heading">¶</a></h2>
+<h2>All Pairs Shortest Path Length<a class="headerlink" href="#all-pairs-shortest-path-length" title="Link to this heading">¶</a></h2>
 <p>This algorithm is used to find all pair shortest path problem from a given weighted graph. As a result of this algorithm, it will compute the minimum distance from any vertex to all other vertices in the graph.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="all_pairs_shortest_path_length">
-<span class="sig-name descname"><span class="pre">all_pairs_shortest_path_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#all_pairs_shortest_path_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">all_pairs_shortest_path_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#all_pairs_shortest_path_length" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the shortest path lengths between all vertices in the graph.</p>
 </dd></dl>
 
 </section>
 <section id="attribute-assortativity">
-<h2>Attribute Assortativity<a class="headerlink" href="#attribute-assortativity" title="Permalink to this heading">¶</a></h2>
+<h2>Attribute Assortativity<a class="headerlink" href="#attribute-assortativity" title="Link to this heading">¶</a></h2>
 <p>Assortativity in a graph refers to the tendency of vertices to connect with other <em>similar</em> vertices over <em>dissimilar</em> vertices. Attribute assortativity is a measure of the extent to which vertices with the same properties connect to each other.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="attribute_assortativity">
-<span class="sig-name descname"><span class="pre">attribute_assortativity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attribute_assortativity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">attribute_assortativity</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#attribute_assortativity" title="Link to this definition">¶</a></dt>
 <dd><p>Compute assortativity for vertex attributes.</p>
 </dd></dl>
 
 </section>
 <section id="average-degree-connectivity">
-<h2>Average Degree Connectivity<a class="headerlink" href="#average-degree-connectivity" title="Permalink to this heading">¶</a></h2>
+<h2>Average Degree Connectivity<a class="headerlink" href="#average-degree-connectivity" title="Link to this heading">¶</a></h2>
 <p>The average degree connectivity is the average nearest neighbor degree of vertices with degree <em>k</em>. This algorithm returns a list of <em>k</em>-average degree connectivity for a graph for successive <em>k</em>=0,1,2….</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="average_degree_connectivity">
-<span class="sig-name descname"><span class="pre">average_degree_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_degree_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#average_degree_connectivity" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">average_degree_connectivity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_degree_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#average_degree_connectivity" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the average degree connectivity of the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -759,11 +758,11 @@ MathJax = {
 
 </section>
 <section id="betweenness-centrality">
-<h2>Betweenness Centrality<a class="headerlink" href="#betweenness-centrality" title="Permalink to this heading">¶</a></h2>
+<h2>Betweenness Centrality<a class="headerlink" href="#betweenness-centrality" title="Link to this heading">¶</a></h2>
 <p>Betweenness centrality is a measure of centrality in a graph based on shortest paths. Betweenness centrality of a vertex <em>v</em> is the sum of the fraction of all-pairs shortest paths that pass through <em>v</em>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="betweenness_centrality">
-<span class="sig-name descname"><span class="pre">betweenness_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#betweenness_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">betweenness_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endpoints</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#betweenness_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the shortest-path betweenness centrality for vertices.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -777,11 +776,11 @@ MathJax = {
 
 </section>
 <section id="breadth-first-search">
-<h2>Breadth-First Search<a class="headerlink" href="#breadth-first-search" title="Permalink to this heading">¶</a></h2>
+<h2>Breadth-First Search<a class="headerlink" href="#breadth-first-search" title="Link to this heading">¶</a></h2>
 <p>Breadth-First Search (BFS) is an algorithm for traversing or searching graph data. It starts at a root vertex and explores all vertices at the present depth prior to moving on to the vertices at the next depth level.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="bfs">
-<span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bfs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">bfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#bfs" title="Link to this definition">¶</a></dt>
 <dd><p>Compute a list of vertices in breadth-first search from source.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -792,12 +791,12 @@ MathJax = {
 
 </section>
 <section id="cdlp">
-<h2>CDLP<a class="headerlink" href="#cdlp" title="Permalink to this heading">¶</a></h2>
+<h2>CDLP<a class="headerlink" href="#cdlp" title="Link to this heading">¶</a></h2>
 <p>Evaluate Community Detection with Label Propagation, Also known as LPA.
 See <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/builtin_algorithms.html#label-propagation-algorithm">LPA</a></p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id0">
-<span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">cdlp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_round</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd><p>Evaluate Community Detection with Label Propagation</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -808,11 +807,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="closeness-centrality">
-<h2>Closeness Centrality<a class="headerlink" href="#closeness-centrality" title="Permalink to this heading">¶</a></h2>
+<h2>Closeness Centrality<a class="headerlink" href="#closeness-centrality" title="Link to this heading">¶</a></h2>
 <p>The original closeness centrality of a vertex <em>v</em> is the reciprocal of the average shortest path distance to <em>v</em> over all n-1 reachable nodes. Wasserman and Faust proposed an improved formula for graphs with more than one connected component. The result is “a ratio of the fraction of actors in the group who are reachable, to the average distance” from the reachable actors.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="closeness_centrality">
-<span class="sig-name descname"><span class="pre">closeness_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#closeness_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">closeness_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wf</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#closeness_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute closeness centrality for vertices.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -823,21 +822,21 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="clustering">
-<h2>Clustering<a class="headerlink" href="#clustering" title="Permalink to this heading">¶</a></h2>
+<h2>Clustering<a class="headerlink" href="#clustering" title="Link to this heading">¶</a></h2>
 <p>The clustering algorithm is to compute the clustering coefficient for each vertex of a graph. The clustering coefficient of a vertex in a graph quantifies how close its neighbors are to being a clique (complete graph).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id1">
-<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the clustering coefficient for each vertex in the graph.</p>
 </dd></dl>
 
 </section>
 <section id="degree-assortativity-coefficient">
-<h2>Degree Assortativity Coefficient<a class="headerlink" href="#degree-assortativity-coefficient" title="Permalink to this heading">¶</a></h2>
+<h2>Degree Assortativity Coefficient<a class="headerlink" href="#degree-assortativity-coefficient" title="Link to this heading">¶</a></h2>
 <p>Similar to attribute assortativity, degree assortativity coefficient measures tendency of having an edge (<em>u</em>,<em>v</em>) such that, degree(<em>u</em>) equals to degree(<em>v</em>).</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="degree_assortativity_coefficient">
-<span class="sig-name descname"><span class="pre">degree_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#degree_assortativity_coefficient" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">degree_assortativity_coefficient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_degree_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#degree_assortativity_coefficient" title="Link to this definition">¶</a></dt>
 <dd><p>Compute degree assortativity coefficient of the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -852,11 +851,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="degree-centrality">
-<h2>Degree Centrality<a class="headerlink" href="#degree-centrality" title="Permalink to this heading">¶</a></h2>
+<h2>Degree Centrality<a class="headerlink" href="#degree-centrality" title="Link to this heading">¶</a></h2>
 <p>The degree centrality for a vertex <em>v</em> is the fraction of nodes it is connected to. If the graph is directed, then three separate measures of degree centrality are defined, namely, in-degree, out-degree and both in- and out-degree.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="degree_centrality">
-<span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centrality_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#degree_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">centrality_type</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#degree_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the degree centrality for vertices.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -867,11 +866,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="depth-first-search">
-<h2>Depth-First Search<a class="headerlink" href="#depth-first-search" title="Permalink to this heading">¶</a></h2>
+<h2>Depth-First Search<a class="headerlink" href="#depth-first-search" title="Link to this heading">¶</a></h2>
 <p>Depth-First-Search (DFS) is an algorithm for traversing or searching graph data. It starts at a root vertex and explores as far as possible along each branch before backtracking.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="dfs">
-<span class="sig-name descname"><span class="pre">dfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dfs" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dfs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#dfs" title="Link to this definition">¶</a></dt>
 <dd><p>Compute a list of vertices in depth-first search from source.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -882,11 +881,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="eigenvector-centrality">
-<h2>Eigenvector Centrality<a class="headerlink" href="#eigenvector-centrality" title="Permalink to this heading">¶</a></h2>
+<h2>Eigenvector Centrality<a class="headerlink" href="#eigenvector-centrality" title="Link to this heading">¶</a></h2>
 <p>Eigenvector centrality is a measure of the influence of a vertex in a graph. Relationships originating from high-scoring vertices contribute more to the score of a vertex than connections from low-scoring vertices. A high eigenvector score means that a vertex is connected to many vertices who themselves have high scores.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="eigenvector_centrality">
-<span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#eigenvector_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the eigenvector centrality for the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -900,11 +899,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="hyperlink-induced-topic-search">
-<h2>Hyperlink-Induced Topic Search<a class="headerlink" href="#hyperlink-induced-topic-search" title="Permalink to this heading">¶</a></h2>
+<h2>Hyperlink-Induced Topic Search<a class="headerlink" href="#hyperlink-induced-topic-search" title="Link to this heading">¶</a></h2>
 <p>Hyperlink-Induced Topic Search (HITS) is an iterative algorithm to compute the importance of each vertices in a graph.  It rates vertices based on two scores, a hub score and an authority score. The authority score estimates the importance of the vertex within the graph. The hub score estimates the value of its relationships to other vertices.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="hits">
-<span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hits" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hits" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the HITS value for each vertex in the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -919,11 +918,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="katz-centrality">
-<h2>Katz Centrality<a class="headerlink" href="#katz-centrality" title="Permalink to this heading">¶</a></h2>
+<h2>Katz Centrality<a class="headerlink" href="#katz-centrality" title="Link to this heading">¶</a></h2>
 <p><a class="reference external" href="https://networkx.org/documentation/stable/reference/algorithms/generated/networkx.algorithms.centrality.katz_centrality.html">Katz centrality</a> computes the relative influence of a vertex within a graph by measuring the number of the immediate neighbors (first degree vertices) and also all other vertices in the graph that connect to the vertex under consideration through these immediate neighbors.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="katz_centrality">
-<span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#katz_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#katz_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the Katz centrality for the vertices of the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -940,11 +939,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="k-core">
-<h2>K-Core<a class="headerlink" href="#k-core" title="Permalink to this heading">¶</a></h2>
+<h2>K-Core<a class="headerlink" href="#k-core" title="Link to this heading">¶</a></h2>
 <p>This algorithm is to find a k-core from an original graph, and a k-core is a maximal subgraph that contains vertices of degree <em>k</em> or more. The k-core is found by recursively pruning vertices with degrees less than <em>k</em>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="kkore">
-<span class="sig-name descname"><span class="pre">kkore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kkore" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">kkore</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kkore" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the k-core of the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -955,11 +954,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="k-shell">
-<h2>K-Shell<a class="headerlink" href="#k-shell" title="Permalink to this heading">¶</a></h2>
+<h2>K-Shell<a class="headerlink" href="#k-shell" title="Link to this heading">¶</a></h2>
 <p>The k-shell is the subgraph induced by vertices with core number <em>k</em>. That is, vertices in the k-core that are not in the (k+1)-core.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="kshell">
-<span class="sig-name descname"><span class="pre">kshell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kshell" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">kshell</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#kshell" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the k-shell of the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -970,11 +969,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="label-propagation-algorithm">
-<h2>Label Propagation Algorithm<a class="headerlink" href="#label-propagation-algorithm" title="Permalink to this heading">¶</a></h2>
+<h2>Label Propagation Algorithm<a class="headerlink" href="#label-propagation-algorithm" title="Link to this heading">¶</a></h2>
 <p>The Label Propagation Algorithm (LPA) is a fast algorithm for finding communities in a graph. It is an iterative algorithm where we assign labels to unlabelled vertices by propagating labels through the graph.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="lpa">
-<span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lpa" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lpa</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#lpa" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the label of each vertex in the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -985,21 +984,21 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="lcc">
-<h2>LCC<a class="headerlink" href="#lcc" title="Permalink to this heading">¶</a></h2>
+<h2>LCC<a class="headerlink" href="#lcc" title="Link to this heading">¶</a></h2>
 <p>The LCC is aims to compute the local clustering coefficient, follow the specification of LDBC</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id2">
-<span class="sig-name descname"><span class="pre">lcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">lcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the local clustering coefficient for each vertex in the graph.</p>
 </dd></dl>
 
 </section>
 <section id="pagerank">
-<h2>PageRank<a class="headerlink" href="#pagerank" title="Permalink to this heading">¶</a></h2>
+<h2>PageRank<a class="headerlink" href="#pagerank" title="Link to this heading">¶</a></h2>
 <p>PageRank is a way of measuring the importance of each vertices in a graph. The PageRank algorithm exists in many variants, the PageRank in GAE follows <a class="reference external" href="https://networkx.org/documentation/networkx-1.7/reference/generated/networkx.algorithms.link_analysis.pagerank_alg.pagerank.html">the PageRank implementation of NetworkX</a>.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id3">
-<span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">pagerank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_round</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tolerance</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the PageRank value for each vertex in the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1014,11 +1013,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="sampling-path">
-<h2>Sampling Path<a class="headerlink" href="#sampling-path" title="Permalink to this heading">¶</a></h2>
+<h2>Sampling Path<a class="headerlink" href="#sampling-path" title="Link to this heading">¶</a></h2>
 <p>This algorithm samples a set of paths starting from a root vertex with path length.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sampling_path">
-<span class="sig-name descname"><span class="pre">sampling_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sampling_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sampling_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cutoff</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sampling_path" title="Link to this definition">¶</a></dt>
 <dd><p>Compute a set of paths starting from a root vertex.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1032,11 +1031,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="single-source-shortest-paths">
-<h2>Single-Source Shortest Paths<a class="headerlink" href="#single-source-shortest-paths" title="Permalink to this heading">¶</a></h2>
+<h2>Single-Source Shortest Paths<a class="headerlink" href="#single-source-shortest-paths" title="Link to this heading">¶</a></h2>
 <p>The Single-Source Shortest Paths (SSSP) fixes a single vertex as the “source” vertex and finds shortest paths from the source to all other vertices in the graph.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="sssp">
-<span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sssp" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sssp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#sssp" title="Link to this definition">¶</a></dt>
 <dd><p>Compute shortest paths from a source vertex in the graph.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1047,11 +1046,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="voterank">
-<h2>VoteRank<a class="headerlink" href="#voterank" title="Permalink to this heading">¶</a></h2>
+<h2>VoteRank<a class="headerlink" href="#voterank" title="Link to this heading">¶</a></h2>
 <p>VoteRank is to measure a ranking of the vertices in a graph based on a voting scheme. With VoteRank, all vertices vote for each of its in-neighbors and the vertices with the top highest votes is elected iteratively.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id4">
-<span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">voterank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_of_nodes</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
 <dd><p>Select a list of influential vertices in a graph using VoteRank algorithm.</p>
 <dl class="myst field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1062,11 +1061,11 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
 
 </section>
 <section id="wcc">
-<h2>WCC<a class="headerlink" href="#wcc" title="Permalink to this heading">¶</a></h2>
+<h2>WCC<a class="headerlink" href="#wcc" title="Link to this heading">¶</a></h2>
 <p>Compute the weakly connected component</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">wcc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the weakly connected component in the graph.</p>
 </dd></dl>
 
@@ -1235,9 +1234,9 @@ See <a class="reference external" href="https://graphscope.io/docs/latest/analyt
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

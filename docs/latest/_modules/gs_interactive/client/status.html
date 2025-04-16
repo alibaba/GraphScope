@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>gs_interactive.client.status - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../_static/css/panels.css?v=0f22cee4" />
@@ -712,12 +711,16 @@ MathJax = {
 <span class="kn">from</span><span class="w"> </span><span class="nn">gs_interactive.models.api_response_with_code</span><span class="w"> </span><span class="kn">import</span> <span class="n">APIResponseWithCode</span>
 
 
-<div class="viewcode-block" id="Status"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Status</span><span class="p">:</span>
+<div class="viewcode-block" id="Status">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Status</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class represents the status of an operation. It contains the status code and the message.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="Status.__init__"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">StatusCode</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<div class="viewcode-block" id="Status.__init__">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">StatusCode</span><span class="p">,</span> <span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct a new Status object with the specified status code and message.</span>
 
@@ -728,31 +731,41 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">message</span> <span class="o">=</span> <span class="n">message</span></div>
 
+
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">, message: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Status: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="si">}</span><span class="s2">, message: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">message</span><span class="si">}</span><span class="s2">&quot;</span>
 
-<div class="viewcode-block" id="Status.is_ok"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.is_ok">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Status.is_ok">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.is_ok">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_ok</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether the operation is successful.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">OK</span></div>
 
-<div class="viewcode-block" id="Status.is_error"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.is_error">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">is_error</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+
+<div class="viewcode-block" id="Status.is_error">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.is_error">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_error</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Whether the operation is failed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">StatusCode</span><span class="o">.</span><span class="n">OK</span></div>
 
-<div class="viewcode-block" id="Status.get_code"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.get_code">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">get_code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Status.get_code">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.get_code">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_code</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the status code returned by the operation.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_message</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -763,7 +776,9 @@ MathJax = {
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">message</span>
 
     <span class="c1"># static method create a server internal error object</span>
-<div class="viewcode-block" id="Status.server_internal_error"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.server_internal_error">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="Status.server_internal_error">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.server_internal_error">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">server_internal_error</span><span class="p">(</span><span class="n">message</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a server internal error object with the specified message.</span>
@@ -771,7 +786,10 @@ MathJax = {
 
         <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">StatusCode</span><span class="o">.</span><span class="n">INTERNAL_ERROR</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Status.from_exception"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.from_exception">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Status.from_exception">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.from_exception">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_exception</span><span class="p">(</span><span class="n">exception</span><span class="p">:</span> <span class="n">ApiException</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a Status object from an ApiException.</span>
@@ -798,7 +816,10 @@ MathJax = {
             <span class="n">StatusCode</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">,</span> <span class="s2">&quot;Unknown Error from exception &quot;</span> <span class="o">+</span> <span class="n">exception</span><span class="o">.</span><span class="n">body</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Status.from_response"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.from_response">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Status.from_response">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.from_response">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">from_response</span><span class="p">(</span><span class="n">response</span><span class="p">:</span> <span class="n">ApiResponse</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a Status object from an ApiResponse.</span>
@@ -816,13 +837,18 @@ MathJax = {
                 <span class="p">)</span>
             <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">StatusCode</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">,</span> <span class="s2">&quot;Unknown Error&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Status.ok"><a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.ok">[docs]</a>    <span class="nd">@staticmethod</span>
+
+<div class="viewcode-block" id="Status.ok">
+<a class="viewcode-back" href="../../../flex/interactive/development/python/status.html#gs_interactive.client.status.Status.ok">[docs]</a>
+    <span class="nd">@staticmethod</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">ok</span><span class="p">():</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a successful status object.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">StatusCode</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">Status</span><span class="p">(</span><span class="n">StatusCode</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span> <span class="s2">&quot;OK&quot;</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
         </article>
       </div>
@@ -858,9 +884,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../_static/copybutton.js?v=f281be69"></script>

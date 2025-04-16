@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Programming Model: FLASH" href="flash.html" /><link rel="prev" title="Programming Model: PIE" href="programming_model_pie.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Ingress: Incrementalize Graph Algorithms - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,22 +691,22 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="ingress-incrementalize-graph-algorithms">
-<h1>Ingress: Incrementalize Graph Algorithms<a class="headerlink" href="#ingress-incrementalize-graph-algorithms" title="Permalink to this heading">¶</a></h1>
+<h1>Ingress: Incrementalize Graph Algorithms<a class="headerlink" href="#ingress-incrementalize-graph-algorithms" title="Link to this heading">¶</a></h1>
 <p>Ingress is an automated system for incremental graph processing. It is able to incrementalize batch vertex-centric algorithms into their incremental counterparts as a whole, without the need of redesigned logic or data structures from users. Underlying Ingress is an automated incrementalization framework equipped with four different memoization policies, to support all kinds of vertex-centric computations with optimized memory utilization.</p>
 <section id="motivation">
-<h2>Motivation<a class="headerlink" href="#motivation" title="Permalink to this heading">¶</a></h2>
+<h2>Motivation<a class="headerlink" href="#motivation" title="Link to this heading">¶</a></h2>
 <p>Most graph systems today are designed to compute over static graphs. When input changes occur, these systems have to recompute the entire algorithm on the new graph, which is costly and time-consuming. This is especially true for graphs with trillions of edges, such as e-commerce graphs that are constantly changing.</p>
 <p>To address this issue, incremental graph computation is needed. This involves applying a batch algorithm to compute the result over the original graph, followed by using an incremental algorithm to adjust the old result in response to input changes. Real-world changes are typically small, and there is often an overlap between the computation over the old graph and the recomputation on the new graph. This makes incremental computation more efficient, as it reduces the need for unnecessary recomputation. However, existing incremental graph systems have limitations, such as the need for manual intervention and the use of different memoization policies. This can be a burden for non-expert users.</p>
 </section>
 <section id="design-of-ingress">
-<h2>Design of Ingress<a class="headerlink" href="#design-of-ingress" title="Permalink to this heading">¶</a></h2>
+<h2>Design of Ingress<a class="headerlink" href="#design-of-ingress" title="Link to this heading">¶</a></h2>
 <section id="overview">
-<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading">¶</a></h3>
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h3>
 <p>In light of these challenges, Ingress is developed, which is an automated vertex-centric system for incremental graph processing. The overall structure of Ingress is shown in the following figure. Given a batch algorithm <em>A</em>, Ingress verifies the characteristics of <em>A</em> and deduces an incremental counterpart <em>∆A</em> automatically. It selects an appropriate memoization engine to record none or part of run-time intermediate states. Upon receiving graph updates, Ingress executes <em>∆A</em> to deliver updated results with the help of memoized states.</p>
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/ingress.png"><img alt="The Ingress architecture" src="../_images/ingress.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">The Ingress architecture.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">The Ingress architecture.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Ingress features the followings that differ from previous systems:</p>
@@ -718,12 +717,12 @@ MathJax = {
 </ul>
 </section>
 <section id="message-driven-differentiation">
-<h3>Message-driven Differentiation<a class="headerlink" href="#message-driven-differentiation" title="Permalink to this heading">¶</a></h3>
+<h3>Message-driven Differentiation<a class="headerlink" href="#message-driven-differentiation" title="Link to this heading">¶</a></h3>
 <p>Ingress’s incremental model for graph processing is based on message-driven differentiation.
 In a vertex-centric model, the (final) state of each vertex <em>v</em> is decided by the messages that <em>v</em> receives in different rounds of the iterative computation. Due to this property, we can reduce the problem of finding the differences among two runs of a batch vertex-centric algorithm to identifying the changes to messages. Then for incremental computation, after fetching the messages that differ in one round of the runs over original and updated graphs, it suffices to replay the computation on the affected areas that receive such changed messages, for state adjustment. After that, the changes to the messages are readily obtained for the next round and the algorithm can simply perform the above operations until all changed messages are found and processed. This coincides with the idea of change propagation.</p>
 </section>
 <section id="flexible-memoization">
-<h3>Flexible Memoization<a class="headerlink" href="#flexible-memoization" title="Permalink to this heading">¶</a></h3>
+<h3>Flexible Memoization<a class="headerlink" href="#flexible-memoization" title="Link to this heading">¶</a></h3>
 <p>A simple memoization strategy for detecting invalid and missing messages is to record all the old messages. Then the changed messages can be found by direct comparison between the messages created in the new run and those memoized ones.  Although this solution is general enough to incrementalize all vertex-centric algorithms, it usually causes overwhelming memory overheads, especially for algorithms that take a large number of rounds to converge.</p>
 <p>Ingress offers a flexible memoization scheme that can perform incrementalization under four different memoization policies:</p>
 <ul class="simple">
@@ -735,7 +734,7 @@ In a vertex-centric model, the (final) state of each vertex <em>v</em> is decide
 <p>Ingress could automatically select the optimal memoization policy for a given batch algorithm. For details on how it decides the optimal memoization policies, please refer to  a <a class="reference external" href="http://vldb.org/pvldb/vol14/p1613-gong.pdf">VLDB paper</a> published in 2021.</p>
 </section>
 <section id="ingress-api">
-<h3>Ingress API<a class="headerlink" href="#ingress-api" title="Permalink to this heading">¶</a></h3>
+<h3>Ingress API<a class="headerlink" href="#ingress-api" title="Link to this heading">¶</a></h3>
 <p>Ingress follows the well-known vertex-centric model and provides an API to users for writing batch vertex-centric algorithms. In this model, the template types of vertex states and edge properties are denoted by <em>D</em> and <em>W</em>, respectively. Users should set the initial values of the vertex states and messages using the <em>init_v</em> and <em>init_m</em> interfaces, respectively. The aggregation function is implemented using the aggregate interface, which has only two input parameters. However, this can be generalized to support different numbers of input parameters if <em>H</em> is associative.</p>
 <p>Although aggregate supports only two input parameters for simplicity, we also provide another interface for function that can take a vector of elements as input. The update function of the vertex-centric model is specified by the update interface, which adjusts vertex states. Additionally, the generate interface in the API corresponds to the propagation function <em>G</em>, which generates messages.</p>
 <div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">template</span><span class="w"> </span><span class="o">&lt;</span><span class="k">class</span><span class="w"> </span><span class="nc">D</span><span class="p">,</span><span class="w"> </span><span class="k">class</span><span class="w"> </span><span class="nc">W</span><span class="o">&gt;</span><span class="w"> </span>
@@ -763,7 +762,7 @@ In a vertex-centric model, the (final) state of each vertex <em>v</em> is decide
 </section>
 </section>
 <section id="distributed-runtime-engine">
-<h2>Distributed Runtime Engine<a class="headerlink" href="#distributed-runtime-engine" title="Permalink to this heading">¶</a></h2>
+<h2>Distributed Runtime Engine<a class="headerlink" href="#distributed-runtime-engine" title="Link to this heading">¶</a></h2>
 <p>The distributed runtime engine of Ingress is built on top of the fundamental modules of GraphScope. Ingress inherits the graph storage backend and graph partitioning strategies from GraphScope, which ensures a seamless integration between the two systems. In addition, Ingress has several new modules that enhance its functionality. These modules include:</p>
 <ul class="simple">
 <li><p><strong>Vertex-centric programming.</strong> Ingress extends the block-centric programming model to achieve vertex-centric programming. Specifically, Ingress spawns a new process on each worker to handle the assigned subgraph. It adopts the CSC/CSR optimized graph storage for fast query processing of the underlying graphs. For each vertex, it invokes the user-specified vertex-centric API to perform the aggregate, update, and generate computations. The generated messages are batched and sent out together after processing the whole subgraph in each iteration. Ingress relies on the message passing interface for efficient communication with other workers.</p></li>
@@ -852,9 +851,9 @@ In a vertex-centric model, the (final) state of each vertex <em>v</em> is decide
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

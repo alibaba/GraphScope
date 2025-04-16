@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.analytical.app.average_degree_connectivity - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/panels.css?v=0f22cee4" />
@@ -709,7 +708,9 @@ MathJax = {
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;average_degree_connectivity&quot;</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="average_degree_connectivity"><a class="viewcode-back" href="../../../../reference/app.html#graphscope.average_degree_connectivity">[docs]</a><span class="nd">@project_to_simple</span>
+<div class="viewcode-block" id="average_degree_connectivity">
+<a class="viewcode-back" href="../../../../reference/app.html#graphscope.average_degree_connectivity">[docs]</a>
+<span class="nd">@project_to_simple</span>
 <span class="nd">@not_compatible_for</span><span class="p">(</span><span class="s2">&quot;arrow_property&quot;</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">average_degree_connectivity</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s2">&quot;in+out&quot;</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;in+out&quot;</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the average degree connectivity of graph.</span>
@@ -784,6 +785,7 @@ MathJax = {
     <span class="n">degree_connectivity</span> <span class="o">=</span> <span class="n">res_list</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
     <span class="n">res</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">degree</span><span class="p">,</span> <span class="n">degree_connectivity</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">res</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -819,9 +821,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>

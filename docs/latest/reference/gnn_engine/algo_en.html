@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Developing Your Own Model - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="developing-your-own-model">
-<h1>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Permalink to this heading">¶</a></h1>
+<h1>Developing Your Own Model<a class="headerlink" href="#developing-your-own-model" title="Link to this heading">¶</a></h1>
 <p>In this document, we will introduce how to use the basic APIs provided
 by <strong>GL</strong> to cooperate with deep learning engines, such as TensorFlow,
 to build graph learning algorithms. We demonstrate the GCN model as an
@@ -703,7 +702,7 @@ introduced some basic concepts used in developing algorithms, such as
 concepts before continuing to read.</p>
 </section>
 <section id="how-to-build-a-graph-learning-algorithm">
-<h1>How to Build a Graph Learning Algorithm<a class="headerlink" href="#how-to-build-a-graph-learning-algorithm" title="Permalink to this heading">¶</a></h1>
+<h1>How to Build a Graph Learning Algorithm<a class="headerlink" href="#how-to-build-a-graph-learning-algorithm" title="Link to this heading">¶</a></h1>
 <p>In general, it requires the following four steps to build an algorithm</p>
 <ul>
 <li><p>Specify sampling mode: use graph sampling and query methods to sample
@@ -746,7 +745,7 @@ loss functions, optimizers and training processes.</p>
 </ul>
 <p>Next, we introduce how to implement a GCN model using the above 4 steps.</p>
 <section id="sampling">
-<h2>Sampling<a class="headerlink" href="#sampling" title="Permalink to this heading">¶</a></h2>
+<h2>Sampling<a class="headerlink" href="#sampling" title="Link to this heading">¶</a></h2>
 <p>We use the Cora dataset as the node classification example. We provide a
 simple data conversion script <code class="docutils literal notranslate"><span class="pre">cora.py</span></code> to convert the original Cora
 to the format required by <strong>GL</strong>. The script generates following 5
@@ -831,7 +830,7 @@ are so we use ‘full’ for sampling. We aggregate the sampling results in
 from <code class="docutils literal notranslate"><span class="pre">EgoFlow</span></code>.</p>
 </section>
 <section id="encoder">
-<h2>Encoder<a class="headerlink" href="#encoder" title="Permalink to this heading">¶</a></h2>
+<h2>Encoder<a class="headerlink" href="#encoder" title="Link to this heading">¶</a></h2>
 <p>Next, we first use the feature encoder to encode the original features.
 In this example, we use <code class="docutils literal notranslate"><span class="pre">IdentityEncoder</span></code> that returns itself, because
 the features of cora are already in vector formats. For the both
@@ -861,7 +860,7 @@ model, please refer to the implementation of GraphSAGE.</p>
 </div>
 </section>
 <section id="loss-function-and-training-process">
-<h2>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Permalink to this heading">¶</a></h2>
+<h2>Loss Function and Training Process<a class="headerlink" href="#loss-function-and-training-process" title="Link to this heading">¶</a></h2>
 <p>For the Cora node classification model, we can select the corresponding
 classification loss function in TensorFlow. Then, we combine the encoder
 and loss function in the <code class="docutils literal notranslate"><span class="pre">build</span></code> function, and finally return a data
@@ -946,9 +945,9 @@ as a starting point for building a similar model.</p>
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><link rel="next" title="Functions" href="functions.html" /><link rel="prev" title="Graph Transformation" href="transformation.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Builtin algorithms - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../_static/css/panels.css?v=0f22cee4" />
@@ -692,10 +691,10 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section id="builtin-algorithms">
-<span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Permalink to this heading">¶</a></h1>
+<span id="builtin"></span><h1>Builtin algorithms<a class="headerlink" href="#builtin-algorithms" title="Link to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.hits">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.hits" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">hits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.hits" title="Link to this definition">¶</a></dt>
 <dd><p>Returns HITS hubs and authorities values for nodes.</p>
 <p>The HITS algorithm computes two numbers for a node.
 Authorities estimates the node value based on the incoming links.
@@ -757,7 +756,7 @@ http://www.cs.cornell.edu/home/kleinber/auth.pdf.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.degree_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.degree_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.degree_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the degree centrality for nodes.</p>
 <p>The degree centrality for a node v is the fraction of nodes it
 is connected to.</p>
@@ -786,7 +785,7 @@ are possible.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.in_degree_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">in_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.in_degree_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">in_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.in_degree_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the in-degree centrality for nodes.</p>
 <p>The in-degree centrality for a node v is the fraction of nodes its
 incoming edges are connected to.</p>
@@ -818,7 +817,7 @@ are possible.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.out_degree_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">out_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.out_degree_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">out_degree_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.out_degree_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the out-degree centrality for nodes.</p>
 <p>The out-degree centrality for a node v is the fraction of nodes its
 outgoing edges are connected to.</p>
@@ -850,7 +849,7 @@ are possible.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.eigenvector_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.eigenvector_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">eigenvector_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.eigenvector_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the eigenvector centrality for the graph <cite>G</cite>.</p>
 <p>Eigenvector centrality computes the centrality for a node based on the
 centrality of its neighbors. The eigenvector centrality for node $i$ is
@@ -937,7 +936,7 @@ Oxford University Press, USA, 2010, pp. 169.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.katz_centrality">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.katz_centrality" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">katz_centrality</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nstart</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalized</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.katz_centrality" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the Katz centrality for the nodes of the graph G.</p>
 <p>Katz centrality computes the centrality for a node based on the centrality
 of its neighbors. It is a generalization of the eigenvector centrality. The
@@ -1046,12 +1045,12 @@ Psychometrika 18(1):39–43, 1953
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.has_path">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">has_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.has_path" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">has_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.has_path" title="Link to this definition">¶</a></dt>
 <dd><p>Returns <em>True</em> if <em>G</em> has a path from <em>source</em> to <em>target</em>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>NetworkX graph</em>)</p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Starting node for path</p></li>
 <li><p><strong>target</strong> (<em>node</em>) – Ending node for path</p></li>
 </ul>
@@ -1061,7 +1060,7 @@ Psychometrika 18(1):39–43, 1953
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.average_shortest_path_length">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_shortest_path_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_shortest_path_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_shortest_path_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_shortest_path_length" title="Link to this definition">¶</a></dt>
 <dd><p>Returns the average shortest path length.</p>
 <p>The average shortest path length is</p>
 <div class="math-wrapper docutils container">
@@ -1074,7 +1073,7 @@ and <cite>n</cite> is the number of nodes in <cite>G</cite>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>NetworkX graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>NetworkX graph</em>)</p></li>
 <li><p><strong>weight</strong> (<em>None</em><em>, </em><em>string</em><em> or </em><em>function</em><em>, </em><em>optional</em><em> (</em><em>default = None</em><em>)</em>) – If None, every edge has weight/distance/cost 1.
 If a string, use this edge attribute as the edge weight.
 Any edge attribute not present defaults to 1.
@@ -1119,12 +1118,12 @@ length for each component</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.bfs_edges">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">bfs_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.bfs_edges" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">bfs_edges</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.bfs_edges" title="Link to this definition">¶</a></dt>
 <dd><p>edges in a breadth-first-search starting at source.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>networkx graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>networkx graph</em>)</p></li>
 <li><p><strong>source</strong> (<em>node</em>) – Specify starting node for breadth-first search; this function
 iterates over only those edges in the component reachable from
 this node.</p></li>
@@ -1151,7 +1150,7 @@ this node.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.k_core">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.k_core" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">k_core</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core_number</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.k_core" title="Link to this definition">¶</a></dt>
 <dd><p>Returns the k-core of G.</p>
 <p>A k-core is a maximal subgraph that contains nodes of degree k or more.</p>
 <dl class="field-list simple">
@@ -1182,7 +1181,7 @@ Vladimir Batagelj and Matjaz Zaversnik,  2003.
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.clustering" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the clustering coefficient for nodes.</p>
 <p>For unweighted graphs, the clustering of a node <span class="math notranslate nohighlight">\(u\)</span>
 is the fraction of possible triangles through that node that exist,</p>
@@ -1219,7 +1218,7 @@ edge weights for unweighted and weighted directed graph respectively <a class="f
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>graph</em>)</p></li>
 <li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute clustering for nodes in this container.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
 If None, then each edge has weight 1.</p></li>
@@ -1272,7 +1271,7 @@ Physical Review E, 76(2), 026107 (2007).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.triangles">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.triangles" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.triangles" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the number of triangles.</p>
 <p>Finds the number of triangles that include a node as one vertex.</p>
 <dl class="field-list simple">
@@ -1306,7 +1305,7 @@ three times, once at each node.  Self loops are ignored.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="graphscope.nx.builtin.average_clustering">
-<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Permalink to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">graphscope.nx.builtin.</span></span><span class="sig-name descname"><span class="pre">average_clustering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">G</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">count_zeros</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#graphscope.nx.builtin.average_clustering" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the average clustering coefficient for the graph G.</p>
 <p>The clustering coefficient for the graph is the average,</p>
 <div class="math-wrapper docutils container">
@@ -1317,7 +1316,7 @@ three times, once at each node.  Self loops are ignored.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>G</strong> (<em>graph</em>) – </p></li>
+<li><p><strong>G</strong> (<em>graph</em>)</p></li>
 <li><p><strong>nodes</strong> (<em>container</em><em> of </em><em>nodes</em><em>, </em><em>optional</em><em> (</em><em>default=all nodes in G</em><em>)</em>) – Compute average clustering for nodes in this container.</p></li>
 <li><p><strong>weight</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>optional</em><em> (</em><em>default=None</em><em>)</em>) – The edge attribute that holds the numerical value used as a weight.
 If None, then each edge has weight 1.</p></li>
@@ -1444,9 +1443,9 @@ nodes and leafs on clustering measures for small-world networks.
       
     </aside>
   </div>
-</div><script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../_static/copybutton.js?v=f281be69"></script>

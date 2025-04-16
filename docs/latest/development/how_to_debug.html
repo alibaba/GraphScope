@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Debugging on local deployment - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -693,10 +692,10 @@ MathJax = {
         <article role="main" id="furo-main-content">
           <p>This document shows how to debugging GraphScope under various conditions.</p>
 <section id="debugging-on-local-deployment">
-<h1>Debugging on local deployment<a class="headerlink" href="#debugging-on-local-deployment" title="Permalink to this heading">¶</a></h1>
+<h1>Debugging on local deployment<a class="headerlink" href="#debugging-on-local-deployment" title="Link to this heading">¶</a></h1>
 </section>
 <section id="find-the-logs">
-<h1>Find the logs<a class="headerlink" href="#find-the-logs" title="Permalink to this heading">¶</a></h1>
+<h1>Find the logs<a class="headerlink" href="#find-the-logs" title="Link to this heading">¶</a></h1>
 <p>Most of the logs will be streamed through the stdout of client, you could control the log level by</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
 <span class="n">graphscope</span><span class="o">.</span><span class="n">set_option</span><span class="p">(</span><span class="n">show_log</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -710,11 +709,11 @@ MathJax = {
 <li><p>Learning Engine: <code class="docutils literal notranslate"><span class="pre">graphlearn.INFO</span></code> in the current directory.</p></li>
 </ul>
 <section id="debugging-on-kubernetes-deployment">
-<h2>Debugging on Kubernetes deployment<a class="headerlink" href="#debugging-on-kubernetes-deployment" title="Permalink to this heading">¶</a></h2>
+<h2>Debugging on Kubernetes deployment<a class="headerlink" href="#debugging-on-kubernetes-deployment" title="Link to this heading">¶</a></h2>
 </section>
 </section>
 <section id="id1">
-<h1>Find the logs<a class="headerlink" href="#id1" title="Permalink to this heading">¶</a></h1>
+<h1>Find the logs<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h1>
 <p>In kubernetes environment, besides most of the logs still output to console, you could find detailed logs in each pod’s stdout, or files inside each pods.</p>
 <p>Note: You could use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">&lt;pod&gt;</span></code> to inspect the stdout of the pod. Use <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">logs</span> <span class="pre">&lt;pod&gt;</span> <span class="pre">-c</span> <span class="pre">&lt;container&gt;</span></code> to inspect a specific container inside the pod.</p>
 <ul class="simple">
@@ -724,7 +723,7 @@ MathJax = {
 </ul>
 </section>
 <section id="commands-for-debugging">
-<h1>Commands for Debugging<a class="headerlink" href="#commands-for-debugging" title="Permalink to this heading">¶</a></h1>
+<h1>Commands for Debugging<a class="headerlink" href="#commands-for-debugging" title="Link to this heading">¶</a></h1>
 <p>Here is list with commands usually used for checking the status of the GraphScope deployment on K8s.</p>
 <ul class="simple">
 <li><p>Check the status of the pods in a specific namespace <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">pods</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
@@ -734,7 +733,7 @@ MathJax = {
 <li><p>Check the configuration of a resource: <code class="docutils literal notranslate"><span class="pre">kubectl</span> <span class="pre">get</span> <span class="pre">&lt;resource-type&gt;</span> <span class="pre">&lt;resource-name&gt;</span> <span class="pre">-o</span> <span class="pre">yaml</span> <span class="pre">-n</span> <span class="pre">&lt;namespace&gt;</span></code></p></li>
 </ul>
 <section id="debugging-techniques">
-<h2>Debugging Techniques<a class="headerlink" href="#debugging-techniques" title="Permalink to this heading">¶</a></h2>
+<h2>Debugging Techniques<a class="headerlink" href="#debugging-techniques" title="Link to this heading">¶</a></h2>
 <ul>
 <li><p>Verify that the Docker image used in the deployment is correct and can be pulled by Kubernetes.</p></li>
 <li><p>Check the logs of the container in the pod to see if there are any error messages or warnings that could indicate the source of the problem.</p></li>
@@ -786,9 +785,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

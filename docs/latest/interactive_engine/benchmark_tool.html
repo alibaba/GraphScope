@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Design of GIE" href="design_of_gie.html" /><link rel="prev" title="Graph Planner Interface by JNI and RESTful API" href="graph_planner.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>A Generic Benchmark Tool - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,11 +691,11 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="a-generic-benchmark-tool">
-<h1>A Generic Benchmark Tool<a class="headerlink" href="#a-generic-benchmark-tool" title="Permalink to this heading">¶</a></h1>
+<h1>A Generic Benchmark Tool<a class="headerlink" href="#a-generic-benchmark-tool" title="Link to this heading">¶</a></h1>
 <p>We provide a benchmarking tool to evaluate the performance of Interactive Engine. This tool acts as multiple clients that send queries (Gremlin, or Cypher) to the server through the corresponding endpoint exposed by the engine. It reports performance metrics such as latency, throughput, and query results.</p>
 <p>Notably, the tool has recently been enhanced to support comprehensive comparisons of different systems and a variety of benchmark workloads, enabling thorough assessments and comparison of query correctness and performance.</p>
 <section id="benchmark-tool-overview">
-<h2>Benchmark Tool Overview<a class="headerlink" href="#benchmark-tool-overview" title="Permalink to this heading">¶</a></h2>
+<h2>Benchmark Tool Overview<a class="headerlink" href="#benchmark-tool-overview" title="Link to this heading">¶</a></h2>
 <p>Here are some key features of the benchmark tool:</p>
 <ul class="simple">
 <li><p><strong>Multiple Query Languages</strong>. The tool accommodates various graph query languages, including Gremlin and Cypher, allowing systems to configure according to their specific language support.</p></li>
@@ -706,12 +705,12 @@ MathJax = {
 </ul>
 </section>
 <section id="benchmark-tool-usage">
-<h2>Benchmark Tool Usage<a class="headerlink" href="#benchmark-tool-usage" title="Permalink to this heading">¶</a></h2>
+<h2>Benchmark Tool Usage<a class="headerlink" href="#benchmark-tool-usage" title="Link to this heading">¶</a></h2>
 <p>The benchark tool is provided in <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark">here</a>.
 The benchmark program sends mixed queries to the server by reading query templates from <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/queries">queries</a> with filling the parameters in the query templates using <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/data/substitution_parameters">substitution_parameters</a>.
 The program uses a round-robin strategy to iterate all the <strong>enabled</strong> queries with corresponding parameters.</p>
 <section id="repository-contents">
-<h3>Repository contents<a class="headerlink" href="#repository-contents" title="Permalink to this heading">¶</a></h3>
+<h3>Repository contents<a class="headerlink" href="#repository-contents" title="Link to this heading">¶</a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">-</span> <span class="nb">bin</span>
     <span class="o">-</span> <span class="n">bench</span><span class="o">.</span><span class="n">sh</span>                          <span class="o">//</span> <span class="n">script</span> <span class="k">for</span> <span class="n">running</span> <span class="n">benchmark</span> <span class="k">for</span> <span class="n">queries</span>
     <span class="o">-</span> <span class="n">collect</span><span class="o">.</span><span class="n">sh</span>                        <span class="o">//</span> <span class="n">script</span> <span class="k">for</span> <span class="n">collecting</span> <span class="n">benchmark</span> <span class="n">results</span>
@@ -734,7 +733,7 @@ The gremlin queries should be with suffix <em>.gremlin</em>, and cypher queries 
 The corresponding parameters (factor 1) for LDBC queries are generated by <a class="reference external" href="http://github.com/ldbc/ldbc_snb_datagen">LDBC official tools</a>.</p>
 </section>
 <section id="building-the-benchmark">
-<h3>Building the benchmark<a class="headerlink" href="#building-the-benchmark" title="Permalink to this heading">¶</a></h3>
+<h3>Building the benchmark<a class="headerlink" href="#building-the-benchmark" title="Link to this heading">¶</a></h3>
 <p>Build benchmark program using Maven:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mvn<span class="w"> </span>clean<span class="w"> </span>package
 </pre></div>
@@ -743,7 +742,7 @@ The corresponding parameters (factor 1) for LDBC queries are generated by <a cla
 and you can use deploy the package to anywhere could connect to the gremlin endpoint (which should be provided in interactive-benchmark.properties).</p>
 </section>
 <section id="running-the-benchmark">
-<h3>Running the benchmark<a class="headerlink" href="#running-the-benchmark" title="Permalink to this heading">¶</a></h3>
+<h3>Running the benchmark<a class="headerlink" href="#running-the-benchmark" title="Link to this heading">¶</a></h3>
 <p>You can unzip built <em>target/benchmark-0.0.1-SNAPSHOT-dist.tar.gz</em>, and run the benchmark.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>target
 tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAPSHOT-dist.tar.gz
@@ -773,7 +772,7 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
 </div>
 </section>
 <section id="collecting-the-results">
-<h3>Collecting the results<a class="headerlink" href="#collecting-the-results" title="Permalink to this heading">¶</a></h3>
+<h3>Collecting the results<a class="headerlink" href="#collecting-the-results" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bin/collect.sh<span class="w">                      </span><span class="c1"># run the result collection program to collect the results and generate a performance comparison table</span>
 </pre></div>
 </div>
@@ -874,11 +873,11 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
 </section>
 </section>
 <section id="configurations">
-<h2>Configurations<a class="headerlink" href="#configurations" title="Permalink to this heading">¶</a></h2>
+<h2>Configurations<a class="headerlink" href="#configurations" title="Link to this heading">¶</a></h2>
 <p>All detailed configurations can be found in <code class="docutils literal notranslate"><span class="pre">config/interactive-benchmark.properties</span></code>.</p>
 <p>Below we highlight some key settings.</p>
 <section id="configure-compared-systems">
-<h3>Configure Compared Systems<a class="headerlink" href="#configure-compared-systems" title="Permalink to this heading">¶</a></h3>
+<h3>Configure Compared Systems<a class="headerlink" href="#configure-compared-systems" title="Link to this heading">¶</a></h3>
 <p>We facilitate comparisons between various graph systems. For instance, to compare the GIE and Kuzu systems, the interactive-benchmark.properties file can be configured as follows. The Benchmark Tool will subsequently send queries to both GIE and Kuzu, gathering and analyzing their results.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The configuration for the compared systems.</span>
 <span class="c1"># Currently, the supported systems includes GIE and KuzuDb.</span>
@@ -900,7 +899,7 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
 </div>
 </section>
 <section id="configure-workloads">
-<h3>Configure Workloads<a class="headerlink" href="#configure-workloads" title="Permalink to this heading">¶</a></h3>
+<h3>Configure Workloads<a class="headerlink" href="#configure-workloads" title="Link to this heading">¶</a></h3>
 <p>Currently, we have provided commonly used benchmark workloads including ic, bi, lsqb, and job. Users can also add their own benchmarking queries to <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/queries">queries</a> as well as adding substitution parameters of queries to <a class="reference external" href="https://github.com/alibaba/GraphScope/tree/main/interactive_engine/benchmark/data/substitution_parameters">substitution_parameters</a>. Note that the file name of user-defined query templates should follow the prefix <em>custom_query</em> or <em>custom_constant_query</em>. The difference between custom_query and custom_constant_query is that the latter has no corresponding parameters.</p>
 <p>Taking JOB benchmark as an example, the related configuration is as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># The configuration for the benchmarking workloads.</span>
@@ -917,7 +916,7 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
 </div>
 </section>
 <section id="configure-results-collection">
-<h3>Configure Results Collection<a class="headerlink" href="#configure-results-collection" title="Permalink to this heading">¶</a></h3>
+<h3>Configure Results Collection<a class="headerlink" href="#configure-results-collection" title="Link to this heading">¶</a></h3>
 <p>By default, benchmark results will be output to the <code class="docutils literal notranslate"><span class="pre">interactive-benchmark.log</span></code> and <code class="docutils literal notranslate"><span class="pre">interactive-benchmark-report.md</span></code> files, as exemplified in the sections “Running the benchmark” and “Collecting the results” above. Specifically, if you want to further compare query correctness under the current workloads, you can provide the corresponding configuration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># the directory of query results which is optional. if provided, the benchmarking results will be compared with the expected results.</span>
 <span class="n">query</span><span class="o">.</span><span class="n">expected</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="o">./</span><span class="n">data</span><span class="o">/</span><span class="n">expected_results</span><span class="o">/</span><span class="n">job_expected</span><span class="o">.</span><span class="n">json</span>
@@ -1012,9 +1011,9 @@ tar<span class="w"> </span>-xvf<span class="w"> </span>gaia-benchmark-0.0.1-SNAP
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

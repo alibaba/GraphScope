@@ -1,8 +1,7 @@
 <map id="gs::SingleMutableCsr&lt; RecordView &gt;::RecordNbr" name="gs::SingleMutableCsr&lt; RecordView &gt;::RecordNbr">
-<area shape="rect" id="node1" title=" " alt="" coords="27,303,232,344"/>
-<area shape="rect" id="node2" href="$structgs_1_1MutableNbr.html" title=" " alt="" coords="5,213,195,240"/>
-<area shape="rect" id="node3" href="$classgs_1_1Table.html" title=" " alt="" coords="219,213,298,240"/>
-<area shape="rect" id="node4" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="189,109,329,151"/>
-<area shape="rect" id="node5" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="61,5,249,47"/>
-<area shape="rect" id="node6" href="$structgs_1_1GHash.html" title=" " alt="" coords="273,13,455,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="27,289,232,331"/>
+<area shape="rect" id="node2" href="$structgs_1_1MutableNbr.html" title=" " alt="" coords="5,200,195,227"/>
+<area shape="rect" id="node3" href="$classgs_1_1Table.html" title=" " alt="" coords="219,200,298,227"/>
+<area shape="rect" id="node4" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="189,96,329,137"/>
+<area shape="rect" id="node5" href="$classgs_1_1IdIndexerBase.html" title=" " alt="" coords="185,5,333,47"/>
 </map>

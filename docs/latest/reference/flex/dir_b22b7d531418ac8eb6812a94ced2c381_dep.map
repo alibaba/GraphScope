@@ -1,16 +1,16 @@
 <map id="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database" name="/home/runner/work/GraphScope/GraphScope/flex/engines/graph_db/database">
-<area shape="rect" id="node2" href="dir_a8273d77570bd975a101d4b4a8cd5689.html" title="wal" alt="" coords="37,159,109,207"/>
-<area shape="rect" id="edge3-headlabel" href="dir_000005_000006.html" title="7" alt="" coords="79,134,89,148"/>
-<area shape="rect" id="node3" href="dir_a95fcce11a0807c0de49b10c3984b702.html" title="utils" alt="" coords="184,159,256,207"/>
-<area shape="rect" id="edge2-headlabel" href="dir_000005_000011.html" title="21" alt="" coords="166,134,183,149"/>
-<area shape="rect" id="node4" href="dir_0bdd5b7109e05b9939ed9c1c6f217959.html" title="storages" alt="" coords="181,255,259,303"/>
-<area shape="rect" id="edge4-headlabel" href="dir_000005_000007.html" title="22" alt="" coords="181,228,198,243"/>
-<area shape="rect" id="node5" href="dir_d6f73bcc22dbded39dcd0a634c0788cb.html" title="app" alt="" coords="168,63,240,111"/>
-<area shape="rect" id="edge5-headlabel" href="dir_000005_000003.html" title="12" alt="" coords="141,71,158,86"/>
-<area shape="rect" id="edge1-headlabel" href="dir_000011_000007.html" title="1" alt="" coords="215,229,224,243"/>
-<area shape="rect" id="edge6-headlabel" href="dir_000007_000011.html" title="21" alt="" coords="212,218,229,233"/>
-<area shape="rect" id="edge8-headlabel" href="dir_000003_000005.html" title="12" alt="" coords="130,88,147,102"/>
-<area shape="rect" id="edge7-headlabel" href="dir_000003_000011.html" title="1" alt="" coords="217,132,226,147"/>
-<area shape="rect" id="clust2" href="dir_b22b7d531418ac8eb6812a94ced2c381.html" alt="" coords="27,52,131,217"/>
-<area shape="rect" id="clust1" href="dir_36ec3549fd5133a6f61eb5067c6256de.html" title="graph_db" alt="" coords="16,16,141,228"/>
+<area shape="rect" id="node1" href="dir_d6f73bcc22dbded39dcd0a634c0788cb.html" title="app" alt="" coords="51,52,123,100"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000003_000005.html" title="12" alt="" coords="91,124,108,139"/>
+<area shape="rect" id="node5" href="dir_a95fcce11a0807c0de49b10c3984b702.html" title="utils" alt="" coords="184,244,256,292"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000003_000011.html" title="1" alt="" coords="199,217,209,231"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000005_000003.html" title="12" alt="" coords="57,110,74,124"/>
+<area shape="rect" id="node3" href="dir_a8273d77570bd975a101d4b4a8cd5689.html" title="wal" alt="" coords="37,244,109,292"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000005_000006.html" title="7" alt="" coords="79,219,89,234"/>
+<area shape="rect" id="node4" href="dir_0bdd5b7109e05b9939ed9c1c6f217959.html" title="storages" alt="" coords="181,340,259,388"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000005_000007.html" title="22" alt="" coords="181,314,198,328"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000005_000011.html" title="21" alt="" coords="166,219,183,234"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000007_000011.html" title="21" alt="" coords="212,304,229,318"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000011_000007.html" title="1" alt="" coords="215,314,224,329"/>
+<area shape="rect" id="clust2" href="dir_b22b7d531418ac8eb6812a94ced2c381.html" alt="" coords="27,137,131,303"/>
+<area shape="rect" id="clust1" href="dir_36ec3549fd5133a6f61eb5067c6256de.html" title="graph_db" alt="" coords="16,16,141,313"/>
 </map>

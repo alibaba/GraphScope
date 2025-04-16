@@ -1,10 +1,9 @@
 <map id="gs::CompactTransaction" name="gs::CompactTransaction">
-<area shape="rect" id="node1" title=" " alt="" coords="199,407,376,433"/>
-<area shape="rect" id="node2" href="$classgs_1_1VersionManager.html" title=" " alt="" coords="5,317,156,344"/>
-<area shape="rect" id="node3" href="$classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="180,317,395,344"/>
-<area shape="rect" id="node4" href="$classgs_1_1Schema.html" title=" " alt="" coords="239,228,336,255"/>
-<area shape="rect" id="node5" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="217,109,357,151"/>
-<area shape="rect" id="node6" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="89,5,277,47"/>
-<area shape="rect" id="node7" href="$structgs_1_1GHash.html" title=" " alt="" coords="301,13,484,39"/>
-<area shape="rect" id="node8" href="$classgs_1_1IWalWriter.html" title=" " alt="" coords="419,317,532,344"/>
+<area shape="rect" id="node1" title=" " alt="" coords="199,393,376,420"/>
+<area shape="rect" id="node2" href="$classgs_1_1VersionManager.html" title=" " alt="" coords="5,304,156,331"/>
+<area shape="rect" id="node3" href="$classgs_1_1MutablePropertyFragment.html" title=" " alt="" coords="180,304,395,331"/>
+<area shape="rect" id="node4" href="$classgs_1_1Schema.html" title=" " alt="" coords="239,215,336,241"/>
+<area shape="rect" id="node5" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="217,96,357,137"/>
+<area shape="rect" id="node6" href="$classgs_1_1IdIndexerBase.html" title=" " alt="" coords="213,5,361,47"/>
+<area shape="rect" id="node7" href="$classgs_1_1IWalWriter.html" title=" " alt="" coords="419,304,532,331"/>
 </map>

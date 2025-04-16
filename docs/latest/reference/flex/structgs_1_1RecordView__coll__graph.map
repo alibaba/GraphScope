@@ -1,7 +1,6 @@
 <map id="gs::RecordView" name="gs::RecordView">
-<area shape="rect" id="node1" title=" " alt="" coords="142,303,265,329"/>
-<area shape="rect" id="node2" href="$classgs_1_1Table.html" title=" " alt="" coords="164,213,243,240"/>
-<area shape="rect" id="node3" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="133,109,273,151"/>
-<area shape="rect" id="node4" href="$structgs_1_1id__indexer__impl_1_1KeyBuffer_3_01std_1_1string_01_4.html" title=" " alt="" coords="5,5,193,47"/>
-<area shape="rect" id="node5" href="$structgs_1_1GHash.html" title=" " alt="" coords="217,13,400,39"/>
+<area shape="rect" id="node1" title=" " alt="" coords="18,289,141,316"/>
+<area shape="rect" id="node2" href="$classgs_1_1Table.html" title=" " alt="" coords="40,200,119,227"/>
+<area shape="rect" id="node3" href="$classgs_1_1IdIndexer.html" title=" " alt="" coords="9,96,149,137"/>
+<area shape="rect" id="node4" href="$classgs_1_1IdIndexerBase.html" title=" " alt="" coords="5,5,153,47"/>
 </map>

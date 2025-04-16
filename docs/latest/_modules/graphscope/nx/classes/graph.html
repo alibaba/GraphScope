@@ -1,17 +1,16 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../../../../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>graphscope.nx.classes.graph - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/css/panels.css?v=0f22cee4" />
@@ -745,7 +744,9 @@ MathJax = {
     <span class="k">pass</span>
 
 
-<div class="viewcode-block" id="Graph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph">[docs]</a><span class="k">class</span><span class="w"> </span><span class="nc">Graph</span><span class="p">(</span><span class="n">_GraphBase</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Graph</span><span class="p">(</span><span class="n">_GraphBase</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for undirected graphs.</span>
 
@@ -953,11 +954,16 @@ MathJax = {
     <span class="k">def</span><span class="w"> </span><span class="nf">to_directed_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">nx</span><span class="o">.</span><span class="n">DiGraph</span>
 
-<div class="viewcode-block" id="Graph.to_undirected_class"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">)</span>
+<div class="viewcode-block" id="Graph.to_undirected_class">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected_class">[docs]</a>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">to_undirected_class</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_undirected_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Graph</span></div>
 
-<div class="viewcode-block" id="Graph.__init__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__init__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.__init__">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__init__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize a graph with graph, edges, name, or graph attributes</span>
 
 <span class="sd">        Parameters</span>
@@ -1059,6 +1065,7 @@ MathJax = {
             <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_unload_op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">unload_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_is_gs_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">incoming_graph_data</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
@@ -1223,7 +1230,9 @@ MathJax = {
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;override default __deepcopy__&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Graph.__iter__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__iter__">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+<div class="viewcode-block" id="Graph.__iter__">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__iter__">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterate over the nodes. Use: &#39;for n in G&#39;.</span>
 
@@ -1242,7 +1251,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_node</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.__contains__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__contains__">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.__contains__">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__contains__">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if n is a node, False otherwise. Use: &#39;n in G&#39;.</span>
 
@@ -1261,7 +1273,10 @@ MathJax = {
         <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="n">NetworkXError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Graph.__len__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__len__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.__len__">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__len__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of nodes in the graph. Use: &#39;len(G)&#39;.</span>
 
 <span class="sd">        Returns</span>
@@ -1282,7 +1297,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.__getitem__"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__getitem__">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.__getitem__">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.__getitem__">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a dict of neighbors of node n.  Use: &#39;G[n]&#39;.</span>
 
 <span class="sd">        Parameters</span>
@@ -1308,7 +1326,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj</span><span class="p">[</span><span class="n">n</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Graph.add_node"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_node">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.add_node">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_node">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">node_for_adding</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a single node `node_for_adding` and update node attributes.</span>
 
@@ -1346,7 +1367,10 @@ MathJax = {
             <span class="p">(</span><span class="n">node_for_adding</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span> <span class="k">else</span> <span class="n">node_for_adding</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.add_nodes_from"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_nodes_from">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.add_nodes_from">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_nodes_from">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes_for_adding</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add multiple nodes.</span>
 
@@ -1400,7 +1424,10 @@ MathJax = {
             <span class="k">except</span> <span class="p">(</span><span class="ne">TypeError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.remove_node"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_node">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.remove_node">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_node">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove node n.</span>
 
@@ -1434,7 +1461,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_node_cache</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.remove_nodes_from"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_nodes_from">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.remove_nodes_from">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_nodes_from">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_nodes_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes_for_removing</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove multiple nodes.</span>
 
@@ -1463,6 +1493,7 @@ MathJax = {
         <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">nodes_for_removing</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_node</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></div>
 
+
     <span class="nd">@property</span>
     <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">nodes</span><span class="p">)</span>
@@ -1471,7 +1502,9 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="p">[</span><span class="s2">&quot;nodes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">nodes</span>
         <span class="k">return</span> <span class="n">nodes</span>
 
-<div class="viewcode-block" id="Graph.number_of_nodes"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_nodes">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+<div class="viewcode-block" id="Graph.number_of_nodes">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_nodes">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">number_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of nodes in the graph.</span>
 
@@ -1494,7 +1527,10 @@ MathJax = {
         <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">archive</span><span class="o">.</span><span class="n">get_size</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.order"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.order">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.order">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.order">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">order</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of nodes in the graph.</span>
 
 <span class="sd">        Returns</span>
@@ -1514,7 +1550,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_nodes</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.has_node"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.has_node">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Graph.has_node">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.has_node">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">has_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if the graph contains the node n.</span>
 
 <span class="sd">        Identical to `n in G`</span>
@@ -1537,7 +1576,10 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">n</span> <span class="ow">in</span> <span class="bp">self</span></div>
 
-<div class="viewcode-block" id="Graph.add_edge"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_edge">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.add_edge">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_edge">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an edge between u and v.</span>
 
@@ -1593,7 +1635,10 @@ MathJax = {
             <span class="p">(</span><span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">if</span> <span class="n">attr</span> <span class="k">else</span> <span class="p">(</span><span class="n">u_of_edge</span><span class="p">,</span> <span class="n">v_of_edge</span><span class="p">)</span>
         <span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.add_edges_from"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_edges_from">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.add_edges_from">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_edges_from">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch_to_add</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add all the edges in ebunch_to_add.</span>
 
@@ -1647,7 +1692,10 @@ MathJax = {
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.add_weighted_edges_from"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_weighted_edges_from">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.add_weighted_edges_from">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.add_weighted_edges_from">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_weighted_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch_to_add</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="s2">&quot;weight&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Add weighted edges in `ebunch_to_add` with specified weight attr</span>
 
@@ -1682,13 +1730,19 @@ MathJax = {
             <span class="n">attr</span><span class="p">[</span><span class="n">weight</span><span class="p">]</span> <span class="o">=</span> <span class="n">d</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="o">**</span><span class="n">attr</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.remove_edge"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_edge">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.remove_edge">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_edge">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_convert_arrow_to_dynamic</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_edge_cache</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Graph.remove_edges_from"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_edges_from">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.remove_edges_from">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.remove_edges_from">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">remove_edges_from</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ebunch</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all edges specified in ebunch.</span>
 
@@ -1721,7 +1775,10 @@ MathJax = {
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Edge tuple </span><span class="si">%s</span><span class="s2"> must be a 2-tuple or 3-tuple.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">e</span><span class="p">,))</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">remove_edge</span><span class="p">(</span><span class="n">e</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">e</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
 
-<div class="viewcode-block" id="Graph.set_edge_data"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.set_edge_data">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.set_edge_data">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.set_edge_data">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_edge_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set edge data of edge (u, v).</span>
 
@@ -1757,7 +1814,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear_neighbor_attr_cache</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.set_node_data"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.set_node_data">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.set_node_data">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.set_node_data">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">set_node_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Set data of node.</span>
 
@@ -1793,7 +1853,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear_node_attr_cache</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.update"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.update">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.update">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.update">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the graph using nodes/edges/graphs as input.</span>
 
@@ -1859,7 +1922,10 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;update needs nodes or edges input&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.size"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.size">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.size">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.size">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of edges or total of all edge weights.</span>
 
@@ -1902,7 +1968,10 @@ MathJax = {
         <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">archive</span><span class="o">.</span><span class="n">get_size</span><span class="p">()</span> <span class="o">//</span> <span class="mi">2</span></div>
 
-<div class="viewcode-block" id="Graph.number_of_edges"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_edges">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.number_of_edges">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.number_of_edges">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">number_of_edges</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">number_of_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">v</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="n">edges_num</span> <span class="o">=</span> <span class="mi">0</span>
@@ -1912,13 +1981,16 @@ MathJax = {
             <span class="n">edges_num</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="k">return</span> <span class="n">edges_num</span></div>
 
+
     <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">number_of_selfloops</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">op</span> <span class="o">=</span> <span class="n">dag_utils</span><span class="o">.</span><span class="n">report_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">types_pb2</span><span class="o">.</span><span class="n">SELFLOOPS_NUM</span><span class="p">)</span>
         <span class="n">archive</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">archive</span><span class="o">.</span><span class="n">get_size</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Graph.has_edge"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.has_edge">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+<div class="viewcode-block" id="Graph.has_edge">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.has_edge">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">has_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns True if the edge (u, v) is in the graph.</span>
 
@@ -1960,7 +2032,10 @@ MathJax = {
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Graph.neighbors"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.neighbors">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.neighbors">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.neighbors">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an iterator over all neighbors of node n.</span>
 
@@ -2003,6 +2078,7 @@ MathJax = {
             <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">[</span><span class="n">n</span><span class="p">])</span>
         <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NetworkXError</span><span class="p">(</span><span class="s2">&quot;The node </span><span class="si">%s</span><span class="s2"> is not in the graph.&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">n</span><span class="p">,))</span></div>
+
 
     <span class="nd">@property</span>
     <span class="nd">@clear_mutation_cache</span>
@@ -2062,7 +2138,9 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">EdgeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Graph.get_edge_data"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.get_edge_data">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+<div class="viewcode-block" id="Graph.get_edge_data">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.get_edge_data">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_edge_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">u</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the attribute dictionary associated with edge (u, v).</span>
 
@@ -2119,13 +2197,16 @@ MathJax = {
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">default</span></div>
 
+
     <span class="nd">@property</span>
     <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">adj</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">adj</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">AdjacencyView</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Graph.adjacency"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.adjacency">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+<div class="viewcode-block" id="Graph.adjacency">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.adjacency">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">adjacency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an iterator over (node, adjacency dict) tuples for all nodes.</span>
 
@@ -2145,6 +2226,7 @@ MathJax = {
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
 
     <span class="nd">@property</span>
     <span class="nd">@clear_mutation_cache</span>
@@ -2187,7 +2269,9 @@ MathJax = {
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">DegreeView</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Graph.clear"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear">[docs]</a>    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Graph.clear">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all nodes and edges from the graph.</span>
 
 <span class="sd">        This also removes the name, and all graph, node, and edge attributes.</span>
@@ -2221,7 +2305,10 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_remove_edge_cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.clear_edges"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear_edges">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.clear_edges">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.clear_edges">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">clear_edges</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove all edges from the graph without altering nodes.</span>
 
@@ -2239,15 +2326,24 @@ MathJax = {
         <span class="bp">self</span><span class="o">.</span><span class="n">_op</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">leaf</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="Graph.is_directed"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.is_directed">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.is_directed">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.is_directed">[docs]</a>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">is_directed</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Graph.is_multigraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.is_multigraph">[docs]</a>    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Graph.is_multigraph">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.is_multigraph">[docs]</a>
+    <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">is_multigraph</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">is_multigraph</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span></div>
 
-<div class="viewcode-block" id="Graph.nbunch_iter"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.nbunch_iter">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.nbunch_iter">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.nbunch_iter">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="nd">@patch_docstring</span><span class="p">(</span><span class="n">RefGraph</span><span class="o">.</span><span class="n">nbunch_iter</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nbunch_iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nbunch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">nbunch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># include all nodes via iterator</span>
@@ -2277,7 +2373,10 @@ MathJax = {
             <span class="n">bunch</span> <span class="o">=</span> <span class="n">bunch_iter</span><span class="p">(</span><span class="n">nbunch</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adj</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">bunch</span></div>
 
-<div class="viewcode-block" id="Graph.copy"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.copy">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.copy">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.copy">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_view</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a copy of the graph.</span>
 
@@ -2348,7 +2447,10 @@ MathJax = {
         <span class="n">g</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
-<div class="viewcode-block" id="Graph.to_undirected"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.to_undirected">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_undirected">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_undirected</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_view</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an undirected copy of the graph.</span>
 
@@ -2403,7 +2505,10 @@ MathJax = {
             <span class="k">return</span> <span class="n">g</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">as_view</span><span class="o">=</span><span class="n">as_view</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Graph.to_directed"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_directed">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.to_directed">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.to_directed">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">to_directed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">as_view</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a directed representation of the graph.</span>
 
@@ -2463,7 +2568,10 @@ MathJax = {
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
-<div class="viewcode-block" id="Graph.subgraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.subgraph">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.subgraph">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.subgraph">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a independent deep copy subgraph induced on `nodes`.</span>
 
@@ -2504,7 +2612,10 @@ MathJax = {
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
 
-<div class="viewcode-block" id="Graph.edge_subgraph"><a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.edge_subgraph">[docs]</a>    <span class="nd">@clear_mutation_cache</span>
+
+<div class="viewcode-block" id="Graph.edge_subgraph">
+<a class="viewcode-back" href="../../../../reference/networkx/graphs.html#graphscope.nx.Graph.edge_subgraph">[docs]</a>
+    <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">edge_subgraph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">edges</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a independent deep copy subgraph induced by the specified edges.</span>
 
@@ -2548,6 +2659,7 @@ MathJax = {
         <span class="n">g</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="n">op</span>
         <span class="n">g</span><span class="o">.</span><span class="n">cache</span><span class="o">.</span><span class="n">warmup</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">g</span></div>
+
 
     <span class="nd">@clear_mutation_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_project_to_simple</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">v_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">e_prop</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
@@ -2685,6 +2797,7 @@ MathJax = {
             <span class="c1"># id is not oid type</span>
             <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;the node type is not arrow_property oid_type.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_n</span></div>
+
 </pre></div>
         </article>
       </div>
@@ -2720,9 +2833,9 @@ MathJax = {
       
     </aside>
   </div>
-</div><script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../../../../_static/doctools.js?v=888ff710"></script>
-    <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../../../../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../../../../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../../../../_static/copybutton.js?v=f281be69"></script>

@@ -1,10 +1,9 @@
 <map id="gs::TypedColumn&lt; std::string_view &gt;" name="gs::TypedColumn&lt; std::string_view &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="903,234,1071,275"/>
-<area shape="rect" id="node2" href="$classgs_1_1ColumnBase.html" title=" " alt="" coords="619,5,746,32"/>
-<area shape="rect" id="node3" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="617,241,748,268"/>
-<area shape="rect" id="node4" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="213,241,416,268"/>
-<area shape="rect" id="node5" href="$classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="601,294,764,335"/>
-<area shape="rect" id="node6" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="235,293,394,334"/>
-<area shape="rect" id="node7" href="$structgs_1_1string__item.html" title=" " alt="" coords="5,300,124,327"/>
-<area shape="rect" id="node8" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="221,359,408,385"/>
+<area shape="rect" id="node1" title=" " alt="" coords="695,233,863,274"/>
+<area shape="rect" id="node2" href="$classgs_1_1ColumnBase.html" title=" " alt="" coords="411,5,538,32"/>
+<area shape="rect" id="node3" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="409,241,540,268"/>
+<area shape="rect" id="node4" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="5,241,208,268"/>
+<area shape="rect" id="node5" href="$classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="393,293,556,334"/>
+<area shape="rect" id="node6" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="27,293,186,334"/>
+<area shape="rect" id="node7" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="13,359,200,385"/>
 </map>

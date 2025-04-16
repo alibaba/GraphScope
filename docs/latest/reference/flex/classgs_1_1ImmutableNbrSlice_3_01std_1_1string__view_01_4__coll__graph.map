@@ -1,13 +1,11 @@
 <map id="gs::ImmutableNbrSlice&lt; std::string_view &gt;" name="gs::ImmutableNbrSlice&lt; std::string_view &gt;">
-<area shape="rect" id="node1" title=" " alt="" coords="1225,91,1396,133"/>
-<area shape="rect" id="node2" href="$classgs_1_1ImmutableNbrSlice.html" title=" " alt="" coords="947,53,1117,94"/>
-<area shape="rect" id="node3" href="$structgs_1_1ImmutableNbr.html" title=" " alt="" coords="601,5,808,32"/>
-<area shape="rect" id="node4" href="$classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="948,123,1116,165"/>
-<area shape="rect" id="node5" href="$classgs_1_1ColumnBase.html" title=" " alt="" coords="641,56,768,83"/>
-<area shape="rect" id="node6" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="639,292,770,319"/>
-<area shape="rect" id="node7" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="213,292,416,319"/>
-<area shape="rect" id="node8" href="$classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="623,343,786,385"/>
-<area shape="rect" id="node9" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="235,343,394,385"/>
-<area shape="rect" id="node10" href="$structgs_1_1string__item.html" title=" " alt="" coords="5,351,124,377"/>
-<area shape="rect" id="node11" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="221,409,408,436"/>
+<area shape="rect" id="node1" title=" " alt="" coords="973,199,1144,241"/>
+<area shape="rect" id="node2" href="$classgs_1_1ImmutableNbrSlice.html" title=" " alt="" coords="695,167,865,209"/>
+<area shape="rect" id="node3" href="$classgs_1_1TypedColumn_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="696,233,864,274"/>
+<area shape="rect" id="node4" href="$classgs_1_1ColumnBase.html" title=" " alt="" coords="411,5,538,32"/>
+<area shape="rect" id="node5" href="$structgs_1_1PropertyType.html" title=" " alt="" coords="409,241,540,268"/>
+<area shape="rect" id="node6" href="$uniongs_1_1impl_1_1AdditionalTypeInfo.html" title=" " alt="" coords="5,241,208,268"/>
+<area shape="rect" id="node7" href="$classgs_1_1mmap__array_3_01std_1_1string__view_01_4.html" title=" " alt="" coords="393,293,556,334"/>
+<area shape="rect" id="node8" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="27,293,186,334"/>
+<area shape="rect" id="node9" href="$classgs_1_1mmap__array.html" title=" " alt="" coords="13,359,200,385"/>
 </map>

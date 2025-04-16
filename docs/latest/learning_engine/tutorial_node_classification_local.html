@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Tutorial: Training a Node Classification Model on K8s Cluster" href="tutorial_node_classification_k8s.html" /><link rel="prev" title="Guide and Examples" href="guide_and_examples.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Tutorial: Training a Node Classification Model on Your Local Machine - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,7 +691,7 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="tutorial-training-a-node-classification-model-on-your-local-machine">
-<h1>Tutorial: Training a Node Classification Model on Your Local Machine<a class="headerlink" href="#tutorial-training-a-node-classification-model-on-your-local-machine" title="Permalink to this heading">¶</a></h1>
+<h1>Tutorial: Training a Node Classification Model on Your Local Machine<a class="headerlink" href="#tutorial-training-a-node-classification-model-on-your-local-machine" title="Link to this heading">¶</a></h1>
 <p>This tutorial presents an end-to-end example that illustrates how GraphScope
 trains the EgoGraphSAGE model for a node classification task. To demonstrate
 this, we utilize the ogbn-mag dataset, which is a heterogeneous academic citation
@@ -706,7 +705,7 @@ features a 128-dimensional word2vec vector that represents its content. This
 vector is obtained by averaging the embeddings of words in the paper’s title
 and abstract. It’s worth noting that the embeddings of individual words are pre-trained.</p>
 <section id="load-graph">
-<h2>Load Graph<a class="headerlink" href="#load-graph" title="Permalink to this heading">¶</a></h2>
+<h2>Load Graph<a class="headerlink" href="#load-graph" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">try</span><span class="p">:</span>
     <span class="c1"># https://www.tensorflow.org/guide/migrate</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">tensorflow.compat.v1</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">tf</span>
@@ -732,7 +731,7 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 </div>
 </section>
 <section id="define-the-training-process-for-the-egographsage-model">
-<h2>Define the Training Process for the EgoGraphSAGE Model<a class="headerlink" href="#define-the-training-process-for-the-egographsage-model" title="Permalink to this heading">¶</a></h2>
+<h2>Define the Training Process for the EgoGraphSAGE Model<a class="headerlink" href="#define-the-training-process-for-the-egographsage-model" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">node_type</span><span class="p">,</span> <span class="n">edge_type</span><span class="p">,</span> <span class="n">class_num</span><span class="p">,</span> <span class="n">features_num</span><span class="p">,</span>
               <span class="n">hops_num</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">nbrs_num</span><span class="o">=</span><span class="p">[</span><span class="mi">25</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
               <span class="n">hidden_dim</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">in_drop_rate</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">learning_rate</span><span class="o">=</span><span class="mf">0.01</span>
@@ -779,7 +778,7 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 </div>
 </section>
 <section id="launch-the-learning-engine">
-<h2>Launch the Learning Engine<a class="headerlink" href="#launch-the-learning-engine" title="Permalink to this heading">¶</a></h2>
+<h2>Launch the Learning Engine<a class="headerlink" href="#launch-the-learning-engine" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># define the features for learning, we chose the original 128-dimension feature</span>
 <span class="n">i_features</span> <span class="o">=</span> <span class="p">[]</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">128</span><span class="p">):</span>
@@ -800,7 +799,7 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
 </div>
 </section>
 <section id="train-the-model">
-<h2>Train the Model<a class="headerlink" href="#train-the-model" title="Permalink to this heading">¶</a></h2>
+<h2>Train the Model<a class="headerlink" href="#train-the-model" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train</span><span class="p">(</span><span class="n">lg</span><span class="p">,</span> <span class="n">node_type</span><span class="o">=</span><span class="s2">&quot;paper&quot;</span><span class="p">,</span> <span class="n">edge_type</span><span class="o">=</span><span class="s2">&quot;cites&quot;</span><span class="p">,</span>
       <span class="n">class_num</span><span class="o">=</span><span class="mi">349</span><span class="p">,</span>  <span class="c1"># output dimension</span>
       <span class="n">features_num</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span>  <span class="c1"># input dimension</span>
@@ -884,9 +883,9 @@ and abstract. It’s worth noting that the embeddings of individual words are pr
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>

@@ -1,18 +1,17 @@
 <!doctype html>
-<html class="no-js" lang="en" data-content_root="">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Ingress: Incrementalize Graph Algorithms" href="ingress.html" /><link rel="prev" title="Vertex-Centric Model" href="vertex_centric_models.html" />
 
-    <!-- Generated with Sphinx 7.1.2 and Furo 2024.08.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Programming Model: PIE - GraphScope documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.5fd3999ee7762ccc51105388f4a9d115.css?v=45cf7dbc" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-main.c949a650a448cc0ae9fd3441c0e17fb0.css?v=2a6c4383" />
-    <link rel="stylesheet" type="text/css" href="../_static/panels-variables.06eb56fa6e07937060861dad626602ad.css?v=d290406d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-dropdown.css?v=995e94df" />
+    <link rel="stylesheet" type="text/css" href="../_static/panels-bootstrap.min.css?v=21c0b90a" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     <link rel="stylesheet" type="text/css" href="../_static/css/custom.css?v=e72d9a73" />
     <link rel="stylesheet" type="text/css" href="../_static/css/panels.css?v=0f22cee4" />
@@ -692,10 +691,10 @@ MathJax = {
         </div>
         <article role="main" id="furo-main-content">
           <section class="tex2jax_ignore mathjax_ignore" id="programming-model-pie">
-<h1>Programming Model: PIE<a class="headerlink" href="#programming-model-pie" title="Permalink to this heading">¶</a></h1>
+<h1>Programming Model: PIE<a class="headerlink" href="#programming-model-pie" title="Link to this heading">¶</a></h1>
 <p>Although the <a class="reference external" href="https://graphscope.io/docs/latest/analytical_engine/vertex_centric_models.html">vertex-centric programming model</a> can express various graph analytics algorithms, existing sequential (single-machine) graph algorithms need to be modified to adhere to the “think like a vertex” principle. This makes parallel graph computation a privilege for experienced users only. Additionally, the performance of graph algorithms using the vertex-centric model is sub-optimal in many cases. Each vertex has information about only its 1-hop neighbors, causing information propagation through the graph to be slow and occur one hop at a time. Consequently, it may take multiple computation iterations to propagate a piece of information from a source to a destination.</p>
 <section id="what-is-the-pie-model">
-<h2>What is the PIE Model?<a class="headerlink" href="#what-is-the-pie-model" title="Permalink to this heading">¶</a></h2>
+<h2>What is the PIE Model?<a class="headerlink" href="#what-is-the-pie-model" title="Link to this heading">¶</a></h2>
 <p>To address the abovementioned problems, we proposed a new programming model PIE (PEval-IncEval-Assemble) in a <a class="reference external" href="https://dl.acm.org/doi/10.1145/3035918.3035942">SIGMOD paper</a> published in 2017. Unlike the vertex-centric model, the PIE model can automatically parallelize existing sequential graph algorithms with only minor modifications. This makes parallel graph computations accessible to users familiar with conventional graph algorithms taught in college textbooks, eliminating the need to recast existing graph algorithms into a new model.</p>
 <p>Specifically, in the PIE model, users only need to provide three functions,</p>
 <ul class="simple">
@@ -706,12 +705,12 @@ MathJax = {
 <figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/pie.png"><img alt="The PIE model" src="../_images/pie.png" style="width: 80%;" /></a>
 <figcaption>
-<p><span class="caption-text">The PIE model.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+<p><span class="caption-text">The PIE model.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="workflow-of-pie">
-<h2>Workflow of PIE<a class="headerlink" href="#workflow-of-pie" title="Permalink to this heading">¶</a></h2>
+<h2>Workflow of PIE<a class="headerlink" href="#workflow-of-pie" title="Link to this heading">¶</a></h2>
 <p>The PIE model works on a graph <em>G</em> and each worker maintains a partition of <em>G</em>. Given a query, each worker first executes <em>PEval</em> against its local partition, to compute partial answers in parallel. Then each worker may exchange partial results with other workers via synchronous message passing. Upon receiving messages, each worker incrementally computes <em>IncEval</em>. The incremental step iterates until no further messages can be generated. At this point, <em>Assemble</em> pulls partial answers and assembles the final result. In this way, the PIE model parallelizes existing sequential graph algorithms, without revising their logic and workflow.</p>
 <p>In this model, users need not be familiar with the intricacies of processing large graphs in a distributed setting. The PIE model automatically parallelizes graph analytics tasks across a cluster of workers based on a fixpoint computation. Under a monotonic condition, it guarantees convergence with accurate answers as long as the three provided sequential algorithms are correct.</p>
 <p>The following code shows how SSSP is expressed with the PIE model in GAE. Note that we only show the major computation logic here.</p>
@@ -857,9 +856,9 @@ algorithm on the sub-graph (fragment) where the <code class="docutils literal no
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=ccbe24c1"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
-    <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+</div><script src="../_static/documentation_options.js?v=8a448e45"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
