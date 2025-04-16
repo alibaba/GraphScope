@@ -82,10 +82,10 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
       LOG(FATAL) << "Unexpected property type: " << var.DebugString();
     }
 
-    boost::format formater(PROPERTY_SELECTOR);
-    formater % prop_type % prop_name;
+    boost::format formatter(PROPERTY_SELECTOR);
+    formatter % prop_type % prop_name;
 
-    return std::make_pair(real_tag_ind, formater.str());
+    return std::make_pair(real_tag_ind, formatter.str());
   } else {
     // if variable has no property, we assume it means get the innerIdProperty
     // there are two cases:
@@ -110,10 +110,10 @@ static std::pair<int32_t, std::string> variable_to_tag_id_property_selector(
     } else {
       prop_type = GRAPE_EMPTY_TYPE;
     }
-    boost::format formater(PROPERTY_SELECTOR);
-    formater % prop_type % "None";
+    boost::format formatter(PROPERTY_SELECTOR);
+    formatter % prop_type % "None";
 
-    return std::make_pair(real_tag_ind, formater.str());
+    return std::make_pair(real_tag_ind, formatter.str());
   }
 }
 
@@ -446,9 +446,9 @@ class ExprBuilder {
     make_var_name_unique(param_const);
     func_call_vars_.push_back(param_const);
 
-    boost::format formater(EXTRACT_TEMPLATE_STR);
-    formater % interval_to_str(interval) % param_const.var_name;
-    auto extract_node_str = formater.str();
+    boost::format formatter(EXTRACT_TEMPLATE_STR);
+    formatter % interval_to_str(interval) % param_const.var_name;
+    auto extract_node_str = formatter.str();
     expr_nodes_.emplace_back(extract_node_str);
 
     tag_selectors_.emplace_back(
@@ -499,13 +499,13 @@ class ExprBuilder {
     private_filed_str = get_private_filed_str();
     VLOG(10) << "Finish preparing code blocks";
 
-    boost::format formater(EXPR_BUILDER_TEMPLATE_STR);
-    formater % class_name_ % common_data_type_pb_2_str(res_data_type_) %
+    boost::format formatter(EXPR_BUILDER_TEMPLATE_STR);
+    formatter % class_name_ % common_data_type_pb_2_str(res_data_type_) %
         constructor_param_str % field_init_code_str %
         func_call_template_typename_str % "auto" % func_call_params_str %
         func_call_impl_str % private_filed_str % get_filter_null_str();
 
-    std::string str = formater.str();
+    std::string str = formatter.str();
 
     return std::make_tuple(class_name_, construct_params_, tag_selectors_, str,
                            res_data_type_);

@@ -47,7 +47,7 @@ message String {
 
 message Temporal {
     enum DateFormat {
-        DF_YYYY_MM_DD = 0; // ISO fomat: 2019-01-01
+        DF_YYYY_MM_DD = 0; // ISO format: 2019-01-01
     }
 
     enum TimeFormat {
