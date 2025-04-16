@@ -46,6 +46,9 @@ namespace gs {
 
 static constexpr const char* CODEGEN_BIN = "load_plan_and_gen.sh";
 
+std::string get_uri_scheme(const std::string& uri);
+std::string get_uri_path(const std::string& uri);
+
 /// Util functions.
 
 inline void blockSignal(int sig) {
@@ -208,6 +211,8 @@ std::pair<double, double> get_current_cpu_usage();
 std::string memory_to_mb_str(uint64_t mem_bytes);
 
 size_t human_readable_to_bytes(const std::string& human_readable);
+
+std::string get_local_ip();
 
 }  // namespace gs
 
