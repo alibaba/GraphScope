@@ -71,85 +71,11 @@ limitations under the License.
 #include "core/flags.h"
 #include "core/fragment/dynamic_fragment.h"
 
-DECLARE_string(application);
-DECLARE_bool(directed);
-DECLARE_string(efile);
-DECLARE_string(vfile);
-DECLARE_string(out_prefix);
 DECLARE_string(datasource);
 DECLARE_string(jobid);
-
-DECLARE_int64(bfs_source);
-DECLARE_string(degree_centrality_type);
-
-DECLARE_double(eigenvector_centrality_tolerance);
-DECLARE_int32(eigenvector_centrality_max_round);
-
-DECLARE_double(hits_tolerance);
-DECLARE_int32(hits_max_round);
-DECLARE_bool(hits_normalized);
-
-DECLARE_int32(kcore_k);
-
-DECLARE_int32(kshell_k);
-
-DECLARE_double(katz_centrality_alpha);
-DECLARE_double(katz_centrality_beta);
-DECLARE_double(katz_centrality_tolerance);
-DECLARE_int32(katz_centrality_max_round);
-DECLARE_bool(katz_centrality_normalized);
-
-DECLARE_int64(sssp_source);
-DECLARE_int64(sssp_target);
-DECLARE_bool(sssp_weight);
-
-DECLARE_int64(bfs_source);
-DECLARE_int32(bfs_depth_limit);
-DECLARE_string(bfs_output_format);
-
-DECLARE_bool(segmented_partition);
-DECLARE_bool(rebalance);
-DECLARE_int32(rebalance_vertex_factor);
-
-DECLARE_bool(serialize);
-DECLARE_bool(deserialize);
-DECLARE_string(serialization_prefix);
-
 DECLARE_int32(app_concurrency);
 
-DECLARE_int64(dfs_source);
-DECLARE_string(dfs_format);
-
-DECLARE_int32(vr_num_of_nodes);
-
 namespace gs {
-
-void Init() {
-  if (FLAGS_out_prefix.empty()) {
-    LOG(FATAL) << "Please assign an output prefix.";
-  }
-  if (FLAGS_deserialize && FLAGS_serialization_prefix.empty()) {
-    LOG(FATAL) << "Please assign a serialization prefix.";
-  } else if (FLAGS_vfile.empty() || FLAGS_efile.empty()) {
-    LOG(FATAL) << "Please assign input vertex/edge files.";
-  }
-
-  if (access(FLAGS_out_prefix.c_str(), 0) != 0) {
-    mkdir(FLAGS_out_prefix.c_str(), 0777);
-  }
-
-  grape::InitMPIComm();
-  grape::CommSpec comm_spec;
-  comm_spec.Init(MPI_COMM_WORLD);
-  if (comm_spec.worker_id() == grape::kCoordinatorRank) {
-    VLOG(1) << "Workers of libgrape-lite initialized.";
-  }
-}
-
-void Finalize() {
-  grape::FinalizeMPIComm();
-  VLOG(1) << "Workers finalized.";
-}
 
 template <typename FRAG_T, typename APP_T, typename... Args>
 void CreateAndQuery(const grape::CommSpec& comm_spec, const std::string efile,
