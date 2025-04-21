@@ -5,3 +5,5 @@ isort==5.10.1
 # ref: https://github.com/pypa/setuptools/issues/3772
 setuptools==70.0.0
 pyopenapigenerator==7.8.0
+# https://github.com/python/importlib_metadata/issues/406
+importlib-metadata<5.0
