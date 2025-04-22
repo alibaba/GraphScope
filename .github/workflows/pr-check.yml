@@ -12,6 +12,11 @@ jobs:
       pull-requests: write
 
     steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11' # Avoid using 3.12, where dependencies error of flake8 and importlib_metadata raises.https://github.com/alibaba/GraphScope/actions/runs/14568714278/job/40862003695?pr=4600
+
     - name: Conventional PR Check
       uses: amannn/action-semantic-pull-request@v5
       id: pr-convention
