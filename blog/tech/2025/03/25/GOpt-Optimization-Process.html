@@ -58,8 +58,9 @@
         <!-- <h1 class="post-title">GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries</h1> -->
 
         <section class="post-content">
-            <p><img src="/blog/assets/images/2025-03-25-title-picture.jpg" alt="gopt" />
-In today’s data analysis landscape, the optimization of complex graph queries has been a persistent challenge for the industry. GOpt is an optimizer framework designed for complex graph queries and was officially presented at <a href="https://arxiv.org/abs/2401.17786">SIGMOD Industry 2025</a>. Its core objective is to provide an efficient and universal optimization solution that adapts to various graph query languages and execution engines. In this article, we will delve into the key innovations of GOpt in unified graph query optimization and analyze its optimization process through specific query cases from <a href="https://ldbcouncil.org/benchmarks/snb">LDBC SNB</a>.</p>
+            <p><img src="/blog/assets/images/2024-02-22-title-picture.jpg" alt="gopt" /></p>
+
+<p>In today’s data analysis landscape, the optimization of complex graph queries has been a persistent challenge for the industry. GOpt is an optimizer framework designed for complex graph queries and was officially presented at <a href="https://arxiv.org/abs/2401.17786">SIGMOD Industry 2025</a>. Its core objective is to provide an efficient and universal optimization solution that adapts to various graph query languages and execution engines. In this article, we will delve into the key innovations of GOpt in unified graph query optimization and analyze its optimization process through specific query cases from <a href="https://ldbcouncil.org/benchmarks/snb">LDBC SNB</a>.</p>
 
 <p>GOpt achieves breakthroughs in the following areas:</p>
 
@@ -176,7 +177,7 @@ In today’s data analysis landscape, the optimization of complex graph queries 
 
 <span class="c1">// Filter</span>
 <span class="k">WHERE</span> <span class="n">person.id</span> <span class="o">=</span> <span class="n">$personId</span>
-      <span class="ow">AND</span> <span class="n">otherP</span> <span class="o">&lt;&gt;</span> <span class="n">$personId</span> 
+      <span class="ow">AND</span> <span class="n">otherP</span> <span class="o">&lt;&gt;</span> <span class="n">$personId</span>
       <span class="ow">AND</span> <span class="n">membership.joinDate</span> <span class="o">&gt;</span> <span class="n">$minDate</span>
 
 <span class="c1">// Aggregate</span>
@@ -201,22 +202,22 @@ In today’s data analysis landscape, the optimization of complex graph queries 
   <li>
     <p>FilterIntoPattern: An extended implementation based on Calcite’s FilterIntoJoin. It pushes filtering conditions further down to graph operation operators within patterns. For example, given the following Cypher query:</p>
 
-    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
-      <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">),</span>
-      <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">)</span>
-  <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
-  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
-  <span class="k">WHERE</span> <span class="n">v3.name</span> <span class="o">=</span> <span class="s2">"China"</span>
-  <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
+    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
+       <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">),</span>
+       <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span><span class="ss">)</span>
+   <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
+   <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
+   <span class="k">WHERE</span> <span class="n">v3.name</span> <span class="o">=</span> <span class="s2">"China"</span>
+   <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
 </code></pre></div>    </div>
     <p>After applying this rule, the optimized query is equivalent to rewriting it as:</p>
 
-    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
-      <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">}),</span>
-      <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">})</span>
-  <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
-  <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
-  <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
+    <div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e1</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v2</span><span class="ss">),</span>
+       <span class="ss">(</span><span class="n">v2</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e2</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">}),</span>
+       <span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v3</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'China'</span><span class="ss">})</span>
+   <span class="c1">// There is a &lt;Join&gt; between the two patterns in GIR</span>
+   <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">v1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="n">e4</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="n">v4</span><span class="ss">)</span>
+   <span class="k">RETURN</span> <span class="n">v1.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="n">v2</span><span class="ss">);</span>
 </code></pre></div>    </div>
   </li>
   <li>
@@ -273,7 +274,7 @@ In today’s data analysis landscape, the optimization of complex graph queries 
 </ul>
 
 <p><img src="/blog/assets/images/2025-03-25-gopt/case_com.png" alt="image" /></p>
-<div style="text-align: center;">Fig.15 The Optimization of ComSubPattern Between M3 and M4.</div>
+<div style="text-align:center;">Tab.1 The LDCB<sub>100</sub> DataSet.</div>
 
 <h2 id="experimental-results">Experimental Results</h2>
 
@@ -298,7 +299,7 @@ In today’s data analysis landscape, the optimization of complex graph queries 
   </tbody>
 </table>
 
-<div style="text-align:center;">Tab.1 The LDCB<sub>100</sub> DataSet.</div>
+<p style="text-align:center;">Tab.1 The LDCB<sub>100</sub> DataSet.</p>
 
 <p>The system configuration consists of a single node with the following specifications:</p>
 <ul>
