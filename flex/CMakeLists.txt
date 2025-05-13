@@ -17,7 +17,10 @@ option(USE_PTHASH "Whether to use pthash" OFF)
 option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build optimized code on host
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
+
+option(ENABLE_SERVICE_REGISTER "Whether to enable service register" ON) # Whether to enable service register, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
+option(BUILD_FOR_MASTER "Only to build bulkloader" OFF)
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -31,6 +34,7 @@ message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 include(CheckLibraryExists)
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -54,8 +58,8 @@ endif()
 
 if (BUILD_WITH_OSS)
     add_definitions(-DBUILD_WITH_OSS)
-    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/third_party/aliyun-oss-cpp-sdk/sdk/include)
-    set(TARGET_OUTPUT_NAME_PREFIX "alibabacloud-oss-" CACHE STRING "The target's output name prefix")
+    set(OSS_CPP_SDK_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/third_party/aliyun-oss-cpp-sdk/sdk/include)
+    include_directories(${OSS_CPP_SDK_INCLUDE_DIR})
     add_subdirectory(third_party/aliyun-oss-cpp-sdk)
 endif()
 
@@ -94,6 +98,11 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+# if compiler support -Wno-format-truncation, add it
+CHECK_CXX_COMPILER_FLAG("-Wno-format-truncation" COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+if(COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format-truncation")
+endif()
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
@@ -137,7 +146,9 @@ add_definitions("-DBOOST_BIND_GLOBAL_PLACEHOLDERS")
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 
 #find hiactor----------------------------------------------------------------------
-find_package(Hiactor)
+if (NOT BUILD_FOR_MASTER)
+    find_package(Hiactor)
+endif()
 if (NOT Hiactor_FOUND)
     message(STATUS "hiactor not found, please install the hiactor library")
 else ()
@@ -234,15 +245,31 @@ macro(install_without_export_flex_target target)
     )
 endmacro()
 
+if (ENABLE_SERVICE_REGISTER)
+    include("cmake/BuildEtcdCpp.cmake")
+    include_directories(SYSTEM ${CPPREST_INCLUDE_DIR})
+    message(STATUS "Include directory: ${CPPREST_INCLUDE_DIR}")
+    foreach(dir ${ETCD_CPP_INCLUDE_DIR})
+        message(STATUS "Include directory: ${dir}")
+        include_directories(SYSTEM ${dir})
+    endforeach()
+endif()
+
+if (ENABLE_SERVICE_REGISTER)
+    add_definitions(-DENABLE_SERVICE_REGISTER)
+endif()
+
 add_subdirectory(utils)
-add_subdirectory(codegen)
 add_subdirectory(storages)
-add_subdirectory(engines)
+add_subdirectory(codegen)
+if (NOT BUILD_FOR_MASTER)
+    add_subdirectory(engines)
+endif()
 add_subdirectory(bin)
 if (OPENTELEMETRY_CPP_FOUND)
    add_subdirectory(otel)
 endif()
-if (BUILD_TEST)
+if ((NOT BUILD_FOR_MASTER) AND BUILD_TEST)
    add_subdirectory(tests)
 endif()
 
