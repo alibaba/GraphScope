@@ -139,7 +139,7 @@ spec:
               value: {{ .Release.Namespace | quote }}
             - name: SERVICE_PORT
               value: {{ .Values.portal.service.servicePort | quote }} 
-            - name: WORKSPACE
+            - name: GRAPHSCOPE_RUNTIME
               value: {{ .Values.portal.runtimePath | quote }}
             - name: STUDIO_WRAPPER_ENDPOINT
               value: {{ .Values.portal.studioWrapperEndpoint | quote }}
