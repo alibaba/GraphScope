@@ -80,7 +80,7 @@ class HighDiskUtilizationAlert(AlertRule):
                 # alert
                 self.alert(alert_message)
         except Exception as e:
-            logger.warn("Failed to get disk usage: %s", str(e))
+            logger.warning("Failed to get disk usage: %s", str(e))
 
 
 class GremlinServiceAvailableAlert(AlertRule):
