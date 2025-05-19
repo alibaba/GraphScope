@@ -18,6 +18,8 @@ https://slack.graphscope.io
 
 https://graphscope.io/blog/
 
+
+https://graphscope.io/blog/tech/2025/04/26/Why-DuckDB-Is-Such-A-Good-Database-Product
 https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process
 https://graphscope.io/blog/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt
 https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack
