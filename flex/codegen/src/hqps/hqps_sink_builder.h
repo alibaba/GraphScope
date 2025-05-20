@@ -55,10 +55,10 @@ class SinkOpBuilder {
       }
       tag_ids_str = ss.str();
     }
-    boost::format formater(SINK_OP_TEMPLATE_STR);
-    formater % ctx_.GraphVar() % prev_ctx_name % tag_ind_2_tag_ids.size() %
+    boost::format formatter(SINK_OP_TEMPLATE_STR);
+    formatter % ctx_.GraphVar() % prev_ctx_name % tag_ind_2_tag_ids.size() %
         tag_ids_str;
-    return formater.str();
+    return formatter.str();
   }
 
  private:
