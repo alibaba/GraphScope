@@ -291,7 +291,7 @@ class KubeDeployment(Deployment):
                     {"host": name, "timestamp": t, "usage": round(memory)}
                 )
         except Exception as e:
-            logger.warn("Failed to fetch resource usage %s", str(e))
+            logger.warning("Failed to fetch resource usage %s", str(e))
 
     def _fetch_status_impl(self):
         try:
@@ -358,7 +358,7 @@ class KubeDeployment(Deployment):
                 sorted_status[key] = status[key]
             self._status["pods"] = sorted_status
         except Exception as e:
-            logger.warn("Failed to fetch deployment status %s", str(e))
+            logger.warning("Failed to fetch deployment status %s", str(e))
 
     def initialize_resource_usage(self):
         try:
@@ -379,7 +379,7 @@ class KubeDeployment(Deployment):
                 "memory_usage": queue.Queue(maxsize=720 * pod_num),
             }
         except Exception as e:
-            logger.warn("Failed to fetch resource usage %s", str(e))
+            logger.warning("Failed to fetch resource usage %s", str(e))
             return {"cpu_usage": [], "memory_usage": []}
 
     def get_resource_usage(self) -> dict:

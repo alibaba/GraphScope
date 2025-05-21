@@ -89,7 +89,7 @@ class GrootClient(object):
                     self._graph, JobStatus.from_dict(status)
                 )
         except Exception as e:
-            logger.warn("Failed to recover job status: %s", str(e))
+            logger.warning("Failed to recover job status: %s", str(e))
 
     def _pickle_job_status_impl(self):
         try:
@@ -100,7 +100,7 @@ class GrootClient(object):
             with open(self._job_status_pickle_path, "wb") as f:
                 pickle.dump(status, f)
         except Exception as e:
-            logger.warn("Pickle job status failed: %s", str(e))
+            logger.warning("Pickle job status failed: %s", str(e))
     
     def _restart_pod(self, pod_name, pod_ip, port):
         logger.info(f"Restart groot store pod {pod_name}, ip {pod_ip}")

@@ -109,7 +109,7 @@ class GrootGraph(object):
             cypher_endpoint = test_cypher_endpoint(pod.status.pod_ip, GROOT_CYPHER_PORT)
             
         except Exception as e:
-            logger.warn(f"Failed to fetch frontend endpoints: {str(e)}")
+            logger.warning(f"Failed to fetch frontend endpoints: {str(e)}")
         else:
             if (
                 gremlin_endpoint != self._endpoints["gremlin_endpoint"]
