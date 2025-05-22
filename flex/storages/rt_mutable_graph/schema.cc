@@ -1210,6 +1210,11 @@ static Status parse_schema_from_yaml_node(const YAML::Node& graph_node,
     schema.SetGraphId(graph_node["id"].as<std::string>());
   } else {
     VLOG(1) << "id is not set";
+    if (schema.GetGraphName().empty()) {
+      LOG(ERROR) << "Graph name is not set";
+      return Status(StatusCode::INVALID_SCHEMA, "Graph name is not set");
+    }
+    schema.SetGraphId(schema.GetGraphName());
   }
 
   if (graph_node["description"]) {
