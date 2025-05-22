@@ -270,6 +270,30 @@ class GetV {
         ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
                                shuffle_offset);
         return ctx;
+      } else if (labels.size() == 1) {
+        auto builder = SLVertexColumnBuilder::builder(labels[0]);
+        if (opt == VOpt::kStart) {
+          input_edge_list.foreach_edge(
+              [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
+                  const EdgeData& edata, Direction dir) {
+                if (label.src_label == labels[0]) {
+                  builder.push_back_opt(src);
+                  shuffle_offset.push_back(index);
+                }
+              });
+        } else if (opt == VOpt::kEnd) {
+          input_edge_list.foreach_edge(
+              [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
+                  const EdgeData& edata, Direction dir) {
+                if (label.dst_label == labels[0]) {
+                  builder.push_back_opt(dst);
+                  shuffle_offset.push_back(index);
+                }
+              });
+        }
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
+        return ctx;
       }
     } else if (column->edge_column_type() == EdgeColumnType::kBDSL) {
       auto& input_edge_list =
