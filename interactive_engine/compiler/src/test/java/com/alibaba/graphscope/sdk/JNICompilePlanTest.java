@@ -47,9 +47,10 @@ public class JNICompilePlanTest {
     @Test
     public void path_expand_test() throws Exception {
         String query =
-                "MATCH (src)-[e:test6*4..5]->(dest) WHERE src.__domain__ = 'xzz' RETURN"
+                "MATCH (src)-[e:test1000*4..5]->(dest) WHERE src.__domain__ = 'xzz' RETURN"
                         + " src.__entity_id__ AS sId, dest.__entity_id__ AS dId;";
-        PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        GraphPlan plan = PlanUtils.compilePlan(configPath, query, schemaYaml, statsJson);
+        System.out.println(plan.fullMessage);
     }
 
     @Test

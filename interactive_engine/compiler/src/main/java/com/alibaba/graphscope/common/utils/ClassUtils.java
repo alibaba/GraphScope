@@ -33,6 +33,8 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.math.BigInteger;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -52,14 +54,23 @@ public class ClassUtils {
             return callable.call();
         } catch (FrontendException e1) {
             e1.getDetails().putAll(details);
+            e1.getDetails().put("stacktrace", getStackTrace(e1));
             throw e1;
         } catch (ExecutionException e2) {
             throw e2;
         } catch (Exception e3) {
             FrontendException e4 = new FrontendException(errorCode, e3.getMessage(), e3);
             e4.getDetails().putAll(details);
+            e4.getDetails().put("stacktrace", getStackTrace(e3));
             throw e4;
         }
+    }
+
+    public static String getStackTrace(Exception e) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        e.printStackTrace(pw);
+        return sw.toString();
     }
 
     /**
