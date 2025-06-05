@@ -55,7 +55,7 @@ jobs:
     - name: Install Rust
       uses: actions-rs/toolchain@v1
       with:
-        toolchain: 1.81.0
+        toolchain: 1.87.0
         override: true
 
     - name: Rust Format Check
