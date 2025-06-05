@@ -87,8 +87,10 @@ impl RocksDB {
         unsafe {
             let prev = prev.into_owned();
             prev.cancel_all_background_work(true);
-            std::thread::sleep(Duration::from_secs(30));
-            drop(prev);
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_secs(120));
+                drop(prev);
+            });
         }
         info!("RocksDB replaced");
     }
