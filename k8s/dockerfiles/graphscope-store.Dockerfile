@@ -14,7 +14,7 @@ COPY --chown=graphscope:graphscope . /home/graphscope/graphscope
 COPY --chown=graphscope:graphscope ./interactive_engine/assembly/src/conf/maven.settings.xml /home/graphscope/.m2/settings.xml
 
 USER graphscope
-RUN rustup toolchain install 1.81.0 && rustup default 1.81.0
+RUN rustup toolchain install 1.87.0 && rustup default 1.87.0
 
 RUN cd /home/graphscope/graphscope \
     && . ~/.graphscope_env \

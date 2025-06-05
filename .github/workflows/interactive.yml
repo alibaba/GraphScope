@@ -129,6 +129,7 @@ jobs:
         . /home/graphscope/.cargo/env
         which cargo
 
+        rustup toolchain install 1.87.0 && rustup default 1.87.0
         # build compiler
         cd ${GIE_HOME}/
         mvn clean install -Pexperimental -DskipTests -q

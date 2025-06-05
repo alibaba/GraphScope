@@ -24,6 +24,7 @@ import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.OffsetSpec;
 import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,8 @@ public class KafkaLogReader implements LogReader {
     private final long latest;
     private long nextReadOffset;
 
+    private TopicPartition partition;
+
     public KafkaLogReader(
             String servers,
             AdminClient client,
@@ -53,8 +56,9 @@ public class KafkaLogReader implements LogReader {
             throws IOException {
         Map<String, Object> kafkaConfigs = new HashMap<>();
         kafkaConfigs.put("bootstrap.servers", servers);
+        // kafkaConfigs.put("max.poll.records", 100);
 
-        TopicPartition partition = new TopicPartition(topicName, partitionId);
+        partition = new TopicPartition(topicName, partitionId);
 
         long earliest = getOffset(client, partition, OffsetSpec.earliest());
         latest = getOffset(client, partition, OffsetSpec.latest());
@@ -91,9 +95,10 @@ public class KafkaLogReader implements LogReader {
         }
     }
 
+    // Deprecated
     @Override
     public ReadLogEntry readNext() {
-        if (nextReadOffset == latest) {
+        if (nextReadOffset >= latest) {
             return null;
         }
         while (iterator == null || !iterator.hasNext()) {
@@ -113,17 +118,24 @@ public class KafkaLogReader implements LogReader {
 
     @Override
     public ConsumerRecord<LogEntry, LogEntry> readNextRecord() {
-        if (nextReadOffset == latest) {
+        if (nextReadOffset >= latest) {
             return null;
         }
         while (iterator == null || !iterator.hasNext()) {
-            ConsumerRecords<LogEntry, LogEntry> consumerRecords =
-                    consumer.poll(Duration.ofMillis(100L));
-            if (consumerRecords == null || consumerRecords.isEmpty()) {
-                logger.info("polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
-                continue;
+            try {
+                ConsumerRecords<LogEntry, LogEntry> consumerRecords =
+                        consumer.poll(Duration.ofMillis(100L));
+                if (consumerRecords == null || consumerRecords.isEmpty()) {
+                    logger.info(
+                            "polled nothing from Kafka. nextReadOffset is [{}]", nextReadOffset);
+                    continue;
+                }
+                iterator = consumerRecords.iterator();
+            } catch (KafkaException ex) {
+                logger.error("poll failed, error: ", ex);
+                long cur = consumer.position(partition);
+                consumer.seek(partition, cur + 1);
             }
-            iterator = consumerRecords.iterator();
         }
         ConsumerRecord<LogEntry, LogEntry> record = iterator.next();
         nextReadOffset = record.offset() + 1;
