@@ -15,38 +15,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
-import logging
+import connexion
 from typing import Dict
 from typing import Tuple
 from typing import Union
 
-import connexion
-
-from gs_interactive_admin import util
-from gs_interactive_admin.models.api_response_with_code import (  # noqa: E501
+from gs_interactive_admin.models.api_response_with_code import (
     APIResponseWithCode,
-)
+)  # noqa: E501
 from gs_interactive_admin.models.service_status import ServiceStatus  # noqa: E501
-from gs_interactive_admin.models.start_service_request import (  # noqa: E501
+from gs_interactive_admin.models.start_service_request import (
     StartServiceRequest,
-)
-from gs_interactive_admin.models.stop_service_request import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.stop_service_request import (
     StopServiceRequest,
-)
+)  # noqa: E501
+from gs_interactive_admin import util
 
-logger = logging.getLogger("interactive")
-
-
-def check_service_ready():  # noqa: E501
-    """check_service_ready
-
-    Check if the service is ready # noqa: E501
-
-
-    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
-    """
-    return "do some magic!"
+from gs_interactive_admin.core.service.service_manager import get_service_manager
 
 
 def get_service_status():  # noqa: E501
@@ -57,10 +43,10 @@ def get_service_status():  # noqa: E501
 
     :rtype: Union[ServiceStatus, Tuple[ServiceStatus, int], Tuple[ServiceStatus, int, Dict[str, str]]
     """
-    return "do some magic!"
+    return get_service_manager().get_service_status()
 
 
-def restart_service():  # noqa: E501
+def restart_service(start_service_request=None):  # noqa: E501
     """restart_service
 
     Start current service # noqa: E501
@@ -68,7 +54,13 @@ def restart_service():  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return "do some magic!"
+    if connexion.request.is_json:
+        start_service_request = StartServiceRequest.from_dict(
+            connexion.request.get_json()
+        )  # noqa: E501
+        return get_service_manager().restart_service(start_service_request)
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def start_service(start_service_request=None):  # noqa: E501
@@ -82,10 +74,12 @@ def start_service(start_service_request=None):  # noqa: E501
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        start_service_request = StartServiceRequest.from_dict(  # noqa: F841
+        start_service_request = StartServiceRequest.from_dict(
             connexion.request.get_json()
         )  # noqa: E501
-    return "do some magic!"
+        return get_service_manager().start_service(start_service_request)
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def stop_service(stop_service_request=None):  # noqa: E501
@@ -99,7 +93,20 @@ def stop_service(stop_service_request=None):  # noqa: E501
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        stop_service_request = StopServiceRequest.from_dict(  # noqa: F841
+        stop_service_request = StopServiceRequest.from_dict(
             connexion.request.get_json()
         )  # noqa: E501
-    return "do some magic!"
+        return get_service_manager().stop_service(stop_service_request)
+    else:
+        raise RuntimeError("Invalid request")
+
+
+def check_service_ready():  # noqa: E501
+    """check_service_ready
+
+    Check if service is ready # noqa: E501
+
+
+    :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
+    """
+    return get_service_manager().check_service_ready()
