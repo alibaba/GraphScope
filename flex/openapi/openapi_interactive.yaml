@@ -18,7 +18,7 @@ info:
     email: graphscope@alibaba-inc.com
   license:
     name: Apache 2.0
-    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+    url: "http://www.apache.org/licenses/LICENSE-2.0.html"
 externalDocs:
   description: Find out More about GraphScope
   url: http://graphscope.io

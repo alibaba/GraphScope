@@ -4,11 +4,12 @@ ARG PLATFORM=x86_64
 ARG ARCH=amd64
 ARG REGISTRY=registry.cn-hongkong.aliyuncs.com
 ARG VINEYARD_VERSION=latest
-FROM $REGISTRY/graphscope/graphscope-dev:$VINEYARD_VERSION-$ARCH AS builder
+
+FROM $REGISTRY/graphscope/graphscope-dev:v0.24.2-amd64 AS builder
 ARG ENABLE_COORDINATOR="false"
 ARG OPTIMIZE_FOR_HOST=OFF
 ARG ENABLE_OPENTELMETRY=false
-ARG PARALLEL=8
+ARG PARALLEL=16
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
@@ -27,12 +28,9 @@ COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
 RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
-    git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && make -j ${PARALLEL} && make install && \
-    cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
-    cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
-    cp target/libs/*.jar /opt/flex/lib/ && \
-    ls ~/GraphScope/interactive_engine/executor/ir && \
-    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
+    git submodule update --init && mkdir build && cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} \
+    -DUSE_STATIC_ARROW=ON -DBUILD_WITH_OSS=ON -DENABLE_SERVICE_REGISTER=ON && make -j ${PARALLEL} && make install
 
 # strip all .so in /opt/flex/lib
 RUN sudo find /opt/flex/lib/ -name "*.so" -type f -exec strip {} \;
@@ -61,6 +59,22 @@ RUN if [ "${ENABLE_COORDINATOR}" = "true" ]; then \
         cp dist/*.whl /opt/flex/wheel/; \
     fi
 
+########################### Compiler Builder ###########################
+FROM $REGISTRY/graphscope/graphscope-dev:v0.24.2-amd64 AS compiler_builder
+
+RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/ && mkdir /opt/flex/lib
+USER graphscope
+WORKDIR /home/graphscope
+
+COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
+
+RUN . ${HOME}/.cargo/env && cd ${HOME}/GraphScope/flex && git submodule update --init && \
+    cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
+    cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \
+    cp target/libs/*.jar /opt/flex/lib/ && \
+    ls ~/GraphScope/interactive_engine/executor/ir && \
+    cp ~/GraphScope/interactive_engine/executor/ir/target/release/libir_core.so /opt/flex/lib/
+
 
 ########################### RUNTIME IMAGE ###########################
 
@@ -76,7 +90,7 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
 # g++ + jre 500MB
-RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata && \
+RUN apt-get update && apt-get -y install sudo locales g++ cmake openjdk-11-jre-headless tzdata zip unzip && \
     locale-gen en_US.UTF-8 && apt-get clean -y && rm -rf /var/lib/apt/lists/* && \
     ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
@@ -97,17 +111,24 @@ COPY --from=builder /opt/flex/wheel/ /opt/flex/wheel/
 
 # lib 
 COPY --from=builder /opt/flex/lib/ /opt/flex/lib/
+
+#Copy compiler related libs
+COPY --from=compiler_builder /opt/flex/lib/ /opt/flex/lib/
+
 # remove .a files
 RUN find /opt/flex/lib/ -name "*.a" -type f -delete
 
 # include 
 COPY --from=builder /opt/flex/include/ /opt/graphscope/include/ /opt/vineyard/include/ /opt/flex/include/
 COPY --from=builder /opt/graphscope/lib/libgrape-lite.so /opt/flex/lib/
+COPY --from=builder /opt/graphscope/lib/libboost_thread*.so* /opt/flex/lib
+COPY --from=builder /opt/graphscope/lib/libboost_filesystem*.so* /opt/flex/lib
+COPY --from=builder /opt/graphscope/lib/libboost_program_options*.so* /opt/flex/lib
 
 # copy the builtin graph, modern_graph
 RUN mkdir -p /opt/flex/share/gs_interactive_default_graph/
 COPY --from=builder /home/graphscope/GraphScope/flex/interactive/examples/modern_graph/* /opt/flex/share/gs_interactive_default_graph/
-COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_test.yaml /opt/flex/share/interactive_config.yaml
+COPY --from=builder /home/graphscope/GraphScope/flex/tests/hqps/interactive_config_standalone.yaml /opt/flex/share/interactive_config.yaml
 COPY --from=builder /home/graphscope/GraphScope/k8s/dockerfiles/interactive-entrypoint.sh /opt/flex/bin/entrypoint.sh
 RUN sed -i 's/name: modern_graph/name: gs_interactive_default_graph/g' /opt/flex/share/gs_interactive_default_graph/graph.yaml && \
     sed -i 's/default_graph: modern_graph/default_graph: gs_interactive_default_graph/g' /opt/flex/share/interactive_config.yaml
@@ -127,26 +148,27 @@ COPY --from=builder /usr/include/rapidjson /usr/include/rapidjson
 COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/openmpi/include/ /opt/flex/include
 
 
-COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libre2*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libutf8proc*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libevent*.so*  \
-    /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libopen-pal*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libunwind*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libhwloc*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libopen-rte*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libcrypto*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libboost_thread*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libboost_filesystem*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libboost_program_options*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libmpi*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libyaml-cpp*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libglog*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* \
-    /usr/lib/$PLATFORM-linux-gnu/libicudata.so* \
-    /usr/lib/$PLATFORM-linux-gnu/
+COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/ /usr/lib/$PLATFORM-linux-gnu/
+# COPY --from=builder /usr/lib/$PLATFORM-linux-gnu/libprotobuf* /usr/lib/$PLATFORM-linux-gnu/libfmt*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libre2*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libutf8proc*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libevent*.so*  \
+#     /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libltdl*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libopen-pal*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libunwind*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libhwloc*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libopen-rte*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libcrypto*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libboost_thread*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libboost_filesystem*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libboost_program_options*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libmpi*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libyaml-cpp*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libglog*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libgflags*.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/libicudata.so* \
+#     /usr/lib/$PLATFORM-linux-gnu/
 
 RUN sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libLLVM*.so* && sudo rm -rf /opt/flex/lib/libseastar.a && \
     sudo rm -rf /usr/lib/$PLATFORM-linux-gnu/libcuda.so && \
