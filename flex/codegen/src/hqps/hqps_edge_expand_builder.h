@@ -194,9 +194,9 @@ std::string make_prop_tuple_array(const std::vector<std::string>& prop_names,
     }
     prop_types_str = ss.str();
   }
-  boost::format formater(PROP_TUPLE_ARRAY_TEMPLATE);
-  formater % prop_types_str % prop_names_str;
-  return formater.str();
+  boost::format formatter(PROP_TUPLE_ARRAY_TEMPLATE);
+  formatter % prop_types_str % prop_names_str;
+  return formatter.str();
 }
 
 // for  properties of one label. construct a propTupleArray.
@@ -324,9 +324,9 @@ static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
             type_names = "\"\"";
           }
         }
-        boost::format formater(PROP_NAME_ARRAY);
-        formater % edge_expand_e_types_str % type_names;
-        edge_prop_selectors_str = formater.str();
+        boost::format formatter(PROP_NAME_ARRAY);
+        formatter % edge_expand_e_types_str % type_names;
+        edge_prop_selectors_str = formatter.str();
       }
     } else {
       VLOG(10) << "No property found for edge expand";
@@ -353,40 +353,40 @@ static std::pair<std::string, std::string> BuildOneLabelEdgeExpandOpt(
       dst_label_ids_str = label_ids_to_array_str(dst_vertex_labels);
     }
   }
-  boost::format formater("");
+  boost::format formatter("");
   if (expand_opt ==
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
     if (params.has_predicate()) {
       VLOG(10) << "Building EdgeExpandE with predicate";
-      formater = boost::format(EDGE_EXPAND_E_OPT_FILTER_TEMPLATE_STR);
-      formater % expr_var_name % expr_func_name % func_construct_params_str %
+      formatter = boost::format(EDGE_EXPAND_E_OPT_FILTER_TEMPLATE_STR);
+      formatter % expr_var_name % expr_func_name % func_construct_params_str %
           property_selectors_str % opt_var_name % edge_expand_e_types_str %
           edge_prop_selectors_str % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;
     } else {
       VLOG(10) << "Building EdgeExpandE without predicate";
-      formater = boost::format(EDGE_EXPAND_E_OPT_NO_FILTER_TEMPLATE_STR);
-      formater % opt_var_name % edge_expand_e_types_str %
+      formatter = boost::format(EDGE_EXPAND_E_OPT_NO_FILTER_TEMPLATE_STR);
+      formatter % opt_var_name % edge_expand_e_types_str %
           edge_prop_selectors_str % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;
     }
   } else {
     if (params.has_predicate()) {
       VLOG(10) << "Building EdgeExpandV with predicate";
-      formater = boost::format(EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR);
-      formater % expr_var_name % expr_func_name % func_construct_params_str %
+      formatter = boost::format(EDGE_EXPAND_V_OPT_FILTER_TEMPLATE_STR);
+      formatter % expr_var_name % expr_func_name % func_construct_params_str %
           property_selectors_str % opt_var_name %
           gs::direction_pb_to_str(direction) % edge_label_id_str %
           dst_label_ids_str;
     } else {
       VLOG(10) << "Building EdgeExpandV without predicate";
-      formater = boost::format(EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR);
-      formater % opt_var_name % gs::direction_pb_to_str(direction) %
+      formatter = boost::format(EDGE_EXPAND_V_OPT_NO_FILTER_TEMPLATE_STR);
+      formatter % opt_var_name % gs::direction_pb_to_str(direction) %
           edge_label_id_str % dst_label_ids_str;
     }
   }
 
-  return std::make_pair(opt_var_name, formater.str());
+  return std::make_pair(opt_var_name, formatter.str());
 }
 
 // Building edge expand opt with multiple edge triplet, no expression are
@@ -423,22 +423,22 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
                            func_construct_params_str, property_selectors_str);
   }
 
-  boost::format formater;
+  boost::format formatter;
   if (expand_opt ==
       physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
     auto edge_triplet_2d_array =
         edge_label_triplet_to_array_str(edge_label_triplet);
     if (params.has_predicate()) {
-      formater =
+      formatter =
           boost::format(EDGE_EXPAND_E_OPT_MULTI_EDGE_FILTER_TEMPLATE_STR);
-      formater % expr_var_name % expr_func_name % func_construct_params_str %
+      formatter % expr_var_name % expr_func_name % func_construct_params_str %
           property_selectors_str % opt_var_name % func_template_str %
           gs::direction_pb_to_str(direction) % edge_triplet_2d_array %
           edge_named_prop_array;
     } else {
-      formater =
+      formatter =
           boost::format(EDGE_EXPAND_E_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
-      formater % opt_var_name % func_template_str %
+      formatter % opt_var_name % func_template_str %
           gs::direction_pb_to_str(direction) % edge_triplet_2d_array %
           edge_named_prop_array;
     }
@@ -449,15 +449,15 @@ static std::pair<std::string, std::string> BuildMultiLabelEdgeExpandOpt(
     } else {
       auto edge_triplet_2d_vector =
           edge_label_triplet_to_vector_str(edge_label_triplet);
-      formater =
+      formatter =
           boost::format(EDGE_EXPAND_V_OPT_MULTI_EDGE_NO_FILTER_TEMPLATE_STR);
-      formater % opt_var_name % gs::direction_pb_to_str(direction) %
+      formatter % opt_var_name % gs::direction_pb_to_str(direction) %
           edge_triplet_2d_vector;
     }
   } else {
     throw std::runtime_error("Unknown expand opt");
   }
-  return std::make_pair(opt_var_name, formater.str());
+  return std::make_pair(opt_var_name, formatter.str());
 }
 
 template <typename LabelT>
@@ -584,19 +584,19 @@ class EdgeExpandOpBuilder {
 
     std::string prev_ctx_name, next_ctx_name;
     std::tie(prev_ctx_name, next_ctx_name) = ctx_.GetPrevAndNextCtxName();
-    boost::format formater("");
+    boost::format formatter("");
     if (expand_opt_ ==
         physical::EdgeExpand::ExpandOpt::EdgeExpand_ExpandOpt_EDGE) {
-      formater = boost::format(EDGE_EXPANDE_OP_TEMPLATE_STR);
+      formatter = boost::format(EDGE_EXPANDE_OP_TEMPLATE_STR);
     } else {
-      formater = boost::format(EDGE_EXPANDV_OP_TEMPLATE_STR);
+      formatter = boost::format(EDGE_EXPANDV_OP_TEMPLATE_STR);
     }
 
     auto append_opt = res_alias_to_append_opt(res_alias_);
-    formater % next_ctx_name % append_opt % format_input_col(v_tag_) %
+    formatter % next_ctx_name % append_opt % format_input_col(v_tag_) %
         ctx_.GraphVar() % make_move(prev_ctx_name) % make_move(opt_name);
 
-    return opt_code + formater.str();
+    return opt_code + formatter.str();
   }
 
  private:

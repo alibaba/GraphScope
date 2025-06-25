@@ -142,10 +142,10 @@ std::string project_case_when_from_project_mapping(
   std::tie(in_col_ids, expr_constructor_param_str, expr_selector_str) =
       concatenate_expr_built_result(ctx, func_construct_param_const,
                                     expr_selectors);
-  boost::format formater(PROJECT_MAPPER_EXPR_TEMPLATE_STR);
-  formater % in_col_ids % expr_func_name % expr_constructor_param_str %
+  boost::format formatter(PROJECT_MAPPER_EXPR_TEMPLATE_STR);
+  formatter % in_col_ids % expr_func_name % expr_constructor_param_str %
       expr_selector_str;
-  return formater.str();
+  return formatter.str();
 }
 
 std::string project_expression_from_project_mapping(
@@ -178,10 +178,10 @@ std::string project_expression_from_project_mapping(
   std::tie(in_col_ids, expr_constructor_param_str, expr_selector_str) =
       concatenate_expr_built_result(ctx, func_construct_param_const,
                                     expr_selectors);
-  boost::format formater(PROJECT_MAPPER_EXPR_TEMPLATE_STR);
-  formater % in_col_ids % expr_func_name % expr_constructor_param_str %
+  boost::format formatter(PROJECT_MAPPER_EXPR_TEMPLATE_STR);
+  formatter % in_col_ids % expr_func_name % expr_constructor_param_str %
       expr_selector_str;
-  return formater.str();
+  return formatter.str();
 }
 
 std::pair<std::string, codegen::DataType> get_prop_name_type_from_variable(
@@ -231,13 +231,13 @@ std::string project_key_value_to_string(BuildingContext& ctx,
     data_type = codegen::DataType::kGlobalVertexId;
   }
 
-  boost::format select_formater(PROPERTY_SELECTOR);
-  select_formater % data_type_2_string(data_type) % prop_name;
-  auto selector_str = select_formater.str();
+  boost::format select_formatter(PROPERTY_SELECTOR);
+  select_formatter % data_type_2_string(data_type) % prop_name;
+  auto selector_str = select_formatter.str();
 
-  boost::format formater(PROJECT_MAPPER_KEY_VALUE_TEMPLATE_STR);
-  formater % real_in_col_id % key_str % selector_str;
-  return formater.str();
+  boost::format formatter(PROJECT_MAPPER_KEY_VALUE_TEMPLATE_STR);
+  formatter % real_in_col_id % key_str % selector_str;
+  return formatter.str();
 }
 
 std::string project_variable_mapping_to_string(BuildingContext& ctx,
@@ -265,9 +265,9 @@ std::string project_key_values_to_string(
   }
 
   auto key_value_str = join_string(key_value_strs, ", ");
-  boost::format formater(PROJECT_KEY_VALUES_TEMPLATE_STR);
-  formater % key_value_str;
-  return formater.str();
+  boost::format formatter(PROJECT_KEY_VALUES_TEMPLATE_STR);
+  formatter % key_value_str;
+  return formatter.str();
 }
 
 std::string project_variable_mapping_to_string(BuildingContext& ctx,
@@ -350,13 +350,13 @@ std::string project_variable_mapping_to_string(BuildingContext& ctx,
   std::string selector_str;
   VLOG(10) << "Projecting properties" << gs::to_string(prop_names);
   CHECK(prop_names.size() == 1);
-  boost::format select_formater(PROPERTY_SELECTOR);
-  select_formater % data_type_2_string(data_types[0]) % prop_names[0];
-  selector_str = select_formater.str();
+  boost::format select_formatter(PROPERTY_SELECTOR);
+  select_formatter % data_type_2_string(data_types[0]) % prop_names[0];
+  selector_str = select_formatter.str();
 
-  boost::format formater(PROJECT_MAPPER_VAR_TEMPLATE_STR);
-  formater % real_in_col_id % selector_str;
-  return formater.str();
+  boost::format formatter(PROJECT_MAPPER_VAR_TEMPLATE_STR);
+  formatter % real_in_col_id % selector_str;
+  return formatter.str();
 }
 
 /**
@@ -414,12 +414,12 @@ class ProjectOpBuilder {
               << " res_alias: " << res_alias_.value();
     bool is_temp = res_alias_.has_value() && res_alias_.value() == -1;
 
-    boost::format formater(PROJECT_OP_TEMPLATE_STR);
-    formater % next_ctx_name % project_is_append_str(is_append_, is_temp) %
+    boost::format formatter(PROJECT_OP_TEMPLATE_STR);
+    formatter % next_ctx_name % project_is_append_str(is_append_, is_temp) %
         ctx_.GraphVar() % prev_ctx_name % project_cols_code;
     ctx_.UpdateTagIdAndIndMapping(new_tag_id_mapping);
 
-    return formater.str();
+    return formatter.str();
   }
 
  private:

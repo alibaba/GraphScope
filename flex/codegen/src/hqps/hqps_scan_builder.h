@@ -331,30 +331,30 @@ class ScanOpBuilder {
     std::string next_ctx_name = ctx_.GetCurCtxName();
     auto append_opt = res_alias_to_append_opt(res_alias_);
 
-    boost::format formater;
+    boost::format formatter;
     if (labels_ids_.size() == 1) {
       if (scan_with_oid_gid_) {
-        formater = boost::format(SCAN_OP_WITH_OID_ONE_LABEL_TEMPLATE_STR);
+        formatter = boost::format(SCAN_OP_WITH_OID_ONE_LABEL_TEMPLATE_STR);
       } else {
-        formater = boost::format(SCAN_OP_WITH_GID_ONE_LABEL_TEMPLATE_STR);
+        formatter = boost::format(SCAN_OP_WITH_GID_ONE_LABEL_TEMPLATE_STR);
       }
-      formater % next_ctx_name % append_opt % oid_or_gid_type_name_ %
+      formatter % next_ctx_name % append_opt % oid_or_gid_type_name_ %
           ctx_.GraphVar() % labels_ids_[0] % oid_or_gid_;
-      return formater.str();
+      return formatter.str();
     } else {
       if (scan_with_oid_gid_) {
-        formater = boost::format(SCAN_OP_WITH_OID_MUL_LABEL_TEMPLATE_STR);
+        formatter = boost::format(SCAN_OP_WITH_OID_MUL_LABEL_TEMPLATE_STR);
       } else {
-        formater = boost::format(SCAN_OP_WITH_GID_MUL_LABEL_TEMPLATE_STR);
+        formatter = boost::format(SCAN_OP_WITH_GID_MUL_LABEL_TEMPLATE_STR);
       }
       std::stringstream ss;
       for (size_t i = 0; i + 1 < labels_ids_.size(); ++i) {
         ss << std::to_string(labels_ids_[i]) << ", ";
       }
       ss << std::to_string(labels_ids_[labels_ids_.size() - 1]);
-      formater % next_ctx_name % append_opt % oid_or_gid_type_name_ %
+      formatter % next_ctx_name % append_opt % oid_or_gid_type_name_ %
           ctx_.GraphVar() % labels_ids_.size() % ss.str() % oid_or_gid_;
-      return formater.str();
+      return formatter.str();
     }
   }
 
@@ -375,10 +375,10 @@ class ScanOpBuilder {
       }
       label_ids_str = ss.str();
     }
-    boost::format formater(SCAN_OP_TEMPLATE_NO_EXPR_STR);
-    formater % ctx_.GetCurCtxName() % res_alias_to_append_opt(res_alias_) %
+    boost::format formatter(SCAN_OP_TEMPLATE_NO_EXPR_STR);
+    formatter % ctx_.GetCurCtxName() % res_alias_to_append_opt(res_alias_) %
         ctx_.GraphVar() % label_ids_str;
-    return formater.str();
+    return formatter.str();
   }
 
   std::string scan_with_expr(const std::string& expr_var_name,
@@ -403,11 +403,11 @@ class ScanOpBuilder {
       label_ids_str = ss.str();
     }
 
-    boost::format formater(SCAN_OP_TEMPLATE_STR);
-    formater % expr_var_name % expr_func_name % expr_construct_params %
+    boost::format formatter(SCAN_OP_TEMPLATE_STR);
+    formatter % expr_var_name % expr_func_name % expr_construct_params %
         selectors_str % next_ctx_name % res_alias_to_append_opt(res_alias_) %
         ctx_.GraphVar() % label_ids_str;
-    return formater.str();
+    return formatter.str();
   }
 
   std::string scan_with_expr_and_oid_gid(
@@ -432,16 +432,16 @@ class ScanOpBuilder {
       label_ids_str = ss.str();
     }
 
-    boost::format formater;
+    boost::format formatter;
     if (scan_with_oid_gid_) {
-      formater = boost::format(SCAN_OP_BOTH_OID_EXPR_TEMPLATE_STR);
+      formatter = boost::format(SCAN_OP_BOTH_OID_EXPR_TEMPLATE_STR);
     } else {
-      formater = boost::format(SCAN_OP_BOTH_GID_EXPR_TEMPLATE_STR);
+      formatter = boost::format(SCAN_OP_BOTH_GID_EXPR_TEMPLATE_STR);
     }
-    formater % expr_var_name % expr_func_name % expr_construct_params %
+    formatter % expr_var_name % expr_func_name % expr_construct_params %
         selectors_str % next_ctx_name % res_alias_to_append_opt(res_alias_) %
         oid_or_gid_type_name_ % ctx_.GraphVar() % label_ids_str % oid_or_gid_;
-    return formater.str();
+    return formatter.str();
   }
 
   void get_real_oid_gid_type_name() {
