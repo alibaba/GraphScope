@@ -5,9 +5,72 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 28 Apr 2025 07:05:28 +0000</pubDate>
-    <lastBuildDate>Mon, 28 Apr 2025 07:05:28 +0000</lastBuildDate>
+    <pubDate>Fri, 13 Jun 2025 09:35:29 +0000</pubDate>
+    <lastBuildDate>Fri, 13 Jun 2025 09:35:29 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>New Breakthrough in Declarative Graph Benchmarking: GraphScope Flex Shatters LDBC SNB Interactive Benchmark World Record</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-20-title.jpg&quot; alt=&quot;release-note&quot; /&gt;
+The &lt;a href=&quot;http://ldbcouncil.org/&quot;&gt;Linked Data Benchmark Council (LDBC)&lt;/a&gt; has released the latest results of its SNB Interactive Benchmark (via Declarative Queries), where &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/flex&quot;&gt;GraphScope Flex&lt;/a&gt; achieved a historic breakthrough with a throughput exceeding &lt;strong&gt;80,000&lt;/strong&gt; QPS (queries per second) – nearly &lt;strong&gt;twice&lt;/strong&gt; the performance of the previous record holder!&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-06-13-ldbc-record.png&quot; alt=&quot;ldbc-record&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;LDBC is an internationally recognized authority in graph data and computing. Its Social Network Benchmark (SNB) simulates a Facebook-like social graph, covering CRUD operations, shortest-path queries, multi-hop traversals, and more, making it the industry’s gold standard for transactional online query performance evaluation. SNB supports two implementation approaches:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Imperative&lt;/strong&gt;: Requires graph experts to manually write and optimize queries in programming languages like C++.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Declarative&lt;/strong&gt;: Uses graph query languages like Cypher, with the system automatically optimizing execution.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In this benchmark, GraphScope Flex exclusively used declarative Cypher queries for all test cases, demonstrating not only its leadership in declarative query optimization and execution but also its full-stack technical prowess – from underlying storage to high-level optimization.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;full-stack-optimization-synergistic-advancements-in-storage-and-compute&quot;&gt;Full-Stack Optimization: Synergistic Advancements in Storage and Compute&lt;/h2&gt;
+
+&lt;p&gt;GraphScope Flex’s record-breaking performance is built on innovations across storage, compute, and scheduling:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Efficient Storage Structure&lt;/strong&gt;: Employs a compact adjacency list format with vertex/edge compression and memory layout optimizations, enabling larger graph datasets on the same hardware.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Intelligent Memory Management&lt;/strong&gt;: Enhances traversal locality via prefetching and caching, significantly reducing memory access latency.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;High-Concurrency Transaction Support&lt;/strong&gt;: Leverages MVCC (Multi-Version Concurrency Control) for high-throughput queries while maintaining low-latency data modification.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;End-to-End Vertical Optimization&lt;/strong&gt;: Coordinated optimizations across storage, compute, and scheduling layers ensure peak performance.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;a-milestone-in-declarative-graph-query-optimization&quot;&gt;A Milestone in Declarative Graph Query Optimization&lt;/h2&gt;
+
+&lt;p&gt;Powered by its robust infrastructure, GraphScope Flex employs its in-house &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt Optimization Framework&lt;/a&gt; to intelligently transform declarative queries into high-performance execution plans:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Rule-Based Optimization (RBO)&lt;/strong&gt;: Pluggble heuristic rules (e.g., filter pushdown, field trimming, join fusion) optimize query plans, minimizing intermediate results and boosting efficiency.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Automatic Type Inference&lt;/strong&gt;: Dynamically deduces implicit type constraints in patterns, validating them against the data graph to avoid invalid traversals and improve cardinality estimation.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cost-Based Optimization (CBO)&lt;/strong&gt;: Uses high-order statistics and backend-registered cost models to search for optimal execution plans via branch-and-bound strategies, balancing data characteristics and system-specific implementations.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The research behind GOpt has been accepted by &lt;a href=&quot;https://2025.sigmod.org/sigmod_industry_papers.shtml&quot;&gt;SIGMOD 2025&lt;/a&gt;. Additionally, we’ve published a detailed paper on arXiv outlining GraphScope’s optimizations for the LDBC SNB benchmark (&lt;a href=&quot;https://arxiv.org/abs/2503.22091&quot;&gt;paper link&lt;/a&gt;).&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;leading-in-both-declarative-and-imperative-snb-leaderboard&quot;&gt;Leading in Both Declarative and Imperative SNB Leaderboard&lt;/h2&gt;
+
+&lt;p&gt;GraphScope currently holds the performance record for &lt;strong&gt;imperative queries&lt;/strong&gt; in the LDBC SNB Interactive benchmark. This latest breakthrough in declarative queries further cements its technical leadership – its declarative performance even surpasses other players’ records in imperative scenarios. This achievement proves that GraphScope Flex’s auto-optimized declarative queries are not only &lt;strong&gt;highly efficient&lt;/strong&gt; and &lt;strong&gt;user-friendly&lt;/strong&gt;, but also exceed manually tuned imperative solutions, dramatically lowering the barrier to high-performance graph querying.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;acknowledgments&quot;&gt;Acknowledgments&lt;/h2&gt;
+&lt;p&gt;The GraphScope team gratefully acknowledges the research contributions of Prof. Cheng Li (University of Science and Technology of China) and Prof. Ying Zhang (Zhejiang Gongshang University). Their rigorous prototype validation and performance benchmarking were instrumental in enhancing​the system’s performance during this benchmark evaluation.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 12 Jun 2025 15:03:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2025/06/12/graphscope-flex-achieved-record-breaking-on-ldbc-snb-interactive-workload-declarative.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/06/12/graphscope-flex-achieved-record-breaking-on-ldbc-snb-interactive-workload-declarative.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Why DuckDB Is Such A Good Database Product</title>
@@ -1520,187 +1583,6 @@ We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 rele
         
         
         <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Import and Export Graph Data of Neo4j with GraphAr</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-09-14-title-picture.jpg&quot; alt=&quot;title-picture&quot; /&gt;
-&lt;a href=&quot;https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval&quot;&gt;GraphAr&lt;/a&gt; is an open source, standard data file format for graph data storage and retrieval. It defines a standardized file format for graph data, and provides a set of interfaces for generating, accessing, and transforming these formatted files.
-This post is a quick guide that shows how to import and export graph data of &lt;a href=&quot;https://neo4j.com/product/neo4j-graph-database/&quot;&gt;Neo4j&lt;/a&gt; with GraphAr.&lt;/p&gt;
-
-&lt;h3 id=&quot;what-is-graphar&quot;&gt;What is GraphAr?&lt;/h3&gt;
-
-&lt;p&gt;GraphAr (Graph Archive, abbreviated as GAR) defines a standardized, system-independent file format for graph data and provides a set of interfaces for generating, accessing, and converting these formatted files. GraphAr can help various graph computing applications or existing systems to conveniently build and access graph data. It can be used as a direct data source for graph computing applications, as well as for importing/exporting and persistently storing graph data, reducing the overhead of collaboration between various graph systems. The following figure shows the scenario of using GraphAr as a graph data archiving format and data source for graph computing applications: with GraphAr, users can quickly and easily import/export graph data from/to graph databases, such as Neo4j, and use GraphAr as a data source for graph computing applications, such as GraphScope.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-09-14-graphar-exchange.jpg&quot; alt=&quot;graphar-exchange&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;graphar-spark-sdk&quot;&gt;GraphAr Spark SDK&lt;/h3&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://alibaba.github.io/GraphAr/user-guide/spark-lib.html&quot;&gt;GraphAr Spark SDK&lt;/a&gt; uses maven as a package build system and requires Java 8 or higher. We provide a script to build GraphAr Spark SDK. To build GraphAr Spark SDK, run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# download GraphAr Spark SDK source code&lt;/span&gt;
-git clone https://github.com/alibaba/GraphAr.git
-&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;GraphAr
-&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;spark
-
-&lt;span class=&quot;c&quot;&gt;# build GraphAr Spark SDK&lt;/span&gt;
-./scripts/build.sh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;exportimport-graph-data-of-neo4j-with-graphar&quot;&gt;Export/Import Graph Data of Neo4j with GraphAr&lt;/h3&gt;
-
-&lt;p&gt;Neo4j is a popular graph database system and it provide &lt;a href=&quot;https://neo4j.com/docs/spark/current/overview/&quot;&gt;Neo4j Spark Connector&lt;/a&gt; tool to import/export graph data between Neo4j and Spark. GraphAr Spark SDK can be used as a data source for Neo4j Spark Connector to import/export graph data between Neo4j and GraphAr.&lt;/p&gt;
-
-&lt;p&gt;To demonstrate how to export graph data of Neo4j to GraphAr, we use &lt;a href=&quot;https://github.com/neo4j-graph-examples/movies&quot;&gt;movie graph data&lt;/a&gt; of Neo4j as an example to show how to export graph data of Neo4j with GraphAr. The following figure shows the movie graph data of Neo4j:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-09-14-movie-example.jpg&quot; alt=&quot;movie-example&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;deploy-neo4j&quot;&gt;Deploy Neo4j&lt;/h4&gt;
-
-&lt;p&gt;Before exporting graph data of Neo4j with GraphAr, we need to deploy Neo4j. Here we provide a script to deploy Neo4j to HOME directory. But If you already have a Neo4j instance, you can skip this step. To deploy Neo4j, run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./scripts/get-neo4j-to-home.sh
-&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NEO4J_HOME&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HOME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/neo4j-community-4.4.23&quot;&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NEO4J_HOME&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;/bin:&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;${&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;PATH&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Set the initial password of Neo4j:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;neo4j-admin set-initial-password xxxx &lt;span class=&quot;c&quot;&gt;# set your password here&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h4 id=&quot;load-movie-graph-data-to-neo4j&quot;&gt;Load Movie Graph Data to Neo4j&lt;/h4&gt;
-
-&lt;p&gt;Neo4j provides a movie graph data example in their dateset. We can load this movie graph data to Neo4j. To load movie graph data to Neo4j, run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./scripts/deploy-neo4j-movie-data.sh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;p&gt;After loading movie graph data to Neo4j, we can use Neo4j Browser to check the movie graph data. The username is &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;neo4j&lt;/code&gt; and the password is the one you set in the previous step. Open the &lt;a href=&quot;http://localhost:7474/browser&quot;&gt;Neo4j browser&lt;/a&gt; to check the movie graph data. The following figure shows the movie graph data of Neo4j:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-09-14-neo4j-browser.jpg&quot; alt=&quot;neo4j-browser&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;export-graph-data-of-neo4j-with-graphar&quot;&gt;Export Graph Data of Neo4j with GraphAr&lt;/h4&gt;
-
-&lt;p&gt;GraphAr provides a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Neo4j2GraphAr&lt;/code&gt; example class to export movie graph data of Neo4j to GraphAr. The following code shows how to export graph data of Neo4j to GraphAr:&lt;/p&gt;
-
-&lt;div class=&quot;language-scala highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Neo4j2GraphAr&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Unit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// connect to the Neo4j instance&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;spark&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SparkSession&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;builder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;Neo4j to GraphAr for Movie Graph&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;neo4j.url&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bolt://localhost:7687&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.type&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;basic&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.basic.username&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;NEO4J_USR&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.basic.password&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;NEO4J_PWD&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;spark.master&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;local&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;getOrCreate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// initialize a graph writer&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;writer&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;GraphWriter&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;GraphWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// put movie graph data into writer&lt;/span&gt;
-    &lt;span class=&quot;nf&quot;&gt;readAndPutDataIntoWriter&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;writer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// output directory&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;outputPath&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// vertex chunk size&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;vertexChunkSize&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;toLong&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// edge chunk size&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;edgeChunkSize&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Long&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;2&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;toLong&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// file type&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;fileType&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// write in graphar format&lt;/span&gt;
-    &lt;span class=&quot;nv&quot;&gt;writer&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;write&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;outputPath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;s&quot;&gt;&quot;MovieGraph&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;vertexChunkSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;edgeChunkSize&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-      &lt;span class=&quot;n&quot;&gt;fileType&lt;/span&gt;
-    &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The code above shows how to export graph data of Neo4j to GraphAr. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readAndPutDataIntoWriter&lt;/code&gt; method is used to read graph data of Neo4j and put the graph data into a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphWriter&lt;/code&gt; instance. The detail of the implementation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readAndPutDataIntoWriter&lt;/code&gt; method can be found in the &lt;a href=&quot;https://github.com/alibaba/GraphAr/blob/main/spark/src/main/scala/com/alibaba/graphar/example/Neo4j2GraphAr.scala&quot;&gt;Neo4j2GraphAr.scala&lt;/a&gt; file.&lt;/p&gt;
-
-&lt;p&gt;To run the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Neo4j2GraphAr&lt;/code&gt; example, just run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NEO4J_USR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;neo4j&quot;&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;NEO4J_PWD&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;xxxx&quot;&lt;/span&gt; &lt;span class=&quot;c&quot;&gt;# the password you set in the previous step&lt;/span&gt;
-./scripts/run-neo4j2graphar.sh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The example will convert the movie data in Neo4j to GraphAr data and save it to the directory &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/tmp/graphar/neo4j2graphar&lt;/code&gt;.&lt;/p&gt;
-
-&lt;h4 id=&quot;import-graph-data-of-neo4j-with-graphar&quot;&gt;Import Graph Data of Neo4j with GraphAr&lt;/h4&gt;
-
-&lt;p&gt;In the same way, GraphAr provides a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphAr2Neo4j&lt;/code&gt; example class to import movie graph data of GraphAr to Neo4j. The following code shows how to import graph data of GraphAr to Neo4j:&lt;/p&gt;
-
-&lt;div class=&quot;language-scala highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;object&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;GraphAr2Neo4j&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-
-  &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;main&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Array&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;])&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;Unit&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// connect to the Neo4j instance&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;spark&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;SparkSession&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;builder&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;appName&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;GraphAr to Neo4j for Movie Graph&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;neo4j.url&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;bolt://localhost:7687&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.type&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;basic&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.basic.username&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;NEO4J_USR&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;
-        &lt;span class=&quot;s&quot;&gt;&quot;neo4j.authentication.basic.password&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt;
-        &lt;span class=&quot;nv&quot;&gt;sys&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;env&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;NEO4J_PWD&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;).&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;get&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;spark.master&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;local&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-      &lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;getOrCreate&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// path to the graph information file&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;graphInfoPath&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;args&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;graphInfo&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GraphInfo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;loadGraphInfo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graphInfoPath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-
-    &lt;span class=&quot;c1&quot;&gt;// The edge data need to convert src and dst to the vertex id , so we need to read&lt;/span&gt;
-    &lt;span class=&quot;c1&quot;&gt;// the vertex data with index column.&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;graphData&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;GraphReader&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graphInfoPath&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;vertexData&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;graphData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;_1&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;edgeData&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;graphData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;_2&lt;/span&gt;
-
-    &lt;span class=&quot;nf&quot;&gt;putVertexDataIntoNeo4j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graphInfo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertexData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-    &lt;span class=&quot;nf&quot;&gt;putEdgeDataIntoNeo4j&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graphInfo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;vertexData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;edgeData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;spark&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
-  &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The code above shows how to import graph data of GraphAr to Neo4j. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;putVertexDataIntoNeo4j&lt;/code&gt; method is used to put vertex data of GraphAr into Neo4j. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;putEdgeDataIntoNeo4j&lt;/code&gt; method is used to put edge data of GraphAr into Neo4j. The detail of the implementation of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;putVertexDataIntoNeo4j&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;putEdgeDataIntoNeo4j&lt;/code&gt; methods can be found in the &lt;a href=&quot;https://github.com/alibaba/GraphAr/blob/main/spark/src/main/scala/com/alibaba/graphar/example/GraphAr2Neo4j.scala&quot;&gt;GraphAr2Neo4j.scala&lt;/a&gt; file.&lt;/p&gt;
-
-&lt;p&gt;To run the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphAr2Neo4j&lt;/code&gt; example, just run the following command:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;./scripts/run-graphar2neo4j.sh
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Now we have successfully imported the movie graph data of GraphAr to Neo4j. We can use Neo4j Browser to check the movie graph data like the previous step.&lt;/p&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;GraphAr define a simple and standard data file format for graph data storage and retrieval. It provides a set of interfaces for generating, accessing, and converting these formatted files. GraphAr can help various graph computing applications or existing systems to conveniently build and access graph data. It can be used as a direct data source for graph computing applications, as well as for importing/exporting and persistently storing graph data, reducing the overhead of collaboration between various graph systems. In this post, we show how to import and export graph data of Neo4j with GraphAr. There are many other examples in GraphAr Spark SDK. Please refer to &lt;a href=&quot;https://alibaba.github.io/GraphAr/applications/out-of-core.html&quot;&gt;more examples&lt;/a&gt; to learn about the other available case studies utilizing GraphAr Spark SDK.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 14 Sep 2023 06:00:42 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2023/09/14/Import-and-Export-Graph-Data-of-Neo4j-with-GraphAr.html</guid>
-        
-        
-        <category>Tech</category>
         
       </item>
     
