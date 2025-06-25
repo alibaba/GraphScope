@@ -79,7 +79,7 @@ class ClientWrapper(object):
             from gscoordinator.flex.core.insight import init_groot_client
             initializer = init_groot_client
         if initializer is None:
-            logger.warn(f"Client initializer of {SOLUTION} not found.")
+            logger.warning(f"Client initializer of {SOLUTION} not found.")
             return None
         return initializer(config)
 

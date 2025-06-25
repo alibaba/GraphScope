@@ -60,7 +60,7 @@ class OneDayAlertMessageCollector(object):
         try:
             self.dump_to_disk()
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 "Failed to dump alert message on date %s: %s",
                 str(self._date),
                 str(e),
@@ -74,7 +74,7 @@ class OneDayAlertMessageCollector(object):
                 with open(self._pickle_path, "rb") as f:
                     self._messages = pickle.load(f)  # noqa: B301
         except Exception as e:
-            logger.warn(
+            logger.warning(
                 "Failed to recover alert message from path %s: %s",
                 self._pickle_path,
                 str(e),
@@ -151,7 +151,7 @@ class AlertMessageCollector(object):
                         os.remove(file_path)
                         logger.info("Clean alert file: %s", str(file_path))
         except Exception as e:
-            logger.warn("Failed to clean the alert file: %s", str(e))
+            logger.warning("Failed to clean the alert file: %s", str(e))
 
     def is_message_belongs_to_certain_day(self, message, date):
         """

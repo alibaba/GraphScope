@@ -45,14 +45,14 @@ class DataSourceManager(object):
                 with open(self._pickle_path, "rb") as f:
                     self._datasource_mapping = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover data source mapping: %s", str(e))
+            logger.warning("Failed to recover data source mapping: %s", str(e))
 
     def dump_to_disk(self):
         try:
             with open(self._pickle_path, "wb") as f:
                 pickle.dump(self._datasource_mapping, f)
         except Exception as e:
-            logger.warn("Failed to dump data source mapping: %s", str(e))
+            logger.warning("Failed to dump data source mapping: %s", str(e))
 
     def get_edge_full_label(
         self,

@@ -118,5 +118,5 @@ class DingTalkReceiver(object):
                 raise RuntimeError(str(rlt))
 
         except Exception as e:
-            logger.warn("Failed to send dingtalk: %s", str(e))
+            logger.warning("Failed to send dingtalk: %s", str(e))
             self._error_msg = str(e)
