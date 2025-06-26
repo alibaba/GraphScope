@@ -36,6 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Objects;
 
@@ -44,6 +45,15 @@ import java.util.Objects;
  */
 public interface IrDataTypeConvertor<T> {
     Logger logger = LoggerFactory.getLogger(IrDataTypeConvertor.class);
+
+    // support unsigned type as decimal type with fixed precision and scale
+    int UINT32_PRECISION = 10;
+    int UINT32_SCALE = 0;
+    int UINT64_PRECISION = 20;
+    int UINT64_SCALE = 0;
+
+    BigDecimal UINT32_MAX = new BigDecimal("4294967295");
+    BigDecimal UINT64_MAX = new BigDecimal("18446744073709551615");
 
     RelDataType convert(T dataFrom);
 
@@ -77,9 +87,17 @@ public interface IrDataTypeConvertor<T> {
                 case INT:
                     // 4-bytes signed integer
                     return typeFactory.createSqlType(SqlTypeName.INTEGER);
+                case UINT:
+                    // 4-bytes unsigned integer
+                    return typeFactory.createSqlType(
+                            SqlTypeName.DECIMAL, UINT32_PRECISION, UINT32_SCALE);
                 case LONG:
                     // 8-bytes signed integer
                     return typeFactory.createSqlType(SqlTypeName.BIGINT);
+                case ULONG:
+                    // 8-bytes unsigned integer
+                    return typeFactory.createSqlType(
+                            SqlTypeName.DECIMAL, UINT64_PRECISION, UINT64_SCALE);
                 case FLOAT:
                     // single precision floating point, 4 bytes
                     return typeFactory.createSqlType(SqlTypeName.FLOAT);
