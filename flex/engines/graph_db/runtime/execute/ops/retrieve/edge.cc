@@ -640,7 +640,24 @@ bl::result<ReadOpBuildResultT> EdgeExpandGetVOprBuilder::Build(
 
     EdgeExpandParams eep;
     eep.v_tag = v_tag;
-    eep.labels = parse_label_triplets(plan.plan(op_idx).meta_data(0));
+    auto temps = parse_label_triplets(plan.plan(op_idx).meta_data(0));
+    auto tables = parse_tables(v_opr.params());
+    if (tables.size() > 0) {
+      for (auto& label : temps) {
+        if ((dir == Direction::kIn || dir == Direction::kBoth) &&
+            std::find(tables.begin(), tables.end(), label.src_label) !=
+                tables.end()) {
+          eep.labels.emplace_back(label);
+        } else if ((dir == Direction::kOut || dir == Direction::kBoth) &&
+                   std::find(tables.begin(), tables.end(), label.dst_label) !=
+                       tables.end()) {
+          eep.labels.emplace_back(label);
+        }
+      }
+    } else {
+      eep.labels = temps;
+    }
+
     eep.dir = dir;
     eep.alias = alias;
     eep.is_optional = is_optional;

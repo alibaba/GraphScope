@@ -199,7 +199,11 @@ class GetV {
           LOG(ERROR) << "output_vertex_label != params.tables[0]"
                      << static_cast<int>(output_vertex_label) << " "
                      << static_cast<int>(params.tables[0]);
-          RETURN_BAD_REQUEST_ERROR("output_vertex_label != params.tables[0]");
+          auto builder = SLVertexColumnBuilder::builder(output_vertex_label);
+          std::vector<size_t> offsets;
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                                 offsets);
+          return ctx;
         }
       }
       auto builder = SLVertexColumnBuilder::builder(output_vertex_label);
@@ -263,6 +267,30 @@ class GetV {
                 if (std::find(labels.begin(), labels.end(), label.dst_label) !=
                     labels.end()) {
                   builder.push_back_vertex({label.dst_label, dst});
+                  shuffle_offset.push_back(index);
+                }
+              });
+        }
+        ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                               shuffle_offset);
+        return ctx;
+      } else if (labels.size() == 1) {
+        auto builder = SLVertexColumnBuilder::builder(labels[0]);
+        if (opt == VOpt::kStart) {
+          input_edge_list.foreach_edge(
+              [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
+                  const EdgeData& edata, Direction dir) {
+                if (label.src_label == labels[0]) {
+                  builder.push_back_opt(src);
+                  shuffle_offset.push_back(index);
+                }
+              });
+        } else if (opt == VOpt::kEnd) {
+          input_edge_list.foreach_edge(
+              [&](size_t index, const LabelTriplet& label, vid_t src, vid_t dst,
+                  const EdgeData& edata, Direction dir) {
+                if (label.dst_label == labels[0]) {
+                  builder.push_back_opt(dst);
                   shuffle_offset.push_back(index);
                 }
               });
