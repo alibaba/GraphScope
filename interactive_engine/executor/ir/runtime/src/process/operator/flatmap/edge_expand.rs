@@ -87,8 +87,12 @@ impl<E: Entry + 'static> FlatMapFunction<Record, Record> for EdgeExpandOperator<
                         // the case of get degree.
                         ExpandOpt::Degree => {
                             let degree = iter.count();
-                            input.append(object!(degree), self.alias);
-                            Ok(Box::new(vec![input].into_iter()))
+                            if !self.is_optional && degree == 0 {
+                                Ok(Box::new(vec![].into_iter()))
+                            } else {
+                                input.append(object!(degree), self.alias);
+                                Ok(Box::new(vec![input].into_iter()))
+                            }
                         }
                     }
                 }
