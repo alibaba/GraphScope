@@ -199,7 +199,11 @@ class GetV {
           LOG(ERROR) << "output_vertex_label != params.tables[0]"
                      << static_cast<int>(output_vertex_label) << " "
                      << static_cast<int>(params.tables[0]);
-          RETURN_BAD_REQUEST_ERROR("output_vertex_label != params.tables[0]");
+          auto builder = SLVertexColumnBuilder::builder(output_vertex_label);
+          std::vector<size_t> offsets;
+          ctx.set_with_reshuffle(params.alias, builder.finish(nullptr),
+                                 offsets);
+          return ctx;
         }
       }
       auto builder = SLVertexColumnBuilder::builder(output_vertex_label);
