@@ -25,6 +25,9 @@ class ColumnsUtils {
   template <typename VEC_T>
   static void generate_dedup_offset(const VEC_T& vec, size_t row_num,
                                     std::vector<size_t>& offsets) {
+    if (row_num == 0) {
+      return;
+    }
     std::vector<size_t> row_indices(row_num);
     row_indices.resize(row_num);
     std::iota(row_indices.begin(), row_indices.end(), 0);
