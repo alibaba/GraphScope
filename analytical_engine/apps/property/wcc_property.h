@@ -140,6 +140,21 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
       }
     }
 
+    for (label_id_t i = 0; i < v_label_num; ++i) {
+      auto iv = frag.InnerVertices(i);
+      bool ok = false;
+      for (auto v : iv) {
+        if (ctx.next_modified[i][v]) {
+          messages.ForceContinue();
+          ok = true;
+          break;
+        }
+      }
+      if (ok) {
+        break;
+      }
+    }
+
     ctx.curr_modified.swap(ctx.next_modified);
   }
 
