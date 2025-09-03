@@ -36,7 +36,7 @@ public class CuratorUtils {
     private static final Logger logger = LoggerFactory.getLogger(CuratorUtils.class);
 
     public static CuratorFramework makeCurator(Configs configs) {
-        String connectionString = ZkConfig.ZK_CONNECT_STRING.get(configs);
+        String connectionString = ZkConfig.getZkServers(configs);
         int sessionTimeoutMs = ZkConfig.ZK_SESSION_TIMEOUT_MS.get(configs);
         int connectionTimeoutMs = ZkConfig.ZK_CONNECTION_TIMEOUT_MS.get(configs);
         int baseSleepMs = ZkConfig.ZK_BASE_SLEEP_MS.get(configs);

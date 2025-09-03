@@ -40,6 +40,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.table.TableRowSorter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -84,6 +85,7 @@ public class StoreService {
     private LongCounter writeCounter;
     private LongHistogram writeHistogram;
     private LongHistogram gcHistogram;
+    private volatile boolean enableCatchUpPrimary = true;
 
     public StoreService(Configs storeConfigs, MetaService metaService) {
         this.storeConfigs = storeConfigs;
@@ -499,6 +501,26 @@ public class StoreService {
         }
     }
 
+    public void compactSinglePartition(int partitionId, CompletionCallback<Void> callback) {
+        if (isSecondary) {
+            callback.onCompleted(null);
+            return;
+        }
+        GraphPartition partition = this.idToPartition.get(partitionId);
+        if (partition == null) {
+            callback.onError(new Exception(partitionId + ":partition not found"));
+        }
+        try {
+            logger.info("Compaction of {} partition started", partition.getId());
+            partition.compact();
+            logger.info("Compaction of {} partition finished", partition.getId());
+            callback.onCompleted(null);
+        } catch (Exception e) {
+            logger.error("compact DB failed", e);
+            callback.onError(e);
+        }
+    }
+
     public void compactDB(CompletionCallback<Void> callback) {
         if (isSecondary) {
             callback.onCompleted(null);
@@ -541,6 +563,9 @@ public class StoreService {
 
     public void tryCatchUpWithPrimary() throws IOException {
         if (!isSecondary) {
+            return;
+        }
+        if (!enableCatchUpPrimary) {
             return;
         }
         for (GraphPartition partition : this.idToPartition.values()) {
@@ -592,6 +617,10 @@ public class StoreService {
                             long[] ret = getDiskStatus();
                             result.record(ret[0] * 1.0 / ret[1]);
                         });
+    }
+
+    public void updateCatchUpStatus(boolean enableStatus) {
+        this.enableCatchUpPrimary = enableStatus;
     }
 
     public long[] getDiskStatus() {

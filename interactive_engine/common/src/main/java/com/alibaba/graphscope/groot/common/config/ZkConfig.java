@@ -15,6 +15,13 @@
  */
 package com.alibaba.graphscope.groot.common.config;
 
+import com.alibaba.graphscope.groot.common.meta.ServerDiscoverMode;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 public class ZkConfig {
     public static final Config<String> ZK_BASE_PATH =
             Config.stringConfig("zk.base.path", "/graphscope/default_graph");
@@ -42,4 +49,43 @@ public class ZkConfig {
 
     public static final Config<String> ZK_AUTH_PASSWORD =
             Config.stringConfig("zk.auth.password", "");
+
+    private static volatile String cachedZkServers;
+    private static volatile long lastUpdateTime = 0L;
+
+    public static String getZkServers(Configs configs) {
+        String kafkaServerDiscoveryMode = CommonConfig.SERVERS_DISCOVERY_MODE.get(configs);
+        if (kafkaServerDiscoveryMode == null) {
+            return ZK_CONNECT_STRING.get(configs);
+        }
+        ServerDiscoverMode discoverMode = ServerDiscoverMode.valueOf(kafkaServerDiscoveryMode);
+        switch (discoverMode) {
+            case SERVICE:
+                return ZK_CONNECT_STRING.get(configs);
+            case FILE:
+                String filePath = ZK_CONNECT_STRING.get(configs);
+                Integer refreshIntervalMs = CommonConfig.FILE_DISCOVERY_INTERVAL_MS.get(configs);
+                long now = System.currentTimeMillis();
+                if (cachedZkServers == null || (now - lastUpdateTime) > refreshIntervalMs) {
+                    synchronized (KafkaConfig.class) {
+                        if (cachedZkServers == null || (now - lastUpdateTime) > refreshIntervalMs) {
+                            try {
+                                Path path = Paths.get(filePath);
+                                if (Files.exists(path)) {
+                                    cachedZkServers = Files.readString(path).trim();
+                                    lastUpdateTime = now;
+                                } else {
+                                    throw new IllegalArgumentException("Zk servers file not found: " + filePath);
+                                }
+                            } catch (IOException e) {
+                                throw new RuntimeException("read Zk servers file error: " + filePath, e);
+                            }
+                        }
+                    }
+                }
+                return cachedZkServers;
+            default:
+                return ZK_CONNECT_STRING.get(configs);
+        }
+    }
 }

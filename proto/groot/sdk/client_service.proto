@@ -36,6 +36,8 @@ service Client {
   rpc compactDB(CompactDBRequest) returns (CompactDBResponse);
   rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
   rpc replayRecordsV2(ReplayRecordsRequestV2) returns(ReplayRecordsResponseV2);
+  rpc updateCatchUpStatus(UpdateCatchUpStatusRequest) returns(UpdateCatchUpStatusResponse);
+  rpc compactPartition(CompactPartitionRequest) returns(CompactPartitionResponse);
 }
 
 message GetSchemaRequest {

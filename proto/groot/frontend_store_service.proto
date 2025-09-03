@@ -28,4 +28,6 @@ service FrontendStoreService {
   rpc reopenSecondary(ReopenSecondaryRequest) returns (ReopenSecondaryResponse);
   rpc GetState(GetStoreStateRequest) returns (GetStoreStateResponse);
   rpc replayRecordsV2(ReplayRecordsRequestV2) returns(ReplayRecordsResponseV2);
+  rpc updateCatchUpStatus(UpdateCatchUpStatusRequest) returns(UpdateCatchUpStatusResponse);
+  rpc compactPartition(CompactPartitionRequest) returns(CompactPartitionResponse);
 }

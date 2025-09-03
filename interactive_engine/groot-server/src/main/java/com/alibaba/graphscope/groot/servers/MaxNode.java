@@ -36,8 +36,8 @@ public class MaxNode extends NodeBase {
     private final List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
-        String zkConnectString = ZkConfig.ZK_CONNECT_STRING.get(configs);
-        String kafkaServers = KafkaConfig.KAFKA_SERVERS.get(configs);
+        String zkConnectString = ZkConfig.getZkServers(configs);
+        String kafkaServers = KafkaConfig.getKafkaServers(configs);
         if (CommonConfig.KAFKA_TEST_CLUSTER_ENABLE.get(configs)) {
             Properties kafkaConfigs = new Properties();
             kafkaConfigs.put("max.request.size", 10000000);
