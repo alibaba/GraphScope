@@ -58,7 +58,7 @@ jobs:
         make install INSTALL_PREFIX=/opt/graphscope
 
     - name: Run Python Test
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.os == 'ubuntu-22.04'
       env:
         FULL_TEST_SUITE: ON
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -71,7 +71,7 @@ jobs:
 
     - name: Upload Coverage
       uses: codecov/codecov-action@v4
-      if: matrix.os == 'ubuntu-20.04'
+      if: matrix.os == 'ubuntu-22.04'
       continue-on-error: true
       with:
         files: ./python/coverage.xml

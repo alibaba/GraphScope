@@ -273,7 +273,7 @@ def get_public_ip() -> Union[str, None]:
         else:
             return None
     except requests.exceptions.RequestException as e:
-        logger.warn("Failed to get public ip: %s", str(e))
+        logger.warning("Failed to get public ip: %s", str(e))
         return None
 
 

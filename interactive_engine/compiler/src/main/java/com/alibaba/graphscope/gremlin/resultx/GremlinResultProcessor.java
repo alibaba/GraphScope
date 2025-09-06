@@ -37,7 +37,7 @@ import org.apache.tinkerpop.gremlin.server.Context;
 import java.util.List;
 import java.util.Map;
 
-public class GremlinResultProcessor implements ExecutionResponseListener {
+public class GremlinResultProcessor implements ExecutionResponseListener<IrResult.Record> {
     protected final Context ctx;
     protected final QueryStatusCallback statusCallback;
     protected final RecordParser<Object> recordParser;

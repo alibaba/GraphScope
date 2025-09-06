@@ -7,7 +7,7 @@ use std::time::Duration;
 use ::rocksdb::backup::{BackupEngine, BackupEngineOptions, RestoreOptions};
 use ::rocksdb::{DBRawIterator, Env, IngestExternalFileOptions, Options, ReadOptions, DB};
 use crossbeam_epoch::{self as epoch, Atomic, Owned};
-use rocksdb::WriteBatch;
+use rocksdb::{WriteBatch, WriteOptions};
 
 use super::{StorageIter, StorageRes};
 use crate::db::api::*;
@@ -85,7 +85,12 @@ impl RocksDB {
 
         let prev = self.db.swap(cur, Ordering::Release, guard);
         unsafe {
-            drop(prev.into_owned());
+            let prev = prev.into_owned();
+            prev.cancel_all_background_work(true);
+            std::thread::spawn(move || {
+                std::thread::sleep(Duration::from_secs(120));
+                drop(prev);
+            });
         }
         info!("RocksDB replaced");
     }
@@ -109,7 +114,9 @@ impl RocksDB {
             return Ok(());
         }
         let db = self.get_db()?;
-        db.put(key, val).map_err(|e| {
+        let mut opt = WriteOptions::default();
+        opt.set_sync(false);
+        db.put_opt(key, val, &opt).map_err(|e| {
             let msg = format!("rocksdb.put failed because {}", e.into_string());
             gen_graph_err!(ErrorCode::EXTERNAL_STORAGE_ERROR, msg)
         })
@@ -381,8 +388,11 @@ fn init_options(options: &HashMap<String, String>) -> Options {
     // https://github.com/facebook/rocksdb/wiki/Basic-Operations#non-sync-writes
     opts.set_use_fsync(true);
     opts.set_max_write_buffer_number(4);
-
+    opts.set_allow_concurrent_memtable_write(true);
+    opts.set_enable_write_thread_adaptive_yield(true);
     opts.set_bytes_per_sync(1048576);
+    opts.set_enable_pipelined_write(true);
+    opts.set_unordered_write(false);
 
     if let Some(conf_str) = options.get("store.rocksdb.disable.auto.compactions") {
         let val = conf_str.parse().unwrap();

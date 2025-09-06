@@ -849,7 +849,9 @@ impl GraphStore {
 
     fn check_si_guard(&self, si: SnapshotId) -> GraphResult<()> {
         let guard = self.si_guard.load(Ordering::Relaxed) as SnapshotId;
-        if si < guard {
+        // allow for a short duration inconsistent, due to different frontend may have minor
+        // difference in timing
+        if guard - si > 10 {
             let msg = format!("si#{} is less than current si_guard#{}", si, guard);
             let err = gen_graph_err!(ErrorCode::INVALID_OPERATION, msg);
             return Err(err);

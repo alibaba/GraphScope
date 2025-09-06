@@ -39,7 +39,9 @@ public class PlannerConfig {
     public static final Config<Integer> GRAPH_PLANNER_GROUP_CLEAR_INTERVAL_MINUTES =
             Config.intConfig("graph.planner.group.clear.interval.minutes", 30);
     public static final Config<String> TRIM_CLASS_NAMES =
-            Config.stringConfig("graph.planner.trim.class.names", "GraphLogicalExpand");
+            Config.stringConfig(
+                    "graph.planner.trim.class.names",
+                    "GraphLogicalExpand, GraphLogicalSource, GraphLogicalGetV");
 
     private final Configs configs;
     private final List<String> rules;

@@ -25,7 +25,7 @@ concurrency:
 
 jobs:
   build-interactive:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
@@ -68,7 +68,7 @@ jobs:
 
 
   test-hqps-engine:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:
@@ -129,6 +129,7 @@ jobs:
         . /home/graphscope/.cargo/env
         which cargo
 
+        rustup toolchain install 1.87.0 && rustup default 1.87.0
         # build compiler
         cd ${GIE_HOME}/
         mvn clean install -Pexperimental -DskipTests -q
@@ -185,6 +186,11 @@ jobs:
         GLOG_v=10 ./bin/bulk_loader -g ${SCHEMA_FILE} -l ${BULK_LOAD_FILE} -d ${TMP_INTERACTIVE_WORKSPACE}/data/modern_graph/indices/
         cd ${GITHUB_WORKSPACE}/flex/tests/hqps
         bash hqps_admin_test.sh ${TMP_INTERACTIVE_WORKSPACE} ./interactive_config_test.yaml ${GS_TEST_DIR}
+
+    - name: Test Interactive Python Admin Service
+      run:
+        cd ${GITHUB_WORKSPACE}/flex/interactive/sdk
+        bash generate_sdk.sh -g python -t server
 
     - name: Build and test Interactive Java/Python SDK
       env: 
@@ -336,6 +342,13 @@ jobs:
            ${GITHUB_WORKSPACE}/flex/interactive/examples/modern_graph/graph.yaml ${INTERACTIVE_ENGINE_HOME}/compiler/src/test/resources/statistics/modern_statistics.json \
           "MATCH(n) return count(n);" /tmp/physical_plan_gen_config.yaml
 
+    - name: Tests cypher write
+      env:
+        INTERACTIVE_WORKSPACE: /tmp/interactive_workspace
+      run: |
+        cd ${GITHUB_WORKSPACE}/flex/tests/hqps
+        bash hqps_cypher_write_test.sh ${INTERACTIVE_WORKSPACE} modern_graph ./interactive_config_test.yaml
+
     - name: Run End-to-End cypher adhoc ldbc query test
       env:
         GS_TEST_DIR: ${{ github.workspace }}/gstest
@@ -409,7 +422,7 @@ jobs:
 
   # test the different combination of cmake options: -DBUILD_TEST=ON/OFF, -DBUILD_ODPS_FRAGMENT_LOADER=ON/OFF
   test-cmake-options:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     strategy:
@@ -429,7 +442,7 @@ jobs:
         sudo make -j4
 
   test-AOCC-compilation:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     container:
       image: registry.cn-hongkong.aliyuncs.com/graphscope/graphscope-dev:v0.24.2-amd64
     steps:
@@ -457,7 +470,7 @@ jobs:
         sudo make -j4
 
   test-flex:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: build-interactive
     if: ${{ github.repository == 'alibaba/GraphScope' }}
     container:

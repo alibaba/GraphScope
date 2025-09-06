@@ -24,10 +24,10 @@ import com.alibaba.graphscope.groot.wal.LogEntry;
 import com.alibaba.graphscope.groot.wal.LogReader;
 import com.alibaba.graphscope.groot.wal.LogService;
 import com.alibaba.graphscope.groot.wal.LogWriter;
-import com.alibaba.graphscope.groot.wal.ReadLogEntry;
 import com.alibaba.graphscope.groot.wal.kafka.KafkaLogService;
 import com.salesforce.kafka.test.junit5.SharedKafkaTestResource;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -94,14 +94,14 @@ public class KafkaWalTest {
         assertEquals(writer.append(queueId, logEntry), 0);
 
         LogReader reader = logService.createReader(queueId, 0);
-        ReadLogEntry readLogEntry = reader.readNext();
+        ConsumerRecord<LogEntry, LogEntry> record = reader.readNextRecord();
         reader.close();
 
         assertAll(
-                () -> assertEquals(readLogEntry.getOffset(), 0),
-                () -> assertEquals(readLogEntry.getLogEntry().getSnapshotId(), snapshotId));
+                () -> assertEquals(record.offset(), 0),
+                () -> assertEquals(record.value().getSnapshotId(), snapshotId));
 
-        OperationBatch operationBatch = readLogEntry.getLogEntry().getOperationBatch();
+        OperationBatch operationBatch = record.value().getOperationBatch();
         assertEquals(operationBatch.getOperationCount(), 1);
         assertEquals(operationBatch.getOperationBlob(0), OperationBlob.MARKER_OPERATION_BLOB);
 
@@ -110,7 +110,7 @@ public class KafkaWalTest {
         assertEquals(writer.append(queueId, logEntry), 3);
 
         LogReader readerTail = logService.createReader(queueId, 4);
-        assertNull(readerTail.readNext());
+        assertNull(readerTail.readNextRecord());
         readerTail.close();
 
         assertThrows(IllegalArgumentException.class, () -> logService.createReader(queueId, 5));

@@ -386,7 +386,7 @@ class DefaultSession(Session):
                 If not provided,the uri will be read from the service status.
         """
         self._admin_uri = admin_uri
-        self._client = ApiClient(Configuration(host=admin_uri))
+        self._client = ApiClient(Configuration(hosts=admin_uri))
 
         self._graph_api = AdminServiceGraphManagementApi(self._client)
         self._job_api = AdminServiceJobManagementApi(self._client)
@@ -405,7 +405,7 @@ class DefaultSession(Session):
             splitted = admin_uri.split(":")
             splitted[-1] = str(service_port)
             stored_proc_uri = ":".join(splitted)
-        self._query_client = ApiClient(Configuration(host=stored_proc_uri))
+        self._query_client = ApiClient(Configuration(hosts=stored_proc_uri))
         self._query_api = QueryServiceApi(self._query_client)
         self._edge_api = GraphServiceEdgeManagementApi(self._query_client)
         self._vertex_api = GraphServiceVertexManagementApi(self._query_client)

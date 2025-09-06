@@ -87,8 +87,8 @@ public class PlanUtils {
                     Code.OK, null, physicalPlan.getContent(), new String(metaStream.toByteArray()));
         } catch (Throwable t) {
             if (t instanceof FrontendException) {
-                return new GraphPlan(
-                        ((FrontendException) t).getErrorCode(), t.getMessage(), null, null);
+                String errorMsg = t.getMessage().substring(0, 1024);
+                return new GraphPlan(((FrontendException) t).getErrorCode(), errorMsg, null, null);
             }
             return new GraphPlan(Code.UNRECOGNIZED, t.getMessage(), null, null);
         }

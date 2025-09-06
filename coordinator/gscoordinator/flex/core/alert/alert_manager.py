@@ -62,14 +62,14 @@ class AlertManager(object):
                 with open(self._receiver_path, "rb") as f:
                     self._receivers = pickle.load(f)
         except Exception as e:
-            logger.warn("Failed to recover alert receiver: %s", str(e))
+            logger.warning("Failed to recover alert receiver: %s", str(e))
 
     def _pickle_receiver_impl(self):
         try:
             with open(self._receiver_path, "wb") as f:
                 pickle.dump(self._receivers, f)
         except Exception as e:
-            logger.warn("Failed to dump receiver: %s", str(e))
+            logger.warning("Failed to dump receiver: %s", str(e))
 
     def list_alert_rules(self) -> List[GetAlertRuleResponse]:
         rlt = []

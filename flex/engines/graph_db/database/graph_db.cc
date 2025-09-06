@@ -42,7 +42,11 @@ struct SessionLocalContext {
                        : thread_local_allocator_prefix(work_dir, thread_id))),
         logger(std::move(in_logger)),
         session(db, allocator, *logger, work_dir, thread_id) {}
-  ~SessionLocalContext() { logger->close(); }
+  ~SessionLocalContext() {
+    if (logger) {
+      logger->close();
+    }
+  }
   Allocator allocator;
   char _padding0[128 - sizeof(Allocator) % 128];
   std::unique_ptr<IWalWriter> logger;

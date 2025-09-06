@@ -19,6 +19,7 @@ import com.alibaba.graphscope.groot.wal.*;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.metrics.Meter;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -248,9 +249,9 @@ public class KafkaAppender {
                 try (LogReader logReader =
                         this.logService.createReader(storeId, offset, timestamp)) {
                     long batchSnapshotId = ingestSnapshotId.get();
-                    ReadLogEntry readLogEntry;
-                    while (!shouldStop && (readLogEntry = logReader.readNext()) != null) {
-                        LogEntry logEntry = readLogEntry.getLogEntry();
+                    ConsumerRecord<LogEntry, LogEntry> readLogEntry;
+                    while (!shouldStop && (readLogEntry = logReader.readNextRecord()) != null) {
+                        LogEntry logEntry = readLogEntry.value();
                         OperationBatch batch =
                                 Utils.extractOperations(logEntry.getOperationBatch(), types);
                         if (batch.getOperationCount() == 0) {

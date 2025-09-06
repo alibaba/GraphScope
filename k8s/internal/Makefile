@@ -110,7 +110,7 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
-	rustup toolchain install 1.81.0 && rustup default 1.81.0 && \
+	rustup toolchain install 1.87.0 && rustup default 1.87.0 && \
 	cd $(WORKING_DIR)/../.. && \
 		if [[ "${PLATFORM}" == "aarch64" ]]; then \
 			export AUDITWHEEL_PLAT=manylinux2014_${PLATFORM}; \

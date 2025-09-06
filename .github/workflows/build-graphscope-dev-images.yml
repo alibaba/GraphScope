@@ -44,7 +44,7 @@ env:
 jobs:
   build-graphscope-dev-wheel-image-amd64:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev_wheel == 'true') || (github.event_name == 'pull_request')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -76,7 +76,7 @@ jobs:
 
   build-graphscope-dev-image-amd64:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_graphscope_dev == 'true') || (github.event_name == 'pull_request')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -108,7 +108,7 @@ jobs:
 
   build-vineyard-dev-image-amd64:
     if: (github.event_name == 'workflow_dispatch' && github.event.inputs.build_vineyard_dev == 'true') || (github.event_name == 'pull_request')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -141,7 +141,7 @@ jobs:
   build-vineyard-runtime-image-amd64:
     # only trigger this step in 'workflow_dispatch' event, since the 'vineyard-dev' image isn't actually pushed in 'pull_request'
     if: ${{ github.event_name == 'workflow_dispatch' }} && ${{ github.event.inputs.build_vineyard_dev == 'true' }} || (github.event_name == 'pull_request')
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: [build-vineyard-dev-image-amd64]
     steps:
     - uses: actions/checkout@v4

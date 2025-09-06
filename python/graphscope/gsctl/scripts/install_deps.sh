@@ -600,9 +600,11 @@ install_libgrape_lite() {
   pushd "${tempdir}" || exit
   git clone -b ${branch} https://github.com/alibaba/libgrape-lite.git
   cd libgrape-lite
+  # Configure the minimum required version of cmake to 3.5: https://github.com/alibaba/GraphScope/actions/runs/14216252611/job/39833569906?pr=4591
   cmake . -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="${install_prefix}" \
-    -DBUILD_LIBGRAPELITE_TESTS=OFF
+    -DBUILD_LIBGRAPELITE_TESTS=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
   make -j$(nproc)
   make install
   popd || exit
@@ -866,9 +868,9 @@ install_analytical_java_dependencies() {
   fi
 }
 
-INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags")
-INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev")
-INTERACTIVE_CENTOS=("rapidjson-devel")
+INTERACTIVE_MACOS=("apache-arrow" "rapidjson" "boost" "glog" "gflags" "yaml-cpp" "protobuf")
+INTERACTIVE_UBUNTU=("rapidjson-dev" "libgoogle-glog-dev" "libgflags-dev" "libyaml-cpp-dev" "libprotobuf-dev" "libgflags-dev")
+INTERACTIVE_CENTOS=("rapidjson-devel" "glog-devel")
 
 install_interactive_dependencies() {
   # dependencies package
@@ -897,8 +899,8 @@ install_interactive_dependencies() {
   if ! command -v rustup &>/dev/null; then
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
     source $HOME/.cargo/env
-    rustup install 1.81.0
-    rustup default 1.81.0
+    rustup install 1.87.0
+    rustup default 1.87.0
     rustc --version
   fi
   # opentelemetry

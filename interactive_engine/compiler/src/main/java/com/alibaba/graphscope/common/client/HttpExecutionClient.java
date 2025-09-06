@@ -53,6 +53,10 @@ public class HttpExecutionClient extends ExecutionClient<URI> {
                         HiactorConfig.INTERACTIVE_QUERY_ENDPOINT.get(graphConfig));
     }
 
+    public Session getSession() {
+        return session;
+    }
+
     @Override
     public void submit(
             ExecutionRequest request,

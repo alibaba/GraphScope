@@ -1830,13 +1830,11 @@ public class GraphBuilderTest {
         RelNode after2 = optimizer.optimize(node2, new GraphIOProcessor(builder, irMeta));
         Assert.assertEquals(
                 "GraphLogicalAggregate(keys=[{variables=[], aliases=[]}], values=[[{operands=[a,"
-                    + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
-                    + "  GraphPhysicalGetV(tableConfig=[{isAll=false, tables=[person]}], alias=[b],"
-                    + " opt=[OTHER], physicalOpt=[ITSELF])\n"
-                    + "    GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
-                    + " alias=[_], startAlias=[a], opt=[BOTH], physicalOpt=[VERTEX])\n"
-                    + "      GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
-                    + " alias=[a], opt=[VERTEX])",
+                        + " b], aggFunction=COUNT, alias='$f0', distinct=false}]])\n"
+                        + "  GraphPhysicalExpand(tableConfig=[{isAll=false, tables=[created]}],"
+                        + " alias=[b], startAlias=[a], opt=[IN], physicalOpt=[VERTEX])\n"
+                        + "    GraphLogicalSource(tableConfig=[{isAll=false, tables=[software]}],"
+                        + " alias=[a], opt=[VERTEX])",
                 after2.explain().trim());
         RelNode node3 = eval("g.V().match(as('a').both().as('b')).count()", builder);
         RelNode after3 = optimizer.optimize(node3, new GraphIOProcessor(builder, irMeta));
