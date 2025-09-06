@@ -1,0 +1,73 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: grape-mpijob
+spec:
+  slotsPerWorker: ${SLOTS_PER_WORKER}
+  runPolicy:
+    cleanPodPolicy: None
+    ttlSecondsAfterFinished: 60
+  sshAuthMountPath: /home/mpiuser/.ssh
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+          - name: grape-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: grape-mpi:v0.1
+            name: mpi-launcher
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: grape-data
+              mountPath: /opt/data
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                set -e
+                echo "[INFO] Waiting for DNS sync..."; sleep 10;
+
+                if [ "$SINGLE_MACHINE" = "1" ]; then
+                  echo "Running in single-machine mode..."
+                  time mpirun -n 1 ./run_app --app_concurrency ${MPIRUN_NP} --vfile /opt/data/${DATASET}.v --efile /opt/data/${DATASET}.e --application ${ALGORITHM} --bfs_source 0 --sssp_source 0 --pr_d 0.85 --pr_mr 10 --cdlp_mr 10 --opt 
+                else
+                  echo "Running in multi-machine mode..."
+                  time mpirun -n ${REPLICAS} --hostfile /etc/mpi/hostfile ./run_app --app_concurrency 32 --vfile /opt/data/${DATASET}.v --efile /opt/data/${DATASET}.e --application ${ALGORITHM} --bfs_source 0 --sssp_source 0 --pr_d 0.85 --pr_mr 10 --cdlp_mr 10 --opt 
+                fi
+                
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
+    Worker:
+      replicas: ${REPLICAS}
+      template:
+        spec:
+          volumes:
+          - name: grape-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: grape-mpi:v0.1
+            name: mpi-worker
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: grape-data
+              mountPath: /opt/data
+            command:
+            - /usr/sbin/sshd
+            args:
+            - -De
+            - -f
+            - /home/mpiuser/.sshd_config
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}

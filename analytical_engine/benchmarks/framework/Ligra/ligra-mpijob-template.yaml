@@ -1,0 +1,66 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: ligra-mpijob
+spec:
+  slotsPerWorker: ${SLOTS_PER_WORKER}
+  runPolicy:
+    cleanPodPolicy: None
+    ttlSecondsAfterFinished: 60
+  sshAuthMountPath: /home/mpiuser/.ssh
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+          - name: ligra-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: ligra-mpi:v0.1
+            name: mpi-launcher
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: ligra-data
+              mountPath: /opt/data
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                set -e
+                echo "[INFO] Waiting for DNS sync..."; sleep 5;
+                time ./${ALGORITHM}${MPIRUN_NP} -rounds 1 /opt/data/${DATASET}
+                
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
+    Worker:
+      replicas: ${REPLICAS}
+      template:
+        spec:
+          volumes:
+          - name: ligra-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: ligra-mpi:v0.1
+            name: mpi-worker
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: ligra-data
+              mountPath: /opt/data
+            command:
+            - /usr/sbin/sshd
+            args:
+            - -De
+            - -f
+            - /home/mpiuser/.sshd_config
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}

@@ -1,0 +1,78 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: flash-mpijob
+spec:
+  slotsPerWorker: ${SLOTS_PER_WORKER}
+  runPolicy:
+    cleanPodPolicy: None
+    ttlSecondsAfterFinished: 60
+  sshAuthMountPath: /home/mpiuser/.ssh
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          volumes:
+          - name: flash-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: flash-mpi:v0.4
+            name: mpi-launcher
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: flash-data
+              mountPath: /opt/data
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                set -e
+                echo "[INFO] Waiting for DNS sync..."; sleep 5;
+
+                if [ "$SINGLE_MACHINE" = "1" ]; then
+                  echo "Running in single-machine mode..."
+                  mpirun -n ${MPIRUN_NP} ./flash format /opt/data/${DATASET}/ /opt/scratch/gfs/ ${DATASET}
+                  echo "Running ${ALGORITHM} in single-machine mode..."
+                  mpirun -n ${MPIRUN_NP} ./${ALGORITHM} /opt/scratch/gfs/ ${DATASET} ${ALGORITHM_PARAMETER}
+    
+                else
+                  echo "Running in multi-machine mode..."
+                  mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./flash format /opt/data/${DATASET}/ /opt/scratch/gfs/ ${DATASET}
+                  mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./${ALGORITHM} /opt/scratch/gfs/ ${DATASET} ${ALGORITHM_PARAMETER}
+   
+                fi
+                
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
+    Worker:
+      replicas: ${REPLICAS}
+      template:
+        spec:
+          volumes:
+          - name: flash-data
+            hostPath:
+              path: ${HOST_PATH}
+              type: Directory
+          containers:
+          - image: flash-mpi:v0.4
+            name: mpi-worker
+            securityContext:
+              runAsUser: 1000
+            volumeMounts:
+            - name: flash-data
+              mountPath: /opt/data
+            command:
+            - /usr/sbin/sshd
+            args:
+            - -De
+            - -f
+            - /home/mpiuser/.sshd_config
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
