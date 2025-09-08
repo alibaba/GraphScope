@@ -75,7 +75,7 @@ g++ FFT-DG.cpp -o generator -O3
 
 We also provide a [LDBC-version of our generator](https://github.com/Lingkai981/Graph-Analytics-Benchmarks/tree/e2377e5a5a1e752ed3db44c58b8c95afc80ae030/renewal_datagen) consisting of only a few modifications.
 
-To easy startup, here is the datasets used in our evalution. The format of these datasets are edge list, i.e., each line is a single edge.
+To ease startup, here are the datasets used in our evaluation. The format of these datasets is an edge list, i.e., each line is a single edge.
 
 [S8-Std](
 https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/graphx-edges-8-Standard.txt), 
