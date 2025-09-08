@@ -404,7 +404,7 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
 ##### GraphX
 
 - **Dataset Format**:  
-  The dataset for Ligra is provided as the `.txt` format.
+  The dataset for GraphX is provided as the `.txt` format.
     - Format: `graphx-adj-{SCALE}-{FEATURE}.txt` (e.g., `graphx-adj-8-Standard.txt`)
 
 - **Supported Algorithms**:  
