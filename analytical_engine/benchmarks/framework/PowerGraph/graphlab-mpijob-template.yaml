@@ -166,7 +166,7 @@ spec:
                         -x LD_LIBRARY_PATH="/usr/lib/jvm/java-17-openjdk-amd64/lib/server:/usr/local/hadoop/lib/native:/usr/local/bin:/usr/local/lib:/opt/mpich/lib/:/usr/local/openmpi/bin:/usr/local/openmpi/lib" \
                         -x JAVA_HOME="/usr/lib/jvm/java-17-openjdk-amd64" \
                         -x HADOOP_CONF_DIR="/etc/hadoop" \
-                        /opt/graphlab/release/toolkits/graph_analytics/betweeness --format=snap \
+                        /opt/graphlab/release/toolkits/graph_analytics/betweenness --format=snap \
                         --graph /opt/data/${DATASET}
 
 
