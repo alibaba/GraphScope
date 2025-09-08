@@ -366,7 +366,7 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
 ##### PowerGraph
 
 - **Dataset Format**:  
-  The dataset for Ligra is provided as the `.txt` format.
+  The dataset for PowerGraph is provided as the `.txt` format.
     - Format: `graphlab-adj-{SCALE}-{FEATURE}.txt` (e.g., `graphlab-adj-8-Standard.txt`)
     
 - **Supported Algorithms**:  
