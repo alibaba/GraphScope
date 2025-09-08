@@ -447,13 +447,14 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
       - `betweenness`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentralityexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentrality.sh))
       - `clique`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kcliqueexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kclique.sh))
  
-     For example:
-      ```bash
-      ./pagerank.sh <SPARK_MASTER> <PATH_TO_DATASET_FOLDER>
-      ```
+        For example:
+        
+         ```bash
+         ./pagerank.sh <SPARK_MASTER> <PATH_TO_DATASET_FOLDER>
+         ```
 
-      - `<SPARK_MASTER>`: Spark master URL, e.g., spark://my_spark:7077.
-      - `<PATH_TO_DATASET_FOLDER>`: Provide the path to the dataset folder.
+         - `<SPARK_MASTER>`: Spark master URL, e.g., spark://my_spark:7077.
+         - `<PATH_TO_DATASET_FOLDER>`: Provide the path to the dataset folder.
 
 
 
