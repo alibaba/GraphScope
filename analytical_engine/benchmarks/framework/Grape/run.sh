@@ -60,7 +60,7 @@ for dataset in "${DATASETS[@]}"; do
     done
 done
 
-=== Multi-machine Distributed Testing using Kubeflow MPIJob ===
+#=== Multi-machine Distributed Testing using Kubeflow MPIJob ===
 echo "[INFO] ====== MULTI-MACHINE TESTING ======"
 for dataset in "${DATASETS[@]}"; do
     if [ "$ALGORITHM" = "sssp" ]; then
