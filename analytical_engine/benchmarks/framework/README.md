@@ -447,7 +447,7 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
       - `betweenness`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentralityexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentrality.sh))
       - `clique`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kcliqueexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kclique.sh))
      
-     ```bash
+      ```bash
       ./pagerank.sh <SPARK_MASTER> <PATH_TO_DATASET_FOLDER>
       ```
 
