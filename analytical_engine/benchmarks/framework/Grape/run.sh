@@ -19,7 +19,7 @@ MPI_TEMPLATE="grape-mpijob-template.yaml"
 DATASET_NAME=""
 ALGORITHM_PARAMETER_=0
 
-mkdir output
+mkdir -p output
 
 export CPU=32
 export MEMORY=100Gi
