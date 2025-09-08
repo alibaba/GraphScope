@@ -53,7 +53,7 @@ for dataset in "${DATASETS[@]}"; do
         export ALGORITHM_PARAMETER=$ALGORITHM_PARAMETER_
         export SINGLE_MACHINE=1
 
-        LOG_FILE="output/${ALGORITHM}-${DATASET_NAME}-n${machines}-p${SLOTS_PER_WORKER}.log"
+        LOG_FILE="output/${ALGORITHM}-${DATASET_NAME}-n${REPLICAS}-p${SLOTS_PER_WORKER}.log"
 
         # Generate and submit MPIJob YAML
         
