@@ -295,7 +295,7 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
 ##### Pregel+
 
 - **Dataset Format**:  
-  The dataset for Ligra is provided as the `.txt` format.
+  The dataset for Pregel+ is provided as the `.txt` format.
     - Format: `pregel+-adj-{SCALE}-{FEATURE}.txt` (e.g., `pregel+-adj-8-Standard.txt`)
     
 - **Supported Algorithms**:  
