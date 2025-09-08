@@ -59,17 +59,18 @@ Researchers, practitioners, and educators in graph systems and distributed compu
 
 ### Data Generator
 
-We provide a lightweight C++ program [FFT-DG.cpp](Data_Generator/FFT-DG.cpp) to generate data. It takes three parameters:
+We provide a lightweight C++ program (download from [Data_Generator.zip](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/Data_Generator.zip)) to generate data. It takes three parameters:
 
   - **Scale**: the dataset scale, chosen from `8, 9, 10`. You may also set a custom size.
   - **Platform**: the target platform to control the output format. Custom formats are supported.
   - **Feature**: the dataset feature (*Standard*; *Density* with **higher** edge density; *Diameter* with a **larger** diameter).
 
+
 ```shell
-scale=8
-framework="graphx"
+unzip Data_Generator.zip
+cd Data_Generator
 g++ FFT-DG.cpp -o generator -O3
-./generator $scale $framework Standard
+./generator 8 graphx Standard
 ```
 
 We also provide a [LDBC-version of our generator](https://github.com/Lingkai981/Graph-Analytics-Benchmarks/tree/e2377e5a5a1e752ed3db44c58b8c95afc80ae030/renewal_datagen) consists of only a few modification.
@@ -436,18 +437,17 @@ docker run -it --rm -e OPENAI_API_KEY=<your OPENAI_API_KEY> llm-eval
       - [graphx-weight-edges-8-Diameter.txt](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/graphx-weight-edges-8-Diameter.txt)
       - [graphx-weight-edges-9-Diameter.txt](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/graphx-weight-edges-9-Diameter.txt)
         
-   2. Download the `.jar` files into the **GraphX/** folder and execute the command to run the algorithm:
-      - `pagerank`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/pagerankexample_2.11-0.1.jar) [[Command]](GraphX/pagerank.sh))
-      - `sssp`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/ssspexample_2.11-0.1.jar) [[Command]](GraphX/sssp.sh))
-      - `triangle`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/trianglecountingexample_2.11-0.1.jar) [[Command]](GraphX/trianglecounting.sh))
-      - `lpa`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/labelpropagationexample_2.11-0.1.jar) [[Command]](GraphX/labelpropagation.sh))
-      - `kcore`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/coreexample_2.11-0.1.jar) [[Command]](GraphX/core.sh))
-      - `cc`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/connectedcomponentexample_2.11-0.1.jar) [[Command]](GraphX/connectedcomponent.sh))
-      - `betweenness`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentralityexample_2.11-0.1.jar) [[Command]](GraphX/betweennesscentrality.sh))
-      - `clique`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kcliqueexample_2.11-0.1.jar) [[Command]](GraphX/kclique.sh))
+   2. Download the `.jar` files and command files into the same folder and execute the command to run the algorithm:
+      - `pagerank`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/pagerankexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/pagerank.sh))
+      - `sssp`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/ssspexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/sssp.sh))
+      - `triangle`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/trianglecountingexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/trianglecounting.sh))
+      - `lpa`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/labelpropagationexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/labelpropagation.sh))
+      - `kcore`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/coreexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/core.sh))
+      - `cc`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/connectedcomponentexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/connectedcomponent.sh))
+      - `betweenness`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentralityexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/betweennesscentrality.sh))
+      - `clique`([[`.jar` file]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kcliqueexample_2.11-0.1.jar) [[Command]](https://graphscope.oss-cn-beijing.aliyuncs.com/benchmark_datasets/kclique.sh))
      
      ```bash
-      cd GraphX
       ./pagerank.sh <SPARK_MASTER> <PATH_TO_DATASET_FOLDER>
       ```
 
