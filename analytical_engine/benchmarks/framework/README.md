@@ -96,7 +96,7 @@ cp .env.example .env
 
 #### Global help
 ```bash
-python3 gab.py --help
+python3 cli.py --help
 ```
 
 #### `datagen` Data Generation
@@ -106,7 +106,7 @@ We provide a lightweight C++ program (download from [Data_Generator.zip](https:/
 
 ##### Usage
 ```bash
-python main.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|gthinker|pregel+|powergraph|graphx>   --feature <Standard|Density|Diameter>
+python cli.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|gthinker|pregel+|powergraph|graphx>   --feature <Standard|Density|Diameter>
 ```
 
 - Automatically compiles and runs `FFT-DG.cpp` in `Data_Generator/`.
@@ -114,7 +114,7 @@ python main.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|g
 
 ##### Example
 ```bash
-python main.py datagen --scale 9 --platform flash --feature Standard
+python cli.py datagen --scale 9 --platform flash --feature Standard
 ```
 
 ---
@@ -128,12 +128,12 @@ python main.py datagen --scale 9 --platform flash --feature Standard
 ##### Usage
 ```bash
 docker load -i llm-eval.tar
-python main.py llm-eval --platform <platform> --algorithm <algorithm>
+python cli.py llm-eval --platform <platform> --algorithm <algorithm>
 ```
 
 ##### Example
 ```bash
-python main.py llm-eval --platform flash --algorithm pagerank
+python cli.py llm-eval --platform flash --algorithm pagerank
 ```
 
 ---
@@ -164,19 +164,19 @@ python main.py llm-eval --platform flash --algorithm pagerank
 ##### Usage
 ```bash
 # General case
-python main.py perf-eval --platform <platform> --algorithm <algorithm> --path <path_to_the_dataset_folder>
+python cli.py perf-eval --platform <platform> --algorithm <algorithm> --path <path_to_the_dataset_folder>
 
 # GraphX requires extra argument
-python main.py perf-eval --platform graphx --algorithm <algorithm>   --path <path_to_the_dataset_folder> --spark-master <spark-master>
+python cli.py perf-eval --platform graphx --algorithm <algorithm>   --path <path_to_the_dataset_folder> --spark-master <spark-master>
 ```
 
 ##### Examples
 ```bash
 # Run PageRank on Flash
-python main.py perf-eval --platform flash --algorithm pagerank --path /data/
+python cli.py perf-eval --platform flash --algorithm pagerank --path /data/
 
 # Run Triangle Counting on GraphX
-python main.py perf-eval --platform graphx --algorithm triangle --path /data/ --spark-master spark://spark-master:7077
+python cli.py perf-eval --platform graphx --algorithm triangle --path /data/ --spark-master spark://spark-master:7077
 ```
 
 ---
