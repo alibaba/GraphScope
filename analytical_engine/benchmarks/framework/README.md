@@ -73,7 +73,7 @@ Researchers, practitioners, and educators in graph systems and distributed compu
 
 ### Prerequisites
 
-- **Python 3.8+** (recommended: 3.10/3.11)  
+- **python3 3.8+** (recommended: 3.10/3.11)  
 - **Docker** (required for `llm-eval` and platform images)  
 - **Kubernetes + MPI Operator + Hadoop** (for distributed experiments)  
 - (GraphX only) **Java 8 / Scala 2.11 / Spark 2.4.x (Hadoop 2.7)**
@@ -106,7 +106,7 @@ We provide a lightweight C++ program (download from [Data_Generator.zip](https:/
 
 ##### Usage
 ```bash
-python cli.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|gthinker|pregel+|powergraph|graphx>   --feature <Standard|Density|Diameter>
+python3 cli.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|gthinker|pregel+|powergraph|graphx>   --feature <Standard|Density|Diameter>
 ```
 
 - Automatically compiles and runs `FFT-DG.cpp` in `Data_Generator/`.
@@ -114,7 +114,7 @@ python cli.py datagen --scale <8|9|10|custom>   --platform <flash|ligra|grape|gt
 
 ##### Example
 ```bash
-python cli.py datagen --scale 9 --platform flash --feature Standard
+python3 cli.py datagen --scale 9 --platform flash --feature Standard
 ```
 
 ---
@@ -128,12 +128,12 @@ python cli.py datagen --scale 9 --platform flash --feature Standard
 ##### Usage
 ```bash
 docker load -i llm-eval.tar
-python cli.py llm-eval --platform <platform> --algorithm <algorithm>
+python3 cli.py llm-eval --platform <platform> --algorithm <algorithm>
 ```
 
 ##### Example
 ```bash
-python cli.py llm-eval --platform flash --algorithm pagerank
+python3 cli.py llm-eval --platform flash --algorithm pagerank
 ```
 
 ---
@@ -164,19 +164,19 @@ python cli.py llm-eval --platform flash --algorithm pagerank
 ##### Usage
 ```bash
 # General case
-python cli.py perf-eval --platform <platform> --algorithm <algorithm> --path <path_to_the_dataset_folder>
+python3 cli.py perf-eval --platform <platform> --algorithm <algorithm> --path <path_to_the_dataset_folder>
 
 # GraphX requires extra argument
-python cli.py perf-eval --platform graphx --algorithm <algorithm>   --path <path_to_the_dataset_folder> --spark-master <spark-master>
+python3 cli.py perf-eval --platform graphx --algorithm <algorithm>   --path <path_to_the_dataset_folder> --spark-master <spark-master>
 ```
 
 ##### Examples
 ```bash
 # Run PageRank on Flash
-python cli.py perf-eval --platform flash --algorithm pagerank --path /data/
+python3 cli.py perf-eval --platform flash --algorithm pagerank --path /data/
 
 # Run Triangle Counting on GraphX
-python cli.py perf-eval --platform graphx --algorithm triangle --path /data/ --spark-master spark://spark-master:7077
+python3 cli.py perf-eval --platform graphx --algorithm triangle --path /data/ --spark-master spark://spark-master:7077
 ```
 
 ---
