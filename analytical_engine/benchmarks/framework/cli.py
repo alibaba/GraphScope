@@ -17,7 +17,7 @@ def run_flash_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     if algorithm == "k-core-search":
@@ -112,7 +112,7 @@ def run_ligra_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -160,7 +160,7 @@ def run_grape_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -244,7 +244,7 @@ def run_pregel_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -328,7 +328,7 @@ def run_gthinker_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -412,7 +412,7 @@ def run_powergraph_perf(algorithm, data_path):
     DATASETS = ["Standard", "Diameter", "Density"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "output"
+    output_dir = "kubectl-yaml"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
