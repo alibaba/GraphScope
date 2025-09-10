@@ -1,6 +1,5 @@
 from jinja2 import Template
 
-# 平台参数配置
 PLATFORM_CONFIG = {
     "flash": {
         "image": "flash-mpi:v0.4",
@@ -40,7 +39,6 @@ PLATFORM_CONFIG = {
     },
 }
 
-# 不带hadoop的模板
 TEMPLATE_NO_HADOOP = """
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
@@ -105,7 +103,6 @@ spec:
                 memory: {{ MEMORY }}
 """
 
-# 带hadoop的模板
 TEMPLATE_HADOOP = """
 apiVersion: kubeflow.org/v2beta1
 kind: MPIJob
@@ -227,10 +224,6 @@ spec:
 """
 
 def get_command_args(platform, params):
-    """
-    根据平台和参数生成 command 和 args。
-    返回 (command, args) 两个字符串，直接用于 YAML 渲染。
-    """
     if platform == "flash":
         command = '["/bin/bash", "-c"]'
         args = f'''
