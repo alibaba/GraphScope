@@ -17,7 +17,10 @@ def run_flash_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     if algorithm == "k-core-search":
@@ -47,7 +50,7 @@ def run_flash_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 1,
             }
             yaml_str = render_mpijob_yaml("flash", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -87,7 +90,7 @@ def run_flash_perf(algorithm, data_path):
             }
             yaml_str = render_mpijob_yaml("flash", params)
             
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -112,7 +115,10 @@ def run_ligra_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -135,7 +141,7 @@ def run_ligra_perf(algorithm, data_path):
             }
             yaml_str = render_mpijob_yaml("ligra", params)
             
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -160,7 +166,10 @@ def run_grape_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -182,7 +191,7 @@ def run_grape_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 1,
             }
             yaml_str = render_mpijob_yaml("grape", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -219,7 +228,7 @@ def run_grape_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 0,
             }
             yaml_str = render_mpijob_yaml("grape", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -244,7 +253,10 @@ def run_pregel_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -266,7 +278,7 @@ def run_pregel_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 1,
             }
             yaml_str = render_mpijob_yaml("pregel+", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -303,7 +315,7 @@ def run_pregel_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 0,
             }
             yaml_str = render_mpijob_yaml("pregel+", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -328,7 +340,10 @@ def run_gthinker_perf(algorithm, data_path):
     DATASETS = ["Standard", "Density", "Diameter"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -350,7 +365,7 @@ def run_gthinker_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 1,
             }
             yaml_str = render_mpijob_yaml("gthinker", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -387,7 +402,7 @@ def run_gthinker_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 0,
             }
             yaml_str = render_mpijob_yaml("gthinker", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -412,7 +427,10 @@ def run_powergraph_perf(algorithm, data_path):
     DATASETS = ["Standard", "Diameter", "Density"]
     MEMORY = "100Gi"
     CPU = "32"
-    output_dir = "kubectl-yaml"
+    yaml_dir = "kubectl-yaml"
+    os.makedirs(yaml_dir, exist_ok=True)
+
+    output_dir = "output"
     os.makedirs(output_dir, exist_ok=True)
 
     for dataset in DATASETS:
@@ -431,7 +449,7 @@ def run_powergraph_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 1,
             }
             yaml_str = render_mpijob_yaml("powergraph", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
@@ -465,7 +483,7 @@ def run_powergraph_perf(algorithm, data_path):
                 "SINGLE_MACHINE": 0,
             }
             yaml_str = render_mpijob_yaml("powergraph", params)
-            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            yaml_path = f"{yaml_dir}/{params['job_name']}-{algorithm}.yaml"
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
