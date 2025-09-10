@@ -3,9 +3,441 @@ import os
 import subprocess
 import click
 from dotenv import load_dotenv
+from config import render_mpijob_yaml
+import tempfile
+import shutil
+
 
 # Load environment variables from .env file at the start
 load_dotenv()
+
+def run_flash_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    MACHINE_LIST = [2, 4, 8, 16]
+    DATASETS = ["Standard", "Density", "Diameter"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    if algorithm == "k-core-search":
+        ALGORITHM_PARAMETER_ = 3
+    elif algorithm == "clique":
+        ALGORITHM_PARAMETER_ = 5
+    else:
+        ALGORITHM_PARAMETER_ = 0
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"flash-sssp-edges-8-{dataset}"
+        else:
+            DATASET_NAME = f"flash-edges-8-{dataset}"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "flash-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "ALGORITHM_PARAMETER": ALGORITHM_PARAMETER_,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("flash", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting MPIJob: {algorithm} single-machine, threads={thread}")
+                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=100m"], check=True)
+                log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+ 
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"flash-sssp-edges-9-{dataset}"
+        else:
+            DATASET_NAME = f"flash-edges-9-{dataset}"
+        for machines in MACHINE_LIST:
+            params = {
+                "job_name": "flash-mpijob",
+                "SLOTS_PER_WORKER": 32,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": machines,
+                "MPIRUN_NP": machines * 32,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "ALGORITHM_PARAMETER": ALGORITHM_PARAMETER_,
+                "SINGLE_MACHINE": 0,
+            }
+            yaml_str = render_mpijob_yaml("flash", params)
+            
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting MPIJob: {algorithm} multi-machine, machines={machines}")
+                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                subprocess.run(["kubectl", "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+                os.remove(yaml_path)
+
+    print("[INFO] ✅ All experiments completed.")
+
+def run_ligra_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    DATASETS = ["Standard", "Density", "Diameter"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dataset in DATASETS:
+        if algorithm == "BellmanFord":
+            DATASET_NAME = f"ligra-sssp-adj-8-{dataset}.txt"
+        else:
+            DATASET_NAME = f"ligra-adj-8-{dataset}.txt"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "ligra-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("ligra", params)
+            
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Ligra MPIJob: {algorithm} threads={thread}")
+                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/ligra-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"ligra_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "logs", "job/ligra-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+    print("[INFO] ✅ Ligra experiments completed.")
+
+def run_grape_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    MACHINE_LIST = [2, 4, 8, 16]
+    DATASETS = ["Standard", "Density", "Diameter"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"grape-sssp-edges-8-{dataset}"
+        else:
+            DATASET_NAME = f"grape-edges-8-{dataset}"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "grape-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("grape", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Grape MPIJob: {algorithm} single-machine, threads={thread}")
+                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"grape-sssp-edges-9-{dataset}"
+        else:
+            DATASET_NAME = f"grape-edges-9-{dataset}"
+        for machines in MACHINE_LIST:
+            params = {
+                "job_name": "grape-mpijob",
+                "SLOTS_PER_WORKER": 32,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": machines,
+                "MPIRUN_NP": machines * 32,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 0,
+            }
+            yaml_str = render_mpijob_yaml("grape", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Grape MPIJob: {algorithm} multi-machine, machines={machines}")
+                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                subprocess.run(["kubectl", "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+    print("[INFO] ✅ Grape experiments completed.")
+
+def run_pregel_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    MACHINE_LIST = [2, 4, 8, 16]
+    DATASETS = ["Standard", "Density", "Diameter"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"pregel+-adj-8-{dataset}.txt"
+        else:
+            DATASET_NAME = f"pregel+-adj-8-{dataset}.txt"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "pregel-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("pregel+", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} single-machine, threads={thread}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"pregel+-adj-9-{dataset}.txt"
+        else:
+            DATASET_NAME = f"pregel+-adj-9-{dataset}.txt"
+        for machines in MACHINE_LIST:
+            params = {
+                "job_name": "pregel-mpijob",
+                "SLOTS_PER_WORKER": 32,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": machines,
+                "MPIRUN_NP": machines * 32,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 0,
+            }
+            yaml_str = render_mpijob_yaml("pregel+", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} multi-machine, machines={machines}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+    print("[INFO] ✅ Pregel+ experiments completed.")
+
+def run_gthinker_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    MACHINE_LIST = [2, 4, 8, 16]
+    DATASETS = ["Standard", "Density", "Diameter"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"gthinker-adj-8-{dataset}.txt"
+        else:
+            DATASET_NAME = f"gthinker-adj-8-{dataset}.txt"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "gthinker-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("gthinker", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} single-machine, threads={thread}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+
+    for dataset in DATASETS:
+        if algorithm == "sssp":
+            DATASET_NAME = f"gthinker-adj-9-{dataset}.txt"
+        else:
+            DATASET_NAME = f"gthinker-adj-9-{dataset}.txt"
+        for machines in MACHINE_LIST:
+            params = {
+                "job_name": "gthinker-mpijob",
+                "SLOTS_PER_WORKER": 32,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": machines,
+                "MPIRUN_NP": machines * 32,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 0,
+            }
+            yaml_str = render_mpijob_yaml("gthinker", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} multi-machine, machines={machines}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+    print("[INFO] ✅ Gthinker experiments completed.")
+
+def run_powergraph_perf(algorithm, data_path):
+    THREAD_LIST = [1, 2, 4, 8, 16, 32]
+    MACHINE_LIST = [2, 4, 8, 16]
+    DATASETS = ["Standard", "Diameter", "Density"]
+    MEMORY = "100Gi"
+    CPU = "32"
+    output_dir = "output"
+    os.makedirs(output_dir, exist_ok=True)
+
+    for dataset in DATASETS:
+        DATASET_NAME = f"graphlab-adj-8-{dataset}.txt"
+        for thread in THREAD_LIST:
+            params = {
+                "job_name": "graphlab-mpijob",
+                "SLOTS_PER_WORKER": thread,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": 1,
+                "MPIRUN_NP": thread,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 1,
+            }
+            yaml_str = render_mpijob_yaml("powergraph", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} single-machine, threads={thread}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                pass
+
+
+    for dataset in DATASETS:
+        DATASET_NAME = f"graphlab-adj-9-{dataset}.txt"
+        for machines in MACHINE_LIST:
+            params = {
+                "job_name": "graphlab-mpijob",
+                "SLOTS_PER_WORKER": 32,
+                "HOST_PATH": data_path,
+                "CPU": CPU,
+                "MEMORY": MEMORY,
+                "REPLICAS": machines,
+                "MPIRUN_NP": machines * 32,
+                "DATASET": DATASET_NAME,
+                "ALGORITHM": algorithm,
+                "SINGLE_MACHINE": 0,
+            }
+            yaml_str = render_mpijob_yaml("powergraph", params)
+            yaml_path = f"{output_dir}/{params['job_name']}-{algorithm}.yaml"
+            with open(yaml_path, "w") as f:
+                f.write(yaml_str)
+            try:
+                print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} multi-machine, machines={machines}")
+                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
+                log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+            finally:
+                os.remove(yaml_path) 
+
+    print("[INFO] ✅ PowerGraph experiments completed.")
 
 # --- Helper Functions ---
 def run_command(command, working_dir="."):
@@ -151,8 +583,6 @@ def perf(platform, algorithm, data_path, spark_master):
             click.secho("❌ Error: --spark-master is required for the 'graphx' platform.", fg="red")
             return
 
-        # The GraphX scripts are named based on the algorithm, not a standard name
-        # We need a map from our standard name to the script's name part
         script_name_map = {
             "pagerank": "pagerank.sh", "sssp": "sssp.sh", "triangle": "trianglecounting.sh",
             "lpa": "labelpropagation.sh", "cd": "core.sh", "cc": "connectedcomponent.sh",
@@ -176,14 +606,18 @@ def perf(platform, algorithm, data_path, spark_master):
 
     # General handling for all other platforms
     else:
-        run_script_path = os.path.join(platform_dir, "run.sh")
-        if not os.path.exists(run_script_path):
-            click.secho(f"❌ Error: Script '{run_script_path}' not found.", fg="red")
-            return
-
-        # Pass the translated, platform-specific algorithm name to run.sh
-        cmd = ["./run.sh", platform_specific_algorithm, data_path]
-        run_command(cmd, working_dir=platform_dir)
+        if platform == "ligra":
+            run_ligra_perf(platform_specific_algorithm, data_path)
+        elif platform == "grape":
+            run_grape_perf(platform_specific_algorithm, data_path)      
+        elif platform == "pregel+":
+            run_pregel_perf(platform_specific_algorithm, data_path)
+        elif platform == "gthinker":
+            run_gthinker_perf(platform_specific_algorithm, data_path)
+        elif platform == "powergraph":
+            run_powergraph_perf(platform_specific_algorithm, data_path)
+        elif platform == "flash":
+            run_flash_perf(platform_specific_algorithm, data_path)
 
 
 if __name__ == "__main__":
