@@ -51,12 +51,17 @@ def run_flash_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting MPIJob: {algorithm} single-machine, threads={thread}")
-                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=100m"], check=True)
-                log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                    print(f"[INFO] Submitting MPIJob: {algorithm} single-machine, threads={thread}")
+                    subprocess.run([kubectl, "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=100m"], check=True)
+                    log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "delete", "-f", yaml_path], check=True)
             finally:
                 pass
  
@@ -86,12 +91,16 @@ def run_flash_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting MPIJob: {algorithm} multi-machine, machines={machines}")
-                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
-                subprocess.run(["kubectl", "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting MPIJob: {algorithm} multi-machine, machines={machines}")
+                    subprocess.run([kubectl, "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "wait", "--for=condition=Succeeded", "mpijob/flash-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"flash_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                    subprocess.run([kubectl, "logs", "job/flash-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "delete", "-f", yaml_path], check=True)
             finally:
                 pass
                 os.remove(yaml_path)
@@ -130,12 +139,16 @@ def run_ligra_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Ligra MPIJob: {algorithm} threads={thread}")
-                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/ligra-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"ligra_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "logs", "job/ligra-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Ligra MPIJob: {algorithm} threads={thread}")
+                    subprocess.run([kubectl, "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "wait", "--for=condition=Succeeded", "mpijob/ligra-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"ligra_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "logs", "job/ligra-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -173,12 +186,16 @@ def run_grape_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Grape MPIJob: {algorithm} single-machine, threads={thread}")
-                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Grape MPIJob: {algorithm} single-machine, threads={thread}")
+                    subprocess.run([kubectl, "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -206,12 +223,16 @@ def run_grape_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Grape MPIJob: {algorithm} multi-machine, machines={machines}")
-                subprocess.run(["kubectl", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
-                subprocess.run(["kubectl", "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Grape MPIJob: {algorithm} multi-machine, machines={machines}")
+                    subprocess.run([kubectl, "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "wait", "--for=condition=Succeeded", "mpijob/grape-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"grape_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                    subprocess.run([kubectl, "logs", "job/grape-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -249,12 +270,16 @@ def run_pregel_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} single-machine, threads={thread}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} single-machine, threads={thread}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -282,12 +307,16 @@ def run_pregel_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} multi-machine, machines={machines}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Pregel+ MPIJob: {algorithm} multi-machine, machines={machines}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/pregel-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"pregel_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/pregel-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -325,12 +354,16 @@ def run_gthinker_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} single-machine, threads={thread}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} single-machine, threads={thread}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -358,12 +391,16 @@ def run_gthinker_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} multi-machine, machines={machines}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting Gthinker MPIJob: {algorithm} multi-machine, machines={machines}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/gthinker-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"gthinker_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/gthinker-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -398,12 +435,16 @@ def run_powergraph_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} single-machine, threads={thread}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} single-machine, threads={thread}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n1-p{thread}.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 pass
 
@@ -428,12 +469,16 @@ def run_powergraph_perf(algorithm, data_path):
             with open(yaml_path, "w") as f:
                 f.write(yaml_str)
             try:
-                print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} multi-machine, machines={machines}")
-                subprocess.run(["kubectl", "-n", "hadoop", "apply", "-f", yaml_path], check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
-                log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
-                subprocess.run(["kubectl", "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
-                subprocess.run(["kubectl", "-n", "hadoop", "delete", "-f", yaml_path], check=True)
+                kubectl = shutil.which("kubectl")
+                if kubectl is None:
+                    raise RuntimeError("kubectl not found in PATH")
+                else:
+                    print(f"[INFO] Submitting PowerGraph MPIJob: {algorithm} multi-machine, machines={machines}")
+                    subprocess.run([kubectl, "-n", "hadoop", "apply", "-f", yaml_path], check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "wait", "--for=condition=Succeeded", "mpijob/graphlab-mpijob", "--timeout=10m"], check=True)
+                    log_file = os.path.join(output_dir, f"powergraph_{algorithm}-{DATASET_NAME}-n{machines}-p32.log")
+                    subprocess.run([kubectl, "-n", "hadoop", "logs", "job/graphlab-mpijob-launcher"], stdout=open(log_file, "w"), check=True)
+                    subprocess.run([kubectl, "-n", "hadoop", "delete", "-f", yaml_path], check=True)
             finally:
                 os.remove(yaml_path) 
 
