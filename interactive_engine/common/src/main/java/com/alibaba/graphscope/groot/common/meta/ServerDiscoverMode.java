@@ -25,5 +25,4 @@ public enum ServerDiscoverMode {
         }
         return null;
     }
-
 }

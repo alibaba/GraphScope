@@ -157,13 +157,17 @@ public class FrontendStoreClient extends RpcClient {
                         });
     }
 
-    public void updateCatchUpStatus(UpdateCatchUpStatusRequest request, CompletionCallback<UpdateCatchUpStatusResponse> callback) {
+    public void updateCatchUpStatus(
+            UpdateCatchUpStatusRequest request,
+            CompletionCallback<UpdateCatchUpStatusResponse> callback) {
         getStub()
-                .updateCatchUpStatus(request,
+                .updateCatchUpStatus(
+                        request,
                         new StreamObserver<UpdateCatchUpStatusResponse>() {
 
                             @Override
-                            public void onNext(UpdateCatchUpStatusResponse updateCatchUpStatusResponse) {
+                            public void onNext(
+                                    UpdateCatchUpStatusResponse updateCatchUpStatusResponse) {
                                 callback.onCompleted(null);
                             }
 
@@ -173,30 +177,29 @@ public class FrontendStoreClient extends RpcClient {
                             }
 
                             @Override
-                            public void onCompleted() {
-
-                            }
+                            public void onCompleted() {}
                         });
     }
 
-    public void compactPartition(CompactPartitionRequest request, CompletionCallback<CompactPartitionResponse> callback) {
+    public void compactPartition(
+            CompactPartitionRequest request,
+            CompletionCallback<CompactPartitionResponse> callback) {
         getStub()
-        .compactPartition(request,
-                new StreamObserver<CompactPartitionResponse>() {
-                    @Override
-                    public void onNext(CompactPartitionResponse compactPartitionResponse) {
-                        callback.onCompleted(null);
-                    }
+                .compactPartition(
+                        request,
+                        new StreamObserver<CompactPartitionResponse>() {
+                            @Override
+                            public void onNext(CompactPartitionResponse compactPartitionResponse) {
+                                callback.onCompleted(null);
+                            }
 
-                    @Override
-                    public void onError(Throwable t) {
-                        callback.onError(t);
-                    }
+                            @Override
+                            public void onError(Throwable t) {
+                                callback.onError(t);
+                            }
 
-                    @Override
-                    public void onCompleted() {
-
-                    }
-                });
+                            @Override
+                            public void onCompleted() {}
+                        });
     }
 }

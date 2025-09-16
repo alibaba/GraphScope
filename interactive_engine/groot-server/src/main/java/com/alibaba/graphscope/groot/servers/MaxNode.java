@@ -39,7 +39,12 @@ public class MaxNode extends NodeBase {
         logger.info("create new MaxNode instance");
         String zkConnectString = ZkConfig.getZkServers(configs);
         String kafkaServers = KafkaConfig.getKafkaServers(configs);
-        logger.info("zkConnectString: ["+zkConnectString+"], kafkaServers: [" + kafkaServers +"].");
+        logger.info(
+                "zkConnectString: ["
+                        + zkConnectString
+                        + "], kafkaServers: ["
+                        + kafkaServers
+                        + "].");
         if (CommonConfig.KAFKA_TEST_CLUSTER_ENABLE.get(configs)) {
             Properties kafkaConfigs = new Properties();
             kafkaConfigs.put("max.request.size", 10000000);

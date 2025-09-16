@@ -54,17 +54,20 @@ public class KafkaConfig {
                 long now = System.currentTimeMillis();
                 if (cachedKafkaServers == null || (now - lastUpdateTime) > refreshIntervalMs) {
                     synchronized (KafkaConfig.class) {
-                        if (cachedKafkaServers == null || (now - lastUpdateTime) > refreshIntervalMs) {
+                        if (cachedKafkaServers == null
+                                || (now - lastUpdateTime) > refreshIntervalMs) {
                             try {
                                 Path path = Paths.get(filePath);
                                 if (Files.exists(path)) {
                                     cachedKafkaServers = Files.readString(path).trim();
                                     lastUpdateTime = now;
                                 } else {
-                                    throw new IllegalArgumentException("Kafka servers file not found: " + filePath);
+                                    throw new IllegalArgumentException(
+                                            "Kafka servers file not found: " + filePath);
                                 }
                             } catch (IOException e) {
-                                throw new RuntimeException("read Kafka ip file error: " + filePath, e);
+                                throw new RuntimeException(
+                                        "read Kafka ip file error: " + filePath, e);
                             }
                         }
                     }

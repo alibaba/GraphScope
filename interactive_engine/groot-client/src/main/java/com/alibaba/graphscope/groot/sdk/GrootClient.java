@@ -714,7 +714,8 @@ public class GrootClient implements Writer {
     }
 
     public boolean compactPartition(int partitionId) {
-        CompactPartitionRequest request = CompactPartitionRequest.newBuilder().setPartitionId(partitionId).build();
+        CompactPartitionRequest request =
+                CompactPartitionRequest.newBuilder().setPartitionId(partitionId).build();
         CompactPartitionResponse response = this.clientStub.compactPartition(request);
         return response.getSuccess();
     }
@@ -726,7 +727,8 @@ public class GrootClient implements Writer {
     }
 
     public boolean updateCatchUpStatus(boolean enableCatchUpPrimary) {
-        UpdateCatchUpStatusRequest request = UpdateCatchUpStatusRequest.newBuilder().setEnable(enableCatchUpPrimary).build();
+        UpdateCatchUpStatusRequest request =
+                UpdateCatchUpStatusRequest.newBuilder().setEnable(enableCatchUpPrimary).build();
         UpdateCatchUpStatusResponse response = this.clientStub.updateCatchUpStatus(request);
         return response.getSuccess();
     }

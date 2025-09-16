@@ -24,4 +24,4 @@ class OpenApiGeneratorApplicationTests {
 
     @Test
     void contextLoads() {}
-    }
+}

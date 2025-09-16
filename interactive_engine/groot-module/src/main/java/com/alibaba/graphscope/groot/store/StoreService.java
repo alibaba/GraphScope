@@ -40,7 +40,6 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.table.TableRowSorter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

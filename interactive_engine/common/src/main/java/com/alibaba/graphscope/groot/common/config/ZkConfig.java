@@ -75,10 +75,12 @@ public class ZkConfig {
                                     cachedZkServers = Files.readString(path).trim();
                                     lastUpdateTime = now;
                                 } else {
-                                    throw new IllegalArgumentException("Zk servers file not found: " + filePath);
+                                    throw new IllegalArgumentException(
+                                            "Zk servers file not found: " + filePath);
                                 }
                             } catch (IOException e) {
-                                throw new RuntimeException("read Zk servers file error: " + filePath, e);
+                                throw new RuntimeException(
+                                        "read Zk servers file error: " + filePath, e);
                             }
                         }
                     }
@@ -100,5 +102,4 @@ public class ZkConfig {
             throw new RuntimeException("Failed to write Zk servers file: " + filePath, e);
         }
     }
-
 }

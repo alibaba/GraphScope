@@ -582,51 +582,58 @@ public class ClientService extends ClientGrpc.ClientImplBase {
     }
 
     @Override
-    public void updateCatchUpStatus(UpdateCatchUpStatusRequest request, StreamObserver<UpdateCatchUpStatusResponse> responseObserver) {
+    public void updateCatchUpStatus(
+            UpdateCatchUpStatusRequest request,
+            StreamObserver<UpdateCatchUpStatusResponse> responseObserver) {
         boolean status = request.getEnable();
         logger.info("updateCatchUpStatus:{}", status);
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
         AtomicBoolean finished = new AtomicBoolean(false);
         for (int i = 0; i < storeCount; i++) {
-            this.frontendStoreClients.getClient(i).updateCatchUpStatus(request,
-                    new CompletionCallback<UpdateCatchUpStatusResponse>() {
+            this.frontendStoreClients
+                    .getClient(i)
+                    .updateCatchUpStatus(
+                            request,
+                            new CompletionCallback<UpdateCatchUpStatusResponse>() {
 
-                        @Override
-                        public void onCompleted(UpdateCatchUpStatusResponse res) {
-                            if (!finished.get() && counter.decrementAndGet() == 0) {
-                                finish(null);
-                            }
-                        }
+                                @Override
+                                public void onCompleted(UpdateCatchUpStatusResponse res) {
+                                    if (!finished.get() && counter.decrementAndGet() == 0) {
+                                        finish(null);
+                                    }
+                                }
 
-                        @Override
-                        public void onError(Throwable t) {
-                            logger.error("failed update catch up status", t);
-                            finish(t);
-                        }
+                                @Override
+                                public void onError(Throwable t) {
+                                    logger.error("failed update catch up status", t);
+                                    finish(t);
+                                }
 
-                        private void finish(Throwable t) {
-                            if (finished.getAndSet(true)) {
-                                return;
-                            }
-                            logger.info("updateCatchUpStatus. Error [" + t + "]");
-                            if (t != null) {
-                                responseObserver.onError(t);
-                            } else {
-                                UpdateCatchUpStatusResponse res =
-                                        UpdateCatchUpStatusResponse.newBuilder()
-                                                .setSuccess(true)
-                                                .build();
-                                responseObserver.onNext(res);
-                                responseObserver.onCompleted();
-                            }
-                        }
-                    });
+                                private void finish(Throwable t) {
+                                    if (finished.getAndSet(true)) {
+                                        return;
+                                    }
+                                    logger.info("updateCatchUpStatus. Error [" + t + "]");
+                                    if (t != null) {
+                                        responseObserver.onError(t);
+                                    } else {
+                                        UpdateCatchUpStatusResponse res =
+                                                UpdateCatchUpStatusResponse.newBuilder()
+                                                        .setSuccess(true)
+                                                        .build();
+                                        responseObserver.onNext(res);
+                                        responseObserver.onCompleted();
+                                    }
+                                }
+                            });
         }
     }
 
     @Override
-    public void compactPartition(CompactPartitionRequest request, StreamObserver<CompactPartitionResponse> responseObserver) {
+    public void compactPartition(
+            CompactPartitionRequest request,
+            StreamObserver<CompactPartitionResponse> responseObserver) {
         logger.info("compactPartition start");
         int storeCount = this.metaService.getStoreCount();
         AtomicInteger counter = new AtomicInteger(storeCount);
@@ -634,7 +641,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
         for (int i = 0; i < storeCount; i++) {
             this.frontendStoreClients
                     .getClient(i)
-                    .compactPartition(request,
+                    .compactPartition(
+                            request,
                             new CompletionCallback<CompactPartitionResponse>() {
                                 @Override
                                 public void onCompleted(CompactPartitionResponse res) {
@@ -659,8 +667,8 @@ public class ClientService extends ClientGrpc.ClientImplBase {
                                     } else {
                                         CompactPartitionResponse res =
                                                 CompactPartitionResponse.newBuilder()
-                                                                .setSuccess(true)
-                                                                        .build();
+                                                        .setSuccess(true)
+                                                        .build();
                                         responseObserver.onNext(res);
                                         responseObserver.onCompleted();
                                     }
