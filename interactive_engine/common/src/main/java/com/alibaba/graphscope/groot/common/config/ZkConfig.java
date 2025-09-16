@@ -58,7 +58,7 @@ public class ZkConfig {
         if (kafkaServerDiscoveryMode == null) {
             return ZK_CONNECT_STRING.get(configs);
         }
-        ServerDiscoverMode discoverMode = ServerDiscoverMode.valueOf(kafkaServerDiscoveryMode);
+        ServerDiscoverMode discoverMode = ServerDiscoverMode.fromMode(kafkaServerDiscoveryMode);
         switch (discoverMode) {
             case SERVICE:
                 return ZK_CONNECT_STRING.get(configs);
@@ -88,4 +88,17 @@ public class ZkConfig {
                 return ZK_CONNECT_STRING.get(configs);
         }
     }
+
+    public static void setZkServersToFile(String zkAddress, Configs configs) {
+        String filePath = ZK_CONNECT_STRING.get(configs);
+        Path path = Paths.get(filePath);
+        try {
+            Files.writeString(path, zkAddress);
+            cachedZkServers = zkAddress.trim();
+            lastUpdateTime = System.currentTimeMillis();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to write Zk servers file: " + filePath, e);
+        }
+    }
+
 }

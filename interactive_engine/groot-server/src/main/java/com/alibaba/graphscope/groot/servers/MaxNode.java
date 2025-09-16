@@ -36,8 +36,10 @@ public class MaxNode extends NodeBase {
     private final List<NodeBase> stores = new ArrayList<>();
 
     public MaxNode(Configs configs) throws Exception {
+        logger.info("create new MaxNode instance");
         String zkConnectString = ZkConfig.getZkServers(configs);
         String kafkaServers = KafkaConfig.getKafkaServers(configs);
+        logger.info("zkConnectString: ["+zkConnectString+"], kafkaServers: [" + kafkaServers +"].");
         if (CommonConfig.KAFKA_TEST_CLUSTER_ENABLE.get(configs)) {
             Properties kafkaConfigs = new Properties();
             kafkaConfigs.put("max.request.size", 10000000);
@@ -45,6 +47,10 @@ public class MaxNode extends NodeBase {
             this.kafkaTestCluster.start();
             zkConnectString = this.kafkaTestCluster.getZookeeperConnectString();
             kafkaServers = this.kafkaTestCluster.getKafkaConnectString();
+            if (CommonConfig.SERVERS_DISCOVERY_MODE.get(configs).equals("file")) {
+                ZkConfig.setZkServersToFile(zkConnectString, configs);
+                KafkaConfig.setKafkaServersToFile(kafkaServers, configs);
+            }
         }
 
         int frontendCount = CommonConfig.FRONTEND_NODE_COUNT.get(configs);

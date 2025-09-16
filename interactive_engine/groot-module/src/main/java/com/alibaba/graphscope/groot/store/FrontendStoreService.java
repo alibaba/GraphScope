@@ -153,7 +153,7 @@ public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStore
         try {
             boolean enableCatchUpPrimary = request.getEnable();
             this.storeService.updateCatchUpStatus(enableCatchUpPrimary);
-            responseObserver.onNext(UpdateCatchUpStatusResponse.newBuilder().build());
+            responseObserver.onNext(UpdateCatchUpStatusResponse.newBuilder().setSuccess(true).build());
             responseObserver.onCompleted();
         } catch (Exception e) {
             responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
@@ -166,7 +166,7 @@ public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStore
         this.storeService.compactSinglePartition(partitionId, new CompletionCallback<Void>() {
             @Override
             public void onCompleted(Void res) {
-                responseObserver.onNext(CompactPartitionResponse.newBuilder().build());
+                responseObserver.onNext(CompactPartitionResponse.newBuilder().setSuccess(true).build());
                 responseObserver.onCompleted();
             }
 

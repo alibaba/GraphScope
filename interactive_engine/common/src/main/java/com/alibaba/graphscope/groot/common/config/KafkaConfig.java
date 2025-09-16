@@ -44,7 +44,7 @@ public class KafkaConfig {
         if (kafkaServerDiscoveryMode == null) {
             return KAFKA_SERVERS.get(configs);
         }
-        ServerDiscoverMode discoverMode = ServerDiscoverMode.valueOf(kafkaServerDiscoveryMode);
+        ServerDiscoverMode discoverMode = ServerDiscoverMode.fromMode(kafkaServerDiscoveryMode);
         switch (discoverMode) {
             case SERVICE:
                 return KAFKA_SERVERS.get(configs);
@@ -72,6 +72,20 @@ public class KafkaConfig {
                 return cachedKafkaServers;
             default:
                 return KAFKA_SERVERS.get(configs);
+        }
+    }
+
+    public static void setKafkaServersToFile(String kafkaAddress, Configs configs) {
+        String filePath = KAFKA_SERVERS.get(configs);
+        Path path = Paths.get(filePath);
+        synchronized (KafkaConfig.class) {
+            try {
+                Files.writeString(path, kafkaAddress);
+                cachedKafkaServers = kafkaAddress.trim();
+                lastUpdateTime = System.currentTimeMillis();
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to write Kafka servers file: " + filePath, e);
+            }
         }
     }
 }
