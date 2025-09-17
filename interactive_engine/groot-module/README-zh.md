@@ -66,7 +66,6 @@ kafka.servers=${file_path}
 #### 2. 支持手动开启/关闭Secondary实例的Catch Up状态
 ```
 /**
- * 行为实时图节点分类近线链路增量写入
  * true为开启catch up, false为关闭catch up
  * catch up 周期参数(单位毫秒): store.catchup.interval.ms
  */
