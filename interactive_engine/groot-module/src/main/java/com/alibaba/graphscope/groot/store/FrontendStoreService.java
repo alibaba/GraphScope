@@ -147,4 +147,45 @@ public class FrontendStoreService extends FrontendStoreServiceGrpc.FrontendStore
                     Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
+
+    @Override
+    public void updateCatchUpStatus(
+            UpdateCatchUpStatusRequest request,
+            StreamObserver<UpdateCatchUpStatusResponse> responseObserver) {
+        try {
+            boolean enableCatchUpPrimary = request.getEnable();
+            this.storeService.updateCatchUpStatus(enableCatchUpPrimary);
+            responseObserver.onNext(
+                    UpdateCatchUpStatusResponse.newBuilder().setSuccess(true).build());
+            responseObserver.onCompleted();
+        } catch (Exception e) {
+            responseObserver.onError(
+                    Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
+        }
+    }
+
+    @Override
+    public void compactPartition(
+            CompactPartitionRequest request,
+            StreamObserver<CompactPartitionResponse> responseObserver) {
+        int partitionId = request.getPartitionId();
+        this.storeService.compactSinglePartition(
+                partitionId,
+                new CompletionCallback<Void>() {
+                    @Override
+                    public void onCompleted(Void res) {
+                        responseObserver.onNext(
+                                CompactPartitionResponse.newBuilder().setSuccess(true).build());
+                        responseObserver.onCompleted();
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        responseObserver.onError(
+                                Status.INTERNAL
+                                        .withDescription(t.getMessage())
+                                        .asRuntimeException());
+                    }
+                });
+    }
 }

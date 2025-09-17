@@ -259,3 +259,19 @@ message ReplayRecordsRequestV2 {
 message ReplayRecordsResponseV2 {
   repeated int64 snapshot_id = 1;
 }
+
+message UpdateCatchUpStatusRequest {
+  bool enable = 1;
+}
+
+message UpdateCatchUpStatusResponse {
+  bool success = 1;
+}
+
+message CompactPartitionRequest {
+  int32 partitionId = 1;
+}
+
+message CompactPartitionResponse {
+  bool success = 1;
+}

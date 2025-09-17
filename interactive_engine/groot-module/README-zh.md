@@ -54,3 +54,40 @@ Frontend 是无状态的，当 Frontend 挂掉时它正在处理的写请求会�
 
 当 Coordinator 挂掉时，写链路可以继续写数据，但是新写入的数据均不可见。Coordinator failover 时，首先从 MetaStore 恢复 SnapshotId、QueueOffsets 信息，然后继续接收 Store 汇报的进度、处理并更新 Frontend 的 QuerySnapshotId、更新 Ingestor 的 WriteSnapshotId。
 
+## 3. 新增特性
+#### 1. 支持通过本地file发现zookeeper和kafka(适用于dns不可用的k8s集群)
+前提：需要zk和kafka的启动脚本里, 把自己的ip写到自定义路径的文件里
+```
+servers.discovery.mode=file // 默认service(通过k8s dns进行服务发现)
+zk.connect.string=${file_path}
+kafka.servers=${file_path}
+```
+
+#### 2. 支持手动开启/关闭Secondary实例的Catch Up状态
+```
+/**
+ * true为开启catch up, false为关闭catch up
+ * catch up 周期参数(单位毫秒): store.catchup.interval.ms
+ */
+com.alibaba.graphscope.groot.sdk.GrootClient.updateCatchUpStatus(boolean enableCatchUpPrimary)
+```
+
+#### 3. 支持manual compact指定partition
+当前的compact会一次性compact所有partition, secondary会catch up大量sst变更导致compact期间rt不稳定, 可调用该接口控制compact速率, 提高secondary rt稳定性
+```
+/**
+ * 获取Groot所有分区数
+ */
+com.alibaba.graphscope.groot.sdk.GrootClient.getPartitionNum()
+
+/**
+ * compact指定的partition
+ */
+com.alibaba.graphscope.groot.sdk.GrootClient.compactPartition(int partitionId)
+
+// 简单使用示例
+int partitionNum = grootClient.getPartitionNum();
+for (int partitionId = 0; partitionId < partitionNum; partitionId++) {
+    grootClient.compactPartition(partitionId);
+}
+```
