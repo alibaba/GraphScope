@@ -16,6 +16,7 @@
 [![FAQ-zh](https://img.shields.io/badge/-FAQ%E4%B8%AD%E6%96%87-blue?logo=Read%20The%20Docs)](https://graphscope.io/docs/zh/frequently_asked_questions.html)
 [![README-zh](https://shields.io/badge/README-%E4%B8%AD%E6%96%87-blue)](README-zh.md)
 [![ACM DL](https://img.shields.io/badge/ACM%20DL-10.14778%2F3476311.3476369-blue)](https://dl.acm.org/doi/10.14778/3476311.3476369)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/alibaba/graphscope)
 
 🎉 See our ongoing [GraphScope Flex](https://github.com/alibaba/GraphScope/tree/main/flex): a LEGO-inspired, modular, and user-friendly GraphScope evolution. 🎉
 
