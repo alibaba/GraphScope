@@ -3,8 +3,6 @@ use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::marker::PhantomData;
 
-use protobuf::ProtobufEnum;
-
 use super::error::*;
 use super::GraphResult;
 use crate::db::api::PropertyId;
@@ -29,22 +27,29 @@ impl dyn PropertyMap {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ValueType {
-    Bool = 1,
-    Char = 2,
-    Short = 3,
-    Int = 4,
-    Long = 5,
-    Float = 6,
-    Double = 7,
-    String = 8,
-    Bytes = 9,
-    IntList = 10,
-    LongList = 11,
-    FloatList = 12,
-    DoubleList = 13,
-    StringList = 14,
+    Bool,
+    Char,
+    Short,
+    Int,
+    Long,
+    Float,
+    Double,
+    String,
+    Bytes,
+    IntList,
+    LongList,
+    FloatList,
+    DoubleList,
+    StringList,
+    UInt,
+    ULong,
+    Date32,
+    Time32,
+    Timestamp,
+    FixedChar(usize), // fixed_length
+    VarChar(usize),   // max_length
 }
 
 impl ValueType {
@@ -65,12 +70,19 @@ impl ValueType {
             ValueType::FloatList,
             ValueType::DoubleList,
             ValueType::StringList,
+            ValueType::UInt,
+            ValueType::ULong,
+            ValueType::Date32,
+            ValueType::Time32,
+            ValueType::Timestamp,
+            ValueType::FixedChar(1),
+            ValueType::VarChar(255),
         ]
     }
 
     #[cfg(test)]
     pub fn count() -> usize {
-        14
+        21
     }
 
     pub fn from_proto(pb: &DataTypePb) -> GraphResult<Self> {
@@ -89,6 +101,13 @@ impl ValueType {
             DataTypePb::FLOAT_LIST => Ok(ValueType::FloatList),
             DataTypePb::DOUBLE_LIST => Ok(ValueType::DoubleList),
             DataTypePb::STRING_LIST => Ok(ValueType::StringList),
+            DataTypePb::UINT => Ok(ValueType::UInt),
+            DataTypePb::ULONG => Ok(ValueType::ULong),
+            DataTypePb::DATE32 => Ok(ValueType::Date32),
+            DataTypePb::TIME32_MS => Ok(ValueType::Time32),
+            DataTypePb::TIMESTAMP_MS => Ok(ValueType::Timestamp),
+            DataTypePb::FIXED_CHAR => Ok(ValueType::FixedChar(1)), // todo: add fixed_length in pb
+            DataTypePb::VAR_CHAR => Ok(ValueType::VarChar(255)),   // todo: add max_length in pb
             _ => {
                 let msg = format!("unsupported data type {:?}", pb);
                 let err = gen_graph_err!(ErrorCode::INVALID_DATA, msg, from_proto, pb);
@@ -113,6 +132,13 @@ impl ValueType {
             ValueType::FloatList => Ok(DataTypePb::FLOAT_LIST),
             ValueType::DoubleList => Ok(DataTypePb::DOUBLE_LIST),
             ValueType::StringList => Ok(DataTypePb::STRING_LIST),
+            ValueType::UInt => Ok(DataTypePb::UINT),
+            ValueType::ULong => Ok(DataTypePb::ULONG),
+            ValueType::Date32 => Ok(DataTypePb::DATE32),
+            ValueType::Time32 => Ok(DataTypePb::TIME32_MS),
+            ValueType::Timestamp => Ok(DataTypePb::TIMESTAMP_MS),
+            ValueType::FixedChar(_fixed_length) => Ok(DataTypePb::FIXED_CHAR),
+            ValueType::VarChar(_max_length) => Ok(DataTypePb::VAR_CHAR),
         }
     }
 
@@ -124,7 +150,8 @@ impl ValueType {
             | ValueType::Int
             | ValueType::Long
             | ValueType::Float
-            | ValueType::Double => true,
+            | ValueType::Double
+            | ValueType::FixedChar(_) => true,
             _ => false,
         }
     }
@@ -136,6 +163,7 @@ impl ValueType {
             ValueType::Short => 2,
             ValueType::Int | ValueType::Float => 4,
             ValueType::Long | ValueType::Double => 8,
+            ValueType::FixedChar(len) => len,
             _ => panic!("{:?} doesn't has fixed len", self),
         }
     }
@@ -184,10 +212,22 @@ impl<'a> ValueRef<'a> {
         Ok(get_int(self.data))
     }
 
+    pub fn get_uint(&self) -> GraphResult<u32> {
+        let res = self.check_type_match(ValueType::UInt);
+        res_unwrap!(res, get_uint)?;
+        Ok(get_uint(self.data) as u32)
+    }
+
     pub fn get_long(&self) -> GraphResult<i64> {
         let res = self.check_type_match(ValueType::Long);
         res_unwrap!(res, get_long)?;
         Ok(get_long(self.data))
+    }
+
+    pub fn get_ulong(&self) -> GraphResult<u64> {
+        let res = self.check_type_match(ValueType::ULong);
+        res_unwrap!(res, get_ulong)?;
+        Ok(get_ulong(self.data) as u64)
     }
 
     pub fn get_float(&self) -> GraphResult<f32> {
@@ -209,10 +249,60 @@ impl<'a> ValueRef<'a> {
             .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_str))
     }
 
+    pub fn get_fixed_char(&self, fixed_length: usize) -> GraphResult<String> {
+        let res = self.check_type_match(ValueType::FixedChar(fixed_length));
+        res_unwrap!(res, get_var_char)?;
+        let str = ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_fixed_char))?;
+        // confirm the length
+        if str.len() > fixed_length {
+            // truncate
+            Ok(str[..fixed_length].to_string())
+        } else if str.len() < fixed_length {
+            // pad with space
+            let mut buf = vec![b' '; fixed_length];
+            buf[..str.len()].copy_from_slice(str.as_bytes());
+            Ok(::std::str::from_utf8(&buf).unwrap().to_string())
+        } else {
+            Ok(str.to_string())
+        }
+    }
+
+    pub fn get_var_char(&self, max_length: usize) -> GraphResult<&str> {
+        let res = self.check_type_match(ValueType::VarChar(max_length));
+        res_unwrap!(res, get_var_char)?;
+        let str = ::std::str::from_utf8(self.data)
+            .map_err(|e| gen_graph_err!(ErrorCode::INVALID_DATA, e.to_string(), get_var_char))?;
+        if str.len() > max_length {
+            // truncate
+            Ok(&str[..max_length])
+        } else {
+            Ok(str)
+        }
+    }
+
     pub fn get_bytes(&self) -> GraphResult<&[u8]> {
         let res = self.check_type_match(ValueType::Bytes);
         res_unwrap!(res, get_str)?;
         Ok(self.data)
+    }
+
+    pub fn get_date32(&self) -> GraphResult<i32> {
+        let res = self.check_type_match(ValueType::Date32);
+        res_unwrap!(res, get_date32)?;
+        Ok(get_int(self.data))
+    }
+
+    pub fn get_time32(&self) -> GraphResult<i32> {
+        let res = self.check_type_match(ValueType::Time32);
+        res_unwrap!(res, get_time32)?;
+        Ok(get_int(self.data))
+    }
+
+    pub fn get_timestamp(&self) -> GraphResult<i64> {
+        let res = self.check_type_match(ValueType::Timestamp);
+        res_unwrap!(res, get_timestamp)?;
+        Ok(get_long(self.data))
     }
 
     pub fn get_int_list(&self) -> GraphResult<NumericArray<i32>> {
@@ -355,6 +445,17 @@ impl std::fmt::Debug for ValueRef<'_> {
                 write!(f, "DoubleArray({:?})", self.get_double_list().unwrap())
             }
             ValueType::StringList => write!(f, "StringArray({:?})", self.get_str_list().unwrap()),
+            ValueType::UInt => write!(f, "UInt({})", get_uint(self.data)),
+            ValueType::ULong => write!(f, "ULong({})", get_ulong(self.data)),
+            ValueType::Date32 => write!(f, "Date32({})", get_int(self.data)),
+            ValueType::Time32 => write!(f, "Time32({})", get_int(self.data)),
+            ValueType::Timestamp => write!(f, "Timestamp({})", get_long(self.data)),
+            ValueType::FixedChar(_) => {
+                write!(f, "FixedChar({:?})", ::std::str::from_utf8(self.data))
+            }
+            ValueType::VarChar(_) => {
+                write!(f, "VarChar({:?})", ::std::str::from_utf8(self.data))
+            }
         }
     }
 }
@@ -496,11 +597,25 @@ fn get_int(data: &[u8]) -> i32 {
     reader.read_i32(0).to_be()
 }
 
+fn get_uint(data: &[u8]) -> u32 {
+    debug_assert_eq!(data.len(), 4);
+    let reader = UnsafeBytesReader::new(data);
+    // don't forget to_be here
+    reader.read_u32(0).to_be()
+}
+
 fn get_long(data: &[u8]) -> i64 {
     debug_assert_eq!(data.len(), 8);
     let reader = UnsafeBytesReader::new(data);
     // don't forget to_be here
     reader.read_i64(0).to_be()
+}
+
+fn get_ulong(data: &[u8]) -> u64 {
+    debug_assert_eq!(data.len(), 8);
+    let reader = UnsafeBytesReader::new(data);
+    // don't forget to_be here
+    reader.read_u64(0).to_be()
 }
 
 fn get_float(data: &[u8]) -> f32 {
@@ -624,9 +739,19 @@ impl Value {
         Value::new(ValueType::Int, data)
     }
 
+    pub fn uint(v: u32) -> Self {
+        let data = transform::u32_to_vec(v.to_be());
+        Value::new(ValueType::UInt, data)
+    }
+
     pub fn long(v: i64) -> Self {
         let data = transform::i64_to_vec(v.to_be());
         Value::new(ValueType::Long, data)
+    }
+
+    pub fn ulong(v: u64) -> Self {
+        let data = transform::u64_to_vec(v.to_be());
+        Value::new(ValueType::ULong, data)
     }
 
     pub fn float(v: f32) -> Self {
@@ -644,9 +769,46 @@ impl Value {
         Value::new(ValueType::String, data)
     }
 
+    pub fn fixed_char(v: &str, len: usize) -> Self {
+        let str = if v.len() > len {
+            // truncate the string
+            &v[..len]
+        } else {
+            v
+        };
+        let data = str.as_bytes().to_vec();
+        Value::new(ValueType::FixedChar(len), data)
+    }
+
+    pub fn var_char(v: &str, max_len: usize) -> Self {
+        let str = if v.len() > max_len {
+            // truncate the string
+            &v[..max_len]
+        } else {
+            v
+        };
+        let data = str.as_bytes().to_vec();
+        Value::new(ValueType::VarChar(max_len), data)
+    }
+
     pub fn bytes(v: &[u8]) -> Self {
         let data = v.to_vec();
         Value::new(ValueType::Bytes, data)
+    }
+
+    pub fn date32(v: i32) -> Self {
+        let data = transform::i32_to_vec(v.to_be());
+        Value::new(ValueType::Date32, data)
+    }
+
+    pub fn time32(v: i32) -> Self {
+        let data = transform::i32_to_vec(v.to_be());
+        Value::new(ValueType::Time32, data)
+    }
+
+    pub fn timestamp(v: i64) -> Self {
+        let data = transform::i64_to_vec(v.to_be());
+        Value::new(ValueType::Timestamp, data)
     }
 
     pub fn int_list(v: &[i32]) -> Self {

@@ -66,6 +66,11 @@ fn encode_runtime_prop_val(prop_val: Property) -> Object {
                 },
             },
         },
+        Property::UInt(i) => Object::Primitive(Primitives::UInteger(i)),
+        Property::ULong(l) => Object::Primitive(Primitives::ULong(l)),
+        Property::Date32(i) => Object::DateFormat(DateTimeFormats::from_date32_dur(i).unwrap()),
+        Property::Time32(i) => Object::DateFormat(DateTimeFormats::from_time32(i).unwrap()),
+        Property::Timestamp(l) => Object::DateFormat(DateTimeFormats::from_timestamp_millis(l).unwrap()),
         _ => unimplemented!(),
     }
 }

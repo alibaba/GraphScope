@@ -47,6 +47,8 @@ enum DataTypePb {
     TIMESTAMP_MS = 30;
     TIMESTAMP_US = 31;
     TIMESTAMP_NS = 32;
+    FIXED_CHAR = 35;
+    VAR_CHAR = 36;
 }
 
 message PropertyValuePb {

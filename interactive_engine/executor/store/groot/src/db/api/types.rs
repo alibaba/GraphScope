@@ -43,7 +43,9 @@ pub enum PropertyValue {
     Char(char),
     Short(i16),
     Int(i32),
+    UInt(u32),
     Long(i64),
+    ULong(u64),
     Float(f32),
     Double(f64),
     String(String),
@@ -53,6 +55,23 @@ pub enum PropertyValue {
     FloatList(Vec<f32>),
     DoubleList(Vec<f64>),
     StringList(Vec<String>),
+    Date32(i32),
+    Time32(i32),
+    Timestamp(i64),
+    FixedChar(FixedCharValue),
+    VarChar(VarCharValue),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FixedCharValue {
+    value: String,
+    fixed_length: usize,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct VarCharValue {
+    value: String,
+    max_length: usize,
 }
 
 impl From<ValueRef<'_>> for PropertyValue {
@@ -62,7 +81,9 @@ impl From<ValueRef<'_>> for PropertyValue {
             ValueType::Char => PropertyValue::Char(char::from(value_ref.get_char().unwrap())),
             ValueType::Short => PropertyValue::Short(value_ref.get_short().unwrap()),
             ValueType::Int => PropertyValue::Int(value_ref.get_int().unwrap()),
+            ValueType::UInt => PropertyValue::UInt(value_ref.get_uint().unwrap()),
             ValueType::Long => PropertyValue::Long(value_ref.get_long().unwrap()),
+            ValueType::ULong => PropertyValue::ULong(value_ref.get_ulong().unwrap()),
             ValueType::Float => PropertyValue::Float(value_ref.get_float().unwrap()),
             ValueType::Double => PropertyValue::Double(value_ref.get_double().unwrap()),
             ValueType::String => PropertyValue::String(String::from(value_ref.get_str().unwrap())),
@@ -103,6 +124,17 @@ impl From<ValueRef<'_>> for PropertyValue {
                     .map(String::from)
                     .collect(),
             ),
+            ValueType::Date32 => PropertyValue::Date32(value_ref.get_date32().unwrap()),
+            ValueType::Time32 => PropertyValue::Time32(value_ref.get_time32().unwrap()),
+            ValueType::Timestamp => PropertyValue::Timestamp(value_ref.get_timestamp().unwrap()),
+            ValueType::FixedChar(fixed) => PropertyValue::FixedChar(FixedCharValue {
+                value: value_ref.get_fixed_char(*fixed).unwrap(),
+                fixed_length: *fixed,
+            }),
+            ValueType::VarChar(max) => PropertyValue::VarChar(VarCharValue {
+                value: String::from(value_ref.get_var_char(*max).unwrap()),
+                max_length: *max,
+            }),
         }
     }
 }

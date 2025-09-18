@@ -16,8 +16,15 @@ package com.alibaba.graphscope.groot.common.schema.wrapper;
 import com.alibaba.graphscope.groot.common.exception.IllegalStateException;
 import com.alibaba.graphscope.groot.common.exception.InvalidArgumentException;
 import com.alibaba.graphscope.proto.groot.PropertyValuePb;
+import com.google.common.primitives.UnsignedInteger;
+import com.google.common.primitives.UnsignedLong;
 import com.google.protobuf.ByteString;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -54,14 +61,24 @@ public class PropertyValue {
                     return Short.valueOf(valString);
                 case INT:
                     return Integer.valueOf(valString);
+                case UINT:
+                    return UnsignedInteger.valueOf(valString);
                 case LONG:
                     return Long.valueOf(valString);
+                case ULONG:
+                    return UnsignedLong.valueOf(valString);
                 case FLOAT:
                     return Float.valueOf(valString);
                 case DOUBLE:
                     return Double.valueOf(valString);
                 case STRING:
                     return valString;
+                case DATE:
+                    return parseDate(valString);
+                case TIME32:
+                    return parseTime32(valString);
+                case TIMESTAMP:
+                    return parseTimestamp(valString);
                 default:
                     throw new IllegalStateException("Unexpected value: " + dataType);
             }
@@ -75,6 +92,65 @@ public class PropertyValue {
                             + valString.getClass()
                             + "]",
                     e);
+        }
+    }
+
+    private static Integer parseDate(String valString) {
+        try {
+            return Integer.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalDate date = LocalDate.parse(valString, DateTimeFormatter.ISO_LOCAL_DATE);
+                long epochDays = date.toEpochDay();
+                return (int) epochDays;
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse date string to date. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
+        }
+    }
+
+    private static Integer parseTime32(String valString) {
+        try {
+            return Integer.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalTime time = LocalTime.parse(valString, DateTimeFormatter.ISO_LOCAL_TIME);
+                return time.toSecondOfDay();
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse time32 string to int. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
+        }
+    }
+
+    private static Long parseTimestamp(String valString) {
+        try {
+            return Long.valueOf(valString);
+        } catch (Exception e) {
+            try {
+                LocalDateTime dateTime =
+                        LocalDateTime.parse(valString, DateTimeFormatter.ISO_DATE_TIME);
+                return dateTime.toEpochSecond(ZoneOffset.UTC) * 1000;
+            } catch (Exception e1) {
+                throw new InvalidArgumentException(
+                        "Unable to parse timestamp string to long. Object ["
+                                + valString
+                                + "], class ["
+                                + valString.getClass()
+                                + "].",
+                        e1);
+            }
         }
     }
 
