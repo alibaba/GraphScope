@@ -189,7 +189,7 @@ jobs:
     - name: Publish to Test PyPI
       # the limit of graphscope package in test.pypi is still 100MB, which is not enough.
       if: false
-      uses: pypa/gh-action-pypi-publish@v1.4.2
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_PASSWORD }}
@@ -197,7 +197,7 @@ jobs:
         packages_dir: upload_pypi/
 
     - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@v1.4.2
+      uses: pypa/gh-action-pypi-publish@v1.13.0
       with:
         user: __token__
         password: ${{ secrets.PYPI_PASSWORD }}
