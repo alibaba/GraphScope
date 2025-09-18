@@ -1,10 +1,18 @@
-find_package (Hiactor)
 if (Hiactor_FOUND)
   include (${Hiactor_CODEGEN_CMAKE_FILE})
 
+  # the included_paths depends on ENABLE_SERVICE_REGISTER
+  set (server_actor_autogen_include_paths ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
+  if (ENABLE_SERVICE_REGISTER)
+    # append
+    set (server_actor_autogen_include_paths ${server_actor_autogen_include_paths},${CPPREST_INCLUDE_DIR},${ETCD_CPP_INCLUDE_DIR})
+  endif ()
+  if (BUILD_WITH_OSS)
+    set (server_actor_autogen_include_paths ${server_actor_autogen_include_paths},${OSS_CPP_SDK_INCLUDE_DIR})
+  endif ()
   hiactor_codegen (server_actor_autogen server_actor_autogen_files
         SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/
-        INCLUDE_PATHS ${Hiactor_INCLUDE_DIR},${CMAKE_CURRENT_SOURCE_DIR}/../../../,${CMAKE_CURRENT_BINARY_DIR}/../../utils/)
+        INCLUDE_PATHS ${server_actor_autogen_include_paths})
         
 
   # get all .cc files in current directory, except for generated/
@@ -14,6 +22,12 @@ if (Hiactor_FOUND)
   add_library(flex_server STATIC ${SERVER_FILES} ${server_actor_autogen_files})
   add_dependencies(flex_server flex_utils) # Make sure flex_utils is built before flex_server
   add_dependencies(flex_server server_actor_autogen)
+  if (BUILD_WITH_OSS)
+    add_dependencies(server_actor_autogen cpp-sdk)
+  endif()
+  if (ENABLE_SERVICE_REGISTER)
+    add_dependencies(server_actor_autogen ${ETCD_CPP_LIBRARIES} ${CPPREST_LIB})
+  endif()
   target_compile_options (flex_server
         PUBLIC
         -Wno-attributes)
@@ -38,5 +52,8 @@ if (Hiactor_FOUND)
     target_link_libraries(flex_server otel)
   endif()
   target_link_libraries(flex_server flex_metadata_store)
+  if (ENABLE_SERVICE_REGISTER)
+    target_link_libraries(flex_server ${ETCD_CPP_LIBRARIES})
+  endif()
   install_without_export_flex_target(flex_server)
 endif ()

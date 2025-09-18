@@ -378,7 +378,7 @@ seastar::future<admin_query_result> admin_actor::run_create_graph(
 // query_param is the graph name
 seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
     query_param&& query_param) {
-  LOG(INFO) << "Get Graph schema for graph_id: " << query_param.content;
+  VLOG(10) << "Get Graph schema for graph_id: " << query_param.content;
   auto schema_res = metadata_store_->GetGraphMeta(query_param.content);
 
   if (schema_res.ok()) {
@@ -395,7 +395,7 @@ seastar::future<admin_query_result> admin_actor::run_get_graph_schema(
 // Get the metadata of a graph.
 seastar::future<admin_query_result> admin_actor::run_get_graph_meta(
     query_param&& query_param) {
-  LOG(INFO) << "Get Graph meta for graph_id: " << query_param.content;
+  VLOG(10) << "Get Graph meta for graph_id: " << query_param.content;
   auto meta_res = metadata_store_->GetGraphMeta(query_param.content);
 
   if (meta_res.ok()) {

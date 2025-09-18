@@ -18,6 +18,7 @@ option(OPTIMIZE_FOR_HOST "Whether to optimize on host" ON) # Whether to build op
 option(USE_STATIC_ARROW "Whether to use static arrow" OFF) # Whether to link arrow statically, default is OFF
 option(BUILD_WITH_OTEL "Whether to build with opentelemetry-cpp" OFF) # Whether to build with opentelemetry-cpp, default is OFF
 option(BUILD_WITH_OSS "Whether to build with oss support" OFF) # Whether to build with oss support, default is OFF
+option(ENABLE_SERVICE_REGISTER "Whether to enable service register" OFF) # Whether to enable service register, default is OFF
 
 #print options
 message(STATUS "Build test: ${BUILD_TEST}")
@@ -31,6 +32,7 @@ message(STATUS "Use pthash indexer : ${USE_PTHASH}")
 
 include(CheckLibraryExists)
 include(GNUInstallDirs)
+include(CheckCXXCompilerFlag)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -94,6 +96,12 @@ endif()
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+
+# if compiler support -Wno-format-truncation, add it
+CHECK_CXX_COMPILER_FLAG("-Wno-format-truncation" COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+if(COMPILER_SUPPORTS_WNO_FORMAT_TRUNCATION)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-format-truncation")
+endif()
 
 find_package(MPI REQUIRED)
 include_directories(SYSTEM ${MPI_CXX_INCLUDE_PATH})
@@ -198,6 +206,24 @@ if (BUILD_DOC)
                 COMMENT "Generating API documentation with Doxygen"
                 VERBATIM)
     endif(DOXYGEN_FOUND)
+endif()
+
+if (ENABLE_SERVICE_REGISTER)
+    # check whether submodule etcd-cpp-apiv3 exists
+    if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/third_party/etcd-cpp-apiv3/CMakeLists.txt)
+        message(FATAL_ERROR "etcd-cpp-apiv3 submodule not found, please run `git submodule update --init --recursive` to fetch the submodule")
+    endif()
+    include("cmake/BuildEtcdCpp.cmake")
+    include_directories(SYSTEM ${CPPREST_INCLUDE_DIR})
+    message(STATUS "Include directory: ${CPPREST_INCLUDE_DIR}")
+    foreach(dir ${ETCD_CPP_INCLUDE_DIR})
+        message(STATUS "Include directory: ${dir}")
+        include_directories(SYSTEM ${dir})
+    endforeach()
+endif()
+
+if (ENABLE_SERVICE_REGISTER)
+    add_definitions(-DENABLE_SERVICE_REGISTER)
 endif()
 
 find_package(RapidJSON REQUIRED)
