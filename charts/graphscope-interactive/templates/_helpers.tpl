@@ -156,7 +156,7 @@ Return the configmap with the graphscope configuration
 Return the engineConfigPath with the graphscope configuration
 */}}
 {{- define "graphscope-interactive.engineConfigPath" -}}
-/etc/interactive/interactive_config.yaml
+/opt/flex/share/interactive_config.yaml
 {{- end -}}
 
 {{/*

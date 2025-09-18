@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "graphscope-interactive.master.serviceName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: master
+    {{- if .Values.commonLabels }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- if .Values.commonAnnotations }}
+    {{- include "common.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+    {{- end }}
+spec:
+  type: {{ .Values.master.service.type }}
+  {{- if and (eq .Values.master.service.type "ClusterIP") .Values.master.service.clusterIP }}
+  clusterIP: {{ .Values.master.service.clusterIP }}
+  {{- end }}
+  {{- if and .Values.master.service.loadBalancerIP (eq .Values.master.service.type "LoadBalancer") }}
+  loadBalancerIP: {{ .Values.master.service.loadBalancerIP }}
+  externalTrafficPolicy: {{ .Values.master.service.externalTrafficPolicy | quote }}
+  {{- end }}
+  {{- if and (eq .Values.master.service.type "LoadBalancer") .Values.master.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges: {{- toYaml .Values.master.service.loadBalancerSourceRanges | nindent 4 }}
+  {{- end }}
+  ports:
+    - name: admin-port
+      port: {{ .Values.master.service.adminPort }}
+      protocol: TCP
+      targetPort: admin-port
+  selector: {{- include "graphscope-interactive.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: master

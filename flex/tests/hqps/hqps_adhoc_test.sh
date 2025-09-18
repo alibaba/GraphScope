@@ -30,9 +30,9 @@ INTERACTIVE_WORKSPACE=$1
 GRAPH_NAME=$2
 COMPILER_PLANNER_OPT=$3
 if [ "${COMPILER_PLANNER_OPT}" == "CBO" ]; then
-  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_test_cbo.yaml
+  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_standalone_cbo.yaml
 elif [ "${COMPILER_PLANNER_OPT}" == "RBO" ]; then
-  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_test.yaml
+  ENGINE_CONFIG_PATH=${FLEX_HOME}/tests/hqps/interactive_config_standalone.yaml
 else
   echo "COMPILER_PLANNER_OPT: ${COMPILER_PLANNER_OPT} not supported, use CBO or RBO"
   exit 1

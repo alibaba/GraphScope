@@ -25,6 +25,8 @@ class JSONEncoder(FlaskJSONEncoder):
     include_nulls = False
 
     def default(self, o):
+        if isinstance(o, set):
+            return list(o)
         if isinstance(o, Model):
             dikt = {}
             for attr in o.openapi_types:

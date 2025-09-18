@@ -5,11 +5,12 @@ compute_engine:
   type: hiactor
   workers:
     - localhost:10000
-  thread_num_per_worker: 4
+  thread_num_per_worker: 1
+  memory_per_worker: 4Gi
   store:
     type: cpp-mcsr
   metadata_store:
-    type: file # file/sqlite/etcd
+    uri: http://localhost:2379 # Could be file://{WORKSPACE}/METADATA or other supported storage class. WORKSPACE is the placeholder for the workspace directory.
   wal_uri: file://{GRAPH_DATA_DIR}/wal # Could be file://{GRAPH_DATA_DIR}/wal or other supported storage class. GRAPH_DATA_DIR is the placeholder for the graph data directory.
 compiler:
   planner:
@@ -22,10 +23,10 @@ compiler:
   meta:
     reader:
       schema:
-        uri: http://localhost:7777/v1/service/status
+        uri: http://localhost:7776/v1/graph/1
         interval: 1000 # ms
       statistics:
-        uri: http://localhost:7777/v1/graph/%s/statistics
+        uri: http://localhost:7776/v1/graph/%s/statistics
         interval: 86400000 # ms
       timeout: 1000 # ms
   endpoint:
@@ -34,7 +35,7 @@ compiler:
       disabled: false
       port: 7687
     gremlin_connector:
-      disabled: false
+      disabled: true
       port: 8182
   query_timeout: 40000
   gremlin_script_language_name: antlr_gremlin_calcite
@@ -43,3 +44,17 @@ http_service:
   admin_port: 7777
   query_port: 10000
   max_content_length: 1GB
+master:
+  port: 7776
+  instance_name: default
+  service_registry:
+    type: etcd
+    endpoint: http://localhost:2379
+    ttl: 5
+  launcher_type: k8s # or host. Only works when launching via master.
+  k8s_launcher_config:
+    namespace: interactive
+    instance_prefix: gs-interactive # The prefix of the instance name. The full instance name will be instance_name_prefix + instance_name.
+    config_file: ~/.kube/config # The config file used to connect to the k8s cluster.
+    image_pull_policy: Always
+    default_replicas: 1

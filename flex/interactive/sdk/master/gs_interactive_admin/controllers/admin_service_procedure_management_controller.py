@@ -16,31 +16,29 @@
 # limitations under the License.
 #
 
-import logging
+import connexion
 from typing import Dict
 from typing import Tuple
 from typing import Union
 
-import connexion
-
-from gs_interactive_admin import util
-from gs_interactive_admin.models.api_response_with_code import (  # noqa: E501
+from gs_interactive_admin.models.api_response_with_code import (
     APIResponseWithCode,
-)
-from gs_interactive_admin.models.create_procedure_request import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.create_procedure_request import (
     CreateProcedureRequest,
-)
-from gs_interactive_admin.models.create_procedure_response import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.create_procedure_response import (
     CreateProcedureResponse,
-)
-from gs_interactive_admin.models.get_procedure_response import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.get_procedure_response import (
     GetProcedureResponse,
-)
-from gs_interactive_admin.models.update_procedure_request import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.update_procedure_request import (
     UpdateProcedureRequest,
-)
+)  # noqa: E501
+from gs_interactive_admin import util
 
-logger = logging.getLogger("interactive")
+from gs_interactive_admin.core.procedure.procedure_manager import ProcedureManager, get_procedure_manager
 
 
 def create_procedure(graph_id, create_procedure_request):  # noqa: E501
@@ -56,10 +54,14 @@ def create_procedure(graph_id, create_procedure_request):  # noqa: E501
     :rtype: Union[CreateProcedureResponse, Tuple[CreateProcedureResponse, int], Tuple[CreateProcedureResponse, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        create_procedure_request = CreateProcedureRequest.from_dict(  # noqa: F841
+        create_procedure_request = CreateProcedureRequest.from_dict(
             connexion.request.get_json()
-        )  # noqa: E501
-    return "do some magic!"
+        )
+        return get_procedure_manager().create_procedure(
+            graph_id=graph_id, create_procedure_request=create_procedure_request
+        )
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def delete_procedure(graph_id, procedure_id):  # noqa: E501
@@ -74,7 +76,12 @@ def delete_procedure(graph_id, procedure_id):  # noqa: E501
 
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
-    return "do some magic!"
+    if connexion.request.is_json:
+        return get_procedure_manager().delete_procedure(
+            graph_id=graph_id, procedure_id=procedure_id
+        )
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def get_procedure(graph_id, procedure_id):  # noqa: E501
@@ -89,7 +96,12 @@ def get_procedure(graph_id, procedure_id):  # noqa: E501
 
     :rtype: Union[GetProcedureResponse, Tuple[GetProcedureResponse, int], Tuple[GetProcedureResponse, int, Dict[str, str]]
     """
-    return "do some magic!"
+    if connexion.request.is_json:
+        return get_procedure_manager().get_procedure(
+            graph_id=graph_id, procedure_id=procedure_id
+        )
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def list_procedures(graph_id):  # noqa: E501
@@ -102,7 +114,10 @@ def list_procedures(graph_id):  # noqa: E501
 
     :rtype: Union[List[GetProcedureResponse], Tuple[List[GetProcedureResponse], int], Tuple[List[GetProcedureResponse], int, Dict[str, str]]
     """
-    return "do some magic!"
+    if connexion.request.is_json:
+        return get_procedure_manager().list_procedures(graph_id=graph_id)
+    else:
+        raise RuntimeError("Invalid request")
 
 
 def update_procedure(
@@ -122,7 +137,13 @@ def update_procedure(
     :rtype: Union[str, Tuple[str, int], Tuple[str, int, Dict[str, str]]
     """
     if connexion.request.is_json:
-        update_procedure_request = UpdateProcedureRequest.from_dict(  # noqa: F841
+        update_procedure_request = UpdateProcedureRequest.from_dict(
             connexion.request.get_json()
-        )  # noqa: E501
-    return "do some magic!"
+        )
+        return get_procedure_manager().update_procedure(
+            graph_id=graph_id,
+            procedure_id=procedure_id,
+            update_procedure_request=update_procedure_request,
+        )
+    else:
+        raise RuntimeError("Invalid request")
