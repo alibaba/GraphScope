@@ -105,7 +105,7 @@ const std::vector<PluginMeta>& get_builtin_plugin_metas() {
     k_neighbors.creation_time = GetCurrentTimeStamp();
     k_neighbors.update_time = GetCurrentTimeStamp();
     k_neighbors.params.push_back({"label_name", PropertyType::kString, true});
-    k_neighbors.params.push_back({"oid", PropertyType::kInt64, false});
+    k_neighbors.params.push_back({"oid", PropertyType::kString, false});
     k_neighbors.params.push_back({"k", PropertyType::kInt32, false});
     k_neighbors.returns.push_back({"label_name", PropertyType::kString});
     k_neighbors.returns.push_back({"vertex_oid", PropertyType::kInt64});
