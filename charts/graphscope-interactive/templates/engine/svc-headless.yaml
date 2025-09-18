@@ -33,5 +33,9 @@ spec:
       port: {{ .Values.engine.service.queryPort }}
       protocol: TCP
       targetPort: query-port
+    - name: cypher-port
+      port: {{ .Values.engine.service.cypherPort }}
+      protocol: TCP
+      targetPort: cypher-port
   selector: {{- include "graphscope-interactive.selectorLabels" . | nindent 4 }}
     app.kubernetes.io/component: engine

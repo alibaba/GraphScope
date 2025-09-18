@@ -1,5 +1,5 @@
-apiVersion: v2
-name: graphscope-interactive
+apiVersion: v1
+name: interactive
 description: GraphScope Interactive
 icon: https://graphscope.io/assets/images/graphscope-logo.svg
 home: https://graphscope.io
@@ -26,3 +26,11 @@ type: application
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
 version: 0.0.2
+
+dependencies:
+  - name: kafka
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: "20.0.6"
+  - name: etcd
+    repository: oci://registry-1.docker.io/bitnamicharts
+    version: "11.1.3"
