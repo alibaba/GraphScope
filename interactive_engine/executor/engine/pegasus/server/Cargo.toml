@@ -2,7 +2,7 @@
 name = "pegasus_server"
 version = "0.1.0"
 authors = ["chenqiang.mcq <chenqiang.mcq@alibaba-inc.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 pegasus_common = { path = "../common" }
@@ -12,8 +12,8 @@ pegasus = { path = "../pegasus" }
 log = "0.4"
 crossbeam-utils = "0.8.14"
 #crossbeam-channel = "0.5.6"
-tonic = "0.8"
-prost = "0.11"
+tonic = "0.11"
+prost = "0.12"
 tokio = { version = "1.24", features = ["macros", "sync", "rt-multi-thread"] }
 tokio-stream = "0.1.11"
 toml = "0.5"
@@ -30,7 +30,7 @@ opentelemetry-otlp = { version = "0.15.0", features = ["trace", "metrics", "grpc
 structopt = "0.3"
 
 [build-dependencies]
-tonic-build = "0.8"
+tonic-build = "0.11"
 
 [features]
 default = []
