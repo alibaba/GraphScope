@@ -132,8 +132,10 @@ public class Utils {
         return graphPathType;
     }
 
-    public static String parseLabelValue(Common.Value value, GraphLabelType type) {
+    public static Object parseLabelValue(Common.Value value, GraphLabelType type) {
         switch (value.getItemCase()) {
+            case NONE:
+                return null;
             case STR:
                 return value.getStr();
             case I32:

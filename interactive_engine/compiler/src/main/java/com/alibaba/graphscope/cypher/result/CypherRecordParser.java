@@ -304,7 +304,14 @@ public class CypherRecordParser implements RecordParser<AnyValue> {
 
     protected AnyValue parseValue(Common.Value value, @Nullable RelDataType dataType) {
         if (dataType instanceof GraphLabelType) {
-            return Values.stringValue(Utils.parseLabelValue(value, (GraphLabelType) dataType));
+            Object labelValue = Utils.parseLabelValue(value, (GraphLabelType) dataType);
+            if (labelValue == null) {
+                return Values.NO_VALUE;
+            } else if (labelValue instanceof String) {
+                return Values.stringValue((String) labelValue);
+            } else {
+                return Values.stringValue(labelValue.toString());
+            }
         }
         switch (value.getItemCase()) {
             case BOOLEAN:
