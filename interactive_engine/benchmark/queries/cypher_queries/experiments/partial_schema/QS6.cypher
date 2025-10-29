@@ -1,0 +1,1 @@
+MATCH (n:PERSON)-[:LooseEdge]->(u:LooseVertex),(n)<-[:HASCREATOR]-(m:COMMENT)-[:LooseEdge]->(u) RETURN COUNT(*);

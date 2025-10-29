@@ -1,0 +1,1 @@
+MATCH (n:PERSON)-[:LooseEdge]->(u:LooseVertex),(m:FORUM)-[:LooseEdge]->(u) RETURN COUNT(*);

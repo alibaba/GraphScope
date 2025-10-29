@@ -1,0 +1,1 @@
+MATCH (n:COMMENT)-[:LooseEdge]->(u:LooseVertex),(n)-[:REPLYOF]->(m:POST)-[:LooseEdge]->(u) RETURN COUNT(*);

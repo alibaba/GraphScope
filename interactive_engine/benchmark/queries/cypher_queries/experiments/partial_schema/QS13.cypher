@@ -1,0 +1,1 @@
+MATCH (n:FORUM)-[:LooseEdge]->(u:LooseVertex),(m:COMMENT)-[:LooseEdge]->(u) RETURN COUNT(*);
