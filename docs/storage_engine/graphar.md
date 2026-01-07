@@ -108,7 +108,7 @@ You can also save a subgraph in GraphAr format using the `save_to` function with
 
 ```python
 import graphscope
-from graphscoped.dataset import load_ldbc
+from graphscope.dataset import load_ldbc
 
 # initialize a session
 sess = graphscope.session(cluster_type="hosts")
@@ -130,7 +130,7 @@ selector = {
 }
 
 # save the subgraph to GraphAr format
-r = g.save_to(
+r = graph.save_to(
     "/tmp/ldbc_subgraph_graphar/",
     format="graphar",
     selector=selector,
