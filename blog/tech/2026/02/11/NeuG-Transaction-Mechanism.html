@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">NeuG's High-Performance MVCC for Graph Workloads</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-02-11">11 Feb 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-02-11">11 Feb 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">NeuG's High-Performance MVCC for Graph Workloads</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-02-11-neug-transaction-title.jpg" alt="neug-transaction-title" /></p>
+
+<p>This article provides an in-depth look at NeuG’s transaction mechanism, which powers its high-throughput Transactional Processing (TP) capabilities while maintaining serializable isolation guarantees.</p>
+
+<p><strong>NeuG Repository</strong>: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a></p>
+
+<hr />
+
+<h2 id="executive-summary">Executive Summary</h2>
+
+<p>NeuG is an embedded graph database supporting both Transactional Processing (TP) and Analytical Processing (AP) workloads through distinct execution models.</p>
+
+<h3 id="operational-models--concurrency">Operational Models &amp; Concurrency</h3>
+
+<ul>
+  <li>
+    <p><strong>Embedded mode</strong>: Analytical queries run in embedded mode with concurrency managed at the Connection level. Within a given AP Connection, all queries (reads or writes) are executed serially. This model does not utilize the fine-grained parallel MVCC mechanism detailed for TP.</p>
+  </li>
+  <li>
+    <p><strong>Service mode</strong>: High-throughput TP operations are achieved via a single Write Connection managed by an internal service layer. This connection spawns multiple worker threads that execute in parallel, utilizing the MVCC and version management system described herein to enable lock-free read-insert parallelism and serializable isolation.</p>
+  </li>
+</ul>
+
+<p><strong>Scope</strong>: This document details the transaction mechanism powering the TP execution model. AP mode uses a simpler, connection-serialized approach for consistency.</p>
+
+<hr />
+
+<h2 id="core-architecture--design-philosophy">Core Architecture &amp; Design Philosophy</h2>
+
+<p>The transaction design is driven by the need for maximal throughput on common graph operations. Recognizing that a dominant pattern is highly concurrent reads mixed with blind inserts, the system categorizes transactions to eliminate unnecessary synchronization. A global versioning system creates immutable snapshots for readers, while inserters proceed in parallel, coordinated only when modifying the same adjacency list.</p>
+
+<hr />
+
+<h2 id="transaction-classification">Transaction Classification</h2>
+
+<p>NeuG categorizes transactions into three types to optimize concurrency:</p>
+
+<style>
+.transaction-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.transaction-table td, .transaction-table th {
+  padding: 12px 15px;
+  vertical-align: top;
+  word-wrap: break-word;
+}
+.transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 10%; white-space: nowrap; }
+.transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 20%; }
+.transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 30%; }
+.transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 40%; }
+</style>
+
+<table class="transaction-table">
+<thead>
+<tr>
+<th>Type</th>
+<th>Purpose</th>
+<th>Key Property</th>
+<th>Concurrency</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><b>Read</b></td>
+<td>Graph traversal, point lookup</td>
+<td>Pure read; sees a versioned snapshot</td>
+<td>Parallel with all Inserts via MVCC</td>
+</tr>
+<tr>
+<td><b>Insert</b></td>
+<td>Add vertices/edges</td>
+<td>Blind write; does not read existing graph</td>
+<td>Parallel with all Reads; fine-grained locks for edge adjacency lists</td>
+</tr>
+<tr>
+<td><b>Update</b></td>
+<td>Complex CRUD</td>
+<td>Sees its own writes; can abort/rollback</td>
+<td>Currently exclusive; future two-phase design</td>
+</tr>
+</tbody>
+</table>
+
+<p><em>Focus: This article details the mechanisms for Read and Insert transactions within the TP worker pool.</em></p>
+
+<hr />
+
+<h2 id="version-management-the-foundation-of-consistency">Version Management: The Foundation of Consistency</h2>
+
+<p>NeuG maintains a global, monotonically increasing version timeline through two counters:</p>
+
+<ul>
+  <li><strong>Global Write Version (GWV)</strong>: Atomic counter assigning unique IDs to write transactions</li>
+  <li><strong>Global Read Version (GRV)</strong>: The highest version where all prior writes are guaranteed committed</li>
+</ul>
+
+<h3 id="transaction-version-assignment">Transaction Version Assignment</h3>
+
+<ul>
+  <li><strong>Read Transaction</strong>: Starts with the current GRV as its snapshot version. GRV remains unchanged.</li>
+  <li><strong>Insert Transaction</strong>: Acquires the current GWV as its write version; GWV is atomically incremented.</li>
+</ul>
+
+<h3 id="grv-advancement-logic">GRV Advancement Logic</h3>
+
+<p>GRV advances only when a contiguous prefix of the version sequence is complete. A bit-set tracks completion within a sliding window.</p>
+
+<p><img src="/blog/assets/images/2026-02-11-grv-advancement.png" alt="GRV Advancement" /></p>
+
+<p>The example above demonstrates how GRV advances only when a contiguous prefix of transaction versions have completed. Although v₄ was already committed in STATE 1, GRV could not advance beyond v₀ because v₁ was still pending. Once v₁ commits, the continuous sequence v₀-v₂ becomes complete, allowing GRV to advance to v₂.</p>
+
+<hr />
+
+<h2 id="mvcc-storage--visibility">MVCC Storage &amp; Visibility</h2>
+
+<p>NeuG implements a lightweight MVCC model optimized for graph workloads:</p>
+
+<ul>
+  <li><strong>Single-Version Model</strong>: Each vertex/edge stores exactly one <code class="language-plaintext highlighter-rouge">write_version</code> (its creation version)</li>
+  <li><strong>Visibility Rule</strong>: A Read transaction with version <code class="language-plaintext highlighter-rouge">Tₓ</code> sees an element if and only if:
+    <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>element.write_version ≤ Tₓ
+</code></pre></div>    </div>
+  </li>
+</ul>
+
+<p>This single-version approach simplifies storage and memory management while providing snapshot isolation for readers.</p>
+
+<hr />
+
+<h2 id="concurrency-and-isolation-guarantees">Concurrency and Isolation Guarantees</h2>
+
+<h3 id="read-insert-parallelism">Read-Insert Parallelism</h3>
+
+<p>Lock-free parallelism between reads and inserts is achieved because:</p>
+
+<ol>
+  <li><strong>No Read-Write Conflicts</strong>: Insert transactions perform zero reads on existing graph data</li>
+  <li><strong>Non-Blocking Snapshot Reads</strong>: Reads operate on an immutable version snapshot</li>
+</ol>
+
+<h3 id="write-write-coordination">Write-Write Coordination</h3>
+
+<ul>
+  <li><strong>Vertex Insertion</strong>: Uniqueness is the caller’s precondition (assumed non-existent)</li>
+  <li><strong>Edge Insertion</strong>: Fine-grained, per-vertex adjacency locks prevent corruption when concurrent transactions add edges from the same source vertex. Lock atomicity prevents deadlocks.</li>
+</ul>
+
+<h3 id="serializable-isolation-guarantee">Serializable Isolation Guarantee</h3>
+
+<ul>
+  <li><strong>Reads</strong>: A single version snapshot is inherently serializable</li>
+  <li><strong>Inserts</strong>: Linearized by GWV assignment and persisted via WAL (see below). No internal read-dependencies ensure a deterministic, serializable order.</li>
+</ul>
+
+<hr />
+
+<h2 id="insert-transaction-lifecycle--durability">Insert Transaction Lifecycle &amp; Durability</h2>
+
+<p>The lifecycle of an Insert transaction follows a carefully designed protocol to ensure both performance and durability:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>1. START &amp; VERSION
+   └── Assign GWV (e.g., v₇); atomically increment GWV to v₈
+
+2. PREPROCESSING (Read-Only Phase)
+   └── Validate IDs, schema, encode properties
+   └── No graph modifications
+
+3. COMMIT PERSISTENCE (Write-Ahead Log - WAL)
+   └── Flush all mutation data to durable WAL
+   └── This point defines durability
+   └── On abort: log a minimal abort marker
+
+4. ATOMIC APPLY
+   └── Acquire necessary per-vertex adjacency locks
+   └── Apply all vertex/edge inserts atomically, stamping with version v₇
+   └── Update indexes
+
+5. COMPLETION
+   └── Mark transaction v₇ as complete in tracking bit-set
+   └── Advance GRV if possible (e.g., from v₆ to v₇)
+</code></pre></div></div>
+
+<h3 id="recovery">Recovery</h3>
+
+<p>After a crash, the system restores the last checkpoint and replays all committed WAL entries to guarantee durability. This design ensures that no committed transaction is lost while minimizing recovery time.</p>
+
+<hr />
+
+<h2 id="performance-characteristics">Performance Characteristics</h2>
+
+<p>The design choices in NeuG’s transaction mechanism deliver several performance benefits:</p>
+
+<h3 id="high-read-throughput">High Read Throughput</h3>
+
+<ul>
+  <li><strong>Zero Lock Contention</strong>: Read transactions never block on locks</li>
+  <li><strong>No Version Chain Traversal</strong>: Single-version model eliminates multi-version lookup overhead</li>
+  <li><strong>Snapshot Isolation</strong>: Readers see a consistent view without coordination</li>
+</ul>
+
+<h3 id="efficient-insert-processing">Efficient Insert Processing</h3>
+
+<ul>
+  <li><strong>Parallel Execution</strong>: Multiple insert transactions execute simultaneously</li>
+  <li><strong>Fine-Grained Locking</strong>: Only edges sharing the same source vertex require coordination</li>
+  <li><strong>Minimal Synchronization</strong>: No read-write conflicts to manage</li>
+</ul>
+
+<h3 id="predictable-latency">Predictable Latency</h3>
+
+<ul>
+  <li><strong>Lock-Free Reads</strong>: Query latency is independent of write workload</li>
+  <li><strong>Deterministic Version Assignment</strong>: Clear ordering of all transactions</li>
+  <li><strong>WAL-Based Durability</strong>: Fast commit with background persistence</li>
+</ul>
+
+<hr />
+
+<h2 id="design-trade-offs">Design Trade-offs</h2>
+
+<h3 id="advantages">Advantages</h3>
+
+<ol>
+  <li><strong>Optimal for Read-Heavy Workloads</strong>: Zero overhead for the common case of concurrent reads</li>
+  <li><strong>Simple Implementation</strong>: Single-version storage reduces complexity</li>
+  <li><strong>Strong Guarantees</strong>: Serializable isolation without complex protocols</li>
+  <li><strong>Predictable Performance</strong>: Lock-free reads provide consistent latency</li>
+</ol>
+
+<h3 id="current-limitations">Current Limitations</h3>
+
+<ol>
+  <li><strong>Update Transactions</strong>: Currently serialized; future work will enable greater concurrency</li>
+  <li><strong>Delete Operations</strong>: Handled through Update transactions</li>
+  <li><strong>Long-Running Transactions</strong>: May delay GRV advancement temporarily</li>
+</ol>
+
+<hr />
+
+<h2 id="use-cases">Use Cases</h2>
+
+<p>NeuG’s transaction mechanism is particularly well-suited for:</p>
+
+<h3 id="real-time-graph-analytics">Real-Time Graph Analytics</h3>
+
+<ul>
+  <li><strong>Social Network Analysis</strong>: Concurrent queries on user relationships while ingesting new connections</li>
+  <li><strong>Recommendation Systems</strong>: Read-heavy workloads with periodic batch inserts</li>
+  <li><strong>Fraud Detection</strong>: Real-time pattern matching on continuously growing transaction graphs</li>
+</ul>
+
+<h3 id="knowledge-graph-applications">Knowledge Graph Applications</h3>
+
+<ul>
+  <li><strong>RAG Systems</strong>: High-throughput entity lookups while incrementally building the knowledge base</li>
+  <li><strong>AI Agents</strong>: Parallel knowledge retrieval with concurrent fact insertion</li>
+  <li><strong>Semantic Search</strong>: Snapshot-consistent queries during graph expansion</li>
+</ul>
+
+<h3 id="edge-computing">Edge Computing</h3>
+
+<ul>
+  <li><strong>Local-First Applications</strong>: Embedded TP capabilities without distributed coordination</li>
+  <li><strong>IoT Data Processing</strong>: Continuous sensor data ingestion with real-time queries</li>
+  <li><strong>Mobile Applications</strong>: ACID guarantees in resource-constrained environments</li>
+</ul>
+
+<hr />
+
+<h2 id="future-work">Future Work</h2>
+
+<p>The NeuG team is actively working on several enhancements to the transaction system:</p>
+
+<h3 id="two-phase-update-transactions">Two-Phase Update Transactions</h3>
+
+<p>Refining the Update transaction model to allow greater concurrency through:</p>
+<ul>
+  <li>Optimistic concurrency control</li>
+  <li>Conflict detection and resolution</li>
+  <li>Selective retry mechanisms</li>
+</ul>
+
+<h3 id="distributed-transactions">Distributed Transactions</h3>
+
+<p>Extending the mechanism for distributed deployment:</p>
+<ul>
+  <li>Multi-node version coordination</li>
+  <li>Distributed WAL replication</li>
+  <li>Cross-shard transaction support</li>
+</ul>
+
+<h3 id="advanced-optimizations">Advanced Optimizations</h3>
+
+<ul>
+  <li><strong>Adaptive Concurrency Control</strong>: Dynamic adjustment based on workload patterns</li>
+  <li><strong>Version Garbage Collection</strong>: Automatic cleanup of old versions</li>
+  <li><strong>Intelligent Lock Management</strong>: Reducing lock contention for hot vertices</li>
+</ul>
+
+<hr />
+
+<h2 id="implementation-details">Implementation Details</h2>
+
+<p>For developers interested in the technical implementation:</p>
+
+<h3 id="version-counter-design">Version Counter Design</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">VersionManager</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">gwv</span> <span class="o">=</span> <span class="n">AtomicCounter</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Global Write Version
+</span>        <span class="bp">self</span><span class="p">.</span><span class="n">grv</span> <span class="o">=</span> <span class="n">AtomicCounter</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Global Read Version
+</span>        <span class="bp">self</span><span class="p">.</span><span class="n">completion_bits</span> <span class="o">=</span> <span class="n">SlidingBitSet</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">assign_write_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">gwv</span><span class="p">.</span><span class="n">fetch_and_increment</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">get_read_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">.</span><span class="n">grv</span><span class="p">.</span><span class="n">load</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">mark_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">version</span><span class="p">):</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">completion_bits</span><span class="p">.</span><span class="nb">set</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+        <span class="bp">self</span><span class="p">.</span><span class="n">try_advance_grv</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="adjacency-lock-protocol">Adjacency Lock Protocol</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">class</span> <span class="nc">EdgeInserter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">insert_edge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">properties</span><span class="p">):</span>
+        <span class="c1"># Acquire lock on source vertex's adjacency list
+</span>        <span class="k">with</span> <span class="bp">self</span><span class="p">.</span><span class="n">vertex_locks</span><span class="p">[</span><span class="n">src</span><span class="p">]:</span>
+            <span class="c1"># Stamp with transaction version
+</span>            <span class="n">edge</span> <span class="o">=</span> <span class="n">Edge</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="n">dst</span><span class="p">,</span> <span class="n">properties</span><span class="p">,</span> <span class="bp">self</span><span class="p">.</span><span class="n">tx_version</span><span class="p">)</span>
+            <span class="bp">self</span><span class="p">.</span><span class="n">adjacency_lists</span><span class="p">[</span><span class="n">src</span><span class="p">].</span><span class="n">append</span><span class="p">(</span><span class="n">edge</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="wal-format">WAL Format</h3>
+
+<p>Each WAL entry contains:</p>
+<ul>
+  <li>Transaction ID (version)</li>
+  <li>Operation type (INSERT/UPDATE/ABORT)</li>
+  <li>Payload (vertices/edges with properties)</li>
+  <li>Checksum for integrity</li>
+</ul>
+
+<hr />
+
+<h2 id="comparison-with-other-approaches">Comparison with Other Approaches</h2>
+
+<h3 id="vs-traditional-rdbms-mvcc">vs. Traditional RDBMS MVCC</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>NeuG</th>
+      <th>Traditional RDBMS</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Version Storage</td>
+      <td>Single version per element</td>
+      <td>Multi-version chains</td>
+    </tr>
+    <tr>
+      <td>Read Overhead</td>
+      <td>Zero lock contention</td>
+      <td>May need version traversal</td>
+    </tr>
+    <tr>
+      <td>Write Model</td>
+      <td>Optimized for blind inserts</td>
+      <td>General-purpose updates</td>
+    </tr>
+    <tr>
+      <td>Isolation Level</td>
+      <td>Serializable</td>
+      <td>Typically snapshot isolation</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="vs-graph-specific-systems">vs. Graph-Specific Systems</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>NeuG</th>
+      <th>Neo4j</th>
+      <th>JanusGraph</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Concurrency Model</td>
+      <td>MVCC</td>
+      <td>Lock-based</td>
+      <td>Optimistic locking</td>
+    </tr>
+    <tr>
+      <td>Read Parallelism</td>
+      <td>Lock-free</td>
+      <td>Lock-based</td>
+      <td>Lock-free</td>
+    </tr>
+    <tr>
+      <td>Transaction Scope</td>
+      <td>Local (embedded)</td>
+      <td>Local</td>
+      <td>Distributed</td>
+    </tr>
+    <tr>
+      <td>Performance Focus</td>
+      <td>TP workloads</td>
+      <td>Mixed OLTP</td>
+      <td>OLAP-oriented</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>NeuG’s transaction mechanism delivers high-throughput serializable isolation for graph workloads by:</p>
+
+<ol>
+  <li><strong>Categorizing transactions</strong> into Read and Insert types</li>
+  <li><strong>Isolating them</strong> via MVCC and versioned snapshots</li>
+  <li><strong>Synchronizing writes</strong> with fine-grained locking and a global version order</li>
+  <li><strong>Guaranteeing durability</strong> with a WAL-based commit protocol</li>
+</ol>
+
+<p>This design provides an optimal balance between performance, simplicity, and correctness for embedded graph database workloads. The system achieves lock-free read scalability while maintaining strong consistency guarantees—making it ideal for modern AI and analytics applications that require both high throughput and transactional integrity.</p>
+
+<hr />
+
+<h2 id="learn-more">Learn More</h2>
+
+<ul>
+  <li><strong>GitHub</strong>: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a></li>
+  <li><strong>Documentation</strong>: <a href="https://graphscope.io/neug/en/overview/introduction/">https://graphscope.io/neug/en/overview/introduction/</a></li>
+  <li><strong>Previous Post</strong>: <a href="https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html">Opensourcing NeuG</a></li>
+</ul>
+
+<hr />
+
+<p><strong>Building robust graph transactions for the embedded era.</strong></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=NeuG's High-Performance MVCC for Graph Workloads&amp;url=https://graphscope.io/tech/2026/02/11/NeuG-Transaction-Mechanism.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/02/11/NeuG-Transaction-Mechanism.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/02/11/NeuG-Transaction-Mechanism.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

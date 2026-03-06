@@ -5,9 +5,949 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Fri, 13 Jun 2025 09:35:29 +0000</pubDate>
-    <lastBuildDate>Fri, 13 Jun 2025 09:35:29 +0000</lastBuildDate>
+    <pubDate>Fri, 06 Mar 2026 10:29:32 +0000</pubDate>
+    <lastBuildDate>Fri, 06 Mar 2026 10:29:32 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>AI-Powered Open Source Development Management: NeuG&apos;s Exploration and Practice</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-title.jpg&quot; alt=&quot;neug-ai-dev-title&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; is a lightweight, high-performance embedded graph database open-sourced by the &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team. It can be installed with a simple &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt; and is designed for local analytics and real-time transaction processing. In this article, we share how we leverage AI capabilities to manage NeuG’s development workflow. In the future, we will further explore how NeuG’s graph computing capabilities can empower AI in return.&lt;/p&gt;
+
+&lt;p&gt;We invite you to follow and star &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG repository&lt;/a&gt;!&lt;/p&gt;
+
+&lt;p&gt;For more technical details, please refer to the &lt;a href=&quot;https://graphscope.io/neug/&quot;&gt;NeuG official documentation&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;pain-points-in-open-source-development-lack-of-comprehensive-project-management&quot;&gt;Pain Points in Open Source Development: Lack of Comprehensive Project Management&lt;/h2&gt;
+
+&lt;p&gt;Managing open source software projects is one of the biggest pain points in the development process. If an engineer only focuses on writing code without an efficient management and tracking mechanism, the final product will struggle to be delivered on time. This is because open source projects inherently possess dynamic uncertainty — requirements can change at any moment.&lt;/p&gt;
+
+&lt;p&gt;In recent months, AI Coding capabilities have been rapidly improving. However, we have found that the imbalance between development and management has actually worsened: developers can leverage the latest and most powerful models to rapidly generate large volumes of code, but this seemingly functional yet poorly readable and architecturally weak code only adds to the project management burden. As code accumulates, it may well be that only the large language model itself can deconstruct such a complex repository.&lt;/p&gt;
+
+&lt;p&gt;In reality, we don’t lack coding capability. On the contrary, in open source projects, designing and breaking down solutions and tracking development progress are far more important. Taking our team’s &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; development as an example, the upfront PRD design and discussion can take up a third or even more of the entire development cycle. The recently popular “vibe-coding” is really only suitable for personal projects built from scratch — for serious development scenarios like databases, it is virtually inapplicable.&lt;/p&gt;
+
+&lt;p&gt;Based on these reflections, we tried introducing AI tools into NeuG development in the role of “manager” rather than “developer,” covering the entire lifecycle from requirements analysis and task decomposition to GitHub synchronization and tracking.&lt;/p&gt;
+
+&lt;h2 id=&quot;spec-driven-the-best-development-paradigm-for-neug&quot;&gt;Spec-Driven: The Best Development Paradigm for NeuG&lt;/h2&gt;
+
+&lt;p&gt;In our early exploration, we still followed a “vibe-coding”-style workflow, letting AI directly manage requirements. We iterated through multiple versions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;Developers write PRD documents, and the Coding Agent parses the context to decompose tasks, syncing them to GitHub.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The Coding Agent parses the Markdown structure of PRD documents before decomposing tasks.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;The Coding Agent converts PRD documents into a standardized intermediate format before parsing and decomposing tasks.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Throughout this exploration, we continuously encountered common pain points such as detail loss from overly long contexts and inconsistent outputs. However, we gradually realized that a structured context might be the paradigm best suited for NeuG development. Many AI products also adopt similar structured contexts — for example, DingTalk’s meeting minutes allow pre-selecting templates, and some project documentation tools offer fully customized templates. After testing, we found that while enforcing output format alignment makes some content read a bit stiffly (for example, some development tasks simply don’t need corresponding unit tests), the completeness of such documents effectively reduces omissions — trimming is always easier than patching.&lt;/p&gt;
+
+&lt;p&gt;Meanwhile, a wealth of Spec-Driven tools have been open-sourced, and we were among the first to try them. We found that the paradigm of “write project specifications first, then generate project code” highly aligned with our needs. Taking GitHub’s official &lt;a href=&quot;https://github.com/github/spec-kit/tree/main&quot;&gt;speckit&lt;/a&gt; as an example, here’s a brief explanation of what Spec-Driven involves and what each step does:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Specify&lt;/strong&gt;. In this phase, users provide a requirements description. This phase doesn’t involve specific technology stacks but focuses on product-level analysis: Who will use it? What features does it provide? What problems does it solve? What are the inputs and outputs? What is the interaction flow?&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Plan&lt;/strong&gt;. In this phase, the AI tool generates a comprehensive development plan. This phase focuses on designing how to incorporate the requirement into the existing codebase, which modules are affected, and what constraints must be maintained. It therefore requires comprehensive code, architecture, and constraint information, with strict confirmation from development experts.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Tasks&lt;/strong&gt;. In this phase, the AI tool further decomposes the Plan into several executable tasks. Each task is a minimal, independently runnable code unit, making it convenient for the AI tool to test after code completion. Simply put, each task can be viewed as a standalone function.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Implement&lt;/strong&gt;. In this phase, the AI tool incrementally completes each task from the Tasks phase. Thanks to the well-prepared Specify, Plan, and Tasks, the AI tool can generate more accurate code that integrates better with the existing context.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Additionally, these Spec-Driven tools interact with the Coding Agent through slash commands. This invocation style is completely transparent and flexible, and users can freely adjust the prompts in Markdown files to create their own specifications. As we encountered the problem of overly verbose generated content, we began migrating our daily development habits into prompts, which significantly improved results. Below, we use a simple example to illustrate how NeuG leverages the Spec-Driven development paradigm to improve efficiency.&lt;/p&gt;
+
+&lt;h2 id=&quot;use-case-adding-multi-threaded-transaction-tests-to-neug&quot;&gt;Use Case: Adding Multi-threaded Transaction Tests to NeuG&lt;/h2&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Background&lt;/strong&gt;: Transaction functionality is one of the most important — and most error-prone — modules in a database. NeuG’s transaction engine implements lock-free read-insert parallelism and serializable isolation based on MVCC (see &lt;a href=&quot;https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html&quot;&gt;NeuG Transaction Mechanism Explained&lt;/a&gt; for details). To ensure this module executes correctly, we need to add various transaction tests. We attempted to use the Spec-Driven approach to let the large language model handle the entire process.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;specify-phase-task-expansion-and-analysis&quot;&gt;Specify Phase: Task Expansion and Analysis&lt;/h3&gt;
+
+&lt;p&gt;In the Specify phase, users can provide a brief requirements description along with some draft documentation (no format or content requirements), and the model independently organizes, expands, and generates a complete PRD document.&lt;/p&gt;
+
+&lt;p&gt;In NeuG’s previous development workflow, PRD document design was a crucial step. However, writing a complete PRD document was extremely tedious and difficult to account for all edge cases and special scenarios. During the model’s document generation process, we enforced a document structure where a requirement is split into multiple modules, each module is further decomposed into multiple tasks, and each task must include corresponding tests and verification to ensure document completeness.&lt;/p&gt;
+
+&lt;p&gt;Even when a task genuinely doesn’t need testing or verification (for example, cycle detection can directly call a third-party library), we still ask the model to list relevant content whenever possible. If some redundant content truly needs to be removed, we can simply edit it ourselves or prompt the model to modify the document. From practical experience, “trimming excess” is always easier than “filling gaps.”&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-specify.png&quot; alt=&quot;Specify Phase Screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;plan-phase-persisting-implementation-details&quot;&gt;Plan Phase: Persisting Implementation Details&lt;/h3&gt;
+
+&lt;p&gt;The Plan phase is primarily responsible for further refining technical details and technology choices that weren’t covered in the Specify phase.&lt;/p&gt;
+
+&lt;p&gt;During NeuG’s product development, we found that many design decisions are difficult to reflect intuitively in code, and the related technical documentation often lacks maintenance, directly leading to collaboration and handoff difficulties. As a solution, we chose to persist extensive technical details during the Plan phase. This content effectively serves as supplementary context for the Coding Agent’s code generation and provides convenience when producing technical reports later.&lt;/p&gt;
+
+&lt;p&gt;As shown in the figure below, we needed to standardize transaction generation ratios and data formats, and determine transaction execution strategies for multi-threaded scenarios. Additionally, transaction testing relies on specific testing workflows, requiring detailed descriptions of dependency graph construction, dependency analysis, and cycle detection algorithms. This content significantly improves the accuracy and consistency of subsequent code generation.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-plan.png&quot; alt=&quot;Plan Phase Screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;tasks-phase-decomposing-tasks-syncing-to-github&quot;&gt;Tasks Phase: Decomposing Tasks, Syncing to GitHub&lt;/h3&gt;
+
+&lt;p&gt;In the Tasks phase, the Coding Agent generates several Modules and Tasks based on the previous documents and syncs them to GitHub Issues. Our hierarchical structure perfectly aligns with GitHub’s Sub-Issue feature, making it convenient to track the entire development progress of a requirement end-to-end.&lt;/p&gt;
+
+&lt;p&gt;In NeuG’s past development, these Issues were created and linked manually — not only time-consuming and labor-intensive, but when a new requirement was inserted, older requirements were often overlooked. Through the Task phase tracking, we can not only generate Issues with one click but also persistently track the completion status of all Issues, preventing development tasks from stalling midway.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-tasks.png&quot; alt=&quot;Tasks Phase Screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Furthermore, we customized our approach to NeuG’s development habits by creating separate Markdown files for each Module, storing detailed information about each task’s assignee, labels, and implementation details. This isolation ensures that when a requirement spans multiple parts of the project and requires collaboration from multiple developers, conflicts are avoided.&lt;/p&gt;
+
+&lt;h4 id=&quot;github-sync-operations&quot;&gt;GitHub Sync Operations&lt;/h4&gt;
+
+&lt;p&gt;In the Tasks phase, we need to sync tasks to GitHub for tracking. Specifically, multiple Module Issues are created under the main Issue, and each Module Issue further contains multiple Task Issues. The overall structure is consistent with the documentation and can be displayed very intuitively on GitHub.&lt;/p&gt;
+
+&lt;p&gt;We also designed a set of synchronization rules tailored to our team’s development habits: initially, the entire Module Content is synced to the Issue body, but no specific Sub-Issues are created. Only when a specific task is about to be developed is the corresponding Issue created, and upon completion, the PR is merged and the Issue is closed. The reason for this design is that the overall plan continuously adjusts as development progresses — new requirements may be inserted or existing ones modified. Fixing the entire workflow at once would lead to high modification costs later.&lt;/p&gt;
+
+&lt;p&gt;The figure below shows a development snapshot of the transaction testing requirement described above (displayed content differs slightly). We planned two Modules, each requiring 3 Tasks to complete. Currently, Tasks 101, 102, 201, and 202 have been completed, while the remaining two Tasks involve complex multi-query scenarios that require further support before implementation.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-github-sync.png&quot; alt=&quot;GitHub Sync Screenshot&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;To accommodate this usage pattern, we designed two separate Commands: sync-module and sync-task. They accept a Module ID or Task ID and generate the corresponding Issue, automatically completing the Sub-Issue linking. When the content of these Modules or Tasks is modified, the same two commands can be reused to update without needing to recreate.&lt;/p&gt;
+
+&lt;h3 id=&quot;implement-phase-preserving-traditional-development&quot;&gt;Implement Phase: Preserving Traditional Development&lt;/h3&gt;
+
+&lt;p&gt;In this phase, we don’t mandate the use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/speckit.implement&lt;/code&gt;. Instead, we allow the task to be handed off to the corresponding developer for implementation. It doesn’t matter which tool they use to generate code (or even “old-school manual coding”), because the comprehensive context and specifications already provide sufficient constraints to naturally produce high-quality code.&lt;/p&gt;
+
+&lt;p&gt;We also recognize the importance of testing, requiring that all Tasks must be supplemented with corresponding CI tests after implementation, ensuring they can execute correctly in an isolated test environment. This is also an area where current large language models excel, so we won’t elaborate further.&lt;/p&gt;
+
+&lt;h2 id=&quot;github-integration-a-more-automated-issuepr-experience&quot;&gt;GitHub Integration: A More Automated Issue/PR Experience&lt;/h2&gt;
+
+&lt;p&gt;Inspired by the Commands functionality, we further integrated more GitHub operations into the Coding Agent. Currently, we have implemented two core capabilities: Issue creation and PR creation. In these two Commands, we incorporated two very important paradigms:&lt;/p&gt;
+
+&lt;h3 id=&quot;context-collection&quot;&gt;Context Collection&lt;/h3&gt;
+
+&lt;p&gt;Context is critically important for Bug Issues. While Issue and PR creation already encourage users to fill in context thoroughly using templates, this step is extremely tedious. Our developers often need to copy terminal error messages, relevant code snippets, and error reproduction commands multiple times — and the useful information in these logs is minimal with poor readability.&lt;/p&gt;
+
+&lt;p&gt;We introduced the create-issue and create-pr commands. Users can directly select relevant content, and the model reads the corresponding terminal or file content, automatically parsing and generating organized content for submission. Developers only need to review the final generated result, which is extremely convenient.&lt;/p&gt;
+
+&lt;p&gt;Below is a simple example: by referencing error messages from the terminal and relevant source code, we prompt the model to submit an Issue and automatically configure the Parent Issue, Assignee, and Project information. In the era of large language models, this information doesn’t need to match exactly — a rough description is sufficient for the model to infer the best match.&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;`/create-issue` [bash:15-20][main.cpp:150:210] Check the error messages and executed code, create an issue of type bug, link to parent issue #xx, assign to &quot;@user-xxx&quot;, and add to project &quot;Project-xxx&quot;.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;creation-confirmation&quot;&gt;Creation Confirmation&lt;/h3&gt;
+
+&lt;p&gt;When Git performs dangerous operations like merge or rebase, it typically displays a confirmation file for the user to review. Inspired by this, we believe that creating Issues and PRs can similarly incorporate a confirmation flow to verify Issue configurations.&lt;/p&gt;
+
+&lt;p&gt;Specifically, before creating an Issue or PR, the Agent provides a file for user interaction to confirm the information to be submitted, with a structure roughly as follows:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Issue Type: Bug
+Issue Title: [BUG] &amp;lt;title&amp;gt;
+Assignee: &amp;lt;assignee&amp;gt;
+Labels: bug, &amp;lt;additional labels&amp;gt;
+Project: NeuG v0.1
+Parent Issue: #&amp;lt;parent-issue-id&amp;gt;
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**Execution Logs**
+The commands that can reproduce the issue.
+1. Command 1: ...
+2. Command 2: ...
+...
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Error Message**
+The error message in the terminal.
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In this temporary file, the configuration parameters for creating the Issue are listed in detail, along with the specific body content. Through this file, users can clearly confirm the Issue’s type, assignee, labels, project, parent issue, and other information. Only after user confirmation does the Agent create and execute the corresponding command. This semi-structured template also ensures greater consistency in subsequently generated commands, significantly reducing unexpected situations caused by users’ unfamiliarity with commands.&lt;/p&gt;
+
+&lt;h2 id=&quot;agent-skills-support&quot;&gt;Agent Skills Support&lt;/h2&gt;
+
+&lt;p&gt;Just as we were writing this blog post, another new paradigm — Agent Skills — was rolling out broadly. We won’t discuss the comparison between Commands and Skills here, but from a product design perspective, the advantage of Agent Skills lies in encouraging users to store large scripts, templates, and other information in separate folders, while keeping only concise but critical descriptions in the core file. Moreover, Agent Skills is fully compatible with Commands operations, invoked explicitly through slash commands. Therefore, we promptly migrated our commands to the Skills format, moving templates, scripts, and other content from prompts into independent files.&lt;/p&gt;
+
+&lt;div class=&quot;language-markdown highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;.cursor
+└── skills
+    ├── speckit.specify
+    │   ├── templates
+    │   │   └── spec-template.md
+    │   └── SKILL.md
+    │
+    ├── speckit.plan
+    │   ├── templates
+    │   │   └── plan-template.md
+    │   └── SKILL.md
+    │
+    ├── speckit.tasks
+    │   ├── templates
+    │   │   ├── tasks-metadata-template.md
+    │   │   └── tasks-module-template.md
+    │   └── SKILL.md
+    │
+    ├── sync-modules
+    │   └── SKILL.md
+    │
+    ├── sync-tasks
+    │   └── SKILL.md
+    │
+    ├── create-issue
+    │   ├── scripts
+    │   │   └── gh-update.sh
+    │   ├── templates
+    │   │   ├── bug-issue.md
+    │   │   └── feature-issue.md
+    │   └── SKILL.md
+    │
+    └── create-pr
+        ├── templates
+        │   └── pull-request.md
+        └── SKILL.md
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Throughout our experience with Spec tools, it became evident that using Coding Agents effectively involves a wealth of techniques — from the overall product application scenarios to the crafting of individual prompts, as well as various interaction paradigms and generation logic. These details are what truly unlock the model’s capabilities, and they explain why the same programming tools produce entirely different results in different people’s hands. In the future, we will continue exploring applications of large language model programming tools across various project development scenarios, letting AI truly unleash productivity.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 12 Feb 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
+    
+      <item>
+        <title>Opensourcing NeuG</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-neug-title.jpg&quot; alt=&quot;neug-title&quot; /&gt;
+We are pleased to announce the open source release of &lt;strong&gt;NeuG&lt;/strong&gt; (pronounced “new-gee”), a lightweight, high-performance embedded graph database designed for local analytics and real-time transaction processing.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;br /&gt;
+&lt;strong&gt;Documentation&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-neug&quot;&gt;Why NeuG&lt;/h2&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team has spent the past few years building large-scale graph computing engines. Along the way, we received consistent feedback from our community: many users don’t need distributed clusters. What they want is a graph database they can &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install&lt;/code&gt;, explore data in Jupyter notebooks, run graph queries in Python scripts, and quickly spin up as a service when needed for production.&lt;/p&gt;
+
+&lt;p&gt;This reminded us of what DuckDB did for relational data processing—an embeddable analytics database that doesn’t require deploying servers or configuring connection pools. Just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import duckdb&lt;/code&gt; and start working. We wanted to bring that same experience to graph data.&lt;/p&gt;
+
+&lt;p&gt;NeuG is the result of that effort. It reuses the storage and query engine from GraphScope Flex (which achieved strong results on the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/&quot;&gt;LDBC SNB Interactive benchmark&lt;/a&gt;), but with a redesigned interface layer that allows it to be embedded directly as a Python library. We also kept the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db.serve()&lt;/code&gt; interface for switching to service mode when concurrent access is needed.&lt;/p&gt;
+
+&lt;p&gt;NeuG is suited for scenarios where you need to process graph data locally and quickly: data science exploration, ML feature engineering, AI application prototyping, and lightweight applications where deployment simplicity matters.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;key-features&quot;&gt;Key Features&lt;/h2&gt;
+
+&lt;h3 id=&quot;lightweight--embeddable&quot;&gt;Lightweight &amp;amp; Embeddable&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Lightweight&lt;/strong&gt;, all dependencies managed via third_party submodules&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Embeddable&lt;/strong&gt; design, currently supporting Python applications with more languages and platforms coming soon&lt;/li&gt;
+  &lt;li&gt;Get started with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/path/to/data&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    MATCH (a:Person)-[:KNOWS]-&amp;gt;(b:Person)
+    RETURN a.name, b.name
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;dual-mode-architecture-htap&quot;&gt;Dual-Mode Architecture (HTAP)&lt;/h3&gt;
+
+&lt;p&gt;NeuG provides two operational modes through a single lightweight core:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Mode&lt;/th&gt;
+      &lt;th&gt;Use Case&lt;/th&gt;
+      &lt;th&gt;Characteristics&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Embedded Mode&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Offline analytics, ML/AI pipelines&lt;/td&gt;
+      &lt;td&gt;Import as a Python library, ideal for Jupyter notebooks, batch ETL, graph algorithm development&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Service Mode&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Online transactions, concurrent access&lt;/td&gt;
+      &lt;td&gt;Call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db.serve()&lt;/code&gt; to start a network service with multi-session ACID transactions&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;This design allows NeuG to adapt flexibly from prototyping to production deployment without changing your technology stack.&lt;/p&gt;
+
+&lt;h3 id=&quot;cypher-native&quot;&gt;Cypher-Native&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Industry-standard Cypher query language&lt;/li&gt;
+  &lt;li&gt;Built on &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt;’s unified intermediate representation, designed for future &lt;a href=&quot;https://www.gqlstandards.org/&quot;&gt;ISO/GQL&lt;/a&gt; compatibility&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;extensible-by-design&quot;&gt;Extensible by Design&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Extension system inspired by PostgreSQL/DuckDB&lt;/li&gt;
+  &lt;li&gt;Keep the core lean; add graph algorithms, vector search, and custom procedures through an extensible framework&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;acid-transactions&quot;&gt;ACID Transactions&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Embedded mode: Single-connection serial access with data consistency guarantees&lt;/li&gt;
+  &lt;li&gt;Service mode: Multi-session concurrent transactions with read-write isolation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
+
+&lt;p&gt;NeuG is built on the GraphScope Flex engine, which achieved industry-leading results on the &lt;strong&gt;LDBC SNB Interactive benchmark&lt;/strong&gt; using Cypher queries:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Metric&lt;/th&gt;
+      &lt;th&gt;Result&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Throughput&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;80,000+ QPS&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Scale Factor&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;SF300 (~1 billion edges)&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Audit Status&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Officially audited by LDBC&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;These results validate NeuG’s capability for high-concurrency transactional workloads. The full audit report is available on the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/&quot;&gt;LDBC website&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;use-cases&quot;&gt;Use Cases&lt;/h2&gt;
+
+&lt;p&gt;NeuG v0.1 is particularly suited for:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;AI/LLM Application Development&lt;/strong&gt;: Knowledge graph storage and querying for RAG systems and AI Agents&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Data Science &amp;amp; Research&lt;/strong&gt;: Graph exploration in Jupyter Notebooks—social network analysis, relationship mining, pattern discovery&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;ML Feature Engineering&lt;/strong&gt;: Computing graph-structural features (node centrality, community structure, path patterns) as machine learning inputs&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Prototype to Production&lt;/strong&gt;: Use embedded mode for rapid iteration during development, switch to service mode for deployment—no technology stack changes required&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Edge Computing &amp;amp; Local-First Applications&lt;/strong&gt;: Run graph queries in resource-constrained environments without network connectivity&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;quick-start&quot;&gt;Quick Start&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Installation&lt;/span&gt;
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;neug
+
+&lt;span class=&quot;c&quot;&gt;# Verify installation&lt;/span&gt;
+python &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;import neug; print(&apos;NeuG is ready!&apos;)&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Create database and load sample data
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./my_graph&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load_builtin_dataset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tinysnb&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Execute queries
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    MATCH (a:person)-[:knows]-&amp;gt;(b:person)-[:knows]-&amp;gt;(c:person),
+          (a)-[:knows]-&amp;gt;(c)
+    RETURN a.fName, b.fName, c.fName
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; are mutual friends&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Switch to service mode
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;coming-soon-v02&quot;&gt;Coming Soon (v0.2)&lt;/h2&gt;
+
+&lt;p&gt;v0.2 focuses on enhanced AI scenario support and data ecosystem integration:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Feature&lt;/th&gt;
+      &lt;th&gt;Description&lt;/th&gt;
+      &lt;th&gt;Use Case&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Node.js Binding&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;TypeScript/JavaScript language binding&lt;/td&gt;
+      &lt;td&gt;AI Agent development, web backend integration&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Graph Algorithm Extensions&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Leiden community detection and more&lt;/td&gt;
+      &lt;td&gt;Knowledge graph clustering, entity grouping in GraphRAG&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Vector DB Extension&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Graph + vector hybrid retrieval&lt;/td&gt;
+      &lt;td&gt;GraphRAG, semantic search + relationship reasoning&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Data Lake Integration&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;S3/OSS + Parquet format&lt;/td&gt;
+      &lt;td&gt;Large-scale offline analytics, data platform integration&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Foreign Tables&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Direct querying of external data sources&lt;/td&gt;
+      &lt;td&gt;Interoperability with PostgreSQL, DuckDB, and relational ecosystems&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;technology-stack&quot;&gt;Technology Stack&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Query Language&lt;/strong&gt;: Cypher (ISO/GQL compatibility planned)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Query Optimization&lt;/strong&gt;: GOpt unified optimization framework&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Storage Engine&lt;/strong&gt;: GraphScope Flex&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Language Bindings&lt;/strong&gt;: Python (C++ API available, Node.js in development)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Platform Support&lt;/strong&gt;: Linux, macOS (x86_64, ARM64)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;license&quot;&gt;License&lt;/h2&gt;
+
+&lt;p&gt;NeuG is released under the Apache License 2.0.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;contributing&quot;&gt;Contributing&lt;/h2&gt;
+
+&lt;p&gt;We welcome community participation and contributions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Star &amp;amp; Watch&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;acknowledgments&quot;&gt;Acknowledgments&lt;/h2&gt;
+
+&lt;p&gt;NeuG is developed by the &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team at Alibaba, incorporating years of expertise in large-scale graph computing. We thank all developers who have contributed to this project.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;Making graph data simple.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;GitHub: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;br /&gt;
+Documentation: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
+    
+      <item>
+        <title>NeuG&apos;s High-Performance MVCC for Graph Workloads</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-neug-transaction-title.jpg&quot; alt=&quot;neug-transaction-title&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;This article provides an in-depth look at NeuG’s transaction mechanism, which powers its high-throughput Transactional Processing (TP) capabilities while maintaining serializable isolation guarantees.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NeuG Repository&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;executive-summary&quot;&gt;Executive Summary&lt;/h2&gt;
+
+&lt;p&gt;NeuG is an embedded graph database supporting both Transactional Processing (TP) and Analytical Processing (AP) workloads through distinct execution models.&lt;/p&gt;
+
+&lt;h3 id=&quot;operational-models--concurrency&quot;&gt;Operational Models &amp;amp; Concurrency&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Embedded mode&lt;/strong&gt;: Analytical queries run in embedded mode with concurrency managed at the Connection level. Within a given AP Connection, all queries (reads or writes) are executed serially. This model does not utilize the fine-grained parallel MVCC mechanism detailed for TP.&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Service mode&lt;/strong&gt;: High-throughput TP operations are achieved via a single Write Connection managed by an internal service layer. This connection spawns multiple worker threads that execute in parallel, utilizing the MVCC and version management system described herein to enable lock-free read-insert parallelism and serializable isolation.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Scope&lt;/strong&gt;: This document details the transaction mechanism powering the TP execution model. AP mode uses a simpler, connection-serialized approach for consistency.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;core-architecture--design-philosophy&quot;&gt;Core Architecture &amp;amp; Design Philosophy&lt;/h2&gt;
+
+&lt;p&gt;The transaction design is driven by the need for maximal throughput on common graph operations. Recognizing that a dominant pattern is highly concurrent reads mixed with blind inserts, the system categorizes transactions to eliminate unnecessary synchronization. A global versioning system creates immutable snapshots for readers, while inserters proceed in parallel, coordinated only when modifying the same adjacency list.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;transaction-classification&quot;&gt;Transaction Classification&lt;/h2&gt;
+
+&lt;p&gt;NeuG categorizes transactions into three types to optimize concurrency:&lt;/p&gt;
+
+&lt;style&gt;
+.transaction-table {
+  width: 100%;
+  table-layout: fixed;
+}
+.transaction-table td, .transaction-table th {
+  padding: 12px 15px;
+  vertical-align: top;
+  word-wrap: break-word;
+}
+.transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 10%; white-space: nowrap; }
+.transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 20%; }
+.transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 30%; }
+.transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 40%; }
+&lt;/style&gt;
+
+&lt;table class=&quot;transaction-table&quot;&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;Type&lt;/th&gt;
+&lt;th&gt;Purpose&lt;/th&gt;
+&lt;th&gt;Key Property&lt;/th&gt;
+&lt;th&gt;Concurrency&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;b&gt;Read&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Graph traversal, point lookup&lt;/td&gt;
+&lt;td&gt;Pure read; sees a versioned snapshot&lt;/td&gt;
+&lt;td&gt;Parallel with all Inserts via MVCC&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;b&gt;Insert&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Add vertices/edges&lt;/td&gt;
+&lt;td&gt;Blind write; does not read existing graph&lt;/td&gt;
+&lt;td&gt;Parallel with all Reads; fine-grained locks for edge adjacency lists&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;&lt;b&gt;Update&lt;/b&gt;&lt;/td&gt;
+&lt;td&gt;Complex CRUD&lt;/td&gt;
+&lt;td&gt;Sees its own writes; can abort/rollback&lt;/td&gt;
+&lt;td&gt;Currently exclusive; future two-phase design&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;em&gt;Focus: This article details the mechanisms for Read and Insert transactions within the TP worker pool.&lt;/em&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;version-management-the-foundation-of-consistency&quot;&gt;Version Management: The Foundation of Consistency&lt;/h2&gt;
+
+&lt;p&gt;NeuG maintains a global, monotonically increasing version timeline through two counters:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Global Write Version (GWV)&lt;/strong&gt;: Atomic counter assigning unique IDs to write transactions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Global Read Version (GRV)&lt;/strong&gt;: The highest version where all prior writes are guaranteed committed&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;transaction-version-assignment&quot;&gt;Transaction Version Assignment&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Read Transaction&lt;/strong&gt;: Starts with the current GRV as its snapshot version. GRV remains unchanged.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Insert Transaction&lt;/strong&gt;: Acquires the current GWV as its write version; GWV is atomically incremented.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;grv-advancement-logic&quot;&gt;GRV Advancement Logic&lt;/h3&gt;
+
+&lt;p&gt;GRV advances only when a contiguous prefix of the version sequence is complete. A bit-set tracks completion within a sliding window.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-grv-advancement.png&quot; alt=&quot;GRV Advancement&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The example above demonstrates how GRV advances only when a contiguous prefix of transaction versions have completed. Although v₄ was already committed in STATE 1, GRV could not advance beyond v₀ because v₁ was still pending. Once v₁ commits, the continuous sequence v₀-v₂ becomes complete, allowing GRV to advance to v₂.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;mvcc-storage--visibility&quot;&gt;MVCC Storage &amp;amp; Visibility&lt;/h2&gt;
+
+&lt;p&gt;NeuG implements a lightweight MVCC model optimized for graph workloads:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Single-Version Model&lt;/strong&gt;: Each vertex/edge stores exactly one &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;write_version&lt;/code&gt; (its creation version)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Visibility Rule&lt;/strong&gt;: A Read transaction with version &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Tₓ&lt;/code&gt; sees an element if and only if:
+    &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;element.write_version ≤ Tₓ
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This single-version approach simplifies storage and memory management while providing snapshot isolation for readers.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;concurrency-and-isolation-guarantees&quot;&gt;Concurrency and Isolation Guarantees&lt;/h2&gt;
+
+&lt;h3 id=&quot;read-insert-parallelism&quot;&gt;Read-Insert Parallelism&lt;/h3&gt;
+
+&lt;p&gt;Lock-free parallelism between reads and inserts is achieved because:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;No Read-Write Conflicts&lt;/strong&gt;: Insert transactions perform zero reads on existing graph data&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Non-Blocking Snapshot Reads&lt;/strong&gt;: Reads operate on an immutable version snapshot&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;write-write-coordination&quot;&gt;Write-Write Coordination&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Vertex Insertion&lt;/strong&gt;: Uniqueness is the caller’s precondition (assumed non-existent)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Edge Insertion&lt;/strong&gt;: Fine-grained, per-vertex adjacency locks prevent corruption when concurrent transactions add edges from the same source vertex. Lock atomicity prevents deadlocks.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;serializable-isolation-guarantee&quot;&gt;Serializable Isolation Guarantee&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Reads&lt;/strong&gt;: A single version snapshot is inherently serializable&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Inserts&lt;/strong&gt;: Linearized by GWV assignment and persisted via WAL (see below). No internal read-dependencies ensure a deterministic, serializable order.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;insert-transaction-lifecycle--durability&quot;&gt;Insert Transaction Lifecycle &amp;amp; Durability&lt;/h2&gt;
+
+&lt;p&gt;The lifecycle of an Insert transaction follows a carefully designed protocol to ensure both performance and durability:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1. START &amp;amp; VERSION
+   └── Assign GWV (e.g., v₇); atomically increment GWV to v₈
+
+2. PREPROCESSING (Read-Only Phase)
+   └── Validate IDs, schema, encode properties
+   └── No graph modifications
+
+3. COMMIT PERSISTENCE (Write-Ahead Log - WAL)
+   └── Flush all mutation data to durable WAL
+   └── This point defines durability
+   └── On abort: log a minimal abort marker
+
+4. ATOMIC APPLY
+   └── Acquire necessary per-vertex adjacency locks
+   └── Apply all vertex/edge inserts atomically, stamping with version v₇
+   └── Update indexes
+
+5. COMPLETION
+   └── Mark transaction v₇ as complete in tracking bit-set
+   └── Advance GRV if possible (e.g., from v₆ to v₇)
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;recovery&quot;&gt;Recovery&lt;/h3&gt;
+
+&lt;p&gt;After a crash, the system restores the last checkpoint and replays all committed WAL entries to guarantee durability. This design ensures that no committed transaction is lost while minimizing recovery time.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;performance-characteristics&quot;&gt;Performance Characteristics&lt;/h2&gt;
+
+&lt;p&gt;The design choices in NeuG’s transaction mechanism deliver several performance benefits:&lt;/p&gt;
+
+&lt;h3 id=&quot;high-read-throughput&quot;&gt;High Read Throughput&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Zero Lock Contention&lt;/strong&gt;: Read transactions never block on locks&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;No Version Chain Traversal&lt;/strong&gt;: Single-version model eliminates multi-version lookup overhead&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Snapshot Isolation&lt;/strong&gt;: Readers see a consistent view without coordination&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;efficient-insert-processing&quot;&gt;Efficient Insert Processing&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Parallel Execution&lt;/strong&gt;: Multiple insert transactions execute simultaneously&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Fine-Grained Locking&lt;/strong&gt;: Only edges sharing the same source vertex require coordination&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Minimal Synchronization&lt;/strong&gt;: No read-write conflicts to manage&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;predictable-latency&quot;&gt;Predictable Latency&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Lock-Free Reads&lt;/strong&gt;: Query latency is independent of write workload&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Deterministic Version Assignment&lt;/strong&gt;: Clear ordering of all transactions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;WAL-Based Durability&lt;/strong&gt;: Fast commit with background persistence&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;design-trade-offs&quot;&gt;Design Trade-offs&lt;/h2&gt;
+
+&lt;h3 id=&quot;advantages&quot;&gt;Advantages&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Optimal for Read-Heavy Workloads&lt;/strong&gt;: Zero overhead for the common case of concurrent reads&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Simple Implementation&lt;/strong&gt;: Single-version storage reduces complexity&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Strong Guarantees&lt;/strong&gt;: Serializable isolation without complex protocols&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Predictable Performance&lt;/strong&gt;: Lock-free reads provide consistent latency&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;current-limitations&quot;&gt;Current Limitations&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Update Transactions&lt;/strong&gt;: Currently serialized; future work will enable greater concurrency&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Delete Operations&lt;/strong&gt;: Handled through Update transactions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Long-Running Transactions&lt;/strong&gt;: May delay GRV advancement temporarily&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;use-cases&quot;&gt;Use Cases&lt;/h2&gt;
+
+&lt;p&gt;NeuG’s transaction mechanism is particularly well-suited for:&lt;/p&gt;
+
+&lt;h3 id=&quot;real-time-graph-analytics&quot;&gt;Real-Time Graph Analytics&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Social Network Analysis&lt;/strong&gt;: Concurrent queries on user relationships while ingesting new connections&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Recommendation Systems&lt;/strong&gt;: Read-heavy workloads with periodic batch inserts&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Fraud Detection&lt;/strong&gt;: Real-time pattern matching on continuously growing transaction graphs&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;knowledge-graph-applications&quot;&gt;Knowledge Graph Applications&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;RAG Systems&lt;/strong&gt;: High-throughput entity lookups while incrementally building the knowledge base&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;AI Agents&lt;/strong&gt;: Parallel knowledge retrieval with concurrent fact insertion&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Semantic Search&lt;/strong&gt;: Snapshot-consistent queries during graph expansion&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;edge-computing&quot;&gt;Edge Computing&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Local-First Applications&lt;/strong&gt;: Embedded TP capabilities without distributed coordination&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;IoT Data Processing&lt;/strong&gt;: Continuous sensor data ingestion with real-time queries&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Mobile Applications&lt;/strong&gt;: ACID guarantees in resource-constrained environments&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;future-work&quot;&gt;Future Work&lt;/h2&gt;
+
+&lt;p&gt;The NeuG team is actively working on several enhancements to the transaction system:&lt;/p&gt;
+
+&lt;h3 id=&quot;two-phase-update-transactions&quot;&gt;Two-Phase Update Transactions&lt;/h3&gt;
+
+&lt;p&gt;Refining the Update transaction model to allow greater concurrency through:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Optimistic concurrency control&lt;/li&gt;
+  &lt;li&gt;Conflict detection and resolution&lt;/li&gt;
+  &lt;li&gt;Selective retry mechanisms&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;distributed-transactions&quot;&gt;Distributed Transactions&lt;/h3&gt;
+
+&lt;p&gt;Extending the mechanism for distributed deployment:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Multi-node version coordination&lt;/li&gt;
+  &lt;li&gt;Distributed WAL replication&lt;/li&gt;
+  &lt;li&gt;Cross-shard transaction support&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;advanced-optimizations&quot;&gt;Advanced Optimizations&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Adaptive Concurrency Control&lt;/strong&gt;: Dynamic adjustment based on workload patterns&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Version Garbage Collection&lt;/strong&gt;: Automatic cleanup of old versions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Intelligent Lock Management&lt;/strong&gt;: Reducing lock contention for hot vertices&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;implementation-details&quot;&gt;Implementation Details&lt;/h2&gt;
+
+&lt;p&gt;For developers interested in the technical implementation:&lt;/p&gt;
+
+&lt;h3 id=&quot;version-counter-design&quot;&gt;Version Counter Design&lt;/h3&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;VersionManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gwv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AtomicCounter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# Global Write Version
+&lt;/span&gt;        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AtomicCounter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# Global Read Version
+&lt;/span&gt;        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completion_bits&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SlidingBitSet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;assign_write_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gwv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fetch_and_increment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_read_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+    
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mark_complete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completion_bits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;try_advance_grv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;adjacency-lock-protocol&quot;&gt;Adjacency Lock Protocol&lt;/h3&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EdgeInserter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;insert_edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;# Acquire lock on source vertex&apos;s adjacency list
+&lt;/span&gt;        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex_locks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt;
+            &lt;span class=&quot;c1&quot;&gt;# Stamp with transaction version
+&lt;/span&gt;            &lt;span class=&quot;n&quot;&gt;edge&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tx_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;adjacency_lists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;wal-format&quot;&gt;WAL Format&lt;/h3&gt;
+
+&lt;p&gt;Each WAL entry contains:&lt;/p&gt;
+&lt;ul&gt;
+  &lt;li&gt;Transaction ID (version)&lt;/li&gt;
+  &lt;li&gt;Operation type (INSERT/UPDATE/ABORT)&lt;/li&gt;
+  &lt;li&gt;Payload (vertices/edges with properties)&lt;/li&gt;
+  &lt;li&gt;Checksum for integrity&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;comparison-with-other-approaches&quot;&gt;Comparison with Other Approaches&lt;/h2&gt;
+
+&lt;h3 id=&quot;vs-traditional-rdbms-mvcc&quot;&gt;vs. Traditional RDBMS MVCC&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Feature&lt;/th&gt;
+      &lt;th&gt;NeuG&lt;/th&gt;
+      &lt;th&gt;Traditional RDBMS&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Version Storage&lt;/td&gt;
+      &lt;td&gt;Single version per element&lt;/td&gt;
+      &lt;td&gt;Multi-version chains&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Read Overhead&lt;/td&gt;
+      &lt;td&gt;Zero lock contention&lt;/td&gt;
+      &lt;td&gt;May need version traversal&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Write Model&lt;/td&gt;
+      &lt;td&gt;Optimized for blind inserts&lt;/td&gt;
+      &lt;td&gt;General-purpose updates&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Isolation Level&lt;/td&gt;
+      &lt;td&gt;Serializable&lt;/td&gt;
+      &lt;td&gt;Typically snapshot isolation&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;vs-graph-specific-systems&quot;&gt;vs. Graph-Specific Systems&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Feature&lt;/th&gt;
+      &lt;th&gt;NeuG&lt;/th&gt;
+      &lt;th&gt;Neo4j&lt;/th&gt;
+      &lt;th&gt;JanusGraph&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Concurrency Model&lt;/td&gt;
+      &lt;td&gt;MVCC&lt;/td&gt;
+      &lt;td&gt;Lock-based&lt;/td&gt;
+      &lt;td&gt;Optimistic locking&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Read Parallelism&lt;/td&gt;
+      &lt;td&gt;Lock-free&lt;/td&gt;
+      &lt;td&gt;Lock-based&lt;/td&gt;
+      &lt;td&gt;Lock-free&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Transaction Scope&lt;/td&gt;
+      &lt;td&gt;Local (embedded)&lt;/td&gt;
+      &lt;td&gt;Local&lt;/td&gt;
+      &lt;td&gt;Distributed&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Performance Focus&lt;/td&gt;
+      &lt;td&gt;TP workloads&lt;/td&gt;
+      &lt;td&gt;Mixed OLTP&lt;/td&gt;
+      &lt;td&gt;OLAP-oriented&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;NeuG’s transaction mechanism delivers high-throughput serializable isolation for graph workloads by:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Categorizing transactions&lt;/strong&gt; into Read and Insert types&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Isolating them&lt;/strong&gt; via MVCC and versioned snapshots&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Synchronizing writes&lt;/strong&gt; with fine-grained locking and a global version order&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Guaranteeing durability&lt;/strong&gt; with a WAL-based commit protocol&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This design provides an optimal balance between performance, simplicity, and correctness for embedded graph database workloads. The system achieves lock-free read scalability while maintaining strong consistency guarantees—making it ideal for modern AI and analytics applications that require both high throughput and transactional integrity.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;learn-more&quot;&gt;Learn More&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Documentation&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Previous Post&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html&quot;&gt;Opensourcing NeuG&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;Building robust graph transactions for the embedded era.&lt;/strong&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>New Breakthrough in Declarative Graph Benchmarking: GraphScope Flex Shatters LDBC SNB Interactive Benchmark World Record</title>
@@ -1341,248 +2281,6 @@ During the test process, a driver continuously sends a variety of query requests
         
         
         <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>GOpt: A Unified Graph Query Optimization Framework in GraphScope</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2024-02-22-title-picture.jpg&quot; alt=&quot;gopt&quot; /&gt;
-In this blog, we introduce &lt;a href=&quot;https://arxiv.org/pdf/2401.17786.pdf&quot;&gt;&lt;strong&gt;GOpt&lt;/strong&gt;&lt;/a&gt;, which is a unified graph query optimization framework in GraphScope.
-GOpt enables the system to support multiple graph query languages while providing consistent and efficient query optimization. We also present two practical cases to demonstrate the effectiveness of our optimizer.&lt;/p&gt;
-
-&lt;h3 id=&quot;background-and-challenges&quot;&gt;Background and Challenges&lt;/h3&gt;
-
-&lt;p&gt;In real applications, there has been a growing interest in integrating graph query semantics with relational query semantics to support more complex queries. A typical querying paradigm, termed as PatRelQuery, involves a two-stage process: first, identifying subgraphs of interest through pattern matching, and subsequently, performing relational operations, such as projection, selection and ordering, on the matched results for further analysis.
-Below, we present an example of PatRelQuery, composed using Cypher, which is one of the most widely adopted graph query languages.
-&lt;img src=&quot;/blog/assets/images/2024-02-22-example.jpg&quot; alt=&quot;example&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;As depicted in Figure 1(a), we consider a graph database comprising vertex types of “Person”, “Product”, and “Place”, alongside edge types of “Purchases”, “LocatedIn”, “ProducedIn”. The PatRelQuery shown in Figure 1(b) begins by identifying a triangle pattern. This pattern imposes a type constraint on vertex $v_3$, designating it as a “Place” as specified in the MATCH clause. Subsequent relational operations are then applied to the results of this pattern match, including filtering based on a specific place name and aggregating the results to return the top 10 entries. These steps are articulated through the WHERE, COUNT, ORDERBY, and LIMIT clauses. Notice that in this query only $v_3$ is explicitly assigned a type constraint, while the other vertices and edges are not. Consequently, these untyped vertices and edges are treated as with arbitrary types. From this example, we distill two primary features for PatRelQuery:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Hybrid Semantics&lt;/strong&gt;: PatRelQuery melds graph pattern matching with relational operations, showcasing a high level of expressiveness.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Arbitrary Types&lt;/strong&gt;: PatRelQuery allows arbitrary type specification for a greater degree of flexibility in pattern descriptions.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;However, such a flexible query representation poses significant challenges for the graph optimizer:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;The optimizer needs to support both graph pattern matching and relational operators within the same framework and perform unified optimization on it.&lt;/li&gt;
-  &lt;li&gt;The optimizer must identify implicit type constraints within the graph patterns. For instance, in the above example, only the type constraints shown in Figure 1(c) are valid, whereas the combination of type constraints in Figure 1(d) is actually invalid.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;To address the above challenges, we propose &lt;strong&gt;GOpt&lt;/strong&gt;, a graph-native optimization framework for PatRelQuery. We summarize the main contributions as follows:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;We have introduced GOpt, which, as far as we know, is the first graph-native optimization framework specifically designed for industrial-scale graph database systems. This framework integrates both graph and relational operations, offering a unified approach to query optimization in complex PatRelQueries across various graph query languages.&lt;/li&gt;
-  &lt;li&gt;We have designed algorithms for efficient type inference in the context of arbitrary patterns. Our approach also includes a comprehensive set of heuristic optimization rules. Moreover, we have proposed a novel cardinality estimation technique that takes into account the arbitrary types. Building upon this, a cost-based optimizer has been developed, operating within a top-down framework with branch-and-bounding strategies.&lt;/li&gt;
-  &lt;li&gt;We have implemented GOpt atop the open-source optimization framework &lt;a href=&quot;https://calcite.apache.org/&quot;&gt;Apache Calcite&lt;/a&gt;, inheriting its capabilities for optimizing relational operations. This integration has been smoothly executed to include our specialized graph-optimization techniques. The effectiveness of our proposed techniques has been validated through comprehensive experimental evaluations.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;system-overview&quot;&gt;System Overview&lt;/h3&gt;
-
-&lt;p&gt;First, we provide an overview of the system architecture of GOpt, as illustrated in Figure 2.
-&lt;img src=&quot;/blog/assets/images/2024-02-22-arch.jpg&quot; alt=&quot;arch&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The overall GOpt system is composed of four principal components:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Parser&lt;/strong&gt; plays a pivotal role in transforming user queries into a &lt;em&gt;language-independent&lt;/em&gt; query plan based on a unified intermediate representation (IR). It accommodates various clients for different graph query languages, such as Gremlin and Cypher. The parser enables the decouple of the query language and the query optimization framework, which allows the system to support multiple query languages with the extensive reuse of techniques developed within GOpt.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Type Checker&lt;/strong&gt; is responsible for inferring and validating the type constraints in the query pattern against the graph schema. We allow users to provide arbitrary type constraints for vertices and edges in their query patterns, and even allow them not to specify any type constraints at all. The type checker is responsible for inferring implicit type constraints within the user’s query based on the graph schema. At the same time, the type checker will also promptly report INVALID errors for queries that are not valid.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Optimizer&lt;/strong&gt; aims to optimize the logical plan to derive the most efficient physical plan. It employs a combination of Rule-based Optimization (RBO) and Cost-based Optimization (CBO). The RBO consists of a set of rules heuristically applied to the logical plan to produce a more efficient equivalent. The CBO consists of two phases: First, to optimize pattern matching, we devise a top-down search algorithm with branch-and-bounding strategies, to identify the optimal plan for arbitrary pattern. Secondly, to refine the relational part, we integrate the proposed graph optimizer with the optimization framework Apache Calcite, leveraging its advanced optimization capabilities for relational queries.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Metadata Provider&lt;/strong&gt; consists of two parts:  the graph schema which defines the vertex and edge types within the data graph and assists the Type Checker in deducing and affirming type constraints within the query plan, and the statistics provider known as GLogue, which precomputed the frequencies of certain small patterns in the data graph to serve as high-order statistical information and provides this high-order statistics for more accurate cost estimation in the optimization phase.&lt;/p&gt;
-
-&lt;h3 id=&quot;query-processing-and-optimization&quot;&gt;Query Processing and Optimization&lt;/h3&gt;
-
-&lt;p&gt;Next, we present the workflow of query processing and optimization within GOpt as depicted in Figure 3, and we will delve into the details in the following.
-&lt;img src=&quot;/blog/assets/images/2024-02-22-workflow.jpg&quot; alt=&quot;arch&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;query-processing&quot;&gt;Query Processing&lt;/h4&gt;
-
-&lt;p&gt;First, we proposed a unified &lt;em&gt;Intermediate Representation&lt;/em&gt; (IR) framework as a foundation to process PatRelQueries. The IR abstraction defines a data model $\mathcal{D}$ that describes the structure of the intermediate results during query execution,and a set of operators $\Omega$. The data model $\mathcal{D}$ presents a schema-like structure in which each data field possesses a name, denoted as a String type, accompanied by a designated datatype. The supported datatypes includes graph-specific datatypes such as &lt;em&gt;Vertex&lt;/em&gt;, &lt;em&gt;Edge&lt;/em&gt;, and &lt;em&gt;Path&lt;/em&gt;, and general datatypes including &lt;em&gt;Primitives&lt;/em&gt; and &lt;em&gt;Collections&lt;/em&gt;. The operators in $\Omega$ operate on data tuples extracted from $\mathcal{D}$, and produce a new set of data tuples as a result. The set $\Omega$ is composed of graph operators such as &lt;em&gt;GetV&lt;/em&gt;, &lt;em&gt;EdgeExpand&lt;/em&gt; and &lt;em&gt;PathExpand&lt;/em&gt;, and relational operators such as &lt;em&gt;Project&lt;/em&gt;, &lt;em&gt;Select&lt;/em&gt;, &lt;em&gt;Join&lt;/em&gt;, etc.&lt;/p&gt;
-
-&lt;p&gt;The IR abstraction enables the opportunity to convert various query languages into a unified form. Currently, GOpt supports two of the most widely used graph query languages, &lt;a href=&quot;https://neo4j.com/developer/cypher/&quot;&gt;Cypher&lt;/a&gt; and &lt;a href=&quot;https://tinkerpop.apache.org/&quot;&gt;Gremlin&lt;/a&gt;. We employs the parser tool provided by &lt;a href=&quot;http://www.antlr.org/&quot;&gt;Antlr&lt;/a&gt; to interpret the queries into an Abstract Syntax Tree (AST), based on which we further build a logical DAG that each node corresponds to an operator defined in IR. As shown in Figure 3, the queries written in Cypher and Gremlin respectively can be parsed in to a unified DAG shown in Figure 3(c).&lt;/p&gt;
-
-&lt;p&gt;Notice that in the Match part in Figure 3(c), the user has not provided explicit type constraints for vertices $v_1$ and $v_2$. However, based on the graph schema, given that $v_3$ is a “Place”, we can infer that $v_1$ and $v_2$ could be either “Person” Or “Product”. Similarly, considering the edge ($v_1$, $v_2$), the type of $v_1$ can be further refined as “Person”. Through type inference, we can obtain a graph pattern that only includes valid types as shown in Figure 3(d).&lt;/p&gt;
-
-&lt;p&gt;Building on the DAG with valid types, we further optimize it to obtain the optimal physical plan shown in Figure 3(e), which is then submitted to the backend for execution. Next, we will introduce the process of query optimization.&lt;/p&gt;
-
-&lt;h4 id=&quot;query-optimization&quot;&gt;Query Optimization&lt;/h4&gt;
-
-&lt;p&gt;The optimizer within GOpt comprises two parts: Rule-Based Optimization (RBO) and Cost-Based Optimization (CBO). The optimization process is illustrated in Figure 4.
-&lt;img src=&quot;/blog/assets/images/2024-02-22-optimize.jpg&quot; alt=&quot;optimize&quot; /&gt;
-To optimize PatRelQueries, we devised a comprehensive set of rules, taking into account potential optimization opportunities among graph operators, relational operators, and between the two. For example, as shown in Figure 4, since only the name attribute of $v_3$ is needed for filtering, we use the &lt;strong&gt;FieldTrimRule&lt;/strong&gt; (a relational optimization) to eliminate other unnecessary attributes, avoiding the retention of irrelevant data during computation. Besides, pattern matching often requires matching adjacent edges, and then further matching neighboring vertices through those edges. Under certain conditions, this can be optimized by the &lt;strong&gt;ExpandGetVFusionRule&lt;/strong&gt; (a graph operator optimization), which combines the two operations into a direct neighboring vertex match. In this query, we also see that after performing pattern matching, the user further selects results that meet certain conditions through a Select operation. We can apply the &lt;strong&gt;FilterIntoMatchRule&lt;/strong&gt; (a graph-relational operator optimization) to push the filter conditions directly into the graph operators, ensuring that only results that meet the filter conditions are matched during the pattern matching process.&lt;/p&gt;
-
-&lt;p&gt;Next, we will demonstrate the cost-based optimization techniques within GOpt, focusing mainly on the optimization of graph patterns, which is often the most crucial part of the optimization process. Drawing from the capabilities provided by our previous work &lt;a href=&quot;https://www.usenix.org/conference/atc23/presentation/lai&quot;&gt;GLogS&lt;/a&gt;, we have designed effective graph pattern matching optimization techniques:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Hybrid implementation strategies for pattern matching. For the physical implementation of graph pattern matching, we consider both the Worst-Case Optimal Join (WCOJ) and the traditional BinaryJoin methods, where the recent research has shown that such hybrid implementation strategies can execute pattern matching queries more efficiently.&lt;/li&gt;
-  &lt;li&gt;Cost estimation based on high-order statistics. The cost estimation in our optimization uses high-order statistics (i.e., the frequencies of occurrences of small patterns, also known as motifs, in the data graph) as a basis, providing a more accurate estimate of the cost of the queried pattern. However, it should be noticed that the precomputed statistics are only for the motifs that contains basic types (i.e., the types defined in schema).&lt;/li&gt;
-  &lt;li&gt;Support for arbitrary type constraints during the optimization process. For graph patterns provided by users, arbitrary type constraints may appear, and in such cases, we cannot directly query statistical information to estimate their costs. Therefore, we propose a new estimation method that considers only the change in the number of matches brought about by expanding one vertex at a time. Thus, we estimate the frequency of a pattern based on its subpatterns’ frequencies iteratively, until the subpattern can be queried from GLogue directly, or it is a single vertex or edge.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Based on the three key techniques, we propose a top-down, cost-based framework for optimizing arbitrary graph pattern matching, aiming to find the optimal execution plan for the arbitrary query patterns.&lt;/p&gt;
-
-&lt;h3 id=&quot;case-study&quot;&gt;Case Study&lt;/h3&gt;
-
-&lt;p&gt;We validated the effectiveness of GOpt through various experiments. Here, we demonstrate the role of GOpt in the entire query optimization process using two real-world cases.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Money Mule Detection.&lt;/strong&gt; In fraud detection, one of the most common fraud patterns is the &lt;em&gt;money mule&lt;/em&gt; pattern, where a fraudster transfers money to a money mule, who then transfers the money to another money mule, and so on, until the money is withdrawn by another fraudster. This can be formulated as a s-t path problem in PatRelQuery: Given two sets of fraudsters $S_1$ and $S_2$ and the hop number $k$, we aim to find all the money transformation paths between the fraudsters in $S_1$ and $S_2$ with the specified hop number. The query written in Cypher is as follows:&lt;/p&gt;
-&lt;pre&gt;&lt;code class=&quot;language-Cypher&quot;&gt;  MATCH (p1:PERSON)-[p:*$k]-(p2:PERSON) 
-  WHERE p1.id IN $S1 and p2.id IN $S2
-  RETURN p
-&lt;/code&gt;&lt;/pre&gt;
-&lt;p&gt;Searching for such paths in a large-scale graph is challenging, as it may involve a large number of intermediate results. Two most commonly used approaches is as follows: single-direction expansion, which starts the traversal from vertices in $S_1$, expanding $k$ hops, and then applying a filter to ensure that the end vertices are contained within the set $S_2$; and bidirectional search, which begins traversal from $S_1$ and $S_2$ simultaneously, and when the sub-paths meet in the middle, join them to make result paths. In most cases, the second approach should be more efficient as it can reduce the number of intermediate results.
-However, the question is that, is the middle vertex in the path always the best choice for the join? Our case study shows that it is not always true. We have conducted experiments on a real-world graph with $3.6$ billion vertices and $21.8$ billion edges, with the hop number $k$ set to $6$. We obtain five different settings randomly for the source fraudster sets $(S_1,S_2)$ from the real application, each corresponds to different fraudster groups, and the five queries are denoted as $ST_1\ldots ST_5$. For the pattern shown in Figure 5(a), GOpt applies the cost-based optimization to derive the optimal execution plans for $ST_1\ldots ST_5$, as shown in Figure 5(b-d). We notice that for queries with different settings, GOpt may generate different optimal execution plans. This is because the cost model takes into account of the number of intermediate results, which is not only affected by the expanding hops, but also affected by the number of matched vertices in the source fraudster sets.
-&lt;img src=&quot;/blog/assets/images/2024-02-22-case-study.jpg&quot; alt=&quot;case-study&quot; /&gt;
-To verify the efficiency, we further generate three alternative plans with different search order for each query as a comparison. The execution time cost of different plans are shown in Figure 6. Here, the tuples above the bars indicate position of the join vertex, e.g., for $ST_1$, the Alt-Plan1 has join vertex in the middle. From the figure, we can see that the plan generated by GOpt outperforms all the alternative plans from $3\times$ to two orders of magnitude, where all the single-direction expansion plans fails to complete the query in 1 hour. Notice that for $ST_1$ and $ST_2$, the plan generated by GOpt outperforms the alternatives that have the join vertex in the middle. This demonstrate the effectiveness of GOpt, that it is able to find the optimal plan adaptively according to the query and the data distribution.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;LDBC Interactive Complex Queries.&lt;/strong&gt; We conducted extensive experiments on the &lt;a href=&quot;https://ldbcouncil.org/&quot;&gt;LDBC SNB Interactive Workload&lt;/a&gt; to verify the effectiveness of GOpt. Here, we use the IC3 query as an example to compare the execution efficiency of GOpt and Neo4j, with the results shown in the table below.&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Execution Plan&lt;/th&gt;
-      &lt;th style=&quot;text-align: right&quot;&gt;Avg. Runtime(s)&lt;/th&gt;
-      &lt;th style=&quot;text-align: right&quot;&gt;Intermediate Result Num.&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;GOpt Optimized Plan&lt;/td&gt;
-      &lt;td style=&quot;text-align: right&quot;&gt;6.085&lt;/td&gt;
-      &lt;td style=&quot;text-align: right&quot;&gt;1,784,536&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Neo4j Optimized Plan&lt;/td&gt;
-      &lt;td style=&quot;text-align: right&quot;&gt;156.845&lt;/td&gt;
-      &lt;td style=&quot;text-align: right&quot;&gt;176,547,616&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;The result shows that the execution time of GOpt’s plan is approximately 26 times faster than that of Neo4j’s plan. Additionally, GOpt’s plan produces a mere $1\%$ of the intermediate results generated by Neo4j’s plan, demonstrating a significant reduction in processing overhead. It is evident that, compared to Neo4j, GOpt is able to obtain more efficient execution plans.&lt;/p&gt;
-
-&lt;h3 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h3&gt;
-
-&lt;p&gt;This article showcases the optimization framework GOpt in GraphScope, which integrates fragmented graph query optimizations into a unified framework. It offers a cohesive approach to optimizing complex PatRelQueries in real-world applications. For detailed techniques, readers can refer to our &lt;a href=&quot;https://arxiv.org/abs/2401.17786&quot;&gt;original paper&lt;/a&gt;. The unified optimization framework GOpt is also gradually being integrated into the main repository of GraphScope, and we welcome interested readers to stay tuned for updates.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 22 Feb 2024 23:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.26.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are pleased to announce an array of improvements in the GraphScope 0.26.0 release. In this release, under the original GraphScope framework, the persistent storage Groot of the Graph Interactive Query Engine (GIE) allows users to launch a Secondary Instance in read-only mode, thereby enhancing the performance of reading graph data. Under the GraphScope Flex architecture, the graph query engine GraphScope Interactive, which is designed for high-concurrency scenarios, now supports running on macOS and has introduced compaction operations for graph data.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;1. Optimization of the Graph Interactive Engine GIE&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Persistent storage Groot leverages RocksDB’s read-only mode to support the creation of a &lt;a href=&quot;https://graphscope.io/docs/latest/storage_engine/groot#secondary-instance&quot;&gt;Secondary Instance&lt;/a&gt; to improve the performance of reading graph data. Meanwhile, new graph update operations will be periodically synchronized to the Secondary Instance;&lt;/li&gt;
-  &lt;li&gt;Added support for automatically inferring the types of vertices/edges in queries, providing more friendly error messages and some performance improvements.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;2. Improvements to GraphScope Interactive&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;GraphScope Interactive is committed to providing users with exceptional query processing capabilities in high-concurrency scenarios. In this update, we have made the following improvements:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Added support for macOS;&lt;/li&gt;
-  &lt;li&gt;Introduced operations for graph data compaction to optimize the reading performance of graph data;&lt;/li&gt;
-  &lt;li&gt;Added support for &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;STRING&lt;/code&gt; type edge properties.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;3. Fixes for other stability issues&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Fixed a memory leak issue in GIE;&lt;/li&gt;
-  &lt;li&gt;Resolved data race conditions in Groot.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.26.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Wed, 31 Jan 2024 00:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2024/01/31/release-notes-0.26.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2024/01/31/release-notes-0.26.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
-        
-      </item>
-    
-      <item>
-        <title>Release Notes: v0.25.0</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/release_note_t.png&quot; alt=&quot;release-note&quot; /&gt;
-We are glad to announce a suite of upgrades in the latest GraphScope 0.25.0 release, bringing significant improvements to the platform. Starting with this version, our updates will be divided into two parts: one is the updates introduced under the original GraphScope framework (including the graph analytics engine GAE, graph interactive engine GIE, and graph learning engine GLE); the other is the latest product features built for the new GraphScope Flex architecture.&lt;/p&gt;
-
-&lt;p&gt;In this release, under the original GraphScope framework, the graph interactive engine (GIE) allows users to express queries in natural language, which are then automatically translated into Cypher; at the same time, the performance of GIE has been improved for certain queries through the optimization of the persistent storage Groot. For graph learning tasks, we have integrated the latest &lt;a href=&quot;https://github.com/alibaba/graphlearn-for-pytorch&quot;&gt;GraphLearn-for-Pytorch (GLTorch) engine&lt;/a&gt;, which supports GPU acceleration for graph sampling and feature extraction, thereby enhancing the training and inference performance of graph neural networks. Under the GraphScope Flex architecture, the graph query engine GraphScope Interactive, designed for high-concurrency scenarios, has also made a series of improvements in functionality and user-friendliness.&lt;/p&gt;
-
-&lt;p&gt;We highlight the following improvements included in this release:&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;1. Integration of the Graph Interactive Query Engine GIE with LLMs&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;To express graph queries, users typically need to use the Cypher or Gremlin languages, which creates a certain usage barrier. With the rapid application of Large Language Models (LLMs) in various industries, we have also tried to leverage the powerful capabilities of LLMs to allow users to express queries in natural language, which are then automatically translated into Cypher and executed on GIE.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;graphscope.langchain_prompt.query&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query_to_cypher&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;question&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;Who is the son of Jia Baoyu?&quot;&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;cypher_sentence&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query_to_cypher&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graph&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;question&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;api_key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;api_key&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cypher_sentence&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# MATCH (p:Person)-[:son_of]-&amp;gt;(q:Person)
-# WHERE p.name = &apos;Jia Baoyu&apos;
-# RETURN q.name
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;2. Integration with GraphLearn-for-Pytorch (GLTorch)&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;GLTorch is a PyTorch-based graph neural network framework optimized for scenarios with single-machine multi-GPUs. It uses GPUs to accelerate graph sampling and feature extraction operations in graph neural networks; in addition, its API is compatible with PyG, allowing users to run their graph neural network models originally written with PyG API on GraphScope with minimal code changes.&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;# load the ogbn_arxiv graph as an example.
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;g&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;load_ogbn_arxiv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;c1&quot;&gt;# specify the learning engine.
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;glt_graph&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;gs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;graphlearn_torch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;edges&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;paper&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;citation&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;paper&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)],&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;node_features&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;paper&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;feat_&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;range&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;128&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)]},&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;node_labels&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;paper&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;label&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;edge_dir&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;out&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
-  &lt;span class=&quot;n&quot;&gt;random_node_split&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;num_val&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;num_test&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;0.1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;},&lt;/span&gt;
-&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;3. Improvements to GraphScope Interactive&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;GraphScope Interactive is dedicated to providing users with outstanding query processing capabilities in high-concurrency scenarios. In this update, we have made the following improvements:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Added a cache mechanism to avoid repeated compilation of the same query during multiple executions;&lt;/li&gt;
-  &lt;li&gt;Supported the use of string-type attributes as the primary key for vertices;&lt;/li&gt;
-  &lt;li&gt;Added &lt;a href=&quot;https://graphscope.io/docs/latest/flex/interactive_intro&quot;&gt;user documentation&lt;/a&gt; for GraphScope Interactive.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;4. Performance Optimization of Persistent Storage Groot&lt;/strong&gt;&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Optimized the performance of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;count()&lt;/code&gt; operator for vertices/edges. The performance has been improved when executing queries like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;g.V().count()&lt;/code&gt; in GIE;&lt;/li&gt;
-  &lt;li&gt;Added APIs related to disk usage in Groot, including used disk capacity and remaining available disk capacity.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;For more detailed improvements that have been made in this release, please refer to the complete &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.25.0&quot;&gt;changelog&lt;/a&gt;.&lt;/p&gt;
-</description>
-        <pubDate>Wed, 15 Nov 2023 01:33:20 +0000</pubDate>
-        <link>https://graphscope.io/blog/releasenotes/2023/11/15/release-notes-0.25.0.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/releasenotes/2023/11/15/release-notes-0.25.0.html</guid>
-        
-        
-        <category>ReleaseNotes</category>
         
       </item>
     

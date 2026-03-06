@@ -32,7 +32,7 @@
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Theme CSS -->
-    <link href="css/style-4f9a969b46.min.css" rel="stylesheet">
+    <link href="css/style-fa29f457ff.min.css" rel="stylesheet">
 
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -58,6 +58,9 @@
             <a class="navbar-brand page-scroll" href="index.html">
                 <div class="logo" id="logo"></div>
                 <div class="brand">GraphScope</div>
+            </a>
+            <a class="nav-neug-btn" href="/neug" target="_blank">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 3px;"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M3 5V19A9 3 0 0 0 21 19V5"></path><path d="M3 12A9 3 0 0 0 21 12"></path></svg>NeuG
             </a>
         </div>
 
@@ -109,7 +112,6 @@
         </div>
     </header>
 
-
     <section class="intro-section gray-section" id="intro-brief">
         <div class="section-content">
             <div class="section-content-inner text-center">
@@ -122,6 +124,11 @@
                     simple by combining several important pieces of Alibaba technology: including GRAPE, MaxGraph, and
                     Graph-Learn (GL) for analytics, interactive, and graph neural networks (GNN) computation,
                     respectively, and the vineyard store that offers efficient in-memory data transfers.
+                </p>
+                <p>
+                    We also opensourced <a href="/neug" target="_blank">NeuG</a>,
+                    a lightweight, embeddable graph database that unifies analytics and real-time
+                    transactions in a single engine — powered by the technology behind GraphScope.
                 </p>
                 <p class="social-icons">
                     <a href="https://graphscope.io/journey" target="_blank">
@@ -235,6 +242,39 @@
                 <p class="as-text"> Stay tuned with our latest news and tech blogs. <br />
                 </p>
                 <div id="owl-slides" class="owl-carousel">
+                    <a href="blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html" class="link-2-post">
+                        <div class="item app-card">
+                            <img src="/blog/assets/images/2026-02-12-neug-ai-dev-title.jpg"
+                                alt="AI-Powered Development Management NeuG" />
+                            <div class="desc">
+                                <h2>AI-Powered Open Source Development Management: NeuG's Exploration and Practice</h2>
+                                <p> We share how the NeuG team leverages AI as a "manager" rather than a "developer" to streamline the entire development lifecycle — from Spec-Driven requirements analysis and task decomposition to automated GitHub Issue/PR synchronization and tracking. </p>
+                                <p class="posted-date">Posted on 12-February-2026</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html" class="link-2-post">
+                        <div class="item app-card">
+                            <img src="/blog/assets/images/2026-02-11-neug-transaction-title.jpg"
+                                alt="NeuG Transaction Mechanism" />
+                            <div class="desc">
+                                <h2>NeuG's High-Performance MVCC for Graph Workloads</h2>
+                                <p> This article provides an in-depth look at NeuG's transaction mechanism, which powers its high-throughput Transactional Processing capabilities. Learn how NeuG achieves lock-free read-insert parallelism and serializable isolation through MVCC, global version management, and fine-grained coordination. </p>
+                                <p class="posted-date">Posted on 11-February-2026</p>
+                            </div>
+                        </div>
+                    </a>
+                    <a href="blog/tech/2026/02/11/Opensourcing-NeuG.html" class="link-2-post">
+                        <div class="item app-card">
+                            <img src="/blog/assets/images/2026-02-11-neug-title.jpg"
+                                alt="Opensourcing NeuG" />
+                            <div class="desc">
+                                <h2>Opensourcing NeuG</h2>
+                                <p> We are pleased to announce the open source release of NeuG, a lightweight, high-performance embedded graph database designed for local analytics and real-time transaction processing. NeuG brings DuckDB-like simplicity to graph data with a dual-mode HTAP architecture supporting both embedded Python use and service mode deployment. </p>
+                                <p class="posted-date">Posted on 11-February-2026</p>
+                            </div>
+                        </div>
+                    </a>
                     <a href="blog/tech/2025/06/12/graphscope-flex-achieved-record-breaking-on-ldbc-snb-interactive-workload-declarative.html" class="link-2-post">
                         <div class="item app-card">
                             <img src="/blog/assets/images/2023-07-20-title.jpg"
@@ -254,17 +294,6 @@
                                 <h2>Why DuckDB Is Such A Good Database Product</h2>
                                 <p> DuckDB has emerged as a groundbreaking database by strategically focusing on embedded analytics rather than chasing "big data" trends. This article explores DuckDB's remarkable success by analyzing how its fundamental design choices perfectly align with modern data needs. </p>
                                 <p class="posted-date">Posted on 26-April-2025</p>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="blog/tech/2025/03/25/GOpt-Optimization-Process.html" class="link-2-post">
-                        <div class="item app-card">
-                            <img src="/blog/assets/images/2024-02-22-title-picture.jpg"
-                                alt="GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries" />
-                            <div class="desc">
-                                <h2>GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries</h2>
-                                <p> The GraphScope team's work on graph-native query optimization framework has been accepted by SIGMOD 2025 Industry. This article introduces the optimization process of GOpt. </p>
-                                <p class="posted-date">Posted on 25-March-2025</p>
                             </div>
                         </div>
                     </a>
