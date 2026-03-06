@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Opensourcing NeuG</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-02-11">11 Feb 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-02-11">11 Feb 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Opensourcing NeuG</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-02-11-neug-title.jpg" alt="neug-title" />
+We are pleased to announce the open source release of <strong>NeuG</strong> (pronounced “new-gee”), a lightweight, high-performance embedded graph database designed for local analytics and real-time transaction processing.</p>
+
+<p><strong>GitHub</strong>: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a><br />
+<strong>Documentation</strong>: <a href="https://graphscope.io/neug/en/overview/introduction/">https://graphscope.io/neug/en/overview/introduction/</a></p>
+
+<hr />
+
+<h2 id="why-neug">Why NeuG</h2>
+
+<p>The <a href="https://graphscope.io">GraphScope</a> team has spent the past few years building large-scale graph computing engines. Along the way, we received consistent feedback from our community: many users don’t need distributed clusters. What they want is a graph database they can <code class="language-plaintext highlighter-rouge">pip install</code>, explore data in Jupyter notebooks, run graph queries in Python scripts, and quickly spin up as a service when needed for production.</p>
+
+<p>This reminded us of what DuckDB did for relational data processing—an embeddable analytics database that doesn’t require deploying servers or configuring connection pools. Just <code class="language-plaintext highlighter-rouge">import duckdb</code> and start working. We wanted to bring that same experience to graph data.</p>
+
+<p>NeuG is the result of that effort. It reuses the storage and query engine from GraphScope Flex (which achieved strong results on the <a href="https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/">LDBC SNB Interactive benchmark</a>), but with a redesigned interface layer that allows it to be embedded directly as a Python library. We also kept the <code class="language-plaintext highlighter-rouge">db.serve()</code> interface for switching to service mode when concurrent access is needed.</p>
+
+<p>NeuG is suited for scenarios where you need to process graph data locally and quickly: data science exploration, ML feature engineering, AI application prototyping, and lightweight applications where deployment simplicity matters.</p>
+
+<hr />
+
+<h2 id="key-features">Key Features</h2>
+
+<h3 id="lightweight--embeddable">Lightweight &amp; Embeddable</h3>
+
+<ul>
+  <li><strong>Lightweight</strong>, all dependencies managed via third_party submodules</li>
+  <li><strong>Embeddable</strong> design, currently supporting Python applications with more languages and platforms coming soon</li>
+  <li>Get started with <code class="language-plaintext highlighter-rouge">pip install neug</code></li>
+</ul>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">neug</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">neug</span><span class="p">.</span><span class="n">Database</span><span class="p">(</span><span class="s">"/path/to/data"</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    MATCH (a:Person)-[:KNOWS]-&gt;(b:Person)
+    RETURN a.name, b.name
+"""</span><span class="p">)</span>
+</code></pre></div></div>
+
+<h3 id="dual-mode-architecture-htap">Dual-Mode Architecture (HTAP)</h3>
+
+<p>NeuG provides two operational modes through a single lightweight core:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Mode</th>
+      <th>Use Case</th>
+      <th>Characteristics</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Embedded Mode</strong></td>
+      <td>Offline analytics, ML/AI pipelines</td>
+      <td>Import as a Python library, ideal for Jupyter notebooks, batch ETL, graph algorithm development</td>
+    </tr>
+    <tr>
+      <td><strong>Service Mode</strong></td>
+      <td>Online transactions, concurrent access</td>
+      <td>Call <code class="language-plaintext highlighter-rouge">db.serve()</code> to start a network service with multi-session ACID transactions</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>This design allows NeuG to adapt flexibly from prototyping to production deployment without changing your technology stack.</p>
+
+<h3 id="cypher-native">Cypher-Native</h3>
+
+<ul>
+  <li>Industry-standard Cypher query language</li>
+  <li>Built on <a href="https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope">GOpt</a>’s unified intermediate representation, designed for future <a href="https://www.gqlstandards.org/">ISO/GQL</a> compatibility</li>
+</ul>
+
+<h3 id="extensible-by-design">Extensible by Design</h3>
+
+<ul>
+  <li>Extension system inspired by PostgreSQL/DuckDB</li>
+  <li>Keep the core lean; add graph algorithms, vector search, and custom procedures through an extensible framework</li>
+</ul>
+
+<h3 id="acid-transactions">ACID Transactions</h3>
+
+<ul>
+  <li>Embedded mode: Single-connection serial access with data consistency guarantees</li>
+  <li>Service mode: Multi-session concurrent transactions with read-write isolation</li>
+</ul>
+
+<hr />
+
+<h2 id="performance">Performance</h2>
+
+<p>NeuG is built on the GraphScope Flex engine, which achieved industry-leading results on the <strong>LDBC SNB Interactive benchmark</strong> using Cypher queries:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Result</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Throughput</strong></td>
+      <td>80,000+ QPS</td>
+    </tr>
+    <tr>
+      <td><strong>Scale Factor</strong></td>
+      <td>SF300 (~1 billion edges)</td>
+    </tr>
+    <tr>
+      <td><strong>Audit Status</strong></td>
+      <td>Officially audited by LDBC</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>These results validate NeuG’s capability for high-concurrency transactional workloads. The full audit report is available on the <a href="https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/">LDBC website</a>.</p>
+
+<hr />
+
+<h2 id="use-cases">Use Cases</h2>
+
+<p>NeuG v0.1 is particularly suited for:</p>
+
+<ul>
+  <li><strong>AI/LLM Application Development</strong>: Knowledge graph storage and querying for RAG systems and AI Agents</li>
+  <li><strong>Data Science &amp; Research</strong>: Graph exploration in Jupyter Notebooks—social network analysis, relationship mining, pattern discovery</li>
+  <li><strong>ML Feature Engineering</strong>: Computing graph-structural features (node centrality, community structure, path patterns) as machine learning inputs</li>
+  <li><strong>Prototype to Production</strong>: Use embedded mode for rapid iteration during development, switch to service mode for deployment—no technology stack changes required</li>
+  <li><strong>Edge Computing &amp; Local-First Applications</strong>: Run graph queries in resource-constrained environments without network connectivity</li>
+</ul>
+
+<hr />
+
+<h2 id="quick-start">Quick Start</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Installation</span>
+pip <span class="nb">install </span>neug
+
+<span class="c"># Verify installation</span>
+python <span class="nt">-c</span> <span class="s2">"import neug; print('NeuG is ready!')"</span>
+</code></pre></div></div>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">neug</span>
+
+<span class="c1"># Create database and load sample data
+</span><span class="n">db</span> <span class="o">=</span> <span class="n">neug</span><span class="p">.</span><span class="n">Database</span><span class="p">(</span><span class="s">"./my_graph"</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="n">db</span><span class="p">.</span><span class="n">load_builtin_dataset</span><span class="p">(</span><span class="s">"tinysnb"</span><span class="p">)</span>
+
+<span class="c1"># Execute queries
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    MATCH (a:person)-[:knows]-&gt;(b:person)-[:knows]-&gt;(c:person),
+          (a)-[:knows]-&gt;(c)
+    RETURN a.fName, b.fName, c.fName
+"""</span><span class="p">)</span>
+
+<span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">record</span><span class="si">}</span><span class="s"> are mutual friends"</span><span class="p">)</span>
+
+<span class="c1"># Switch to service mode
+</span><span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">db</span><span class="p">.</span><span class="n">serve</span><span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">8080</span><span class="p">)</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="coming-soon-v02">Coming Soon (v0.2)</h2>
+
+<p>v0.2 focuses on enhanced AI scenario support and data ecosystem integration:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>Description</th>
+      <th>Use Case</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Node.js Binding</strong></td>
+      <td>TypeScript/JavaScript language binding</td>
+      <td>AI Agent development, web backend integration</td>
+    </tr>
+    <tr>
+      <td><strong>Graph Algorithm Extensions</strong></td>
+      <td>Leiden community detection and more</td>
+      <td>Knowledge graph clustering, entity grouping in GraphRAG</td>
+    </tr>
+    <tr>
+      <td><strong>Vector DB Extension</strong></td>
+      <td>Graph + vector hybrid retrieval</td>
+      <td>GraphRAG, semantic search + relationship reasoning</td>
+    </tr>
+    <tr>
+      <td><strong>Data Lake Integration</strong></td>
+      <td>S3/OSS + Parquet format</td>
+      <td>Large-scale offline analytics, data platform integration</td>
+    </tr>
+    <tr>
+      <td><strong>Foreign Tables</strong></td>
+      <td>Direct querying of external data sources</td>
+      <td>Interoperability with PostgreSQL, DuckDB, and relational ecosystems</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="technology-stack">Technology Stack</h2>
+
+<ul>
+  <li><strong>Query Language</strong>: Cypher (ISO/GQL compatibility planned)</li>
+  <li><strong>Query Optimization</strong>: GOpt unified optimization framework</li>
+  <li><strong>Storage Engine</strong>: GraphScope Flex</li>
+  <li><strong>Language Bindings</strong>: Python (C++ API available, Node.js in development)</li>
+  <li><strong>Platform Support</strong>: Linux, macOS (x86_64, ARM64)</li>
+</ul>
+
+<hr />
+
+<h2 id="license">License</h2>
+
+<p>NeuG is released under the Apache License 2.0.</p>
+
+<hr />
+
+<h2 id="contributing">Contributing</h2>
+
+<p>We welcome community participation and contributions:</p>
+
+<ul>
+  <li><strong>Star &amp; Watch</strong>: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a></li>
+</ul>
+
+<hr />
+
+<h2 id="acknowledgments">Acknowledgments</h2>
+
+<p>NeuG is developed by the <a href="https://graphscope.io">GraphScope</a> team at Alibaba, incorporating years of expertise in large-scale graph computing. We thank all developers who have contributed to this project.</p>
+
+<hr />
+
+<p><strong>Making graph data simple.</strong></p>
+
+<p>GitHub: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a><br />
+Documentation: <a href="https://graphscope.io/neug/en/overview/introduction/">https://graphscope.io/neug/en/overview/introduction/</a></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Opensourcing NeuG&amp;url=https://graphscope.io/tech/2026/02/11/Opensourcing-NeuG.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/02/11/Opensourcing-NeuG.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/02/11/Opensourcing-NeuG.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
