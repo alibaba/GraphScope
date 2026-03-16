@@ -1,0 +1,83 @@
+apiVersion: kubeflow.org/v2beta1
+kind: MPIJob
+metadata:
+  name: flash-mpijob
+spec:
+  slotsPerWorker: ${SLOTS_PER_WORKER}
+  runPolicy:
+    cleanPodPolicy: None
+    ttlSecondsAfterFinished: 60
+  sshAuthMountPath: /home/mpiuser/.ssh
+  mpiReplicaSpecs:
+    Launcher:
+      replicas: 1
+      template:
+        spec:
+          ${VOLUMES_BLOCK}
+          containers:
+          - image: graphanalysisbenchmarks/flash-mpi:v0.1
+            name: mpi-launcher
+            securityContext:
+              runAsUser: 1000
+            ${VOLUME_MOUNTS_BLOCK}
+            command: ["/bin/bash", "-c"]
+            args:
+              - |
+                set -e
+                echo "[INFO] Waiting for DNS sync..."; sleep 5;
+
+                if [ "${ALGORITHM}" = "sssp" ]; then
+
+                  if [ "${SINGLE_MACHINE}" = "1" ]; then
+                    echo "Running in single-machine mode..."
+                    mpirun -n ${MPIRUN_NP} ./flash format /opt/data_sssp/ /opt/scratch/gfs/ data_sssp
+                    echo "Running ${ALGORITHM} in single-machine mode..."
+                    mpirun -n ${MPIRUN_NP} ./${ALGORITHM} /opt/scratch/gfs/ data_sssp ${ALGORITHM_PARAMETER}
+
+                  else
+                    echo "Running in multi-machine mode..."
+                    mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./flash format /opt/data_sssp/ /opt/scratch/gfs/ data_sssp
+                    mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./${ALGORITHM} /opt/scratch/gfs/ data_sssp ${ALGORITHM_PARAMETER}
+
+                  fi
+
+                else
+                  if [ "${SINGLE_MACHINE}" = "1" ]; then
+                    echo "Running in single-machine mode..."
+                    mpirun -n ${MPIRUN_NP} ./flash format /opt/data/ /opt/scratch/gfs/ data
+                    echo "Running ${ALGORITHM} in single-machine mode..."
+                    mpirun -n ${MPIRUN_NP} ./${ALGORITHM} /opt/scratch/gfs/ data ${ALGORITHM_PARAMETER}
+
+                  else
+                    echo "Running in multi-machine mode..."
+                    mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./flash format /opt/data/ /opt/scratch/gfs/ data
+                    mpirun -n ${MPIRUN_NP} -hostfile /etc/mpi/hostfile ./${ALGORITHM} /opt/scratch/gfs/ data ${ALGORITHM_PARAMETER}
+
+                  fi
+                fi
+                
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
+    Worker:
+      replicas: ${REPLICAS}
+      template:
+        spec:
+          ${VOLUMES_BLOCK}
+          containers:
+          - image: graphanalysisbenchmarks/flash-mpi:v0.1
+            name: mpi-worker
+            securityContext:
+              runAsUser: 1000
+            ${VOLUME_MOUNTS_BLOCK}
+            command:
+            - /usr/sbin/sshd
+            args:
+            - -De
+            - -f
+            - /home/mpiuser/.sshd_config
+            resources:
+              limits:
+                cpu: ${CPU}
+                memory: ${MEMORY}
