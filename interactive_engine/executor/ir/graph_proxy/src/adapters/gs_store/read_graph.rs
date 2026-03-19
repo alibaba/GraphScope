@@ -679,12 +679,10 @@ fn encode_store_prop_val(prop_val: Object) -> Property {
         Object::Primitive(p) => match p {
             Primitives::Byte(b) => Property::Char(b as u8),
             Primitives::Integer(i) => Property::Int(i),
-            // will support u32 in groot soon.
-            Primitives::UInteger(i) => Property::Int(i as i32),
+            Primitives::UInteger(i) => Property::UInt(i),
             Primitives::Long(i) => Property::Long(i),
-            // will support u64 in groot soon.
-            Primitives::ULong(i) => Property::Long(i as i64),
-            Primitives::ULLong(i) => Property::Long(i as i64),
+            Primitives::ULong(i) => Property::ULong(i),
+            Primitives::ULLong(i) => Property::ULong(i as u64),
             Primitives::Float(f) => Property::Float(f),
             Primitives::Double(f) => Property::Double(f),
         },

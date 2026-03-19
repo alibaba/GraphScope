@@ -538,6 +538,21 @@ impl GraphPartitionManager for GlobalGraph {
                     Property::Unknown => {
                         unimplemented!()
                     }
+                    Property::UInt(i) => {
+                        data.write_u32::<BigEndian>(*i).unwrap();
+                    }
+                    Property::ULong(l) => {
+                        data.write_u64::<BigEndian>(*l).unwrap();
+                    }
+                    Property::Date32(i) => {
+                        data.write_i32::<BigEndian>(*i).unwrap();
+                    }
+                    Property::Time32(i) => {
+                        data.write_i32::<BigEndian>(*i).unwrap();
+                    }
+                    Property::Timestamp(l) => {
+                        data.write_i64::<BigEndian>(*l).unwrap();
+                    }
                 }
                 data
             });

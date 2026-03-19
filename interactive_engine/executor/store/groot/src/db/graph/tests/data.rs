@@ -138,6 +138,34 @@ fn vertex_prop(si: SnapshotId, label: LabelId, id: VertexId, r#type: ValueType) 
             let v = vec![format!("{}", x), format!("{}", y), format!("{}_{}", x, y), format!("{}", s)];
             Value::string_list(&v)
         }
+        ValueType::UInt => {
+            let v = (x * x + y * 23 + 123 + s) % 1000000007;
+            Value::uint(v as u32)
+        }
+        ValueType::ULong => {
+            let v = x * x * x + y * y - 1234 * x + 3333 * y + 1 + s;
+            Value::ulong(v as u64)
+        }
+        ValueType::Date32 => {
+            let v = (x + y + s) % 10000;
+            Value::date32(v as i32)
+        }
+        ValueType::Time32 => {
+            let v = (x + y + s) % 10000;
+            Value::time32(v as i32)
+        }
+        ValueType::Timestamp => {
+            let v = (x + y + s) % 10000;
+            Value::timestamp(v as i64)
+        }
+        ValueType::FixedChar(fixed_length) => {
+            let v = format!("t");
+            Value::fixed_char(&v, fixed_length)
+        }
+        ValueType::VarChar(max_length) => {
+            let v = format!("test");
+            Value::var_char(&v, max_length)
+        }
     }
 }
 
@@ -212,6 +240,34 @@ fn edge_prop(si: SnapshotId, edge_type: &EdgeKind, id: &EdgeId, r#type: ValueTyp
         ValueType::StringList => {
             let v = vec![format!("{}", x), format!("{}", y), format!("{}_{}", x, y), format!("{}", s)];
             Value::string_list(&v)
+        }
+        ValueType::UInt => {
+            let v = (x * x + y * 23 + 123 + s) % 1000000007;
+            Value::uint(v as u32)
+        }
+        ValueType::ULong => {
+            let v = x * x * 2 + y * 100 - 1234 * x + 3333 * y + 1 + s;
+            Value::ulong(v as u64)
+        }
+        ValueType::Date32 => {
+            let v = (x + y + s) % 10000;
+            Value::date32(v as i32)
+        }
+        ValueType::Time32 => {
+            let v = (x + y + s) % 10000;
+            Value::time32(v as i32)
+        }
+        ValueType::Timestamp => {
+            let v = (x + y + s) % 10000;
+            Value::timestamp(v as i64)
+        }
+        ValueType::FixedChar(fixed_length) => {
+            let v = format!("t");
+            Value::fixed_char(&v, fixed_length)
+        }
+        ValueType::VarChar(max_length) => {
+            let v = format!("test");
+            Value::var_char(&v, max_length)
         }
     }
 }

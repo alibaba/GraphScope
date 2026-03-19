@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 use std::collections::{HashMap, HashSet};
 
-use protobuf::{Message, ProtobufEnum};
+use protobuf::Message;
 
 use super::error::*;
 use super::property::ValueType;
