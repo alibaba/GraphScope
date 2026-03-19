@@ -140,6 +140,8 @@ public class Utils {
                 return parseLabelValue(value.getI32(), type);
             case I64:
                 return parseLabelValue(value.getI64(), type);
+            case NONE:
+                return null;
             default:
                 throw new IllegalArgumentException(
                         "cannot parse label value with type=" + value.getItemCase().name());
