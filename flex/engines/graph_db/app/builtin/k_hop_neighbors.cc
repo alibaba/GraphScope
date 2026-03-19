@@ -18,7 +18,7 @@ namespace gs {
 
 results::CollectiveResults KNeighbors::Query(const GraphDBSession& sess,
                                              std::string label_name,
-                                             int64_t vertex_id, int32_t k) {
+                                             std::string vertex_id, int32_t k) {
   auto txn = sess.GetReadTransaction();
   const Schema& schema_ = txn.schema();
 
@@ -117,7 +117,7 @@ results::CollectiveResults KNeighbors::Query(const GraphDBSession& sess,
         ->mutable_entry()
         ->mutable_element()
         ->mutable_object()
-        ->set_i64(txn.GetVertexId(vertex_.first, vertex_.second).AsInt64());
+        ->set_str(txn.GetVertexId(vertex_.first, vertex_.second).to_string());
   }
 
   txn.Commit();
