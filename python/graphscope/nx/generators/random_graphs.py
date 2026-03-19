@@ -729,7 +729,7 @@ def random_kernel_graph(n, kernel_integral, kernel_root=None, seed=None):
 
     graph = nx.Graph()
     graph.add_nodes_from(range(n))
-    (i, j) = (1, 1)
+    i, j = (1, 1)
     while i < n:
         r = -math.log(1 - seed.random())  # (1-seed.random()) in (0, 1]
         if kernel_integral(i / n, j / n, 1) <= r:

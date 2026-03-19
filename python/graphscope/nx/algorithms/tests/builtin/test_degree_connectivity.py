@@ -17,6 +17,7 @@
 """
 Unit tests for average degree connectivity.
 """
+
 from itertools import permutations
 
 import pytest

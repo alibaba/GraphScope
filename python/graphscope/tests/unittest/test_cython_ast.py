@@ -186,47 +186,35 @@ def test_ann_assign(compiler):
 
 
 def test_for(compiler):
-    s1 = textwrap.dedent(
-        """\
+    s1 = textwrap.dedent("""\
         for i in range(10):
-            pass"""
-    )
-    e1 = textwrap.dedent(
-        """\
+            pass""")
+    e1 = textwrap.dedent("""\
         for i in range(10):
-            pass"""
-    )
+            pass""")
     r1 = compiler.compile(s1)
     assert r1 == e1
 
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         for i in [1, 2, 3]:
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         for i in [1, 2, 3]:
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == e2
 
     # for else
-    s3 = textwrap.dedent(
-        """\
+    s3 = textwrap.dedent("""\
         for i in range(10):
             pass
         else:
-            pass"""
-    )
-    e3 = textwrap.dedent(
-        """\
+            pass""")
+    e3 = textwrap.dedent("""\
         for i in range(10):
             pass
         else:
-            pass"""
-    )
+            pass""")
     r3 = compiler.compile(s3)
     assert r3 == e3
 
@@ -234,154 +222,117 @@ def test_for(compiler):
 
 
 def test_while(compiler):
-    s1 = textwrap.dedent(
-        """\
+    s1 = textwrap.dedent("""\
         while True:
-            pass"""
-    )
-    e1 = textwrap.dedent(
-        """\
+            pass""")
+    e1 = textwrap.dedent("""\
         while True:
-            pass"""
-    )
+            pass""")
     r1 = compiler.compile(s1)
     assert r1 == e1
 
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         while a:
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         while a:
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == e2
 
-    s3 = textwrap.dedent(
-        """\
+    s3 = textwrap.dedent("""\
         while i < 10:
-            pass"""
-    )
-    e3 = textwrap.dedent(
-        """\
+            pass""")
+    e3 = textwrap.dedent("""\
         while i < 10:
-            pass"""
-    )
+            pass""")
     r3 = compiler.compile(s3)
     assert r3 == e3
 
 
 def test_if(compiler):
-    s1 = textwrap.dedent(
-        """\
+    s1 = textwrap.dedent("""\
         if True:
-            pass"""
-    )
-    e1 = textwrap.dedent(
-        """\
+            pass""")
+    e1 = textwrap.dedent("""\
         if True:
-            pass"""
-    )
+            pass""")
     r1 = compiler.compile(s1)
     assert r1 == e1
 
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         if a:
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         if a:
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == e2
 
-    s3 = textwrap.dedent(
-        """\
+    s3 = textwrap.dedent("""\
         if i < 10:
-            pass"""
-    )
-    e3 = textwrap.dedent(
-        """\
+            pass""")
+    e3 = textwrap.dedent("""\
         if i < 10:
-            pass"""
-    )
+            pass""")
     r3 = compiler.compile(s3)
     assert r3 == e3
 
     # test with else
-    s4 = textwrap.dedent(
-        """\
+    s4 = textwrap.dedent("""\
         if True:
             pass
         else:
-            pass"""
-    )
-    e4 = textwrap.dedent(
-        """\
+            pass""")
+    e4 = textwrap.dedent("""\
         if True:
             pass
         else:
-            pass"""
-    )
+            pass""")
     r4 = compiler.compile(s4)
     assert r4 == e4
 
     # test with elif
     # s5 and e5 are equivalent
-    s5 = textwrap.dedent(
-        """\
+    s5 = textwrap.dedent("""\
         if a:
             pass
         elif b:
             pass
         else:
-            pass"""
-    )
-    e5 = textwrap.dedent(
-        """\
+            pass""")
+    e5 = textwrap.dedent("""\
         if a:
             pass
         else:
             if b:
                 pass
             else:
-                pass"""
-    )
+                pass""")
     r5 = compiler.compile(s5)
     assert r5 == e5
 
-    s6 = textwrap.dedent(
-        """\
+    s6 = textwrap.dedent("""\
         if a:
             pass
         else:
             if b:
                 pass
             else:
-                pass"""
-    )
-    e6 = textwrap.dedent(
-        """\
+                pass""")
+    e6 = textwrap.dedent("""\
         if a:
             pass
         else:
             if b:
                 pass
             else:
-                pass"""
-    )
+                pass""")
     r6 = compiler.compile(s6)
     assert r6 == e6
 
     # test nesting
-    s7 = textwrap.dedent(
-        """\
+    s7 = textwrap.dedent("""\
         if a:
             if b:
                 pass
@@ -389,10 +340,8 @@ def test_if(compiler):
                 pass
             pass
         else:
-            pass"""
-    )
-    e7 = textwrap.dedent(
-        """\
+            pass""")
+    e7 = textwrap.dedent("""\
         if a:
             if b:
                 pass
@@ -400,46 +349,35 @@ def test_if(compiler):
                 pass
             pass
         else:
-            pass"""
-    )
+            pass""")
     r7 = compiler.compile(s7)
     assert r7 == e7
 
 
 def test_with(compiler):
-    s1 = textwrap.dedent(
-        """\
+    s1 = textwrap.dedent("""\
         with fin.open('file') as f:
-            pass"""
-    )
-    e1 = textwrap.dedent(
-        """\
+            pass""")
+    e1 = textwrap.dedent("""\
         with fin.open('file') as f:
-            pass"""
-    )
+            pass""")
     r1 = compiler.compile(s1)
     assert r1 == s1
 
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         with a as b:
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         with a as b:
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == s2
 
     # multiple items with is not supported yet
     with pytest.raises(AssertionError):
-        s3 = textwrap.dedent(
-            """\
+        s3 = textwrap.dedent("""\
             with a as f, b as c:
-                pass"""
-        )
+                pass""")
         r3 = compiler.compile(s3)
 
 
@@ -452,30 +390,25 @@ def test_raise(compiler):
 
 def test_try(compiler):
     # try except else
-    s1 = textwrap.dedent(
-        """\
+    s1 = textwrap.dedent("""\
         try:
             pass
         except:
             pass
         else:
-            pass"""
-    )
-    e1 = textwrap.dedent(
-        """\
+            pass""")
+    e1 = textwrap.dedent("""\
         try:
             pass
         except:
             pass
         else:
-            pass"""
-    )
+            pass""")
     r1 = compiler.compile(s1)
     assert r1 == e1
 
     # try multiple except with else
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         try:
             pass
         except IOError as e:
@@ -483,10 +416,8 @@ def test_try(compiler):
         except RuntimeError as e:
             pass
         else:
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         try:
             pass
         except IOError as e:
@@ -494,48 +425,39 @@ def test_try(compiler):
         except RuntimeError as e:
             pass
         else:
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == e2
 
     # try except
-    s3 = textwrap.dedent(
-        """\
+    s3 = textwrap.dedent("""\
         try:
             pass
         except:
-            pass"""
-    )
-    e3 = textwrap.dedent(
-        """\
+            pass""")
+    e3 = textwrap.dedent("""\
         try:
             pass
         except:
-            pass"""
-    )
+            pass""")
     r3 = compiler.compile(s3)
     assert r3 == e3
 
     # try except with finally
-    s5 = textwrap.dedent(
-        """\
+    s5 = textwrap.dedent("""\
         try:
             pass
         except:
             pass
         finally:
-            pass"""
-    )
-    e5 = textwrap.dedent(
-        """\
+            pass""")
+    e5 = textwrap.dedent("""\
         try:
             pass
         except:
             pass
         finally:
-            pass"""
-    )
+            pass""")
     r5 = compiler.compile(s5)
     assert r5 == e5
 
@@ -672,131 +594,87 @@ def test_expr(compiler):
     assert r20 == e20
 
     # dict
-    s21 = textwrap.dedent(
-        """\
-        {'a': 10, 'b': 'str'}"""
-    )
-    e21 = textwrap.dedent(
-        """\
-        {'a': 10, 'b': 'str'}"""
-    )
+    s21 = textwrap.dedent("""\
+        {'a': 10, 'b': 'str'}""")
+    e21 = textwrap.dedent("""\
+        {'a': 10, 'b': 'str'}""")
     r21 = compiler.compile(s21)
     assert r21 == e21
 
     # set
-    s22 = textwrap.dedent(
-        """\
-        a = {1, 2, 3}"""
-    )
-    e22 = textwrap.dedent(
-        """\
-        a = {1, 2, 3}"""
-    )
+    s22 = textwrap.dedent("""\
+        a = {1, 2, 3}""")
+    e22 = textwrap.dedent("""\
+        a = {1, 2, 3}""")
     r22 = compiler.compile(s22)
     assert r22 == e22
 
     # tuple
-    s23 = textwrap.dedent(
-        """\
-        a = (1, 2, 3)"""
-    )
-    e23 = textwrap.dedent(
-        """\
-        a = (1, 2, 3)"""
-    )
+    s23 = textwrap.dedent("""\
+        a = (1, 2, 3)""")
+    e23 = textwrap.dedent("""\
+        a = (1, 2, 3)""")
     r23 = compiler.compile(s23)
     assert r23 == e23
 
     # list
-    s24 = textwrap.dedent(
-        """\
-        a = [1, 2, 3]"""
-    )
-    e24 = textwrap.dedent(
-        """\
-        a = [1, 2, 3]"""
-    )
+    s24 = textwrap.dedent("""\
+        a = [1, 2, 3]""")
+    e24 = textwrap.dedent("""\
+        a = [1, 2, 3]""")
     r24 = compiler.compile(s24)
     assert r24 == e24
 
     # list comprehension
-    s25 = textwrap.dedent(
-        """\
-        [a for a in 'human' if a in 'man']"""
-    )
-    e25 = textwrap.dedent(
-        """\
-        [a for a in 'human' if a in 'man']"""
-    )
+    s25 = textwrap.dedent("""\
+        [a for a in 'human' if a in 'man']""")
+    e25 = textwrap.dedent("""\
+        [a for a in 'human' if a in 'man']""")
     r25 = compiler.compile(s25)
     assert r25 == e25
 
-    s26 = textwrap.dedent(
-        """\
-        [a for a in 'human']"""
-    )
-    e26 = textwrap.dedent(
-        """\
-        [a for a in 'human']"""
-    )
+    s26 = textwrap.dedent("""\
+        [a for a in 'human']""")
+    e26 = textwrap.dedent("""\
+        [a for a in 'human']""")
     r26 = compiler.compile(s26)
     assert r26 == e26
 
     # set comprehension
-    s27 = textwrap.dedent(
-        """\
-        {a for a in 'human' if a in 'man'}"""
-    )
-    e27 = textwrap.dedent(
-        """\
-        {a for a in 'human' if a in 'man'}"""
-    )
+    s27 = textwrap.dedent("""\
+        {a for a in 'human' if a in 'man'}""")
+    e27 = textwrap.dedent("""\
+        {a for a in 'human' if a in 'man'}""")
     r27 = compiler.compile(s27)
     assert r27 == e27
 
-    s28 = textwrap.dedent(
-        """\
-        {a for a in 'human'}"""
-    )
-    e28 = textwrap.dedent(
-        """\
-        {a for a in 'human'}"""
-    )
+    s28 = textwrap.dedent("""\
+        {a for a in 'human'}""")
+    e28 = textwrap.dedent("""\
+        {a for a in 'human'}""")
     r28 = compiler.compile(s28)
     assert r28 == e28
 
     # dict comprehension
-    s29 = textwrap.dedent(
-        """\
-        {k: v for (k, v) in d.items() if k in ['a'] or v in [20]}"""
-    )
-    e29 = textwrap.dedent(
-        """\
-        {k: v for (k, v) in d.items() if k in ['a'] or v in [20]}"""
-    )
+    s29 = textwrap.dedent("""\
+        {k: v for (k, v) in d.items() if k in ['a'] or v in [20]}""")
+    e29 = textwrap.dedent("""\
+        {k: v for (k, v) in d.items() if k in ['a'] or v in [20]}""")
     r29 = compiler.compile(s29)
     assert r29 == e29
 
-    s30 = textwrap.dedent(
-        """\
-        {k: v for (k, v) in d.items()}"""
-    )
-    e30 = textwrap.dedent(
-        """\
-        {k: v for (k, v) in d.items()}"""
-    )
+    s30 = textwrap.dedent("""\
+        {k: v for (k, v) in d.items()}""")
+    e30 = textwrap.dedent("""\
+        {k: v for (k, v) in d.items()}""")
     r30 = compiler.compile(s30)
     assert r30 == e30
 
     # generator exp
-    s31 = textwrap.dedent(
-        """\
-        [num ** 2 for num in range(5)]"""
-    )
-    e31 = textwrap.dedent(
-        """\
-        [num ** 2 for num in range(5)]"""
-    )
+    s31 = textwrap.dedent("""\
+        [num ** 2 for num in range(5)]""")
+    e31 = textwrap.dedent("""\
+        [num ** 2 for num in range(5)]""")
     r31 = compiler.compile(s31)
     assert r31 == e31
 
@@ -893,11 +771,9 @@ def test_expr(compiler):
 
     # formated and joinedstr expr
     with pytest.raises(RuntimeError, match="Joinedstr is not supported yet"):
-        s49 = textwrap.dedent(
-            """\
+        s49 = textwrap.dedent("""\
             f'{x}.{y}'
-        """
-        )
+        """)
         r49 = compiler.compile(s49)
 
     # complex compare
@@ -927,14 +803,10 @@ def test_misc(compiler):
     assert r3 == e3
 
     # str format
-    s4 = textwrap.dedent(
-        """\
-        '{}.{}'.format('a', 'b')"""
-    )
-    e4 = textwrap.dedent(
-        """\
-        '{}.{}'.format('a', 'b')"""
-    )
+    s4 = textwrap.dedent("""\
+        '{}.{}'.format('a', 'b')""")
+    e4 = textwrap.dedent("""\
+        '{}.{}'.format('a', 'b')""")
     r4 = compiler.compile(e4)
     assert r4 == e4
 
@@ -949,103 +821,77 @@ def test_lambda(compiler):
 def test_function_def(compiler):
     # Only support function definition from Pregel/PIE model.
     with pytest.raises(RuntimeError, match="Not recognized method"):
-        s1 = textwrap.dedent(
-            """\
+        s1 = textwrap.dedent("""\
             @staticmethod
             def f(*args, **kwargs):
-                pass"""
-        )
+                pass""")
         r1 = compiler.compile(s1)
 
     compiler.set_pregel_program_model()
     # Pregel Init
-    s2 = textwrap.dedent(
-        """\
+    s2 = textwrap.dedent("""\
         @staticmethod
         def Init(v, context):
-            pass"""
-    )
-    e2 = textwrap.dedent(
-        """\
+            pass""")
+    e2 = textwrap.dedent("""\
         cdef public void Init(Vertex[double, double] &v, Context[double, double] &context):
-            pass"""
-    )
+            pass""")
     r2 = compiler.compile(s2)
     assert r2 == e2
 
     # Pregel Compute
-    s3 = textwrap.dedent(
-        """\
+    s3 = textwrap.dedent("""\
         @staticmethod
         def Compute(messages, v, context):
-            pass"""
-    )
-    e3 = textwrap.dedent(
-        """\
+            pass""")
+    e3 = textwrap.dedent("""\
         cdef public void Compute(MessageIterator[double] messages, Vertex[double, double] &v, Context[double, double] &context):
-            pass"""
-    )
+            pass""")
     r3 = compiler.compile(s3)
     assert r3 == e3
 
     # Pregel Combine
-    s4 = textwrap.dedent(
-        """\
+    s4 = textwrap.dedent("""\
         @staticmethod
         def Combine(messages):
-            pass"""
-    )
-    e4 = textwrap.dedent(
-        """\
+            pass""")
+    e4 = textwrap.dedent("""\
         cdef public double Combine(MessageIterator[double] messages):
-            pass"""
-    )
+            pass""")
     r4 = compiler.compile(s4)
     assert r4 == e4
 
     compiler.set_pie_program_model()
     # PIE Init
-    s5 = textwrap.dedent(
-        """\
+    s5 = textwrap.dedent("""\
         @staticmethod
         def Init(frag, context):
-            pass"""
-    )
-    e5 = textwrap.dedent(
-        """\
+            pass""")
+    e5 = textwrap.dedent("""\
         cdef public void Init(Fragment &frag, Context[double, double] &context):
-            pass"""
-    )
+            pass""")
     r5 = compiler.compile(s5)
     assert r5 == e5
 
     # Pregel Compute
-    s6 = textwrap.dedent(
-        """\
+    s6 = textwrap.dedent("""\
         @staticmethod
         def PEval(frag, context):
-            pass"""
-    )
-    e6 = textwrap.dedent(
-        """\
+            pass""")
+    e6 = textwrap.dedent("""\
         cdef public void PEval(Fragment &frag, Context[double, double] &context):
-            pass"""
-    )
+            pass""")
     r6 = compiler.compile(s6)
     assert r6 == e6
 
     # Pregel Combine
-    s7 = textwrap.dedent(
-        """\
+    s7 = textwrap.dedent("""\
         @staticmethod
         def IncEval(frag, context):
-            pass"""
-    )
-    e7 = textwrap.dedent(
-        """\
+            pass""")
+    e7 = textwrap.dedent("""\
         cdef public void IncEval(Fragment &frag, Context[double, double] &context):
-            pass"""
-    )
+            pass""")
     r7 = compiler.compile(s7)
     assert r7 == e7
     # await is unsupported yet, since we can't import asyncio

@@ -18,6 +18,7 @@
 #
 
 """Unit tests for the :mod:`graphscope.nx.generators.triads` module."""
+
 import pytest
 
 from graphscope.nx import triad_graph

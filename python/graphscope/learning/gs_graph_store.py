@@ -66,7 +66,7 @@ class GsGraphStore(GraphStore):
         rows = []
         cols = []
         for server_id in range(num_servers):
-            (row, col) = request_server(
+            row, col = request_server(
                 server_id, DistServer.get_edge_index, group_name, layout
             )
             rows.append(row)
@@ -91,7 +91,7 @@ class GsGraphStore(GraphStore):
             size(`tupple(int, int)`): The size of the subgraph.
         """
         group_name, layout, is_sorted, _ = self.key(edge_attr)
-        (row, col) = self._get_edge_index(edge_attr)
+        row, col = self._get_edge_index(edge_attr)
         size = (int(row.max()) + 1, int(col.max()) + 1)
         new_edge_attr = EdgeAttr(group_name, layout, is_sorted, size)
         self.edge_attrs[(group_name, layout, is_sorted)] = new_edge_attr
