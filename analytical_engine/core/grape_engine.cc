@@ -36,6 +36,7 @@
 #include "grape/worker/comm_spec.h"
 #include "grpcpp/server.h"
 
+#include "core/applications.h"
 #include "core/context/i_context.h"
 #include "core/error.h"
 #include "core/flags.h"
@@ -202,14 +203,15 @@ int main(int argc, char* argv[]) {
   // set RDMAV_FORK_SAFE to avoid the openmpi error, see also #2812
   setenv("RDMAV_FORK_SAFE", "1", 0);
 
-  int exit_code = 0;
   // not output any log to stderr by glog.
   FLAGS_stderrthreshold = std::numeric_limits<int>::max();
 
   grape::gflags::SetUsageMessage(
       "Usage: mpiexec [mpi_opts] ./grape_engine [grape_opts].\n"
       "  Example: mpiexec -n 1 ./grape_engine -host 0.0.0.0 -port 50001");
-  if (argc == 2 && strcmp(argv[1], "-h") == 0) {
+  if (argc == 2 &&
+      (strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0 ||
+       strcmp(argv[1], "-help") == 0)) {
     grape::gflags::ShowUsageWithFlagsRestrict(argv[0], "core/flags");
     exit(0);
   }
@@ -224,25 +226,17 @@ int main(int argc, char* argv[]) {
   // Init MPI
   grape::InitMPIComm();
 
-  auto host = FLAGS_host;
-  auto port = FLAGS_port;
-  auto dag_file = FLAGS_dag_file;
-
-  if (dag_file.empty()) {
-    grape_engine_ptr = std::make_shared<gs::GrapeEngine>(host, port);
+  if (FLAGS_batch_mode) {
+    gs::RunApp();
   } else {
-    grape_engine_ptr = std::make_shared<gs::GrapeEngine>(dag_file);
-  }
-
-  InstallSignalHandlers(&master_signal_handler);
-  grape_engine_ptr->Start();
-
-  if (!dag_file.empty()) {
-    exit_code = grape_engine_ptr->RunDAGFile();
+    grape_engine_ptr =
+        std::make_shared<gs::GrapeEngine>(FLAGS_host, FLAGS_port);
+    InstallSignalHandlers(&master_signal_handler);
+    grape_engine_ptr->Start();
   }
 
   grape::FinalizeMPIComm();
   //////////////////////////////////////////////
   google::ShutdownGoogleLogging();
-  return exit_code;
+  return 0;
 }
