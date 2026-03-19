@@ -22,3 +22,5 @@ tomli
 wheel
 setuptools==70.0.0
 pyopenapigenerator==7.8.0
+# https://github.com/python/importlib_metadata/issues/406
+importlib-metadata<4.3

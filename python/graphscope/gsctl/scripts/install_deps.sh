@@ -719,6 +719,8 @@ install_hiactor() {
         -DHiactor_CXX_DIALECT=gnu++17 -DSeastar_CXX_FLAGS="-DSEASTAR_DEFAULT_ALLOCATOR -mno-avx512" ..
   make -j$(nproc) && make install
   popd && rm -rf "${tempdir}/hiactor"
+  # install seastar requires sudo permission, we need to change the owner to current user
+  ${SUDO} chown -R $(id -u):$(id -g) ${install_prefix}
 }
 
 
