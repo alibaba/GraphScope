@@ -18,7 +18,6 @@
 
 """Classes and functions used to manage dags."""
 
-
 import queue
 
 from graphscope.framework.operation import Operation

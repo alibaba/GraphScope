@@ -1667,7 +1667,7 @@ def _codegen_app_info(attr, meta_file: str, java_class_path: str):
     algo = attr[types_pb2.APP_ALGO].s.decode("utf-8", errors="ignore")
     # for algo start with giraph:, we don't find info in meta
     if algo.startswith("giraph:") or algo.startswith("java_pie:"):
-        (app_type, real_algo) = algo.split(":")
+        app_type, real_algo = algo.split(":")
         logger.info("codegen app info for java app: %s", real_algo)
         src_header, app_class, vd_type, java_app_template_str = _probe_for_java_app(
             attr, java_class_path, real_algo

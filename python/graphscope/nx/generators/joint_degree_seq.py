@@ -17,7 +17,6 @@
 #
 """Generate graphs with a given joint degree and directed joint degree"""
 
-
 import networkx.generators.joint_degree_seq
 
 from graphscope.nx.utils.compat import import_as_graphscope_nx

@@ -17,6 +17,7 @@
 #
 
 """Monitor coordinator by prometheus"""
+
 import copy
 import functools
 import re

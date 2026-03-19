@@ -497,9 +497,7 @@ if os.name == "nt":
         def __repr__(self) -> str:
             return self
 
-    raise RuntimeError(
-        _ReprableString(
-            """
+    raise RuntimeError(_ReprableString("""
             ====================================================================
 
             GraphScope doesn't support Windows natively, please try to install graphscope in WSL
@@ -508,6 +506,4 @@ if os.name == "nt":
 
             with pip.
 
-            ===================================================================="""
-        )
-    )
+            ===================================================================="""))
