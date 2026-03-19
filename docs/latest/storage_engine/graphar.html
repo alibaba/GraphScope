@@ -782,7 +782,7 @@ A graph information file which named “<name>.graph.yml” describes the meta i
 </div>
 <p>You can also save a subgraph in GraphAr format using the <code class="docutils literal notranslate"><span class="pre">save_to</span></code> function with the <code class="docutils literal notranslate"><span class="pre">selector</span></code> parameter. Here’s an example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">graphscope</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">graphscoped.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ldbc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">graphscope.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_ldbc</span>
 
 <span class="c1"># initialize a session</span>
 <span class="n">sess</span> <span class="o">=</span> <span class="n">graphscope</span><span class="o">.</span><span class="n">session</span><span class="p">(</span><span class="n">cluster_type</span><span class="o">=</span><span class="s2">&quot;hosts&quot;</span><span class="p">)</span>
@@ -804,7 +804,7 @@ A graph information file which named “<name>.graph.yml” describes the meta i
 <span class="p">}</span>
 
 <span class="c1"># save the subgraph to GraphAr format</span>
-<span class="n">r</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">save_to</span><span class="p">(</span>
+<span class="n">r</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">save_to</span><span class="p">(</span>
     <span class="s2">&quot;/tmp/ldbc_subgraph_graphar/&quot;</span><span class="p">,</span>
     <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;graphar&quot;</span><span class="p">,</span>
     <span class="n">selector</span><span class="o">=</span><span class="n">selector</span><span class="p">,</span>

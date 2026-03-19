@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-03-18">18 Mar 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-03-18">18 Mar 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-03-18-openclaw-token-cost-title.png" alt="openclaw-token-cost-title" /></p>
+
+<blockquote>
+  <p><em>Turns out, heartbeat has been quietly eating your tokens all along.</em></p>
+</blockquote>
+
+<hr />
+
+<h2 id="background">Background</h2>
+
+<p><a href="https://github.com/openclaw/openclaw">OpenClaw</a> has become one of the hottest open-source AI gateway projects. With 18,000+ commits and a rapidly growing community, it connects messaging platforms — Telegram, Discord, Slack, MS Teams, Lark, Matrix, and more — to various LLM providers. For many teams building AI-powered chatbots and agents, OpenClaw has become the go-to solution.</p>
+
+<p>But as adoption grows, so do user complaints — and one issue stands out: <strong>token consumption is way higher than expected</strong>. Users report mysterious token budget drains, conversation histories that grow without bound, and system prompts bloating to 29K characters. Some hit the 200K token limit repeatedly, even with <code class="language-plaintext highlighter-rouge">lightContext: true</code> configured. These aren’t edge cases — they’re common pain points affecting real users and real budgets.</p>
+
+<p>What’s going on? Is it a misconfiguration? A model issue? Or something deeper in the codebase itself?</p>
+
+<p>To find out, we analyzed the entire OpenClaw codebase using <a href="https://github.com/alibaba/neug">NeuG</a> (graph database) + <a href="https://github.com/alibaba/zvec">zvec</a> (vector index), producing a code knowledge graph with <strong>21,057 functions and 35,761 call edges</strong>. What we discovered was surprising: one of the biggest token consumers is hiding in plain sight — the <strong>heartbeat mechanism</strong>.</p>
+
+<p>In this article, we start from the end-user perspective and trace how a supposedly “lightweight” timer became a token-eating machine. Follow-up articles will cover the extension developer and core maintainer perspectives.</p>
+
+<hr />
+
+<h2 id="the-problem-session-history-that-never-stops-growing">The Problem: Session History That Never Stops Growing</h2>
+
+<p>If you are using OpenClaw and experiencing any of the following:</p>
+
+<ul>
+  <li>Conversation history that grows indefinitely without being truncated</li>
+  <li>A system prompt that bloats unexpectedly (one user reported 29K characters)</li>
+  <li>Repeatedly hitting the model’s 200K token limit</li>
+  <li><code class="language-plaintext highlighter-rouge">lightContext: true</code> configured in HEARTBEAT.md, but with no noticeable effect</li>
+</ul>
+
+<p>This is likely not a misconfiguration or a model issue. One easily overlooked cause is OpenClaw’s <strong>heartbeat mechanism</strong>.</p>
+
+<hr />
+
+<h2 id="what-is-heartbeat-secretly-doing">What Is Heartbeat Secretly Doing?</h2>
+
+<p>OpenClaw’s heartbeat is a periodic timer. By design, it is supposed to be a lightweight tick that keeps the agent alive. We traced its call chain using <a href="https://github.com/codescope/codescope">CodeScope</a>, and the results were surprising.</p>
+
+<h3 id="step-1-locate-all-heartbeat-related-code">Step 1: Locate All Heartbeat-Related Code</h3>
+
+<p>CodeScope provides two retrieval methods: text search (string matching) and semantic search (vector similarity). For a well-named codebase like OpenClaw, keyword search is usually sufficient to locate the core code. We query all functions containing <code class="language-plaintext highlighter-rouge">heartbeat</code>:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">f:</span><span class="n">Function</span><span class="ss">)</span>
+<span class="k">WHERE</span> <span class="n">f.name</span> <span class="ow">CONTAINS</span> <span class="s1">'heartbeat'</span> <span class="ow">OR</span> <span class="n">f.name</span> <span class="ow">CONTAINS</span> <span class="s1">'Heartbeat'</span>
+<span class="k">RETURN</span> <span class="n">f.name</span><span class="ss">,</span> <span class="n">f.file_path</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">f.file_path</span>
+</code></pre></div></div>
+
+<p>The query returns <strong>68 functions</strong> spread across 10 modules — infra, auto-reply, gateway, config, cron, and others. We visualized the results using <a href="https://graphscope.io/neug/en/getting_started/neug_ui/">neug-ui</a>:</p>
+
+<p><img src="/blog/assets/images/2026-03-18-openclaw-heartbeat-1.png" alt="heartbeat functions distribution" /></p>
+
+<p>The infra module has the heaviest heartbeat presence, and most of it is concentrated in <code class="language-plaintext highlighter-rouge">heartbeat-runner.ts</code>.</p>
+
+<p><strong>This is where conventional approaches stop.</strong> Once you have the 68 functions and the core file, the usual next step is to feed the code to an LLM and ask it to explain. That process consumes tokens itself, and what you get back is a text description — not a queryable structure. You cannot directly ask: “Who calls whom?”, “How deep does the call chain go?”, “Which function is the structural center?”</p>
+
+<p>Graph analysis takes a different approach: <strong>instead of reading code content, we model the function-to-function call relationships as a graph</strong>, turning structural questions into graph queries.</p>
+
+<h3 id="step-2-find-the-core-entry-point-via-the-call-graph">Step 2: Find the Core Entry Point via the Call Graph</h3>
+
+<p>We build a connectivity graph from the call relationships among the 68 functions and group them by connected component. The largest component contains <strong>45 functions</strong>, indicating they form a tightly coupled core module. The remaining 19 components average just 1.2 functions each — mostly standalone interface or configuration functions.</p>
+
+<p>We then ran centrality analysis on the largest component: <code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> connects <strong>27 functions within 3 hops</strong>. The second-ranked function connects only 6. The gap is decisive: <strong><code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> is the core entry point of the entire heartbeat mechanism</strong>. Results below:</p>
+
+<p><img src="/blog/assets/images/2026-03-18-openclaw-heartbeat-2.png" alt="runHeartbeatOnce centrality" /></p>
+
+<h3 id="step-3-expand-the-call-chain--what-does-it-actually-touch">Step 3: Expand the Call Chain — What Does It Actually Touch?</h3>
+
+<p>We expand the multi-hop outgoing edges of <code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> to find all context-loading functions it directly or indirectly calls:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Find context-loading functions in the runHeartbeatOnce call chain</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">f:</span><span class="n">Function</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'runHeartbeatOnce'</span><span class="ss">})</span><span class="o">-</span><span class="ss">[</span><span class="nc">:CALLS</span><span class="o">*</span><span class="m">1</span><span class="o">..</span><span class="m">3</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">t:</span><span class="n">Function</span><span class="ss">)</span>
+<span class="k">WHERE</span> <span class="n">t.name</span> <span class="ow">CONTAINS</span> <span class="s1">'Context'</span>
+   <span class="ow">OR</span> <span class="n">t.name</span> <span class="ow">CONTAINS</span> <span class="s1">'Workspace'</span>
+   <span class="ow">OR</span> <span class="n">t.name</span> <span class="ow">CONTAINS</span> <span class="s1">'Session'</span>
+   <span class="ow">OR</span> <span class="n">t.name</span> <span class="ow">CONTAINS</span> <span class="s1">'Prompt'</span>
+<span class="k">RETURN</span> <span class="n">t.name</span><span class="ss">,</span> <span class="n">t.file_path</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">t.file_path</span>
+</code></pre></div></div>
+
+<p>Results:</p>
+
+<p><img src="/blog/assets/images/2026-03-18-openclaw-heartbeat-3.png" alt="context-loading functions" /></p>
+
+<p><strong>Every heartbeat tick triggers all of these functions</strong> — loading the workspace directory, building a full session context, generating a complete prompt. <code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> has <strong>15 direct callees</strong>, each involved in parsing heartbeat configuration and assembling context. This is the structural root cause of heartbeat being far heavier than its design intended.</p>
+
+<hr />
+
+<h2 id="why-doesnt-lightcontext-true-help">Why Doesn’t <code class="language-plaintext highlighter-rouge">lightContext: true</code> Help?</h2>
+
+<p>You may have set <code class="language-plaintext highlighter-rouge">lightContext: true</code> in HEARTBEAT.md, expecting heartbeat to load only a lightweight context.</p>
+
+<p><code class="language-plaintext highlighter-rouge">lightContext</code> is a configuration flag, but it cannot change the structure of the call chain. As long as the dependency tree of heartbeat remains intact, every tick must load the workspace, build the session context, and traverse multiple modules. This is a path determined by the code structure — it cannot be bypassed by a flag.</p>
+
+<p>We also analyzed the modification frequency of the most recent 200 commits: 4 out of 21 functions in the <code class="language-plaintext highlighter-rouge">context-pruning</code> module (responsible for context trimming) have been repeatedly modified recently. This indicates the OpenClaw team is aware of the context bloat problem and is actively working on a fix — but a stable solution is not yet available.</p>
+
+<hr />
+
+<h2 id="codegraph-reproduce-this-analysis-yourself">CodeGraph: Reproduce This Analysis Yourself</h2>
+
+<p>We have packaged the entire analysis workflow into a <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph Skill</a>, published inside NeuG. You can use it to reproduce every query in this article.</p>
+
+<h3 id="prerequisites">Prerequisites</h3>
+
+<p><strong>CodeScope requires Python 3.10+ and PyTorch 2.4+.</strong></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip <span class="nb">install </span>codegraph-ai
+</code></pre></div></div>
+
+<p><strong>Environment variables:</strong></p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Use HuggingFace offline mode if you have already downloaded the models</span>
+<span class="nb">export </span><span class="nv">HF_HUB_OFFLINE</span><span class="o">=</span><span class="s2">"1"</span>
+<span class="c"># Set the database directory</span>
+<span class="nb">export </span><span class="nv">CODESCOPE_DB_DIR</span><span class="o">=</span><span class="s2">"/path/to/your/project/.codegraph"</span>
+</code></pre></div></div>
+
+<h3 id="building-the-index">Building the Index</h3>
+
+<p>Index the OpenClaw repository:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Build the index (first run)</span>
+codegraph init <span class="nt">--repo</span> /path/to/openclaw <span class="nt">--lang</span> auto <span class="nt">--commits</span> 100
+<span class="c"># Check index status</span>
+codegraph status <span class="nt">--db</span> <span class="nv">$CODESCOPE_DB_DIR</span>
+</code></pre></div></div>
+
+<p>Sample output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>============================================================
+CodeScope Index Summary
+============================================================
+  Files:      7083  (+ 5774 external)
+  Functions:  24173  (+ 0 historical)
+  Call edges: 41269
+  Vectors:    24173
+  Imports:    28877
+  Classes:    255
+  Modules:    380
+</code></pre></div></div>
+
+<p>Once indexed, you can query the graph via CLI or Python SDK.</p>
+
+<h3 id="cli">CLI</h3>
+
+<p>Check the database status:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>codegraph status <span class="nt">--db</span> <span class="nv">$CODESCOPE_DB_DIR</span>
+</code></pre></div></div>
+
+<p>Sample output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>============================================================
+CodeScope Index Status: /path/to/.codegraph
+============================================================
+
+Graph:
+  File        :     12,857
+  Function    :     24,173
+  Class       :        255
+  Module      :        380
+  Commit      :        100
+
+Edges:
+  CALLS       :     41,269
+  TOUCHES     :        605
+  MODIFIES    :          0
+
+Backfill: 0/100 commits have MODIFIES edges
+  100 commits still need backfill
+
+Vectors: 24,173 function embeddings
+</code></pre></div></div>
+
+<p>Natural language query:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>codegraph query <span class="s2">"Who calls runHeartbeatOnce?"</span> <span class="nt">--db</span> <span class="nv">$CODESCOPE_DB_DIR</span>
+</code></pre></div></div>
+
+<p>Output:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Question type: structural
+Retrieved 6 evidence items in 76ms:
+
+[1] (caller) executeJobCore (src/cron/service/timer.ts) — hop=1, relevance=0.000
+[2] (caller) createGatewayReloadHandlers (src/gateway/server-reload-handlers.ts) — hop=2, relevance=0.000
+[3] (caller) startGatewayServer (src/gateway/server.impl.ts) — hop=2, relevance=0.000
+[4] (caller) executeJob (src/cron/service/timer.ts) — hop=2, relevance=0.000
+[5] (caller) executeJobCoreWithTimeout (src/cron/service/timer.ts) — hop=2, relevance=0.000
+[6] (caller) buildGatewayCronService (src/gateway/server-cron.ts) — hop=1, relevance=0.000
+</code></pre></div></div>
+
+<p>Generate a full architecture report with multi-dimensional analysis:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>codegraph analyze <span class="nt">--db</span> <span class="nv">$CODESCOPE_DB_DIR</span> <span class="nt">--output</span> architecture-report.md
+</code></pre></div></div>
+
+<h3 id="python-sdk">Python SDK</h3>
+
+<p>For more complex queries — such as the multi-hop call chain traversal used in this analysis — call the CodeGraph Python API directly, using <code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> as an example:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">'HF_HUB_OFFLINE'</span><span class="p">]</span> <span class="o">=</span> <span class="s">'1'</span>
+<span class="kn">from</span> <span class="nn">codegraph.core</span> <span class="kn">import</span> <span class="n">CodeScope</span>
+
+<span class="n">cs</span> <span class="o">=</span> <span class="n">CodeScope</span><span class="p">(</span><span class="n">os</span><span class="p">.</span><span class="n">environ</span><span class="p">[</span><span class="s">'CODESCOPE_DB_DIR'</span><span class="p">])</span>
+
+<span class="n">rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">cs</span><span class="p">.</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    MATCH (f:Function {name: 'runHeartbeatOnce'})-[:CALLS*1..3]-&gt;(t:Function)
+    WHERE t.name CONTAINS 'Context'
+       OR t.name CONTAINS 'Workspace'
+       OR t.name CONTAINS 'Session'
+       OR t.name CONTAINS 'Prompt'
+    RETURN t.name, t.file_path
+    ORDER BY t.file_path
+'''</span><span class="p">))</span>
+<span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"</span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s"> @ </span><span class="si">{</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+
+<span class="n">cs</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>We will continue to publish more analysis angles on OpenClaw. If you want to explore further or try your own queries, give CodeGraph a try.</p>
+
+<hr />
+
+<h2 id="what-you-can-do-now-four-practical-mitigations">What You Can Do Now: Four Practical Mitigations</h2>
+
+<p><strong>1. Treat heartbeat as a heavyweight operation</strong></p>
+
+<p>Do not assume heartbeat is lightweight. When estimating token budgets, count every heartbeat tick as a real consumption event. Do not rely on <code class="language-plaintext highlighter-rouge">lightContext: true</code> to save tokens.</p>
+
+<p><strong>2. Reduce heartbeat trigger frequency</strong></p>
+
+<p>If your use case does not strictly depend on real-time heartbeat behavior, lowering the trigger frequency is the most direct and effective way to reduce token consumption. Fewer ticks = fewer full context loads.</p>
+
+<p><strong>3. Manually cap session history length</strong></p>
+
+<p>Do not rely on OpenClaw to auto-truncate conversation history. Explicitly set a maximum history count in your configuration to prevent unbounded accumulation.</p>
+
+<p><strong>4. Monitor for periodic token spikes</strong></p>
+
+<p>Enable token usage monitoring on the LLM provider side. If you observe periodic, clock-like token spikes (rather than growth correlated with conversation length), heartbeat is likely triggering full context loads on schedule.</p>
+
+<hr />
+
+<h2 id="summary">Summary</h2>
+
+<p>We dissected heartbeat across three analytical layers:</p>
+
+<ol>
+  <li><strong>Function distribution</strong>: 68 heartbeat-related functions spread across 10+ modules, with the heaviest concentration in <code class="language-plaintext highlighter-rouge">heartbeat-runner.ts</code></li>
+  <li><strong>Call graph centrality</strong>: <code class="language-plaintext highlighter-rouge">runHeartbeatOnce</code> is the core entry point — 15 direct callees, 27 functions reachable within 3 hops</li>
+  <li><strong>Call chain expansion</strong>: every tick loads the workspace directory and builds full session context, with a load comparable to processing a complete user message</li>
+</ol>
+
+<p>Together, these findings explain one observation: <strong>heartbeat is designed as a lightweight timer, but its actual execution path is structurally equivalent to a full message-processing pipeline.</strong> <code class="language-plaintext highlighter-rouge">lightContext: true</code> cannot override this. Until an official fix is available, reducing heartbeat trigger frequency and manually capping session history length are the most effective mitigations.</p>
+
+<hr />
+
+<p><em>This analysis is based on a scan of the OpenClaw codebase using <a href="https://github.com/alibaba/neug">NeuG</a> graph database and <a href="https://github.com/alibaba/zvec">zvec</a> vector index.</em></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?&amp;url=https://graphscope.io/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
