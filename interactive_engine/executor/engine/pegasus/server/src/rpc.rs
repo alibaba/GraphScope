@@ -401,14 +401,14 @@ fn init_otel() -> Result<bool, Box<dyn std::error::Error>> {
         return Ok(true);
     }
 
-    // let mut metadata = tonic::metadata::MetadataMap::with_capacity(1);
-    // let dsn = std::env::var("UPTRACE_DSN").unwrap_or_default();
-    // if !dsn.is_empty() {
-    //     metadata.insert("uptrace-dsn", dsn.parse().unwrap());
-    //     info!("using DSN: {}", dsn);
-    // } else {
-    //     warn!("Error: UPTRACE_DSN not found.");
-    // }
+    let mut metadata = tonic::metadata::MetadataMap::with_capacity(1);
+    let dsn = std::env::var("UPTRACE_DSN").unwrap_or_default();
+    if !dsn.is_empty() {
+        metadata.insert("uptrace-dsn", dsn.parse().unwrap());
+        info!("using DSN: {}", dsn);
+    } else {
+        warn!("Error: UPTRACE_DSN not found.");
+    }
 
     let default_endpoint = "http://localhost:4317".to_string();
     let endpoint = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT").unwrap_or(default_endpoint);
@@ -425,15 +425,15 @@ fn init_otel() -> Result<bool, Box<dyn std::error::Error>> {
     let exporter = opentelemetry_otlp::new_exporter()
         .tonic()
         .with_timeout(Duration::from_secs(5))
-        .with_endpoint(endpoint.clone());
-    // .with_metadata(metadata.clone());
+        .with_endpoint(endpoint.clone())
+        .with_metadata(metadata.clone());
     let _tracer = init_tracer(resource.clone(), exporter)?;
 
     let exporter = opentelemetry_otlp::new_exporter()
         .tonic()
         .with_timeout(Duration::from_secs(5))
-        .with_endpoint(endpoint);
-    // .with_metadata(metadata);
+        .with_endpoint(endpoint)
+        .with_metadata(metadata);
 
     let _meter = init_meter_provider(resource, exporter)?;
     global::set_meter_provider(_meter);
