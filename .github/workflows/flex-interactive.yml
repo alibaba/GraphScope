@@ -70,7 +70,7 @@ jobs:
         docker image inspect graphscope/interactive:latest --format='{{.Size}}'
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
-              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
+              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml \
               --set storage.string_default_max_length=1024
         sleep 20
         # test
@@ -97,9 +97,9 @@ jobs:
       run: |
         # launch service: ${COORDINATOR_PORT} for coordinator http port; ${CYPHER_PORT} for cypher port;
         # replace max_content_length to 1MB
-        sed -i 's/max_content_length: .*/max_content_length: 1MB/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        sed -i 's/max_content_length: .*/max_content_length: 1MB/g' ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml
         gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --cypher-port ${CYPHER_PORT} \
-              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml \
+              --coordinator-port ${COORDINATOR_PORT} --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml \
               --admin-port 7778 --storedproc-port 10001
         sleep 20
         # test
@@ -121,7 +121,7 @@ jobs:
         cd python && pip3 install -r requirements.txt && python3 setup.py build_proto
         python3 setup.py bdist_wheel
         pip3 install dist/*.whl
-        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_test.yaml
+        gsctl instance deploy --type interactive --image-registry graphscope --image-tag latest --config ${GITHUB_WORKSPACE}/flex/tests/hqps/interactive_config_standalone.yaml
         sleep 20
         # test
         cd ${GITHUB_WORKSPACE}/flex/interactive/sdk/examples/python

@@ -16,6 +16,7 @@
 #include "flex/utils/result.h"
 
 namespace gs {
+
 Status::Status() noexcept : error_code_(StatusCode::OK) {}
 
 Status::Status(StatusCode error_code) noexcept : error_code_(error_code) {}

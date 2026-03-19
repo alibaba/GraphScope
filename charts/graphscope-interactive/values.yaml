@@ -18,6 +18,8 @@ commonAnnotations: {}
 ##
 commonLabels: {}
 
+imagePullSecrets: {}
+
 ##
 javaOpts: ""
 
@@ -30,11 +32,9 @@ workspace: "/tmp/interactive_workspace"
 ## default graph
 defaultGraph: modern_graph
 
-
 hiactorWorkerNum: 1
 
 hiactorTimeout: 240000
-
 
 # ## need by vineyard in distributed env
 # etcdEndpoint: "etcd-for-vineyard.default.svc.cluster.local:2379"
@@ -73,7 +73,7 @@ persistence:
   ##
   storageClass: ""
   accessModes:
-  - ReadWriteOnce
+    - ReadWriteOnce
   annotations: {}
   ## @param persistence.labels Labels for the PVC
   ##
@@ -98,7 +98,7 @@ engine:
     ## pullSecrets:
     ##   - myRegistryKeySecretName
     ##
-    pullSecrets: [ ]
+    pullSecrets: []
 
   replicaCount: 1
 
@@ -133,6 +133,7 @@ engine:
   ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
   ## Note: podAffinityPreset, podAntiAffinityPreset, and  nodeAffinityPreset will be ignored when it's set
   ##
+  affinity: {}
   # affinity:
   #   nodeAffinity:
   #     requiredDuringSchedulingIgnoredDuringExecution:
@@ -170,7 +171,8 @@ engine:
   ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -319,7 +321,7 @@ frontend:
     ## pullSecrets:
     ##   - myRegistryKeySecretName
     ##
-    pullSecrets: [ ]
+    pullSecrets: []
 
   replicaCount: 1
 
@@ -373,7 +375,8 @@ frontend:
   ## GraphScope Interactive container's resource requests and limits
   ## ref: http://kubernetes.io/docs/user-guide/compute-resources/
   ##
-  resources: {}
+  resources:
+    {}
     # We usually recommend not to specify default resources and to leave this as a conscious
     # choice for the user. This also increases chances charts run on environments with little
     # resources, such as Minikube. If you do want to specify resources, uncomment the following
