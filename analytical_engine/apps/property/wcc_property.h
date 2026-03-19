@@ -140,6 +140,7 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
       }
     }
 
+    HandleMessageForceContinue(frag, ctx, messages);
     ctx.curr_modified.swap(ctx.next_modified);
   }
 
@@ -205,6 +206,14 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
         }
       }
     }
+
+    HandleMessageForceContinue(frag, ctx, messages);
+    ctx.curr_modified.swap(ctx.next_modified);
+  }
+
+  void HandleMessageForceContinue(const fragment_t& frag, context_t& ctx,
+                                  message_manager_t& messages) {
+    label_id_t v_label_num = frag.vertex_label_num();
     for (label_id_t i = 0; i < v_label_num; ++i) {
       auto iv = frag.InnerVertices(i);
       bool ok = false;
@@ -219,7 +228,6 @@ class WCCProperty : public PropertyAppBase<FRAG_T, WCCPropertyContext<FRAG_T>> {
         break;
       }
     }
-    ctx.curr_modified.swap(ctx.next_modified);
   }
 };
 
