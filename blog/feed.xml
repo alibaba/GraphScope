@@ -5,9 +5,285 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 09 Mar 2026 09:50:46 +0000</pubDate>
-    <lastBuildDate>Mon, 09 Mar 2026 09:50:46 +0000</lastBuildDate>
+    <pubDate>Thu, 19 Mar 2026 09:45:54 +0000</pubDate>
+    <lastBuildDate>Thu, 19 Mar 2026 09:45:54 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-token-cost-title.png&quot; alt=&quot;openclaw-token-cost-title&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;Turns out, heartbeat has been quietly eating your tokens all along.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;background&quot;&gt;Background&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/openclaw/openclaw&quot;&gt;OpenClaw&lt;/a&gt; has become one of the hottest open-source AI gateway projects. With 18,000+ commits and a rapidly growing community, it connects messaging platforms — Telegram, Discord, Slack, MS Teams, Lark, Matrix, and more — to various LLM providers. For many teams building AI-powered chatbots and agents, OpenClaw has become the go-to solution.&lt;/p&gt;
+
+&lt;p&gt;But as adoption grows, so do user complaints — and one issue stands out: &lt;strong&gt;token consumption is way higher than expected&lt;/strong&gt;. Users report mysterious token budget drains, conversation histories that grow without bound, and system prompts bloating to 29K characters. Some hit the 200K token limit repeatedly, even with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; configured. These aren’t edge cases — they’re common pain points affecting real users and real budgets.&lt;/p&gt;
+
+&lt;p&gt;What’s going on? Is it a misconfiguration? A model issue? Or something deeper in the codebase itself?&lt;/p&gt;
+
+&lt;p&gt;To find out, we analyzed the entire OpenClaw codebase using &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; (graph database) + &lt;a href=&quot;https://github.com/alibaba/zvec&quot;&gt;zvec&lt;/a&gt; (vector index), producing a code knowledge graph with &lt;strong&gt;21,057 functions and 35,761 call edges&lt;/strong&gt;. What we discovered was surprising: one of the biggest token consumers is hiding in plain sight — the &lt;strong&gt;heartbeat mechanism&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;In this article, we start from the end-user perspective and trace how a supposedly “lightweight” timer became a token-eating machine. Follow-up articles will cover the extension developer and core maintainer perspectives.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-problem-session-history-that-never-stops-growing&quot;&gt;The Problem: Session History That Never Stops Growing&lt;/h2&gt;
+
+&lt;p&gt;If you are using OpenClaw and experiencing any of the following:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Conversation history that grows indefinitely without being truncated&lt;/li&gt;
+  &lt;li&gt;A system prompt that bloats unexpectedly (one user reported 29K characters)&lt;/li&gt;
+  &lt;li&gt;Repeatedly hitting the model’s 200K token limit&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; configured in HEARTBEAT.md, but with no noticeable effect&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is likely not a misconfiguration or a model issue. One easily overlooked cause is OpenClaw’s &lt;strong&gt;heartbeat mechanism&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-is-heartbeat-secretly-doing&quot;&gt;What Is Heartbeat Secretly Doing?&lt;/h2&gt;
+
+&lt;p&gt;OpenClaw’s heartbeat is a periodic timer. By design, it is supposed to be a lightweight tick that keeps the agent alive. We traced its call chain using &lt;a href=&quot;https://github.com/codescope/codescope&quot;&gt;CodeScope&lt;/a&gt;, and the results were surprising.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-1-locate-all-heartbeat-related-code&quot;&gt;Step 1: Locate All Heartbeat-Related Code&lt;/h3&gt;
+
+&lt;p&gt;CodeScope provides two retrieval methods: text search (string matching) and semantic search (vector similarity). For a well-named codebase like OpenClaw, keyword search is usually sufficient to locate the core code. We query all functions containing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat&lt;/code&gt;:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;heartbeat&apos;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Heartbeat&apos;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.file_path&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.file_path&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The query returns &lt;strong&gt;68 functions&lt;/strong&gt; spread across 10 modules — infra, auto-reply, gateway, config, cron, and others. We visualized the results using &lt;a href=&quot;https://graphscope.io/neug/en/getting_started/neug_ui/&quot;&gt;neug-ui&lt;/a&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-1.png&quot; alt=&quot;heartbeat functions distribution&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The infra module has the heaviest heartbeat presence, and most of it is concentrated in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat-runner.ts&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;This is where conventional approaches stop.&lt;/strong&gt; Once you have the 68 functions and the core file, the usual next step is to feed the code to an LLM and ask it to explain. That process consumes tokens itself, and what you get back is a text description — not a queryable structure. You cannot directly ask: “Who calls whom?”, “How deep does the call chain go?”, “Which function is the structural center?”&lt;/p&gt;
+
+&lt;p&gt;Graph analysis takes a different approach: &lt;strong&gt;instead of reading code content, we model the function-to-function call relationships as a graph&lt;/strong&gt;, turning structural questions into graph queries.&lt;/p&gt;
+
+&lt;h3 id=&quot;step-2-find-the-core-entry-point-via-the-call-graph&quot;&gt;Step 2: Find the Core Entry Point via the Call Graph&lt;/h3&gt;
+
+&lt;p&gt;We build a connectivity graph from the call relationships among the 68 functions and group them by connected component. The largest component contains &lt;strong&gt;45 functions&lt;/strong&gt;, indicating they form a tightly coupled core module. The remaining 19 components average just 1.2 functions each — mostly standalone interface or configuration functions.&lt;/p&gt;
+
+&lt;p&gt;We then ran centrality analysis on the largest component: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; connects &lt;strong&gt;27 functions within 3 hops&lt;/strong&gt;. The second-ranked function connects only 6. The gap is decisive: &lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; is the core entry point of the entire heartbeat mechanism&lt;/strong&gt;. Results below:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-2.png&quot; alt=&quot;runHeartbeatOnce centrality&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;step-3-expand-the-call-chain--what-does-it-actually-touch&quot;&gt;Step 3: Expand the Call Chain — What Does It Actually Touch?&lt;/h3&gt;
+
+&lt;p&gt;We expand the multi-hop outgoing edges of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; to find all context-loading functions it directly or indirectly calls:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// Find context-loading functions in the runHeartbeatOnce call chain&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;runHeartbeatOnce&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CALLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;t:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Context&apos;&lt;/span&gt;
+   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Workspace&apos;&lt;/span&gt;
+   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Session&apos;&lt;/span&gt;
+   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Prompt&apos;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.file_path&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.file_path&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Results:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-3.png&quot; alt=&quot;context-loading functions&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Every heartbeat tick triggers all of these functions&lt;/strong&gt; — loading the workspace directory, building a full session context, generating a complete prompt. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; has &lt;strong&gt;15 direct callees&lt;/strong&gt;, each involved in parsing heartbeat configuration and assembling context. This is the structural root cause of heartbeat being far heavier than its design intended.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-doesnt-lightcontext-true-help&quot;&gt;Why Doesn’t &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; Help?&lt;/h2&gt;
+
+&lt;p&gt;You may have set &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; in HEARTBEAT.md, expecting heartbeat to load only a lightweight context.&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext&lt;/code&gt; is a configuration flag, but it cannot change the structure of the call chain. As long as the dependency tree of heartbeat remains intact, every tick must load the workspace, build the session context, and traverse multiple modules. This is a path determined by the code structure — it cannot be bypassed by a flag.&lt;/p&gt;
+
+&lt;p&gt;We also analyzed the modification frequency of the most recent 200 commits: 4 out of 21 functions in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;context-pruning&lt;/code&gt; module (responsible for context trimming) have been repeatedly modified recently. This indicates the OpenClaw team is aware of the context bloat problem and is actively working on a fix — but a stable solution is not yet available.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;codegraph-reproduce-this-analysis-yourself&quot;&gt;CodeGraph: Reproduce This Analysis Yourself&lt;/h2&gt;
+
+&lt;p&gt;We have packaged the entire analysis workflow into a &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph Skill&lt;/a&gt;, published inside NeuG. You can use it to reproduce every query in this article.&lt;/p&gt;
+
+&lt;h3 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;CodeScope requires Python 3.10+ and PyTorch 2.4+.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;codegraph-ai
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Environment variables:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Use HuggingFace offline mode if you have already downloaded the models&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HF_HUB_OFFLINE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
+&lt;span class=&quot;c&quot;&gt;# Set the database directory&lt;/span&gt;
+&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CODESCOPE_DB_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/path/to/your/project/.codegraph&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;building-the-index&quot;&gt;Building the Index&lt;/h3&gt;
+
+&lt;p&gt;Index the OpenClaw repository:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Build the index (first run)&lt;/span&gt;
+codegraph init &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; /path/to/openclaw &lt;span class=&quot;nt&quot;&gt;--lang&lt;/span&gt; auto &lt;span class=&quot;nt&quot;&gt;--commits&lt;/span&gt; 100
+&lt;span class=&quot;c&quot;&gt;# Check index status&lt;/span&gt;
+codegraph status &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sample output:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;============================================================
+CodeScope Index Summary
+============================================================
+  Files:      7083  (+ 5774 external)
+  Functions:  24173  (+ 0 historical)
+  Call edges: 41269
+  Vectors:    24173
+  Imports:    28877
+  Classes:    255
+  Modules:    380
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Once indexed, you can query the graph via CLI or Python SDK.&lt;/p&gt;
+
+&lt;h3 id=&quot;cli&quot;&gt;CLI&lt;/h3&gt;
+
+&lt;p&gt;Check the database status:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph status &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Sample output:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;============================================================
+CodeScope Index Status: /path/to/.codegraph
+============================================================
+
+Graph:
+  File        :     12,857
+  Function    :     24,173
+  Class       :        255
+  Module      :        380
+  Commit      :        100
+
+Edges:
+  CALLS       :     41,269
+  TOUCHES     :        605
+  MODIFIES    :          0
+
+Backfill: 0/100 commits have MODIFIES edges
+  100 commits still need backfill
+
+Vectors: 24,173 function embeddings
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Natural language query:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph query &lt;span class=&quot;s2&quot;&gt;&quot;Who calls runHeartbeatOnce?&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Output:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Question type: structural
+Retrieved 6 evidence items in 76ms:
+
+[1] (caller) executeJobCore (src/cron/service/timer.ts) — hop=1, relevance=0.000
+[2] (caller) createGatewayReloadHandlers (src/gateway/server-reload-handlers.ts) — hop=2, relevance=0.000
+[3] (caller) startGatewayServer (src/gateway/server.impl.ts) — hop=2, relevance=0.000
+[4] (caller) executeJob (src/cron/service/timer.ts) — hop=2, relevance=0.000
+[5] (caller) executeJobCoreWithTimeout (src/cron/service/timer.ts) — hop=2, relevance=0.000
+[6] (caller) buildGatewayCronService (src/gateway/server-cron.ts) — hop=1, relevance=0.000
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Generate a full architecture report with multi-dimensional analysis:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph analyze &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--output&lt;/span&gt; architecture-report.md
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;python-sdk&quot;&gt;Python SDK&lt;/h3&gt;
+
+&lt;p&gt;For more complex queries — such as the multi-hop call chain traversal used in this analysis — call the CodeGraph Python API directly, using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; as an example:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;HF_HUB_OFFLINE&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;1&apos;&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;codegraph.core&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CodeScope&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CodeScope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;CODESCOPE_DB_DIR&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;rows&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    MATCH (f:Function {name: &apos;runHeartbeatOnce&apos;})-[:CALLS*1..3]-&amp;gt;(t:Function)
+    WHERE t.name CONTAINS &apos;Context&apos;
+       OR t.name CONTAINS &apos;Workspace&apos;
+       OR t.name CONTAINS &apos;Session&apos;
+       OR t.name CONTAINS &apos;Prompt&apos;
+    RETURN t.name, t.file_path
+    ORDER BY t.file_path
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; @ &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;We will continue to publish more analysis angles on OpenClaw. If you want to explore further or try your own queries, give CodeGraph a try.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-you-can-do-now-four-practical-mitigations&quot;&gt;What You Can Do Now: Four Practical Mitigations&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;1. Treat heartbeat as a heavyweight operation&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Do not assume heartbeat is lightweight. When estimating token budgets, count every heartbeat tick as a real consumption event. Do not rely on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; to save tokens.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;2. Reduce heartbeat trigger frequency&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;If your use case does not strictly depend on real-time heartbeat behavior, lowering the trigger frequency is the most direct and effective way to reduce token consumption. Fewer ticks = fewer full context loads.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;3. Manually cap session history length&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Do not rely on OpenClaw to auto-truncate conversation history. Explicitly set a maximum history count in your configuration to prevent unbounded accumulation.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;4. Monitor for periodic token spikes&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Enable token usage monitoring on the LLM provider side. If you observe periodic, clock-like token spikes (rather than growth correlated with conversation length), heartbeat is likely triggering full context loads on schedule.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
+
+&lt;p&gt;We dissected heartbeat across three analytical layers:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Function distribution&lt;/strong&gt;: 68 heartbeat-related functions spread across 10+ modules, with the heaviest concentration in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat-runner.ts&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Call graph centrality&lt;/strong&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; is the core entry point — 15 direct callees, 27 functions reachable within 3 hops&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Call chain expansion&lt;/strong&gt;: every tick loads the workspace directory and builds full session context, with a load comparable to processing a complete user message&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Together, these findings explain one observation: &lt;strong&gt;heartbeat is designed as a lightweight timer, but its actual execution path is structurally equivalent to a full message-processing pipeline.&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; cannot override this. Until an official fix is available, reducing heartbeat trigger frequency and manually capping session history length are the most effective mitigations.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;em&gt;This analysis is based on a scan of the OpenClaw codebase using &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; graph database and &lt;a href=&quot;https://github.com/alibaba/zvec&quot;&gt;zvec&lt;/a&gt; vector index.&lt;/em&gt;&lt;/p&gt;
+</description>
+        <pubDate>Wed, 18 Mar 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>AI-Powered Open Source Development Management: NeuG&apos;s Exploration and Practice</title>
@@ -2249,35 +2525,6 @@ Secondly, when evaluating a system, we should assess the ease with which an algo
         <pubDate>Tue, 16 Jul 2024 01:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>GraphScope Refreshes the World Record for the LDBC SNB Benchmark in both Performance and Data Scale</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/ldbc-news-title.jpg&quot; alt=&quot;benchmark&quot; /&gt;
-Recently, &lt;a href=&quot;https://ldbcouncil.org&quot;&gt;LDBC&lt;/a&gt; released the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/&quot;&gt;latest results for the LDBC SNB Interactive benchmark test&lt;/a&gt;, where GraphScope Flex leads the pack once again with a score exceeding 127,000 QPS (Queries Per Second), representing a more than 2.6 times improvement over the second place, which was the previous record holder!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2024-06-27-benchmark.jpg&quot; alt=&quot;Benchmark screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In addition, GraphScope Flex has updated the maximum data scale for the benchmark test, being the only system among all the participants that used the SF1000 dataset for the test. The SF1000 dataset, generated with the LDBC’s official data generator, has a Scale Factor (SF) of 1000. This dataset contains approximately 2.9 billion vertices and 208 billion edges, with the original disk data file size around 1TB, making it an extremely large-scale graph. Previously, the maximum any system participating in the LDBC SNB Interactive had been tested was SF300, which is about a third of the scale of SF1000.&lt;/p&gt;
-
-&lt;p&gt;LDBC is an internationally recognized authority in the field of graph computing, developing and leading a series of graph benchmarks, including the Social Network Benchmark (SNB), the Graphalytics Benchmark, and the Financial Benchmark (FinBench), to measure the capabilities and performance of various types of graph systems. The SNB Interactive benchmark test that GraphScope Flex participated in simulates a social network graph of Facebook at different scales, executing operations including basic Create, Read, Update, Delete (CRUD) as well as complex tasks like shortest paths and multi-hop queries, covering commonly used operations and queries in transactional online query scenarios and is recognized as an authoritative benchmark in the field of graph data.
-During the test process, a driver continuously sends a variety of query requests to the system being tested at high speed, and the system’s performance is measured by its throughput (QPS) in handling queries. The testing procedure is professional and rigorous, with systems submitting their codes to be tested and their scores verified by LDBC’s professional staff.&lt;/p&gt;
-
-&lt;p&gt;In recent years, with the collective efforts of R&amp;amp;D personnel in the graph database industry, the performance of graph computing has continuously improved. GraphScope Flex participated in the LDBC SNB Interactive benchmark test for the first time in July 2023, achieving more than a 2.45 times performance improvement over the then world record holder, &lt;a href=&quot;https://www.tugraph.org/&quot;&gt;TuGraph&lt;/a&gt; (developed by Ant Group). Then in December 2023, &lt;a href=&quot;https://atlasgraph.io/en/&quot;&gt;AtlasGraph&lt;/a&gt; took the lead with a performance 45% higher than that of GraphScope Flex. One year later, GraphScope Flex has once again won the top spot, achieving approximately 2.6 times the performance of AtlasGraph and testing on the larger data scale SF1000 for the first time. This performance is due to a series of technical upgrades in GraphScope Flex over the year:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;A more compact graph structure and more efficient graph storage, allowing larger graphs to be loaded into limited memory with higher access efficiency;&lt;/li&gt;
-  &lt;li&gt;Further optimized graph queries, with the help of auxiliary data, online cost analysis is utilized to choose the optimal execution sequence, reducing the overhead of queries.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We will provide a detailed analysis of the technical optimizations used in the version of GraphScope Flex for this benchmark test. Stay tuned!&lt;/p&gt;
-</description>
-        <pubDate>Thu, 27 Jun 2024 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark.html</guid>
         
         
         <category>Tech</category>
