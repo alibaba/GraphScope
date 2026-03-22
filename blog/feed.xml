@@ -5,9 +5,423 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 19 Mar 2026 09:45:54 +0000</pubDate>
-    <lastBuildDate>Thu, 19 Mar 2026 09:45:54 +0000</lastBuildDate>
+    <pubDate>Sun, 22 Mar 2026 06:29:14 +0000</pubDate>
+    <lastBuildDate>Sun, 22 Mar 2026 06:29:14 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>We X-Rayed OpenClaw with a Graph Database — Here&apos;s the Technical Debt We Found</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-19-openclaw-technical-debt-title.png&quot; alt=&quot;openclaw-technical-debt-title&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;em&gt;When a codebase grows to 21,000 functions connected by 35,000 call edges, code review alone isn’t enough. We ran OpenClaw through NeuG’s graph database and surfaced structural problems that traditional tools can’t see.&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-a-graph-perspective&quot;&gt;Why a Graph Perspective?&lt;/h2&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/openclaw/openclaw&quot;&gt;OpenClaw&lt;/a&gt; is a popular AI gateway project — 18,000+ commits, 6,000+ TypeScript files, and 21,000+ functions, with new versions shipping almost daily. In our previous post, we looked at OpenClaw from the user’s perspective and found that the heartbeat mechanism was consuming far more tokens than anyone expected.&lt;/p&gt;
+
+&lt;p&gt;This time, we go deeper. From a developer’s perspective: &lt;strong&gt;what structural debt has fast iteration quietly accumulated?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Traditional code review and static analysis tools catch a lot, but they struggle to answer structural questions:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Which functions are “time bombs” — where a bug would cause maximum blast radius?&lt;/li&gt;
+  &lt;li&gt;Which code is dead weight, confusing new contributors who think it’s still active?&lt;/li&gt;
+  &lt;li&gt;Which module is the system’s structural hub — touch it, and half the codebase shakes?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The answers to these questions live in &lt;strong&gt;relationships&lt;/strong&gt;, not in lines of code.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-approach-turn-the-codebase-into-a-graph&quot;&gt;The Approach: Turn the Codebase into a Graph&lt;/h2&gt;
+
+&lt;p&gt;We built a code knowledge graph using &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; (graph database) and &lt;a href=&quot;https://github.com/alibaba/zvec&quot;&gt;zvec&lt;/a&gt; (vector database):&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Nodes&lt;/strong&gt;: functions, classes, modules, files&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Edges&lt;/strong&gt;: call relationships, import dependencies, commit history&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Here’s what the graph looks like at scale:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Type&lt;/th&gt;
+      &lt;th&gt;Count&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Source files&lt;/td&gt;
+      &lt;td&gt;6,062&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Functions&lt;/td&gt;
+      &lt;td&gt;21,057&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Call edges&lt;/td&gt;
+      &lt;td&gt;35,761&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Import edges&lt;/td&gt;
+      &lt;td&gt;25,883&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Classes&lt;/td&gt;
+      &lt;td&gt;233&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Modules&lt;/td&gt;
+      &lt;td&gt;318&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;21,000 functions connected by 35,000 call edges. Once the graph is built, hard structural questions become Cypher queries.&lt;/p&gt;
+
+&lt;p&gt;The full analysis pipeline is packaged as &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph Skill&lt;/a&gt; — open source and fully reproducible.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;finding-1-high-risk-functions&quot;&gt;Finding 1: High-Risk Functions&lt;/h2&gt;
+
+&lt;h3 id=&quot;defining-risk-score&quot;&gt;Defining Risk Score&lt;/h3&gt;
+
+&lt;p&gt;We define a &lt;strong&gt;risk score&lt;/strong&gt; for each function to quantify its potential blast radius:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Risk Score = fan_in × fan_out
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;fan-in&lt;/strong&gt;: how many functions call it (dependency pressure)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;fan-out&lt;/strong&gt;: how many functions it calls (dependency complexity)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The product represents the blast radius — how much of the system breaks if this function has a bug.&lt;/p&gt;
+
+&lt;p&gt;Detecting fan-out is straightforward; most IDE tools can do it. But fan-in requires a full-codebase scan — exactly where a graph database shines. This is one of the built-in capabilities of our &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph Skill&lt;/a&gt;: it ships with a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hotspots()&lt;/code&gt; method that handles the full-graph traversal for you, so finding the highest-risk functions across the entire codebase is a single call:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;functions&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;hotspots&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;topk&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;30&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Top 5 by risk score:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Function&lt;/th&gt;
+      &lt;th&gt;File&lt;/th&gt;
+      &lt;th&gt;fan-in&lt;/th&gt;
+      &lt;th&gt;fan-out&lt;/th&gt;
+      &lt;th&gt;Risk Score&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;startGatewayServer&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;src/gateway/server.impl.ts&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;103&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;1030&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;createConfigIO&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;src/config/io.ts&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+      &lt;td&gt;56&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;1008&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;runEmbeddedPiAgent&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;src/agents/pi-embedded-runner/run.ts&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;67&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;938&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;loadOpenClawPlugins&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;src/plugins/loader.ts&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+      &lt;td&gt;36&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;720&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;runCronIsolatedAgentTurn&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;src/cron/isolated-agent/run.ts&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;60&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;660&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;These functions sit at the core of critical execution paths. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;startGatewayServer&lt;/code&gt; bootstraps the entire service; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;createConfigIO&lt;/code&gt; generates all configuration; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runEmbeddedPiAgent&lt;/code&gt; orchestrates embedded Pi Agent execution.&lt;/p&gt;
+
+&lt;p&gt;Here’s an interesting observation about &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;createConfigIO&lt;/code&gt;: configuration parsing rarely gets prioritized for test coverage — it “seems safe.” But with 18 callers and 56 outgoing calls, &lt;strong&gt;by structural risk metrics it’s one of the most dangerous functions in the entire codebase&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;filtering-for-the-real-high-risk-core&quot;&gt;Filtering for the Real High-Risk Core&lt;/h3&gt;
+
+&lt;p&gt;We wrote a custom Cypher query to filter out low-level utility functions (high fan-in, low fan-out) and focus on functions that are simultaneously heavily depended upon &lt;em&gt;and&lt;/em&gt; highly complex:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CALLS&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;g:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;DISTINCT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;g&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_out&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CALLS&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;h:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WITH&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_out&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;COUNT&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;DISTINCT&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;h&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_in&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_in&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_out&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_in&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;fan_out&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;LIMIT&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;100&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The result was surprising: &lt;strong&gt;only 17 functions&lt;/strong&gt; in the entire codebase meet both criteria. Every one of them is a critical, high-risk node:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Function&lt;/th&gt;
+      &lt;th&gt;File&lt;/th&gt;
+      &lt;th&gt;fan-in&lt;/th&gt;
+      &lt;th&gt;fan-out&lt;/th&gt;
+      &lt;th&gt;Risk Score&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;startGatewayServer&lt;/td&gt;
+      &lt;td&gt;src/gateway/server.impl.ts&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;103&lt;/td&gt;
+      &lt;td&gt;1030&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;createConfigIO&lt;/td&gt;
+      &lt;td&gt;src/config/io.ts&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+      &lt;td&gt;56&lt;/td&gt;
+      &lt;td&gt;1008&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;runEmbeddedPiAgent&lt;/td&gt;
+      &lt;td&gt;src/agents/pi-embedded-runner/run.ts&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;67&lt;/td&gt;
+      &lt;td&gt;938&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;loadOpenClawPlugins&lt;/td&gt;
+      &lt;td&gt;src/plugins/loader.ts&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+      &lt;td&gt;36&lt;/td&gt;
+      &lt;td&gt;720&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;runCronIsolatedAgentTurn&lt;/td&gt;
+      &lt;td&gt;src/cron/isolated-agent/run.ts&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;60&lt;/td&gt;
+      &lt;td&gt;660&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;getReplyFromConfig&lt;/td&gt;
+      &lt;td&gt;src/auto-reply/reply/get-reply.ts&lt;/td&gt;
+      &lt;td&gt;20&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;480&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;runMessageAction&lt;/td&gt;
+      &lt;td&gt;src/infra/outbound/message-action-runner.ts&lt;/td&gt;
+      &lt;td&gt;21&lt;/td&gt;
+      &lt;td&gt;22&lt;/td&gt;
+      &lt;td&gt;462&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;loadPluginManifestRegistry&lt;/td&gt;
+      &lt;td&gt;src/plugins/manifest-registry.ts&lt;/td&gt;
+      &lt;td&gt;22&lt;/td&gt;
+      &lt;td&gt;16&lt;/td&gt;
+      &lt;td&gt;352&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;createOpenClawTools&lt;/td&gt;
+      &lt;td&gt;src/agents/openclaw-tools.ts&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;240&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;fetchWithSsrFGuard&lt;/td&gt;
+      &lt;td&gt;src/infra/net/fetch-guard.ts&lt;/td&gt;
+      &lt;td&gt;24&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;240&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;resolveCommandSecretRefsViaGateway&lt;/td&gt;
+      &lt;td&gt;src/cli/command-secret-gateway.ts&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+      &lt;td&gt;14&lt;/td&gt;
+      &lt;td&gt;210&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;fetchRemoteMedia&lt;/td&gt;
+      &lt;td&gt;src/media/fetch.ts&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;198&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;loadModelCatalog&lt;/td&gt;
+      &lt;td&gt;src/agents/model-catalog.ts&lt;/td&gt;
+      &lt;td&gt;18&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;198&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;resolveApiKeyForProvider&lt;/td&gt;
+      &lt;td&gt;src/agents/model-auth.ts&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;15&lt;/td&gt;
+      &lt;td&gt;195&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;start&lt;/td&gt;
+      &lt;td&gt;src/gateway/client.ts&lt;/td&gt;
+      &lt;td&gt;12&lt;/td&gt;
+      &lt;td&gt;13&lt;/td&gt;
+      &lt;td&gt;156&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;resolveAuthProfileOrder&lt;/td&gt;
+      &lt;td&gt;src/agents/auth-profiles/order.ts&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;121&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;createClackPrompter&lt;/td&gt;
+      &lt;td&gt;src/wizard/clack-prompter.ts&lt;/td&gt;
+      &lt;td&gt;10&lt;/td&gt;
+      &lt;td&gt;11&lt;/td&gt;
+      &lt;td&gt;110&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;These 17 functions are the structural pressure points of the system. Any change to them deserves extra scrutiny.&lt;/p&gt;
+
+&lt;h3 id=&quot;finding-zombie-functions&quot;&gt;Finding Zombie Functions&lt;/h3&gt;
+
+&lt;p&gt;We plotted the fan-in distribution across all functions as a histogram. NeuG’s Python SDK makes this straightforward — query results flow directly into pandas or matplotlib. The distribution reveals that most functions have fan-in and fan-out values below 2, meaning OpenClaw’s code is largely linear: most functions sit in a simple “one-in, one-out” position in the call chain.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-19-openclaw-technical-debt-1.png&quot; alt=&quot;fan-in and fan-out distribution histogram&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;What stands out: &lt;strong&gt;over 20% of all functions have fan-in = 0&lt;/strong&gt; — they are never called by anything. After filtering out legitimate entry points and framework hooks, &lt;strong&gt;more than 2,000 functions remain that are true zombie code&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Here’s a concrete example. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;assertPublicHostname&lt;/code&gt; in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;src/infra/net/ssrf.ts&lt;/code&gt; has zero callers in the current codebase. A git bisect reveals:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Commit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;5bd550&lt;/code&gt;: the function is introduced and actively used&lt;/li&gt;
+  &lt;li&gt;Commit &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b62355&lt;/code&gt;: its logic is migrated to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;resolvePinnedHostname&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;The old function is never deleted — likely out of caution — and silently becomes a zombie&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The real harm isn’t the wasted lines. It’s what happens next: a new contributor finds the function, assumes it’s still relevant, builds something on top of it, and then spends hours debugging a dead code path.&lt;/p&gt;
+
+&lt;p&gt;In a project with OpenClaw’s pace of change, a 20% zombie function rate is a significant cognitive tax on everyone who reads the code.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;finding-2-the-over-coupled-module&quot;&gt;Finding 2: The Over-Coupled Module&lt;/h2&gt;
+
+&lt;p&gt;We analyzed the 20 most recent bug reports. Of 57 root-cause function candidates, &lt;strong&gt;24 — 42% — pointed to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;src/agents&lt;/code&gt;&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;To understand why, we ran a Cypher query to inspect &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agents&lt;/code&gt;’ call relationships with the rest of the system:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;m1:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Module&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;agents&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:BELONGS_TO&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f1:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:DEFINES_FUNC&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;func1:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;func1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CALLS&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;func2:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:DEFINES_FUNC&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f2:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;File&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:BELONGS_TO&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;m2:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Module&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m2.name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;agents&apos;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m2.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;as&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;call_count&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;call_count&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;DESC&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;LIMIT&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;10&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The numbers below show bidirectional call counts between modules (a→b = calls from module a into module b):&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;agents &amp;lt;-&amp;gt; reply              a→b=19    b→a=117
+agents &amp;lt;-&amp;gt; infra              a→b=108   b→a=15
+agents &amp;lt;-&amp;gt; pi-embedded-runner a→b=19    b→a=88
+agents &amp;lt;-&amp;gt; tools              a→b=38    b→a=55
+agents &amp;lt;-&amp;gt; plugins            a→b=45    b→a=40
+agents &amp;lt;-&amp;gt; gateway            a→b=9     b→a=60
+agents &amp;lt;-&amp;gt; src                a→b=35    b→a=31
+agents &amp;lt;-&amp;gt; models             a→b=1     b→a=63
+agents &amp;lt;-&amp;gt; sessions           a→b=46    b→a=5
+agents &amp;lt;-&amp;gt; auth-profiles      a→b=24    b→a=12
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;In total, &lt;strong&gt;30+ modules have bidirectional dependencies with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agents&lt;/code&gt;&lt;/strong&gt;. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reply&lt;/code&gt; module calls into &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agents&lt;/code&gt; 117 times; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pi-embedded-runner&lt;/code&gt; calls it 88 times; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;models&lt;/code&gt; calls it 63 times. The vast majority of the system’s business logic flows through this one module.&lt;/p&gt;
+
+&lt;p&gt;We visualized the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reply-&amp;gt;agents&lt;/code&gt; call relationships using neug-ui:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-19-openclaw-technical-debt-2.png&quot; alt=&quot;agents module call relationship visualization&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agents&lt;/code&gt; is the structural hub of the system. A single-line change there can ripple across half the codebase. The fact that 42% of bugs trace back to this module isn’t bad luck — it’s an architectural consequence.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-graph-analysis-reveals-that-other-tools-dont&quot;&gt;What Graph Analysis Reveals That Other Tools Don’t&lt;/h2&gt;
+
+&lt;p&gt;Code review catches function-level issues. Static analysis handles syntax and import-level concerns. Graph analysis fills the gap between them — &lt;strong&gt;cross-file, cross-module structural problems&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;p&gt;Traditional tools can tell you:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Which line has a syntax error&lt;/li&gt;
+  &lt;li&gt;Which function has high cyclomatic complexity&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;NeuG can tell you:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How many functions are affected by a single change&lt;/li&gt;
+  &lt;li&gt;Which code is dead but still confusing contributors&lt;/li&gt;
+  &lt;li&gt;Which module is the structural load-bearing wall of the system&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;When a codebase outgrows what human reviewers can hold in their heads, structural problems can only be found through structural queries.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;three-recommendations-for-openclaw&quot;&gt;Three Recommendations for OpenClaw&lt;/h2&gt;
+
+&lt;p&gt;Based on this analysis, the three highest-leverage improvements:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Decouple &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;src/agents&lt;/code&gt;&lt;/strong&gt;: With 30+ modules in bidirectional dependency, start by defining clear interface boundaries between &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;agents&lt;/code&gt; and its heaviest callers (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;reply&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pi-embedded-runner&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;models&lt;/code&gt;). Even partial decoupling would significantly reduce blast radius.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Prioritize test coverage for high-risk functions&lt;/strong&gt;: Functions like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;createConfigIO&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;startGatewayServer&lt;/code&gt; are structurally critical but likely undertested. A bug there propagates everywhere. Cover them first.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Clean up zombie functions&lt;/strong&gt;: 2,000+ dead functions are actively misleading contributors. Running a graph-based dead code analysis and removing confirmed zombies is a high-ROI cleanup with low risk.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;em&gt;Analysis powered by &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; graph database and CodeScope code analysis engine. Full index completed in approximately 4 minutes.&lt;/em&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 19 Mar 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?</title>
@@ -2456,75 +2870,6 @@ We will also publish articles in the future to provide detailed information abou
         <pubDate>Mon, 05 Aug 2024 01:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>GraphScope&apos;s Perspective Sharing at the SIGMOD 2024 Panel: The Future of Graph Analytics</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/sigmod-panel.png&quot; alt=&quot;benchmark&quot; /&gt;
-From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile. 
-Graph computing remains a hot topic at this conference, and it is also the area that received the most paper submissions. 
-SIGMOD 2024 organized a panel discussion on graph computation titled “The Future of Graph Analytics”.&lt;/p&gt;
-
-&lt;p&gt;This panel invited six well-known individuals from the academic and industrial sectors of graph computing, including Professor &lt;a href=&quot;https://perso.liris.cnrs.fr/angela.bonifati/&quot;&gt;Angela Bonifati&lt;/a&gt; from Lyon 1 University, Professor &lt;a href=&quot;https://cs.uwaterloo.ca/~tozsu/&quot;&gt;M. Tamer Özsu&lt;/a&gt; from the University of Waterloo, &lt;a href=&quot;https://humming80.github.io/&quot;&gt;Yuanyuan Tian&lt;/a&gt;, a Principal Scientist Manager from Microsoft, &lt;a href=&quot;https://de.linkedin.com/in/hannesvoigt&quot;&gt;Hannes Voigt&lt;/a&gt;, a Staff Engineer from Neo4j, Professor &lt;a href=&quot;https://research.unsw.edu.au/people/professor-wenjie-zhang&quot;&gt;Wenjie Zhang&lt;/a&gt; from the University of New South Wales, and Dr. &lt;a href=&quot;https://wyu.io/&quot;&gt;Wenyuan Yu&lt;/a&gt;, the person in charge of GraphScope.&lt;/p&gt;
-
-&lt;p&gt;Graph computing plays an important role in real-world business scenarios, and various graph computing systems are emerging one after another. Nowadays, the types of graph computing tasks are becoming more diverse, and they form complex workflows together with other task types, such as machine learning and Large Language Model (LLM) tasks. This also leads to new discussions and considerations regarding graph computing. 
-The panel discussed the following six issues, and Dr. Wenyuan Yu shared GraphScope’s perspectives on these matters.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-given-the-varied-types-of-graph-computations-and-the-widespread-use-of-graph-query-languages-eg-cypher-gql-do-we-need-new-and-more-expressive-query-languages&quot;&gt;Q: Given the varied types of graph computations and the widespread use of graph query languages (e.g., Cypher, GQL), do we need new and more expressive query languages?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Considering the diverse and extensive applications of graphs, there is still a need for new query languages. However, languages with strong expressive power often come with increased complexity, so finding a balance between complexity and expressiveness is essential. The computing patterns for different types of graph computing tasks, such as pattern matching, graph analysis, and graph neural networks, exhibit both significant differences and some overlaps, making the balance challenging to achieve.&lt;/p&gt;
-
-&lt;p&gt;Over the past two years, the development of Large Language Models (LLMs) has inspired the idea that natural language processing enhanced by LLMs could play a vital role in simplifying complex queries and reducing the learning curve for users.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-in-many-cases-graph-data-originates-from-oltp-systems-while-graph-analysis-is-a-typical-olap-operation-do-we-therefore-need-to-build-an-htap-system-for-graph-analysis&quot;&gt;Q: In many cases, graph data originates from OLTP systems, while graph analysis is a typical OLAP operation. Do we, therefore, need to build an HTAP system for graph analysis?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Regarding the necessity of building an HTAP system for graph analysis, we believe it is essential. However, it is not necessary to process OLTP and OLAP tasks within the same system simultaneously. On the one hand, users’ core businesses often rely on very mature OLTP systems, such as relational databases, and it may be challenging for users to migrate their core businesses to a new system simply to add OLAP capabilities for graph analysis. On the other hand, performing OLAP tasks directly on the storage systems designed for OLTP can be highly inefficient.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/gart.jpg&quot; alt=&quot;GART&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;To address this, we developed and open-sourced a system called &lt;a href=&quot;https://github.com/GraphScope/GART&quot;&gt;GART&lt;/a&gt;. Its core architecture, as depicted in the diagram above, captures changes from OLTP systems (such as binlog from MySQL) and synchronizes these changes in real-time. The changes to table data in OLTP systems correspond to operations of adding, deleting, or modifying vertices and edges in graph data. GART has also been designed with efficient mutable graph storage and is integrated with the GraphScope’s graph analytical engine GAE and the graph interactive engine GIE. This allows users to intuitively express queries with graph semantics and achieve efficient execution on GraphScope’s engine. Consequently, graph HTAP capabilities are achieved without any modifications to the existing OLTP system.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-currently-benchmarks-for-graph-analysis-focus-more-on-system-performance-metrics-such-as-the-execution-of-algorithms-should-we-also-focus-on-other-metrics&quot;&gt;Q: Currently, benchmarks for graph analysis focus more on system performance metrics such as the execution of algorithms. Should we also focus on other metrics?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: In addition to performance metrics, we believe that benchmarks for graph analysis should consider two additional aspects. Firstly, concerning the graphs themselves, it is important to increase the diversity of graph algorithms and datasets. The range of graph algorithms should extend beyond well-known examples like PageRank and Shortest Path. New algorithms need to exhibit a variety of graph access patterns and computational characteristics. In addition, benchmarks should include varied types of datasets beyond just social network datasets.
-Secondly, when evaluating a system, we should assess the ease with which an algorithm can be implemented within that system, as this reflects the expressive power of the system’s interface. In this context, we have collaborated with external universities to propose &lt;a href=&quot;https://arxiv.org/abs/2404.06037&quot;&gt;a new benchmark for graph analysis&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;Moreover, graph computations may represent only a small component of a complex workflow. Therefore, when testing a system, it is insufficient to just consider the execution time of a particular algorithm; we should also evaluate the time required for the system to load the graph from common file formats and export the results in other formats.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-in-many-cases-a-complete-graph-computation-task-includes-multiple-types-of-sub-tasks-so-is-one-graph-storage-sufficient-in-this-case-do-we-need-multiple-graph-storages&quot;&gt;Q: In many cases, a complete graph computation task includes multiple types of sub-tasks. So, is one graph storage sufficient? In this case, do we need multiple graph storages?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: Regarding whether multiple graph storages are needed, we believe they are necessary. Currently, various graph storages are designed for different scenarios and optimization objectives, and it is difficult to have a “one size fits all” solution. However, the existence of multiple storages means that when a task requires the use of multiple graph computing systems, data exchanges must be made between different systems to enable interfacing. To address this issue, GraphScope has taken the following two steps.&lt;/p&gt;
-
-&lt;p&gt;First, we designed a standardized graph storage file format, &lt;a href=&quot;https://graphscope.io/blog/tech/2023/08/29/GraphAr-A-Standard-Data-File-Format-for-Graph-Data-Storage-and-Retrieval&quot;&gt;GraphAr&lt;/a&gt;, which defines a set of computing/storage system-independent file formats for graph data and provides a series of interfaces to generate, access, and convert these formatted files. As illustrated in the diagram below, &lt;a href=&quot;https://github.com/apache/incubator-graphar&quot;&gt;GraphAr&lt;/a&gt; aims to solve the problem of data import/export and mutual access between various graph computing systems. GraphAr is now an Apache Incubator project and is actively promoting integration with mainstream graph systems in the industry.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-08-29-graphar-overview.jpg&quot; alt=&quot;graphar-overview&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;On the other hand, we designed &lt;a href=&quot;https://github.com/GraphScope/GRIN&quot;&gt;GRIN&lt;/a&gt;, a unified graph access interface, which defines a series of standardized interfaces for accessing graph data. Storages must implement these interface methods, and computing engines only need to use these interfaces to execute operators, thereby facilitating easy docking between different engines and storages.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-in-a-complex-workflow-graph-analysis-may-be-just-one-component-alongside-data-analysis-machine-learning-llms-and-other-types-of-tasks-in-this-scenario-do-we-need-new-apisdsls-to-facilitate-interaction-between-graph-related-tasks-and-other-tasks&quot;&gt;Q: In a complex workflow, graph analysis may be just one component, alongside data analysis, machine learning, LLMs, and other types of tasks. In this scenario, do we need new APIs/DSLs to facilitate interaction between graph-related tasks and other tasks?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: This question should be considered from two perspectives. On one hand, graphs are adept at intuitively expressing relationships between entities, which allows graph data to be utilized as part of knowledge graphs within RAG (Retrieval-Augmented Generation), interacting seamlessly with LLMs. Additionally, graph neural networks, which represent a fundamental aspect of machine learning, naturally integrate graph tasks with machine learning tasks.&lt;/p&gt;
-
-&lt;p&gt;On the other hand, the input and output formats of tasks involving graphs differ from those of tasks involving LLMs. To enable seamless interoperability between graph computation tasks and LLM tasks, we may need to consider the development of an ETL (Extract, Transform, Load) DSL in the future. Such a DSL would assist in resolving data alignment challenges that arise when integrating different types of tasks.&lt;/p&gt;
-
-&lt;h5 id=&quot;q-in-some-scenarios-graph-data-is-not-static-but-constantly-changing-what-are-the-expectations-for-dynamic-incremental-and-stream-graph-analysis-operations&quot;&gt;Q: In some scenarios, graph data is not static but constantly changing. What are the expectations for dynamic, incremental, and stream graph analysis operations?&lt;/h5&gt;
-
-&lt;p&gt;&lt;strong&gt;A&lt;/strong&gt;: For dynamic graph scenarios, we believe that compared to static graphs, the applications may be more diverse. The current hot topics in dynamic graph research include dynamic, incremental, and stream graph processing, with complex application scenarios requiring the integration of these technologies or even the advancement beyond current capabilities. To apply dynamic graphs effectively to real-world scenarios, we need to work on the following aspects:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;In terms of storage, efficient dynamic/stream graph storage capabilities are essential. These capabilities should not only support graph update operations efficiently but also provide efficient graph data access interfaces.&lt;/li&gt;
-  &lt;li&gt;Concerning graph algorithms, it is necessary to research incremental graph algorithms and explore the use of previously computed results to efficiently calculate the required outcomes on newly updated graphs.&lt;/li&gt;
-  &lt;li&gt;The time dimension is an essential aspect of dynamic graphs, and we need to enhance support for time-series graphs in our analysis operations.&lt;/li&gt;
-&lt;/ul&gt;
-
-</description>
-        <pubDate>Tue, 16 Jul 2024 01:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/07/16/GraphScope-Perspective-Sharing-at-SIGMOD-2024-Panel.html</guid>
         
         
         <category>Tech</category>
