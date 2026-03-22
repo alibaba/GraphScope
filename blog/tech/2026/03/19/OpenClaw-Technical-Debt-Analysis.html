@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">We X-Rayed OpenClaw with a Graph Database — Here's the Technical Debt We Found</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-03-19">19 Mar 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-03-19">19 Mar 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">We X-Rayed OpenClaw with a Graph Database — Here's the Technical Debt We Found</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-03-19-openclaw-technical-debt-title.png" alt="openclaw-technical-debt-title" /></p>
+
+<blockquote>
+  <p><em>When a codebase grows to 21,000 functions connected by 35,000 call edges, code review alone isn’t enough. We ran OpenClaw through NeuG’s graph database and surfaced structural problems that traditional tools can’t see.</em></p>
+</blockquote>
+
+<hr />
+
+<h2 id="why-a-graph-perspective">Why a Graph Perspective?</h2>
+
+<p><a href="https://github.com/openclaw/openclaw">OpenClaw</a> is a popular AI gateway project — 18,000+ commits, 6,000+ TypeScript files, and 21,000+ functions, with new versions shipping almost daily. In our previous post, we looked at OpenClaw from the user’s perspective and found that the heartbeat mechanism was consuming far more tokens than anyone expected.</p>
+
+<p>This time, we go deeper. From a developer’s perspective: <strong>what structural debt has fast iteration quietly accumulated?</strong></p>
+
+<p>Traditional code review and static analysis tools catch a lot, but they struggle to answer structural questions:</p>
+
+<ul>
+  <li>Which functions are “time bombs” — where a bug would cause maximum blast radius?</li>
+  <li>Which code is dead weight, confusing new contributors who think it’s still active?</li>
+  <li>Which module is the system’s structural hub — touch it, and half the codebase shakes?</li>
+</ul>
+
+<p>The answers to these questions live in <strong>relationships</strong>, not in lines of code.</p>
+
+<hr />
+
+<h2 id="the-approach-turn-the-codebase-into-a-graph">The Approach: Turn the Codebase into a Graph</h2>
+
+<p>We built a code knowledge graph using <a href="https://github.com/alibaba/neug">NeuG</a> (graph database) and <a href="https://github.com/alibaba/zvec">zvec</a> (vector database):</p>
+
+<ul>
+  <li><strong>Nodes</strong>: functions, classes, modules, files</li>
+  <li><strong>Edges</strong>: call relationships, import dependencies, commit history</li>
+</ul>
+
+<p>Here’s what the graph looks like at scale:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Source files</td>
+      <td>6,062</td>
+    </tr>
+    <tr>
+      <td>Functions</td>
+      <td>21,057</td>
+    </tr>
+    <tr>
+      <td>Call edges</td>
+      <td>35,761</td>
+    </tr>
+    <tr>
+      <td>Import edges</td>
+      <td>25,883</td>
+    </tr>
+    <tr>
+      <td>Classes</td>
+      <td>233</td>
+    </tr>
+    <tr>
+      <td>Modules</td>
+      <td>318</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>21,000 functions connected by 35,000 call edges. Once the graph is built, hard structural questions become Cypher queries.</p>
+
+<p>The full analysis pipeline is packaged as <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph Skill</a> — open source and fully reproducible.</p>
+
+<hr />
+
+<h2 id="finding-1-high-risk-functions">Finding 1: High-Risk Functions</h2>
+
+<h3 id="defining-risk-score">Defining Risk Score</h3>
+
+<p>We define a <strong>risk score</strong> for each function to quantify its potential blast radius:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Risk Score = fan_in × fan_out
+</code></pre></div></div>
+
+<ul>
+  <li><strong>fan-in</strong>: how many functions call it (dependency pressure)</li>
+  <li><strong>fan-out</strong>: how many functions it calls (dependency complexity)</li>
+</ul>
+
+<p>The product represents the blast radius — how much of the system breaks if this function has a bug.</p>
+
+<p>Detecting fan-out is straightforward; most IDE tools can do it. But fan-in requires a full-codebase scan — exactly where a graph database shines. This is one of the built-in capabilities of our <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph Skill</a>: it ships with a <code class="language-plaintext highlighter-rouge">hotspots()</code> method that handles the full-graph traversal for you, so finding the highest-risk functions across the entire codebase is a single call:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">functions</span> <span class="o">=</span> <span class="n">cs</span><span class="p">.</span><span class="n">hotspots</span><span class="p">(</span><span class="n">topk</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><strong>Top 5 by risk score:</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>File</th>
+      <th>fan-in</th>
+      <th>fan-out</th>
+      <th>Risk Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>startGatewayServer</strong></td>
+      <td>src/gateway/server.impl.ts</td>
+      <td>10</td>
+      <td>103</td>
+      <td><strong>1030</strong></td>
+    </tr>
+    <tr>
+      <td><strong>createConfigIO</strong></td>
+      <td>src/config/io.ts</td>
+      <td>18</td>
+      <td>56</td>
+      <td><strong>1008</strong></td>
+    </tr>
+    <tr>
+      <td><strong>runEmbeddedPiAgent</strong></td>
+      <td>src/agents/pi-embedded-runner/run.ts</td>
+      <td>14</td>
+      <td>67</td>
+      <td><strong>938</strong></td>
+    </tr>
+    <tr>
+      <td><strong>loadOpenClawPlugins</strong></td>
+      <td>src/plugins/loader.ts</td>
+      <td>20</td>
+      <td>36</td>
+      <td><strong>720</strong></td>
+    </tr>
+    <tr>
+      <td><strong>runCronIsolatedAgentTurn</strong></td>
+      <td>src/cron/isolated-agent/run.ts</td>
+      <td>11</td>
+      <td>60</td>
+      <td><strong>660</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>These functions sit at the core of critical execution paths. <code class="language-plaintext highlighter-rouge">startGatewayServer</code> bootstraps the entire service; <code class="language-plaintext highlighter-rouge">createConfigIO</code> generates all configuration; <code class="language-plaintext highlighter-rouge">runEmbeddedPiAgent</code> orchestrates embedded Pi Agent execution.</p>
+
+<p>Here’s an interesting observation about <code class="language-plaintext highlighter-rouge">createConfigIO</code>: configuration parsing rarely gets prioritized for test coverage — it “seems safe.” But with 18 callers and 56 outgoing calls, <strong>by structural risk metrics it’s one of the most dangerous functions in the entire codebase</strong>.</p>
+
+<h3 id="filtering-for-the-real-high-risk-core">Filtering for the Real High-Risk Core</h3>
+
+<p>We wrote a custom Cypher query to filter out low-level utility functions (high fan-in, low fan-out) and focus on functions that are simultaneously heavily depended upon <em>and</em> highly complex:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">f:</span><span class="n">Function</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:CALLS</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">g:</span><span class="n">Function</span><span class="ss">)</span>
+<span class="k">WITH</span> <span class="n">f</span><span class="ss">,</span> <span class="nf">COUNT</span><span class="ss">(</span><span class="k">DISTINCT</span> <span class="n">g</span><span class="ss">)</span> <span class="k">as</span> <span class="n">fan_out</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">f</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:CALLS</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="py">h:</span><span class="n">Function</span><span class="ss">)</span>
+<span class="k">WITH</span> <span class="n">f</span><span class="ss">,</span> <span class="n">fan_out</span><span class="ss">,</span> <span class="nf">COUNT</span><span class="ss">(</span><span class="k">DISTINCT</span> <span class="n">h</span><span class="ss">)</span> <span class="k">as</span> <span class="n">fan_in</span>
+<span class="k">WHERE</span> <span class="n">fan_in</span> <span class="o">&gt;</span> <span class="mi">10</span> <span class="ow">AND</span> <span class="n">fan_out</span> <span class="o">&gt;</span> <span class="mi">10</span>
+<span class="k">RETURN</span> <span class="n">f.name</span><span class="ss">,</span> <span class="n">fan_in</span><span class="ss">,</span> <span class="n">fan_out</span>
+<span class="k">LIMIT</span> <span class="mi">100</span>
+</code></pre></div></div>
+
+<p>The result was surprising: <strong>only 17 functions</strong> in the entire codebase meet both criteria. Every one of them is a critical, high-risk node:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>File</th>
+      <th>fan-in</th>
+      <th>fan-out</th>
+      <th>Risk Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>startGatewayServer</td>
+      <td>src/gateway/server.impl.ts</td>
+      <td>10</td>
+      <td>103</td>
+      <td>1030</td>
+    </tr>
+    <tr>
+      <td>createConfigIO</td>
+      <td>src/config/io.ts</td>
+      <td>18</td>
+      <td>56</td>
+      <td>1008</td>
+    </tr>
+    <tr>
+      <td>runEmbeddedPiAgent</td>
+      <td>src/agents/pi-embedded-runner/run.ts</td>
+      <td>14</td>
+      <td>67</td>
+      <td>938</td>
+    </tr>
+    <tr>
+      <td>loadOpenClawPlugins</td>
+      <td>src/plugins/loader.ts</td>
+      <td>20</td>
+      <td>36</td>
+      <td>720</td>
+    </tr>
+    <tr>
+      <td>runCronIsolatedAgentTurn</td>
+      <td>src/cron/isolated-agent/run.ts</td>
+      <td>11</td>
+      <td>60</td>
+      <td>660</td>
+    </tr>
+    <tr>
+      <td>getReplyFromConfig</td>
+      <td>src/auto-reply/reply/get-reply.ts</td>
+      <td>20</td>
+      <td>24</td>
+      <td>480</td>
+    </tr>
+    <tr>
+      <td>runMessageAction</td>
+      <td>src/infra/outbound/message-action-runner.ts</td>
+      <td>21</td>
+      <td>22</td>
+      <td>462</td>
+    </tr>
+    <tr>
+      <td>loadPluginManifestRegistry</td>
+      <td>src/plugins/manifest-registry.ts</td>
+      <td>22</td>
+      <td>16</td>
+      <td>352</td>
+    </tr>
+    <tr>
+      <td>createOpenClawTools</td>
+      <td>src/agents/openclaw-tools.ts</td>
+      <td>10</td>
+      <td>24</td>
+      <td>240</td>
+    </tr>
+    <tr>
+      <td>fetchWithSsrFGuard</td>
+      <td>src/infra/net/fetch-guard.ts</td>
+      <td>24</td>
+      <td>10</td>
+      <td>240</td>
+    </tr>
+    <tr>
+      <td>resolveCommandSecretRefsViaGateway</td>
+      <td>src/cli/command-secret-gateway.ts</td>
+      <td>15</td>
+      <td>14</td>
+      <td>210</td>
+    </tr>
+    <tr>
+      <td>fetchRemoteMedia</td>
+      <td>src/media/fetch.ts</td>
+      <td>18</td>
+      <td>11</td>
+      <td>198</td>
+    </tr>
+    <tr>
+      <td>loadModelCatalog</td>
+      <td>src/agents/model-catalog.ts</td>
+      <td>18</td>
+      <td>11</td>
+      <td>198</td>
+    </tr>
+    <tr>
+      <td>resolveApiKeyForProvider</td>
+      <td>src/agents/model-auth.ts</td>
+      <td>13</td>
+      <td>15</td>
+      <td>195</td>
+    </tr>
+    <tr>
+      <td>start</td>
+      <td>src/gateway/client.ts</td>
+      <td>12</td>
+      <td>13</td>
+      <td>156</td>
+    </tr>
+    <tr>
+      <td>resolveAuthProfileOrder</td>
+      <td>src/agents/auth-profiles/order.ts</td>
+      <td>11</td>
+      <td>11</td>
+      <td>121</td>
+    </tr>
+    <tr>
+      <td>createClackPrompter</td>
+      <td>src/wizard/clack-prompter.ts</td>
+      <td>10</td>
+      <td>11</td>
+      <td>110</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>These 17 functions are the structural pressure points of the system. Any change to them deserves extra scrutiny.</p>
+
+<h3 id="finding-zombie-functions">Finding Zombie Functions</h3>
+
+<p>We plotted the fan-in distribution across all functions as a histogram. NeuG’s Python SDK makes this straightforward — query results flow directly into pandas or matplotlib. The distribution reveals that most functions have fan-in and fan-out values below 2, meaning OpenClaw’s code is largely linear: most functions sit in a simple “one-in, one-out” position in the call chain.</p>
+
+<p><img src="/blog/assets/images/2026-03-19-openclaw-technical-debt-1.png" alt="fan-in and fan-out distribution histogram" /></p>
+
+<p>What stands out: <strong>over 20% of all functions have fan-in = 0</strong> — they are never called by anything. After filtering out legitimate entry points and framework hooks, <strong>more than 2,000 functions remain that are true zombie code</strong>.</p>
+
+<p>Here’s a concrete example. <code class="language-plaintext highlighter-rouge">assertPublicHostname</code> in <code class="language-plaintext highlighter-rouge">src/infra/net/ssrf.ts</code> has zero callers in the current codebase. A git bisect reveals:</p>
+
+<ul>
+  <li>Commit <code class="language-plaintext highlighter-rouge">5bd550</code>: the function is introduced and actively used</li>
+  <li>Commit <code class="language-plaintext highlighter-rouge">b62355</code>: its logic is migrated to <code class="language-plaintext highlighter-rouge">resolvePinnedHostname</code></li>
+  <li>The old function is never deleted — likely out of caution — and silently becomes a zombie</li>
+</ul>
+
+<p>The real harm isn’t the wasted lines. It’s what happens next: a new contributor finds the function, assumes it’s still relevant, builds something on top of it, and then spends hours debugging a dead code path.</p>
+
+<p>In a project with OpenClaw’s pace of change, a 20% zombie function rate is a significant cognitive tax on everyone who reads the code.</p>
+
+<hr />
+
+<h2 id="finding-2-the-over-coupled-module">Finding 2: The Over-Coupled Module</h2>
+
+<p>We analyzed the 20 most recent bug reports. Of 57 root-cause function candidates, <strong>24 — 42% — pointed to <code class="language-plaintext highlighter-rouge">src/agents</code></strong>.</p>
+
+<p>To understand why, we ran a Cypher query to inspect <code class="language-plaintext highlighter-rouge">agents</code>’ call relationships with the rest of the system:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">m1:</span><span class="n">Module</span> <span class="ss">{</span><span class="py">name:</span> <span class="s1">'agents'</span><span class="ss">})</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:BELONGS_TO</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="py">f1:</span><span class="n">File</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:DEFINES_FUNC</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">func1:</span><span class="n">Function</span><span class="ss">)</span>
+<span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="n">func1</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:CALLS</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">func2:</span><span class="n">Function</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="nc">:DEFINES_FUNC</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="py">f2:</span><span class="n">File</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="nc">:BELONGS_TO</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">m2:</span><span class="n">Module</span><span class="ss">)</span>
+<span class="k">WHERE</span> <span class="n">m2.name</span> <span class="o">&lt;&gt;</span> <span class="s1">'agents'</span>
+<span class="k">RETURN</span> <span class="n">m2.name</span><span class="ss">,</span> <span class="nf">count</span><span class="ss">(</span><span class="o">*</span><span class="ss">)</span> <span class="k">as</span> <span class="n">call_count</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">call_count</span> <span class="k">DESC</span>
+<span class="k">LIMIT</span> <span class="mi">10</span>
+</code></pre></div></div>
+
+<p>The numbers below show bidirectional call counts between modules (a→b = calls from module a into module b):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>agents &lt;-&gt; reply              a→b=19    b→a=117
+agents &lt;-&gt; infra              a→b=108   b→a=15
+agents &lt;-&gt; pi-embedded-runner a→b=19    b→a=88
+agents &lt;-&gt; tools              a→b=38    b→a=55
+agents &lt;-&gt; plugins            a→b=45    b→a=40
+agents &lt;-&gt; gateway            a→b=9     b→a=60
+agents &lt;-&gt; src                a→b=35    b→a=31
+agents &lt;-&gt; models             a→b=1     b→a=63
+agents &lt;-&gt; sessions           a→b=46    b→a=5
+agents &lt;-&gt; auth-profiles      a→b=24    b→a=12
+</code></pre></div></div>
+
+<p>In total, <strong>30+ modules have bidirectional dependencies with <code class="language-plaintext highlighter-rouge">agents</code></strong>. The <code class="language-plaintext highlighter-rouge">reply</code> module calls into <code class="language-plaintext highlighter-rouge">agents</code> 117 times; <code class="language-plaintext highlighter-rouge">pi-embedded-runner</code> calls it 88 times; <code class="language-plaintext highlighter-rouge">models</code> calls it 63 times. The vast majority of the system’s business logic flows through this one module.</p>
+
+<p>We visualized the <code class="language-plaintext highlighter-rouge">reply-&gt;agents</code> call relationships using neug-ui:</p>
+
+<p><img src="/blog/assets/images/2026-03-19-openclaw-technical-debt-2.png" alt="agents module call relationship visualization" /></p>
+
+<p><code class="language-plaintext highlighter-rouge">agents</code> is the structural hub of the system. A single-line change there can ripple across half the codebase. The fact that 42% of bugs trace back to this module isn’t bad luck — it’s an architectural consequence.</p>
+
+<hr />
+
+<h2 id="what-graph-analysis-reveals-that-other-tools-dont">What Graph Analysis Reveals That Other Tools Don’t</h2>
+
+<p>Code review catches function-level issues. Static analysis handles syntax and import-level concerns. Graph analysis fills the gap between them — <strong>cross-file, cross-module structural problems</strong>:</p>
+
+<p>Traditional tools can tell you:</p>
+
+<ul>
+  <li>Which line has a syntax error</li>
+  <li>Which function has high cyclomatic complexity</li>
+</ul>
+
+<p>NeuG can tell you:</p>
+
+<ul>
+  <li>How many functions are affected by a single change</li>
+  <li>Which code is dead but still confusing contributors</li>
+  <li>Which module is the structural load-bearing wall of the system</li>
+</ul>
+
+<blockquote>
+  <p>When a codebase outgrows what human reviewers can hold in their heads, structural problems can only be found through structural queries.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="three-recommendations-for-openclaw">Three Recommendations for OpenClaw</h2>
+
+<p>Based on this analysis, the three highest-leverage improvements:</p>
+
+<ol>
+  <li><strong>Decouple <code class="language-plaintext highlighter-rouge">src/agents</code></strong>: With 30+ modules in bidirectional dependency, start by defining clear interface boundaries between <code class="language-plaintext highlighter-rouge">agents</code> and its heaviest callers (<code class="language-plaintext highlighter-rouge">reply</code>, <code class="language-plaintext highlighter-rouge">pi-embedded-runner</code>, <code class="language-plaintext highlighter-rouge">models</code>). Even partial decoupling would significantly reduce blast radius.</li>
+  <li><strong>Prioritize test coverage for high-risk functions</strong>: Functions like <code class="language-plaintext highlighter-rouge">createConfigIO</code> and <code class="language-plaintext highlighter-rouge">startGatewayServer</code> are structurally critical but likely undertested. A bug there propagates everywhere. Cover them first.</li>
+  <li><strong>Clean up zombie functions</strong>: 2,000+ dead functions are actively misleading contributors. Running a graph-based dead code analysis and removing confirmed zombies is a high-ROI cleanup with low risk.</li>
+</ol>
+
+<hr />
+
+<p><em>Analysis powered by <a href="https://github.com/alibaba/neug">NeuG</a> graph database and CodeScope code analysis engine. Full index completed in approximately 4 minutes.</em></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=We X-Rayed OpenClaw with a Graph Database — Here's the Technical Debt We Found&amp;url=https://graphscope.io/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

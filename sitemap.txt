@@ -18,6 +18,7 @@ https://slack.graphscope.io
 
 https://graphscope.io/blog/
 
+https://graphscope.io/blog/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis
 https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis
 https://graphscope.io/blog/tech/2025/04/26/Why-DuckDB-Is-Such-A-Good-Database-Product
 https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process
