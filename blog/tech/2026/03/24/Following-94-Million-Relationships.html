@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Following 94 Million Relationships Down the Rabbit Hole</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-03-24">24 Mar 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-03-24">24 Mar 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Following 94 Million Relationships Down the Rabbit Hole</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-03-24-explorative-bi-title.png" alt="explorative-bi-title" /></p>
+
+<p>We ran an experiment: take a real question, point it at a massive academic knowledge graph, and keep asking follow-ups to see how deep LLM-driven analysis can actually go.</p>
+
+<p>The question: <strong>“What impact has the Russia-Ukraine conflict had on Russian academia?”</strong></p>
+
+<p>The data comes from <a href="https://www.openaire.eu/">OpenAIRE</a>, one of Europe’s largest open research data platforms: 22 million entities, 94 million relationships, spanning publications, authors, institutions, funding sources, and journals. Too large to feed into any LLM directly — but perfect for structured analysis.</p>
+
+<p>Here’s how the investigation unfolded.</p>
+
+<hr />
+
+<h2 id="question-1-did-publication-output-actually-decline">Question 1: Did publication output actually decline?</h2>
+
+<p>The obvious starting point. We matched <code class="language-plaintext highlighter-rouge">Publication ↔ Organization</code> patterns across the graph and aggregated by country and year to track Russia’s publication trend.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Year</th>
+      <th style="text-align: right">Publications</th>
+      <th style="text-align: right">YoY Change</th>
+      <th style="text-align: right">Cumulative</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">2020</td>
+      <td style="text-align: right">9,544</td>
+      <td style="text-align: right">-</td>
+      <td style="text-align: right">0%</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2021</td>
+      <td style="text-align: right">8,976</td>
+      <td style="text-align: right">-6.0%</td>
+      <td style="text-align: right">-6.0%</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2022</td>
+      <td style="text-align: right">8,548</td>
+      <td style="text-align: right"><strong>-4.8%</strong></td>
+      <td style="text-align: right">-10.4%</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2023</td>
+      <td style="text-align: right">7,732</td>
+      <td style="text-align: right"><strong>-9.5%</strong></td>
+      <td style="text-align: right">-19.0%</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2024</td>
+      <td style="text-align: right">4,686</td>
+      <td style="text-align: right"><strong>-39.4%</strong></td>
+      <td style="text-align: right"><strong>-50.9%</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>A mild decline before the war, accelerating sharply after 2022, nearly halved by 2024.</p>
+
+<p>But is this Russia-specific, or a global trend? We sliced the same analytical structure differently — global publication volume actually <em>increased</em> in 2022. Comparing 2021→2024: Russia dropped 47.8%, far exceeding the US and Germany at 27.6%, while China grew 14.8%.</p>
+
+<p>This isn’t a global downturn. It’s a cliff — and it’s Russia’s alone.</p>
+
+<p><img src="/blog/assets/images/2026-03-24-explorative-bi-1.png" alt="Russian Scholar Publication Trend" /></p>
+
+<h2 id="question-2-did-the-funding-dry-up">Question 2: Did the funding dry up?</h2>
+
+<p>When publication output drops, the first instinct is to follow the money.</p>
+
+<p>We extended our analysis by adding a Funding dimension on top of the existing structure — not starting over, but incrementally expanding what we’d already built.</p>
+
+<p>The result: the European Commission (EC) had been a major funder of Russian research. After 2022, EC completely cut off funding for projects involving Russian institutions — while continuing to fund 26 Ukrainian institutions. This aligns perfectly with the EC’s official policy announcements.</p>
+
+<p>The money did dry up. But does that explain everything?</p>
+
+<h2 id="question-3-are-journals-shutting-the-door-too">Question 3: Are journals shutting the door too?</h2>
+
+<p>We pivoted to a different angle, adding a Publisher dimension to the structure from Question 1: which journals changed their stance toward Russian papers around 2022?</p>
+
+<p>Finding: EDP Sciences dramatically reduced publications from Russian institutions after 2022. Further investigation revealed that EDP Sciences had publicly declared support for Ukraine. And crucially, their publication volume from other countries didn’t see a comparable drop — this wasn’t a general contraction, it was selective.</p>
+
+<p>Funding was being cut. Publishing channels were narrowing.</p>
+
+<h2 id="question-4-what-happened-to-the-collaboration-network">Question 4: What happened to the collaboration network?</h2>
+
+<p>The previous questions looked at individual factors. We zoomed out to the big picture — querying <code class="language-plaintext highlighter-rouge">Author(country=RU) → Publication → Organization</code> to map how Russia’s collaboration with each country changed over time.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Partner Country</th>
+      <th style="text-align: right">2021</th>
+      <th style="text-align: right">2024</th>
+      <th style="text-align: right">Change</th>
+      <th>Country Type</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Turkey</td>
+      <td style="text-align: right">988</td>
+      <td style="text-align: right">16</td>
+      <td style="text-align: right"><strong>-98.4%</strong></td>
+      <td>Non-Western, no sanctions</td>
+    </tr>
+    <tr>
+      <td>Germany</td>
+      <td style="text-align: right">656</td>
+      <td style="text-align: right">46</td>
+      <td style="text-align: right"><strong>-93.0%</strong></td>
+      <td>Western, sanctions</td>
+    </tr>
+    <tr>
+      <td>USA</td>
+      <td style="text-align: right">3,614</td>
+      <td style="text-align: right">271</td>
+      <td style="text-align: right"><strong>-92.5%</strong></td>
+      <td>Western, sanctions</td>
+    </tr>
+    <tr>
+      <td>China</td>
+      <td style="text-align: right">570</td>
+      <td style="text-align: right">112</td>
+      <td style="text-align: right">-80.4%</td>
+      <td>Non-Western, no sanctions</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Wait — the steepest drop is Turkey?</strong></p>
+
+<p>-98.4%. A non-Western country. A country that imposed no sanctions on Russia. And yet the collaboration decline is <em>worse</em> than with the US or Germany.</p>
+
+<p>This breaks a seemingly natural assumption: that the decline is primarily sanctions-driven. If sanctions were the main cause, Western countries should show the steepest drops. But the data tells a different story.</p>
+
+<p><strong>Sanctions are part of the picture, but the deeper shift is systemic: the entire international academic network is distancing itself from Russia.</strong> It’s not that certain countries stopped cooperating — Russia is being structurally marginalized from the global research fabric.</p>
+
+<p><img src="/blog/assets/images/2026-03-24-explorative-bi-2.png" alt="Key Finding: Turkey Non-Western Dropped More" /></p>
+
+<hr />
+
+<h2 id="why-could-we-keep-asking">Why could we keep asking?</h2>
+
+<p>Looking back at these four steps, each finding naturally raised the next question. This “follow the thread” experience feels intuitive — analysis <em>should</em> work this way.</p>
+
+<p>But if you’ve used traditional data analysis tools, you know reality is different. The typical workflow looks like this:</p>
+
+<blockquote>
+  <p>Ask question → get result → want to follow up → realize the data model doesn’t have that dimension → ask a data engineer to redesign the schema → rebuild the wide table → rerun the query → finally see the result → want to follow up again → redesign again → …</p>
+</blockquote>
+
+<p><strong>Every follow-up costs as much as the first question.</strong> Three questions means three full analysis cycles from scratch. So most analyses stop at the surface — not because people don’t want to go deeper, but because going deeper is prohibitively expensive.</p>
+
+<p>Text-to-SQL and NL2BI tools solve the problem of “how to ask the first question more easily” — having an LLM translate natural language into queries. That’s genuinely useful, but it doesn’t solve the follow-up problem. The SQL gets generated, but the underlying data model is still rigid, intermediate results are still discarded, and every new question still requires full recomputation.</p>
+
+<p>What we set out to solve is exactly this: <strong>make follow-up questions dramatically cheaper than the first one.</strong></p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: center">Step</th>
+      <th>Question</th>
+      <th>Operation</th>
+      <th>What was reused</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: center">1</td>
+      <td>Did output decline?</td>
+      <td>Match Pub↔Org on graph, aggregate by year+country</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">2</td>
+      <td>Did funding dry up?</td>
+      <td>Add Funding dimension</td>
+      <td>Pub-Org structure from Step 1</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">3</td>
+      <td>Are journals biased?</td>
+      <td>Add Publisher dimension</td>
+      <td>Pub-Org structure from Step 1</td>
+    </tr>
+    <tr>
+      <td style="text-align: center">4</td>
+      <td>How much did collaborations drop?</td>
+      <td>Match Author→Pub→Org, aggregate by country</td>
+      <td>Underlying data structures</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The analytical structure built in Step 1 was reused across all subsequent steps. Each follow-up wasn’t “start over” — it was “take one more step from where we left off.”</p>
+
+<hr />
+
+<h2 id="how-it-works-under-the-hood">How it works under the hood</h2>
+
+<p>Keeping the follow-up chain going requires three things simultaneously: the analytical structure must be dynamically extensible, intermediate results must persist, and computation over massive data must be fast enough for interactive use. We tackle each with a specific design.</p>
+
+<h3 id="hypergraph-data-model-a-schema-that-grows-with-your-questions">Hypergraph Data Model: a schema that grows with your questions</h3>
+
+<p>Traditional analytical data models (star/snowflake schemas) are designed upfront. You must decide on all dimensions before asking any questions — miss one, and you start over.</p>
+
+<p>We designed a Hypergraph-based data model with a composable operator algebra:</p>
+
+<ul>
+  <li><strong>Source</strong>: perform pattern matching on the raw data graph to produce a hypergraph — the starting point</li>
+  <li><strong>Join</strong>: add new dimensions to an existing hypergraph — the ability to extend on follow-up</li>
+  <li><strong>View</strong>: materialize intermediate results — the system’s “memory” of what’s been computed</li>
+  <li><strong>DrillDown / RollUp / Slice / Dice</strong>: multidimensional slicing and aggregation on hypergraphs</li>
+</ul>
+
+<p>These operators form a closed algebra: freely composable and chainable. This is what powers the “add a dimension and keep going” experience in the case study above — the schema isn’t predefined, it grows as your curiosity leads.</p>
+
+<h3 id="unbiased-sampling-sub-second-responses-over-94-million-relationships">Unbiased Sampling: sub-second responses over 94 million relationships</h3>
+
+<p>Whether you can sustain a chain of follow-ups depends heavily on how long each step takes. If every question takes five minutes to run, you’ll lose patience by Step 3.</p>
+
+<p>But the core operation behind these analyses is subgraph matching — exhaustively computing this over a large-scale graph is prohibitively expensive. Our approach: unbiased sampling. Instead of enumerating all matches, we uniformly sample a subset and use statistical methods to estimate aggregates. “Unbiased” means the estimates don’t systematically skew high or low.</p>
+
+<p>For analytical tasks, this trade-off is remarkably effective: what matters is “did something change, which direction, who changed most” — not whether every number is exact to the last unit. In practice, COUNT estimates have an average error rate of just <strong>0.27%</strong> — trend-level conclusions stay perfectly intact while computation cost drops by one to two orders of magnitude.</p>
+
+<h3 id="neug-co-located-storage-and-computation">NeuG: co-located storage and computation</h3>
+
+<p><a href="https://github.com/alibaba/neug">NeuG</a> is our graph storage engine. The key design decision: sampling-based subgraph matching algorithms are implemented directly in the storage layer, so computation executes where the data lives — no need to shuttle data to a separate system.</p>
+
+<p>Many systems don’t bottleneck on the operators themselves, but on data movement. NeuG’s principle: <strong>the best optimization is not moving data at all.</strong></p>
+
+<p>For the formal definitions of the hypergraph data model, operator design, and theoretical guarantees of the sampling algorithms, see our paper: <a href="https://arxiv.org/abs/2603.10625">A Hypergraph-Based Framework for Exploratory Business Intelligence</a>.</p>
+
+<hr />
+
+<h2 id="benchmarks">Benchmarks</h2>
+
+<p>Beyond the real-world case study above, we ran systematic evaluations on LDBC Social Network Benchmark datasets (SF1, SF3, SF10) across 13 analytical queries of varying complexity.</p>
+
+<p>On the largest scale, SF10 (~10GB), <strong>ExBI was the only system to complete all 13 queries</strong>. Neo4j completed 7; MySQL completed 2.</p>
+
+<p>Performance:</p>
+
+<ul>
+  <li>vs. Neo4j: <strong>16.21x</strong> average speedup, up to 146.25x</li>
+  <li>vs. MySQL: <strong>46.67x</strong> average speedup, up to 230.53x</li>
+</ul>
+
+<p>Speed doesn’t come at the cost of accuracy — COUNT average error rate is 0.27%, MAX error is near zero.</p>
+
+<p>For the full experimental design and analysis, see the <a href="https://arxiv.org/abs/2603.10625">paper</a>.</p>
+
+<hr />
+
+<h2 id="try-it-yourself">Try it yourself</h2>
+
+<p>We integrated this analytical capability into <a href="https://github.com/openclaw/openclaw">OpenClaw</a> by adding NeuG-related data loading and analysis <a href="https://github.com/Louyk14/neug/tree/main/skills">skills</a>. The case study above was conducted entirely in this environment.</p>
+
+<table><tr><td width="50%"><img src="/blog/assets/images/2026-03-24-explorative-bi-3.jpg" alt="OpenAIRE Schema" /></td><td width="50%"><img src="/blog/assets/images/2026-03-24-explorative-bi-4.jpg" alt="Analysis Report" /></td></tr></table>
+
+<ul>
+  <li>
+    <p>NeuG: https://github.com/alibaba/neug</p>
+  </li>
+  <li>
+    <p>NeuG data loading and analysis skills: https://github.com/Louyk14/neug/tree/main/skills</p>
+  </li>
+  <li>
+    <p>Docker (code + OpenAIRE dataset, ready to use): https://hub.docker.com/r/shunyangli/neugbi</p>
+  </li>
+  <li>
+    <p>Paper: <a href="https://arxiv.org/abs/2603.10625">A Hypergraph-Based Framework for Exploratory Business Intelligence</a></p>
+  </li>
+  <li>
+    <p>Full analysis report: <a href="http://neug.oss-cn-beijing.aliyuncs.com/neugbi/ru_ua_conflict_research_report_en.pdf">Impact of the Russia-Ukraine War on Russian Academia</a></p>
+  </li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Following 94 Million Relationships Down the Rabbit Hole&amp;url=https://graphscope.io/tech/2026/03/24/Following-94-Million-Relationships.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/03/24/Following-94-Million-Relationships.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/03/24/Following-94-Million-Relationships.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

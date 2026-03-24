@@ -5,9 +5,300 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 22 Mar 2026 06:29:14 +0000</pubDate>
-    <lastBuildDate>Sun, 22 Mar 2026 06:29:14 +0000</lastBuildDate>
+    <pubDate>Tue, 24 Mar 2026 09:01:31 +0000</pubDate>
+    <lastBuildDate>Tue, 24 Mar 2026 09:01:31 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>Following 94 Million Relationships Down the Rabbit Hole</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-24-explorative-bi-title.png&quot; alt=&quot;explorative-bi-title&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;We ran an experiment: take a real question, point it at a massive academic knowledge graph, and keep asking follow-ups to see how deep LLM-driven analysis can actually go.&lt;/p&gt;
+
+&lt;p&gt;The question: &lt;strong&gt;“What impact has the Russia-Ukraine conflict had on Russian academia?”&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The data comes from &lt;a href=&quot;https://www.openaire.eu/&quot;&gt;OpenAIRE&lt;/a&gt;, one of Europe’s largest open research data platforms: 22 million entities, 94 million relationships, spanning publications, authors, institutions, funding sources, and journals. Too large to feed into any LLM directly — but perfect for structured analysis.&lt;/p&gt;
+
+&lt;p&gt;Here’s how the investigation unfolded.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;question-1-did-publication-output-actually-decline&quot;&gt;Question 1: Did publication output actually decline?&lt;/h2&gt;
+
+&lt;p&gt;The obvious starting point. We matched &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Publication ↔ Organization&lt;/code&gt; patterns across the graph and aggregated by country and year to track Russia’s publication trend.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Year&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Publications&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;YoY Change&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Cumulative&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2020&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;9,544&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;0%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2021&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;8,976&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-6.0%&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-6.0%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2022&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;8,548&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-4.8%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-10.4%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2023&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;7,732&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-9.5%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-19.0%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2024&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;4,686&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-39.4%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-50.9%&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;A mild decline before the war, accelerating sharply after 2022, nearly halved by 2024.&lt;/p&gt;
+
+&lt;p&gt;But is this Russia-specific, or a global trend? We sliced the same analytical structure differently — global publication volume actually &lt;em&gt;increased&lt;/em&gt; in 2022. Comparing 2021→2024: Russia dropped 47.8%, far exceeding the US and Germany at 27.6%, while China grew 14.8%.&lt;/p&gt;
+
+&lt;p&gt;This isn’t a global downturn. It’s a cliff — and it’s Russia’s alone.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-24-explorative-bi-1.png&quot; alt=&quot;Russian Scholar Publication Trend&quot; /&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;question-2-did-the-funding-dry-up&quot;&gt;Question 2: Did the funding dry up?&lt;/h2&gt;
+
+&lt;p&gt;When publication output drops, the first instinct is to follow the money.&lt;/p&gt;
+
+&lt;p&gt;We extended our analysis by adding a Funding dimension on top of the existing structure — not starting over, but incrementally expanding what we’d already built.&lt;/p&gt;
+
+&lt;p&gt;The result: the European Commission (EC) had been a major funder of Russian research. After 2022, EC completely cut off funding for projects involving Russian institutions — while continuing to fund 26 Ukrainian institutions. This aligns perfectly with the EC’s official policy announcements.&lt;/p&gt;
+
+&lt;p&gt;The money did dry up. But does that explain everything?&lt;/p&gt;
+
+&lt;h2 id=&quot;question-3-are-journals-shutting-the-door-too&quot;&gt;Question 3: Are journals shutting the door too?&lt;/h2&gt;
+
+&lt;p&gt;We pivoted to a different angle, adding a Publisher dimension to the structure from Question 1: which journals changed their stance toward Russian papers around 2022?&lt;/p&gt;
+
+&lt;p&gt;Finding: EDP Sciences dramatically reduced publications from Russian institutions after 2022. Further investigation revealed that EDP Sciences had publicly declared support for Ukraine. And crucially, their publication volume from other countries didn’t see a comparable drop — this wasn’t a general contraction, it was selective.&lt;/p&gt;
+
+&lt;p&gt;Funding was being cut. Publishing channels were narrowing.&lt;/p&gt;
+
+&lt;h2 id=&quot;question-4-what-happened-to-the-collaboration-network&quot;&gt;Question 4: What happened to the collaboration network?&lt;/h2&gt;
+
+&lt;p&gt;The previous questions looked at individual factors. We zoomed out to the big picture — querying &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Author(country=RU) → Publication → Organization&lt;/code&gt; to map how Russia’s collaboration with each country changed over time.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Partner Country&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;2021&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;2024&lt;/th&gt;
+      &lt;th style=&quot;text-align: right&quot;&gt;Change&lt;/th&gt;
+      &lt;th&gt;Country Type&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Turkey&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;988&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;16&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-98.4%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Non-Western, no sanctions&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Germany&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;656&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;46&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-93.0%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Western, sanctions&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;USA&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;3,614&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;271&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;&lt;strong&gt;-92.5%&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Western, sanctions&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;China&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;570&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;112&lt;/td&gt;
+      &lt;td style=&quot;text-align: right&quot;&gt;-80.4%&lt;/td&gt;
+      &lt;td&gt;Non-Western, no sanctions&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;strong&gt;Wait — the steepest drop is Turkey?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;-98.4%. A non-Western country. A country that imposed no sanctions on Russia. And yet the collaboration decline is &lt;em&gt;worse&lt;/em&gt; than with the US or Germany.&lt;/p&gt;
+
+&lt;p&gt;This breaks a seemingly natural assumption: that the decline is primarily sanctions-driven. If sanctions were the main cause, Western countries should show the steepest drops. But the data tells a different story.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Sanctions are part of the picture, but the deeper shift is systemic: the entire international academic network is distancing itself from Russia.&lt;/strong&gt; It’s not that certain countries stopped cooperating — Russia is being structurally marginalized from the global research fabric.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-24-explorative-bi-2.png&quot; alt=&quot;Key Finding: Turkey Non-Western Dropped More&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-could-we-keep-asking&quot;&gt;Why could we keep asking?&lt;/h2&gt;
+
+&lt;p&gt;Looking back at these four steps, each finding naturally raised the next question. This “follow the thread” experience feels intuitive — analysis &lt;em&gt;should&lt;/em&gt; work this way.&lt;/p&gt;
+
+&lt;p&gt;But if you’ve used traditional data analysis tools, you know reality is different. The typical workflow looks like this:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Ask question → get result → want to follow up → realize the data model doesn’t have that dimension → ask a data engineer to redesign the schema → rebuild the wide table → rerun the query → finally see the result → want to follow up again → redesign again → …&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;&lt;strong&gt;Every follow-up costs as much as the first question.&lt;/strong&gt; Three questions means three full analysis cycles from scratch. So most analyses stop at the surface — not because people don’t want to go deeper, but because going deeper is prohibitively expensive.&lt;/p&gt;
+
+&lt;p&gt;Text-to-SQL and NL2BI tools solve the problem of “how to ask the first question more easily” — having an LLM translate natural language into queries. That’s genuinely useful, but it doesn’t solve the follow-up problem. The SQL gets generated, but the underlying data model is still rigid, intermediate results are still discarded, and every new question still requires full recomputation.&lt;/p&gt;
+
+&lt;p&gt;What we set out to solve is exactly this: &lt;strong&gt;make follow-up questions dramatically cheaper than the first one.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th style=&quot;text-align: center&quot;&gt;Step&lt;/th&gt;
+      &lt;th&gt;Question&lt;/th&gt;
+      &lt;th&gt;Operation&lt;/th&gt;
+      &lt;th&gt;What was reused&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;1&lt;/td&gt;
+      &lt;td&gt;Did output decline?&lt;/td&gt;
+      &lt;td&gt;Match Pub↔Org on graph, aggregate by year+country&lt;/td&gt;
+      &lt;td&gt;—&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;2&lt;/td&gt;
+      &lt;td&gt;Did funding dry up?&lt;/td&gt;
+      &lt;td&gt;Add Funding dimension&lt;/td&gt;
+      &lt;td&gt;Pub-Org structure from Step 1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;3&lt;/td&gt;
+      &lt;td&gt;Are journals biased?&lt;/td&gt;
+      &lt;td&gt;Add Publisher dimension&lt;/td&gt;
+      &lt;td&gt;Pub-Org structure from Step 1&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td style=&quot;text-align: center&quot;&gt;4&lt;/td&gt;
+      &lt;td&gt;How much did collaborations drop?&lt;/td&gt;
+      &lt;td&gt;Match Author→Pub→Org, aggregate by country&lt;/td&gt;
+      &lt;td&gt;Underlying data structures&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The analytical structure built in Step 1 was reused across all subsequent steps. Each follow-up wasn’t “start over” — it was “take one more step from where we left off.”&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;how-it-works-under-the-hood&quot;&gt;How it works under the hood&lt;/h2&gt;
+
+&lt;p&gt;Keeping the follow-up chain going requires three things simultaneously: the analytical structure must be dynamically extensible, intermediate results must persist, and computation over massive data must be fast enough for interactive use. We tackle each with a specific design.&lt;/p&gt;
+
+&lt;h3 id=&quot;hypergraph-data-model-a-schema-that-grows-with-your-questions&quot;&gt;Hypergraph Data Model: a schema that grows with your questions&lt;/h3&gt;
+
+&lt;p&gt;Traditional analytical data models (star/snowflake schemas) are designed upfront. You must decide on all dimensions before asking any questions — miss one, and you start over.&lt;/p&gt;
+
+&lt;p&gt;We designed a Hypergraph-based data model with a composable operator algebra:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Source&lt;/strong&gt;: perform pattern matching on the raw data graph to produce a hypergraph — the starting point&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Join&lt;/strong&gt;: add new dimensions to an existing hypergraph — the ability to extend on follow-up&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;View&lt;/strong&gt;: materialize intermediate results — the system’s “memory” of what’s been computed&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;DrillDown / RollUp / Slice / Dice&lt;/strong&gt;: multidimensional slicing and aggregation on hypergraphs&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These operators form a closed algebra: freely composable and chainable. This is what powers the “add a dimension and keep going” experience in the case study above — the schema isn’t predefined, it grows as your curiosity leads.&lt;/p&gt;
+
+&lt;h3 id=&quot;unbiased-sampling-sub-second-responses-over-94-million-relationships&quot;&gt;Unbiased Sampling: sub-second responses over 94 million relationships&lt;/h3&gt;
+
+&lt;p&gt;Whether you can sustain a chain of follow-ups depends heavily on how long each step takes. If every question takes five minutes to run, you’ll lose patience by Step 3.&lt;/p&gt;
+
+&lt;p&gt;But the core operation behind these analyses is subgraph matching — exhaustively computing this over a large-scale graph is prohibitively expensive. Our approach: unbiased sampling. Instead of enumerating all matches, we uniformly sample a subset and use statistical methods to estimate aggregates. “Unbiased” means the estimates don’t systematically skew high or low.&lt;/p&gt;
+
+&lt;p&gt;For analytical tasks, this trade-off is remarkably effective: what matters is “did something change, which direction, who changed most” — not whether every number is exact to the last unit. In practice, COUNT estimates have an average error rate of just &lt;strong&gt;0.27%&lt;/strong&gt; — trend-level conclusions stay perfectly intact while computation cost drops by one to two orders of magnitude.&lt;/p&gt;
+
+&lt;h3 id=&quot;neug-co-located-storage-and-computation&quot;&gt;NeuG: co-located storage and computation&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; is our graph storage engine. The key design decision: sampling-based subgraph matching algorithms are implemented directly in the storage layer, so computation executes where the data lives — no need to shuttle data to a separate system.&lt;/p&gt;
+
+&lt;p&gt;Many systems don’t bottleneck on the operators themselves, but on data movement. NeuG’s principle: &lt;strong&gt;the best optimization is not moving data at all.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;For the formal definitions of the hypergraph data model, operator design, and theoretical guarantees of the sampling algorithms, see our paper: &lt;a href=&quot;https://arxiv.org/abs/2603.10625&quot;&gt;A Hypergraph-Based Framework for Exploratory Business Intelligence&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;benchmarks&quot;&gt;Benchmarks&lt;/h2&gt;
+
+&lt;p&gt;Beyond the real-world case study above, we ran systematic evaluations on LDBC Social Network Benchmark datasets (SF1, SF3, SF10) across 13 analytical queries of varying complexity.&lt;/p&gt;
+
+&lt;p&gt;On the largest scale, SF10 (~10GB), &lt;strong&gt;ExBI was the only system to complete all 13 queries&lt;/strong&gt;. Neo4j completed 7; MySQL completed 2.&lt;/p&gt;
+
+&lt;p&gt;Performance:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;vs. Neo4j: &lt;strong&gt;16.21x&lt;/strong&gt; average speedup, up to 146.25x&lt;/li&gt;
+  &lt;li&gt;vs. MySQL: &lt;strong&gt;46.67x&lt;/strong&gt; average speedup, up to 230.53x&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Speed doesn’t come at the cost of accuracy — COUNT average error rate is 0.27%, MAX error is near zero.&lt;/p&gt;
+
+&lt;p&gt;For the full experimental design and analysis, see the &lt;a href=&quot;https://arxiv.org/abs/2603.10625&quot;&gt;paper&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;try-it-yourself&quot;&gt;Try it yourself&lt;/h2&gt;
+
+&lt;p&gt;We integrated this analytical capability into &lt;a href=&quot;https://github.com/openclaw/openclaw&quot;&gt;OpenClaw&lt;/a&gt; by adding NeuG-related data loading and analysis &lt;a href=&quot;https://github.com/Louyk14/neug/tree/main/skills&quot;&gt;skills&lt;/a&gt;. The case study above was conducted entirely in this environment.&lt;/p&gt;
+
+&lt;table&gt;&lt;tr&gt;&lt;td width=&quot;50%&quot;&gt;&lt;img src=&quot;/blog/assets/images/2026-03-24-explorative-bi-3.jpg&quot; alt=&quot;OpenAIRE Schema&quot; /&gt;&lt;/td&gt;&lt;td width=&quot;50%&quot;&gt;&lt;img src=&quot;/blog/assets/images/2026-03-24-explorative-bi-4.jpg&quot; alt=&quot;Analysis Report&quot; /&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;NeuG: https://github.com/alibaba/neug&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;NeuG data loading and analysis skills: https://github.com/Louyk14/neug/tree/main/skills&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Docker (code + OpenAIRE dataset, ready to use): https://hub.docker.com/r/shunyangli/neugbi&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Paper: &lt;a href=&quot;https://arxiv.org/abs/2603.10625&quot;&gt;A Hypergraph-Based Framework for Exploratory Business Intelligence&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;Full analysis report: &lt;a href=&quot;http://neug.oss-cn-beijing.aliyuncs.com/neugbi/ru_ua_conflict_research_report_en.pdf&quot;&gt;Impact of the Russia-Ukraine War on Russian Academia&lt;/a&gt;&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Tue, 24 Mar 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/03/24/Following-94-Million-Relationships.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/24/Following-94-Million-Relationships.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>We X-Rayed OpenClaw with a Graph Database — Here&apos;s the Technical Debt We Found</title>
@@ -2749,127 +3040,6 @@ JOB
         <pubDate>Mon, 10 Mar 2025 01:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>GraphScope Flex: LEGO-like Graph Computing Stack</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/flex-title.jpg&quot; alt=&quot;title&quot; /&gt;
-From June 9th to June 15th, 2024, SIGMOD 2024 was held in Santiago, Chile. 
-The GraphScope team presented their paper “&lt;a href=&quot;https://arxiv.org/abs/2312.12107&quot;&gt;GraphScope Flex: LEGO-like Graph Computing Stack&lt;/a&gt;” at the SIGMOD Industry Session. 
-This article introduces the main content of that paper.&lt;/p&gt;
-
-&lt;h3 id=&quot;diversified-graph-computing-demands&quot;&gt;Diversified Graph Computing Demands&lt;/h3&gt;
-&lt;p&gt;Graph computing encompasses a wide range of types, commonly including graph analytics, graph interactive queries, and graph neural networks (GNNs). Previous graph computing systems typically cater to a specific type of graph computation. In a complex workflow, which may involve multiple types of graph computing tasks, users often need to employ multiple graph computing systems to complete this intricate process.&lt;/p&gt;
-
-&lt;p&gt;To address these issues, we developed and open-sourced the industry’s first one-stop graph computing system, GraphScope, in 2020. As illustrated in the figure below, GraphScope integrates a Graph Analytics Engine (GAE), a Graph Interactive Engine (GIE), and a Graph Learning Engine (GLE) to support different types of graph computations. Additionally, GraphScope includes an immutable in-memory graph storage system called &lt;a href=&quot;https://github.com/v6d-io/v6d&quot;&gt;Vineyard&lt;/a&gt;, which allows various computing engines to share data through shared memory. To reduce the learning curve for users, GraphScope extends Gremlin as a unified query language and offers a simple and user-friendly Python interface.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/graphscope-arch.jpg&quot; alt=&quot;gs&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In real scenarios, we find that the demand for graph computing is highly diverse. The diagram below illustrates Alibaba’s real graph computing scenarios, where graph data may consist of immutable data stored in memory, may come from external data sources that are continuously updated, or may originate from files in a data lake. The workloads of graph computing are also quite varied. For example, Workload 1 represents running a ranking algorithm (e.g., PageRank) on the graph, which is a typical graph analytics task. Workload 2 represents running a fraud detection model based on graph neural networks on the graph. Workload 3 requires processing a large number of queries related to product recommendations in a short amount of time. Workload 4 represents the need to perform real-time online query operations on graph data through a WebUI, while Workload 5 represents data analysts needing to conduct BI analysis on graph data, aiming to obtain analytical results in the shortest time possible.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/diverse-graph.jpg&quot; alt=&quot;diverse&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;From the examples mentioned above, it is clear that the diversity of graph computing is reflected in various aspects such as storage, workloads, and performance metrics of interest. In light of this diversity, the one-stop design of GraphScope appears inadequate to handle such varied requirements.&lt;/p&gt;
-
-&lt;h4 id=&quot;diversity-of-graph-types-and-storage&quot;&gt;Diversity of Graph Types and Storage&lt;/h4&gt;
-&lt;p&gt;Firstly, there is a diversity in both graph types and graph storage. On one hand, there are multiple graph representation models currently available, as illustrated below. Common models include simple graphs, weighted graphs, sparse matrices/tensors, labeled property graphs, and RDF (Resource Description Framework) graphs. On the other hand, the storage characteristics of graph data also exhibit diversity, including in-memory vs. external storage, mutable vs. immutable data, and support for multi-versioning, among others. Therefore, the use of the property graph model with immutable in-memory storage, such as Vineyard in GraphScope, struggles to adapt to this diversity.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/diverse-store.jpg&quot; alt=&quot;diverse-store&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;diversity-of-graph-computing-paradigms-and-query-interfaces&quot;&gt;Diversity of Graph Computing Paradigms and Query Interfaces&lt;/h4&gt;
-&lt;p&gt;Secondly, the types of graph computing are highly diverse, encompassing various workloads such as graph analytics, graph querying, and graph neural networks. Moreover, different types of graph computing tasks typically employ different programming interfaces and query languages. Even within the same type of graph computation, there are multiple commonly used programming interfaces and query languages, making it difficult to expect users to express all workloads using a single, unified interface or language. For example, &lt;a href=&quot;https://graphscope.io/blog/tech/2021/03/25/a-review-of-programming-models-for-parallel-graph-processing&quot;&gt;common programming interfaces for graph analytics tasks&lt;/a&gt; include Pregel, GAS, and PIE, while frequently used query languages in the graph querying domain include Gremlin, Cypher, and GQL. Additionally, popular graph neural network systems like &lt;a href=&quot;https://www.dgl.ai/&quot;&gt;DGL&lt;/a&gt; and &lt;a href=&quot;https://www.pyg.org/&quot;&gt;PyG&lt;/a&gt; utilize different programming interfaces. Consequently, the use of a unified programming/query language in GraphScope faces challenges in addressing the diversity of computing paradigms and query interfaces.&lt;/p&gt;
-
-&lt;h4 id=&quot;diversity-of-performance-requirements-in-graph-computing&quot;&gt;Diversity of Performance Requirements in Graph Computing&lt;/h4&gt;
-&lt;p&gt;Finally, even with the same data and the same type of workload, the performance metrics we focus on may vary across different scenarios. For example, in tasks related to graph querying, when faced with a scenario that requires handling a large number of simple queries in a short time, our primary performance metric is system throughput. Conversely, in a scenario involving a small number of complex queries, the focus shifts to low latency, meaning that the system must return results for individual queries in the shortest time possible. Since any given system or component is typically optimized for a specific performance metric, a single component in GraphScope struggles to effectively meet multiple performance requirements simultaneously.&lt;/p&gt;
-
-&lt;h3 id=&quot;graphscope-flex-modular-design-inspired-by-lego&quot;&gt;GraphScope Flex: Modular Design Inspired by LEGO&lt;/h3&gt;
-
-&lt;p&gt;To better address the increasingly diverse needs of graph computing, we have designed the next-generation architecture of GraphScope, known as GraphScope Flex. This architecture adopts a modular design philosophy, allowing users to freely select appropriate components based on specific task requirements, much like building with LEGO bricks.&lt;/p&gt;
-
-&lt;p&gt;The architecture of GraphScope Flex, as shown in the diagram below, is divided into three layers: the storage layer, the execution engine layer, and the frontend layer. Each layer contains a rich set of components that have been highly optimized for different objectives.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/flex-arch.jpg&quot; alt=&quot;flex-arch&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;When given a specific task, users simply need to select the components that meet their requirements from each layer. They can then use the building tool, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flexbuild&lt;/code&gt;, provided by GraphScope Flex to construct a graph computing system tailored to their needs. Specifically, each layer in GraphScope Flex includes the following components.&lt;/p&gt;
-
-&lt;h4 id=&quot;storage-layer&quot;&gt;Storage Layer&lt;/h4&gt;
-&lt;p&gt;The storage layer currently supports several types of storage: immutable in-memory storage (Vineyard), standard data file format for graph (&lt;a href=&quot;https://graphar.apache.org/&quot;&gt;GraphAr&lt;/a&gt;), multi-version mutable storage (&lt;a href=&quot;https://github.com/graphscope/gart&quot;&gt;GART&lt;/a&gt;), and mutable in-memory storage (mCSR). Each storage type has different access interfaces. To shield the execution engines from the interface discrepancies of various storage types, GraphScope Flex adopts a standardized graph access interface called &lt;a href=&quot;https://github.com/GraphScope/GRIN&quot;&gt;GRIN&lt;/a&gt;, requiring all storage implementations to comply with this interface. This way, all upper-layer computing engines can access all graph storage using a single, uniform interface. In the future, if new storage options are added to the storage layer, users won’t need to worry about compatibility issues resulting from these extensions.&lt;/p&gt;
-
-&lt;h4 id=&quot;execution-engine-layer&quot;&gt;Execution Engine Layer&lt;/h4&gt;
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRAPE&lt;/code&gt; is a high-performance distributed engine designed for graph analysis tasks, optimized for computation and communication on the CPU. Recently, it has introduced support for GPU, leveraging the high computing power of GPUs and high-speed interconnects like NVLink to accelerate graph analysis tasks. GRAPE provides external programming models such as Pregel, PIE, and FLASH, facilitating the development of customized graph analysis algorithms for users.&lt;/p&gt;
-
-&lt;p&gt;For graph querying tasks, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphIR&lt;/code&gt; module translates user-written queries in Cypher or Gremlin into a query language-agnostic intermediate representation. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph Query Optimizer&lt;/code&gt; module employs both Rule-based Optimization (RBO) and Cost-based Optimization (CBO) techniques to optimize this intermediate representation. Depending on the performance metrics of interest, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor Codegen&lt;/code&gt; module generates physical execution plans that can be executed on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor&lt;/code&gt; component, a low-level parallel engine suitable for high-throughput scenarios. If the goal is to minimize the execution time of individual queries, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaia Codegen&lt;/code&gt; module will generate physical execution plans for execution on the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gaia&lt;/code&gt; component, a dataflow engine that automatically parallelizes queries to reduce execution time.&lt;/p&gt;
-
-&lt;p&gt;To support graph neural networks, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph-Learn&lt;/code&gt; module handles graph sampling operations, offering support for both CPU and GPU. On the GPU platform, it incorporates an efficient caching mechanism to further accelerate the graph sampling speed. Additionally, the back-end tensor execution module supports both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PyTorch&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TensorFlow&lt;/code&gt;, allowing users to choose according to their needs.&lt;/p&gt;
-
-&lt;h4 id=&quot;frontend-layer&quot;&gt;Frontend Layer&lt;/h4&gt;
-&lt;p&gt;The frontend layer includes a rich set of algorithm packages and provides various SDKs and APIs for external services. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Builtin Apps&lt;/code&gt; module includes common graph analysis algorithms, such as PageRank and shortest path. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GNN Models&lt;/code&gt; module encompasses popular graph neural network models like GCN, PinSAGE, and GraphSAGE. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cypher&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Gremlin&lt;/code&gt; modules allow users to perform graph query operations directly using Cypher and Gremlin query languages. Furthermore, the application layer exposes RESTful/WebSocket APIs, making it easy for users to integrate GraphScope Flex with other systems, and provides C++, Python, and Java SDKs to facilitate the development of custom graph algorithm applications.&lt;/p&gt;
-
-&lt;h3 id=&quot;real-world-use-cases-of-graphscope-flex&quot;&gt;Real-World Use Cases of GraphScope Flex&lt;/h3&gt;
-
-&lt;h4 id=&quot;company-equity-analysis&quot;&gt;Company Equity Analysis&lt;/h4&gt;
-&lt;p&gt;In the task of company equity analysis, we need to identify the ultimate controller of a company, i.e., the individual who controls more than 50% of the company’s equity. An individual may exert influence through multiple layers of companies, so we need to start from a particular individual and calculate both the equity they directly hold and the equity held through other companies. While this process can be expressed and executed using SQL on a relational database, it is often very inefficient. For instance, on a real dataset containing 300 million individuals/companies and 1.5 billion equity holding records, it can take over an hour in a relational database to compute the desired results without yielding any output.&lt;/p&gt;
-
-&lt;p&gt;Given the interconnected nature of equity structures, we can transform this problem into a graph analytics task. First, we need to convert the equity relationships into a graph data structure, where the vertices represent individuals or companies, and the edges represent the equity holding relationships.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/equity-analysis.jpg&quot; alt=&quot;equity&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;We then select the components illustrated in the diagram below to build a graph analytical system for completing the company equity analysis task.
-To achieve higher performance, we choose the in-memory graph storage, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Vineyard&lt;/code&gt;, for the storage layer.
-We select &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GRAPE&lt;/code&gt; as the execution engine for the graph analysis algorithms in the wxecution engine layer.
-Users can write the equity analysis logic using the SDK, leveraging the Pregel/PIE interfaces exposed by GRAPE in the frontend layer.
-With this configuration, GraphScope Flex can process the same dataset and obtain results in just 15 minutes, demonstrating a significant improvement in efficiency compared to traditional methods. This showcases the flexibility and power of GraphScope Flex in handling complex analysis tasks effectively.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/equity-arch.jpg&quot; alt=&quot;equity-arch&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;real-time-fraud-detection&quot;&gt;Real-Time Fraud Detection&lt;/h4&gt;
-
-&lt;p&gt;E-commerce platforms need to perform real-time checks on each order to determine whether it involves fraudulent activities such as order brushing. As shown in the image below, the e-commerce platform has marked a portion of accounts as fraudulent accounts (fraud seeds). We can consider accounts that frequently have a “co-purchase” relationship with these fraudulent accounts as highly suspicious fraudulent accounts as well.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/fraud-graph.jpg&quot; alt=&quot;fraud-graph&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;To express the “co-purchase” relationship mentioned above, we can use the following Cypher statement. Therefore, this fraud detection issue is well suited to be transformed into a graph computing problem.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;MATCH (v:Account{id:1})-[b1:BUY]-&amp;gt;(:Item)&amp;lt;-[b2:BUY]-(s:Account)
-WHERE s.id IN SEEDS AND b1.date-b2.date &amp;lt; 5 /*within 5 days*/
-WITH v, COUNT(s) AS cnt1
-MATCH (v)-[:KNOWS]-(f:Account), (f)-[b1:BUY]-&amp;gt;(:Item)&amp;lt;-[b2:BUY]-(s:
-          Account) WHERE s.id IN SEEDS WITH v, cnt1, COUNT(s) AS cnt2
-WHERE w1 * cnt1 + w2 * cnt2 &amp;gt; threshold
-RETURN v
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;To achieve real-time fraud detection, we can select the components shown in the diagram to construct a graph computing system. Considering that order data is continuously arriving, we have chosen the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GART&lt;/code&gt; component, which supports multi-version variable memory graph storage.
-At the execution engine layer, since we need to handle a large volume of orders in a short time, the core metric we need to focus on is system throughput. Therefore, we have selected the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor Codegen&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Hiactor&lt;/code&gt; components, along with the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;GraphIR&lt;/code&gt; component and the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph Query Optimizer&lt;/code&gt; component, to receive queries written in Cypher from the frontend layer.
-With this deployment plan on real datasets, we can achieve performance exceeding 350,000 QPS.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/fraud-arch.jpg&quot; alt=&quot;fraud-arch&quot; /&gt;&lt;/p&gt;
-
-&lt;h4 id=&quot;friendship-relationship-prediction&quot;&gt;Friendship Relationship Prediction&lt;/h4&gt;
-
-&lt;p&gt;When e-commerce platforms make product recommendations, a very important strategy is to recommend products liked by a user’s friends. However, the friendship relationship data among users on e-commerce platforms is often incomplete, so it is necessary to predict whether a friendship exists between two users. Since graphs can naturally depict the relationships among users, this issue can also be transformed into a graph computing problem. Currently, the industry commonly uses graph neural networks to handle graph-based friendship relationship prediction tasks.&lt;/p&gt;
-
-&lt;p&gt;Based on e-commerce data, we can first construct a graph as shown in the diagram, where each vertex represents users, products, comments, etc., and edges represent friendships, purchases, comments, etc. In graph neural network models, such as those represented by the NCN algorithm, calculations like “common friends” need to be performed on the graph, as two users with many common friends are more likely to have a friendship.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/rec-graph.jpg&quot; alt=&quot;rec-graph&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;To deploy a system for friendship relationship prediction based on GraphScope Flex, we can select the components shown in the diagram from GraphScope Flex. In this setup, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Vineyard&lt;/code&gt; component in the storage layer models the data as a property graph and stores it in memory. The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Graph-Learn&lt;/code&gt; component is responsible for calculating common friends, neighbor sampling, and other operations, while the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PyTorch&lt;/code&gt; module is used for graph neural network inference. At the frontend layer, users can invoke the inference service through the Python SDK.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/rec-arch.jpg&quot; alt=&quot;rec-arch&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;high-performance-and-continuous-iteration&quot;&gt;High Performance and Continuous Iteration&lt;/h3&gt;
-
-&lt;p&gt;Thanks to the modular design of GraphScope Flex, it has achieved efficient performance across a variety of workloads. Notably, in the internationally recognized benchmark for transactional online query scenarios, LDBC-SNB, GraphScope Flex achieved &lt;a href=&quot;https://graphscope.io/blog/tech/2024/06/27/GraphScope-refreshes-the-world-record-for-the-LDBC-benchmark&quot;&gt;a performance that surpasses the previous record holder by 2.6 times&lt;/a&gt;, securing the top position.
-We will also publish articles in the future to provide detailed information about the design of each module, so stay tuned!&lt;/p&gt;
-
-</description>
-        <pubDate>Mon, 05 Aug 2024 01:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2024/08/05/GraphScope-Flex-LEGO-like-Graph-Computing-Stack.html</guid>
         
         
         <category>Tech</category>
