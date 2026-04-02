@@ -5,9 +5,618 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 24 Mar 2026 09:01:31 +0000</pubDate>
-    <lastBuildDate>Tue, 24 Mar 2026 09:01:31 +0000</lastBuildDate>
+    <pubDate>Thu, 02 Apr 2026 13:35:17 +0000</pubDate>
+    <lastBuildDate>Thu, 02 Apr 2026 13:35:17 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>Dissecting Claude Code: A Graph-Powered Deep Dive into an AI Coding Agent&apos;s Architecture</title>
+        <description>&lt;blockquote&gt;
+  &lt;p&gt;We indexed &lt;strong&gt;1,906 source files&lt;/strong&gt;, &lt;strong&gt;9,848 functions&lt;/strong&gt;, and &lt;strong&gt;22,678 call edges&lt;/strong&gt; using &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph&lt;/a&gt; — a code intelligence skill powered by &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt;, an open-source embedded graph database — to reveal what lies beneath the surface of one of the most ambitious AI coding tools ever built.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-numbers-at-a-glance&quot;&gt;The Numbers at a Glance&lt;/h2&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Metric&lt;/th&gt;
+      &lt;th&gt;Count&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Source Files&lt;/td&gt;
+      &lt;td&gt;1,906&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Functions&lt;/td&gt;
+      &lt;td&gt;9,848&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Call Edges&lt;/td&gt;
+      &lt;td&gt;22,678&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Import Edges&lt;/td&gt;
+      &lt;td&gt;15,743&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Modules&lt;/td&gt;
+      &lt;td&gt;306&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Classes&lt;/td&gt;
+      &lt;td&gt;128&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Claude Code is a &lt;strong&gt;TypeScript monolith&lt;/strong&gt; running on &lt;strong&gt;Bun + Ink&lt;/strong&gt; (React for terminals). &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.tsx&lt;/code&gt; alone exceeds 4,700 lines, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;REPL.tsx&lt;/code&gt; tops 5,000 lines with 288 outgoing function calls — the highest fan-out of any component in the system.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;1-architecture-five-layers-one-gravity-well&quot;&gt;1. Architecture: Five Layers, One Gravity Well&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/01-architecture.png&quot; alt=&quot;Architecture Overview&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;CodeGraph’s layer discovery reveals an &lt;strong&gt;onion-ring architecture&lt;/strong&gt; with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;src/utils&lt;/code&gt; as the gravitational center. The five layers, from top to bottom:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Entry Points&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;REPL.tsx&lt;/code&gt; (288 calls, 236 imports), &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;main.tsx&lt;/code&gt; (275 calls, 163 imports), and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;print.ts&lt;/code&gt; (164 calls, CLI pipeline). These are the three doors into Claude Code.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;UI Layer&lt;/strong&gt; — 131 files including the 113-file &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;components/&lt;/code&gt; directory, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PromptInput&lt;/code&gt; (105 outgoing calls), the Buddy virtual pet system, and Ink’s custom terminal renderer (52 methods).&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Logic Layer&lt;/strong&gt; — 120 hooks, 80+ slash commands, 42 tools (from the 151-function BashTool to the 1-function SleepTool), and 14 keybinding files.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Service Layer&lt;/strong&gt; — Analytics (428 callers), MCP protocol (41 files), Permissions (41 files), Bridge remote control (33 files), the Swarm multi-agent system, and 7 task types.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Foundation&lt;/strong&gt; — The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;utils/&lt;/code&gt; directory with 299 files absorbing &lt;strong&gt;5,951 incoming calls&lt;/strong&gt; — 6x more than the next highest module. It’s not a utility folder; it’s the bedrock of reality for this codebase.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-repl-a-component-that-imports-the-universe&quot;&gt;The REPL: A Component That Imports the Universe&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;REPL.tsx&lt;/code&gt; imports from &lt;strong&gt;236 files&lt;/strong&gt; — more than any other file in the codebase. It connects to hooks, components, services, bridge, swarm, voice, cost-tracking, MCP, and keybindings. Yet it has &lt;strong&gt;0 callers&lt;/strong&gt; (fan-in = 0). It’s the root UI leaf that nobody calls into; it only calls out.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;2-bridge-functions-the-nervous-system&quot;&gt;2. Bridge Functions: The Nervous System&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/02-bridge-functions.png&quot; alt=&quot;Bridge Functions&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;A &lt;strong&gt;bridge function&lt;/strong&gt; is one called from the most distinct modules — the glue holding disparate subsystems together. CodeGraph identified these top bridges:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Function&lt;/th&gt;
+      &lt;th&gt;File&lt;/th&gt;
+      &lt;th&gt;Modules Spanned&lt;/th&gt;
+      &lt;th&gt;Total Callers&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logForDebugging&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;debug.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;90&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;911&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logEvent&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;analytics/index.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;94&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;428&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logError&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;log.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;77&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;413&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;set&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;fileStateCache.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;64&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;290&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jsonStringify&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;slowOperations.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;63&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;248&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;isEnvTruthy&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;envUtils.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;47&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;194&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getGlobalConfig&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;config.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;44&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;163&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getCwd&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;cwd.ts&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;43&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;135&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;logForDebugging&lt;/code&gt; is called from &lt;strong&gt;90 out of 306 modules&lt;/strong&gt; — nearly 1 in 3 modules feeds debug info through this single function. It’s the all-seeing eye of Claude Code.&lt;/p&gt;
+
+&lt;p&gt;Notice the file name &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;slowOperations.ts&lt;/code&gt; housing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jsonStringify&lt;/code&gt; (248 callers, 63 modules). The team explicitly wraps JSON operations in a module named “slow” — a candid acknowledgment that serialization is a performance bottleneck they want to track.&lt;/p&gt;
+
+&lt;p&gt;The top 3 bridge functions alone account for &lt;strong&gt;1,752 call edges&lt;/strong&gt; across &lt;strong&gt;261 module-boundaries&lt;/strong&gt;. Removing any one would fracture the entire system.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;3-the-permission-gateway-a-single-chokepoint&quot;&gt;3. The Permission Gateway: A Single Chokepoint&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/03-permission-gateway.png&quot; alt=&quot;Permission Gateway&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;One of the most architecturally significant findings: &lt;strong&gt;every tool execution flows through a single function&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;checkPermissionsAndCallTool&lt;/code&gt;. It has only &lt;strong&gt;1 caller&lt;/strong&gt; (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;streamedCheckPermissionsAndCallTool&lt;/code&gt;) but calls &lt;strong&gt;30 different functions&lt;/strong&gt; spanning telemetry, permission rules, classifier checks, error handling, and analytics.&lt;/p&gt;
+
+&lt;p&gt;This is a textbook &lt;strong&gt;Policy Enforcement Point (PEP)&lt;/strong&gt; — a single chokepoint where all 42 tools must pass through for authorization. The downstream functions include:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;checkRuleBasedPermissions&lt;/strong&gt; — evaluates the rule engine&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;startSpeculativeClassifierCheck&lt;/strong&gt; — the “YOLO mode” classifier&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;resolveHookPermissionDecision&lt;/strong&gt; — hook-based overrides&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;logEvent + logOTelEvent&lt;/strong&gt; — dual telemetry (analytics + OpenTelemetry)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;startToolSpan / endToolSpan&lt;/strong&gt; — tracing boundaries&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;formatZodValidationError&lt;/strong&gt; — schema validation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This architecture makes it trivially easy to add security policies, audit logging, and rate limiting without modifying any individual tool.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-1511-complexity-ratio&quot;&gt;The 151:1 Complexity Ratio&lt;/h3&gt;
+
+&lt;p&gt;Not all tools are created equal. BashTool has &lt;strong&gt;151 functions&lt;/strong&gt; (command parsing, sandboxing, permission verification, timeout management, output capture, cross-platform compatibility). SleepTool has &lt;strong&gt;1 function&lt;/strong&gt;. That’s a 151:1 complexity range across a unified interface.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Tool&lt;/th&gt;
+      &lt;th&gt;Functions&lt;/th&gt;
+      &lt;th&gt;Category&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;BashTool&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;151&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Shell execution&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;PowerShellTool&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;101&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Windows shell&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;AgentTool&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;91&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Multi-agent orchestration&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;LSPTool&lt;/td&gt;
+      &lt;td&gt;35&lt;/td&gt;
+      &lt;td&gt;Language server&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;FileEditTool&lt;/td&gt;
+      &lt;td&gt;31&lt;/td&gt;
+      &lt;td&gt;File operations&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GrepTool&lt;/td&gt;
+      &lt;td&gt;8&lt;/td&gt;
+      &lt;td&gt;Search&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;SleepTool&lt;/td&gt;
+      &lt;td&gt;1&lt;/td&gt;
+      &lt;td&gt;Wait&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;4-the-buddy-system-a-gacha-game-inside-a-dev-tool&quot;&gt;4. The Buddy System: A Gacha Game Inside a Dev Tool&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/04-buddy-system.png&quot; alt=&quot;Buddy System&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Perhaps the most delightful discovery: Claude Code contains a complete &lt;strong&gt;virtual pet system&lt;/strong&gt; with gacha mechanics, ASCII art animations, and RPG stats.&lt;/p&gt;
+
+&lt;h3 id=&quot;how-companion-generation-works&quot;&gt;How Companion Generation Works&lt;/h3&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Hash the User ID&lt;/strong&gt; with a salt (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;friend-2026-401&lt;/code&gt;) using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hashString()&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Seed a Mulberry32 PRNG&lt;/strong&gt; with the hash value&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Roll deterministically&lt;/strong&gt; for species, rarity, eyes, hat, and stats&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cache the result&lt;/strong&gt; (the buddy renders every 500ms, can’t re-roll each frame)&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;The “bones” (species, rarity, stats) are &lt;strong&gt;regenerated from hash on every read&lt;/strong&gt; and never persisted to disk. Only the “soul” (user-chosen name and personality) is saved. This means:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Anti-cheat&lt;/strong&gt;: Users can’t edit their config to fake a Legendary rarity&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Schema-safe&lt;/strong&gt;: Changes to the species array won’t break saved companions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Deterministic&lt;/strong&gt;: Same user = same companion forever&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;the-hex-obfuscation-trick&quot;&gt;The Hex Obfuscation Trick&lt;/h3&gt;
+
+&lt;p&gt;All 18 species names are encoded as hex character codes to dodge a build-time string filter:&lt;/p&gt;
+
+&lt;div class=&quot;language-typescript highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;const&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;duck&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;String&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;fromCharCode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mh&quot;&gt;0x64&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x75&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x63&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;mh&quot;&gt;0x6b&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;// &quot;duck&quot;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One species name collides with an internal model codename listed in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;excluded-strings.txt&lt;/code&gt;, so the team encoded ALL species uniformly.&lt;/p&gt;
+
+&lt;h3 id=&quot;gacha-rarity-distribution&quot;&gt;Gacha Rarity Distribution&lt;/h3&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Rarity&lt;/th&gt;
+      &lt;th&gt;Probability&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Common&lt;/td&gt;
+      &lt;td&gt;60%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Uncommon&lt;/td&gt;
+      &lt;td&gt;25%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Rare&lt;/td&gt;
+      &lt;td&gt;10%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Epic&lt;/td&gt;
+      &lt;td&gt;4%&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Legendary&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;1%&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Each companion has &lt;strong&gt;5 RPG stats&lt;/strong&gt;: DEBUGGING, PATIENCE, CHAOS, WISDOM, SNARK. The ASCII sprites are 5 lines tall, 12 columns wide, with 2-3 frames for idle animation. Frame &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-1&lt;/code&gt; in the 15-frame idle sequence triggers a rare blink animation.&lt;/p&gt;
+
+&lt;p&gt;Here’s an actual duck sprite from the codebase:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;    __
+  &amp;lt;(· )___
+   (  ._&amp;gt;
+    `--´
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;CodeGraph’s impact analysis traces the call chain: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getCompanion()&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CompanionSprite&lt;/code&gt; → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PromptInput&lt;/code&gt; (105 calls) → &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;REPL&lt;/code&gt; (288 calls) → Terminal UI.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;5-dream-task-the-ai-that-dreams-while-you-code&quot;&gt;5. Dream Task: The AI That Dreams While You Code&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/05-dream-task.png&quot; alt=&quot;Dream Task&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Claude Code has a &lt;strong&gt;background memory consolidation system&lt;/strong&gt; that literally runs while you work — the AI “dreams” about past sessions to improve its memory.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-four-gates-cheapest-first&quot;&gt;The Four Gates (Cheapest First)&lt;/h3&gt;
+
+&lt;p&gt;Before dreaming begins, four gates must pass — ordered by computational cost:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Time Gate&lt;/strong&gt; (cost: 1 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;stat()&lt;/code&gt; call) — Has 24 hours elapsed since the last dream?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Scan Throttle&lt;/strong&gt; (cost: memory timestamp check) — Has 10 minutes passed since the last scan?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Session Gate&lt;/strong&gt; (cost: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;readdir&lt;/code&gt;) — Are there 5+ new sessions to consolidate?&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Lock Gate&lt;/strong&gt; (cost: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flock&lt;/code&gt;) — Is the file-based mutex free?&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;This ordering ensures &lt;strong&gt;cheap rejections happen first&lt;/strong&gt;. Most API turns exit at gate 1 with a single stat call.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-four-phases-of-dreaming&quot;&gt;The Four Phases of Dreaming&lt;/h3&gt;
+
+&lt;p&gt;Once the gates pass, a restricted subagent forks with &lt;strong&gt;read-only Bash permissions&lt;/strong&gt; (only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ls&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grep&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cat&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;head&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tail&lt;/code&gt;):&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Orient&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ls&lt;/code&gt; the memory directory to understand current state&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Gather&lt;/strong&gt; — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;grep&lt;/code&gt; recent session transcripts for patterns and reusable knowledge&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Consolidate&lt;/strong&gt; — Write/update memory files with distilled knowledge&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Prune&lt;/strong&gt; — Keep the memory index under 25KB, entries under 150 characters&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;the-filesystem-retry-trick&quot;&gt;The Filesystem Retry Trick&lt;/h3&gt;
+
+&lt;p&gt;When a dream is killed mid-flight, it calls &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;rollbackConsolidationLock(priorMtime)&lt;/code&gt; to &lt;strong&gt;rewind the lock file’s modification time&lt;/strong&gt;. This makes the Time Gate pass again on the next API turn — a retry mechanism built into the filesystem itself.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;6-swarm-multi-agent-orchestration&quot;&gt;6. Swarm: Multi-Agent Orchestration&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/06-swarm-system.png&quot; alt=&quot;Swarm System&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The most architecturally ambitious module: a &lt;strong&gt;three-tier backend abstraction&lt;/strong&gt; for spawning and managing teams of AI agents.&lt;/p&gt;
+
+&lt;h3 id=&quot;backend-detection-priority-chain&quot;&gt;Backend Detection Priority Chain&lt;/h3&gt;
+
+&lt;p&gt;When a teammate is spawned, the system probes the environment:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Priority&lt;/th&gt;
+      &lt;th&gt;Backend&lt;/th&gt;
+      &lt;th&gt;Lines&lt;/th&gt;
+      &lt;th&gt;Detection Method&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;P1&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;TmuxBackend&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;765&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ORIGINAL_USER_TMUX&lt;/code&gt; env var&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;P2&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;ITermBackend&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;370&lt;/td&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TERM_PROGRAM&lt;/code&gt; + &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;it2 session list&lt;/code&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;P3&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;InProcessBackend&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;340&lt;/td&gt;
+      &lt;td&gt;Always available (fallback)&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The &lt;strong&gt;PaneBackendExecutor&lt;/strong&gt; adapter wraps tmux/iTerm2 into the same &lt;strong&gt;TeammateExecutor&lt;/strong&gt; interface that InProcessBackend implements directly. This lets the system degrade gracefully: tmux → iTerm2 → in-process.&lt;/p&gt;
+
+&lt;h3 id=&quot;why-asynclocalstorage&quot;&gt;Why AsyncLocalStorage?&lt;/h3&gt;
+
+&lt;p&gt;When agents are backgrounded (Ctrl+B), multiple agents run &lt;strong&gt;concurrently in the same Node.js process&lt;/strong&gt;. AppState is a single shared mutable object. If Agent A’s telemetry reads it, it might get Agent B’s context.&lt;/p&gt;
+
+&lt;p&gt;AsyncLocalStorage isolates each async execution chain, giving each agent its own identity bubble — without requiring process isolation.&lt;/p&gt;
+
+&lt;h3 id=&quot;task-id-design&quot;&gt;Task ID Design&lt;/h3&gt;
+
+&lt;p&gt;Each task gets a unique ID: a &lt;strong&gt;single-letter prefix&lt;/strong&gt; + 8 random base-36 characters:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt; = bash, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt; = agent, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;r&lt;/code&gt; = remote, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;t&lt;/code&gt; = teammate, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;w&lt;/code&gt; = workflow, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;m&lt;/code&gt; = monitor, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d&lt;/code&gt; = dream&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This gives instant type identification from the ID string alone, with 36^8 ≈ 2.8 trillion combinations.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;7-cost-tracker-follow-the-money&quot;&gt;7. Cost Tracker: Follow the Money&lt;/h2&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-02-claude-code/07-cost-tracker.png&quot; alt=&quot;Cost Tracker&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The cost tracking system handles &lt;strong&gt;7 pricing tiers&lt;/strong&gt; with dynamic tier selection for Opus 4.6:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Model&lt;/th&gt;
+      &lt;th&gt;Input/1M&lt;/th&gt;
+      &lt;th&gt;Output/1M&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Haiku 3.5&lt;/td&gt;
+      &lt;td&gt;$0.80&lt;/td&gt;
+      &lt;td&gt;$4&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Sonnet&lt;/td&gt;
+      &lt;td&gt;$3&lt;/td&gt;
+      &lt;td&gt;$15&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Opus 4.5&lt;/td&gt;
+      &lt;td&gt;$5&lt;/td&gt;
+      &lt;td&gt;$25&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Opus 4/4.1&lt;/td&gt;
+      &lt;td&gt;$15&lt;/td&gt;
+      &lt;td&gt;$75&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Opus 4.6 (fast)&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;$30&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;$150&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getOpus46CostTier(fastMode)&lt;/code&gt; dynamically selects the tier based on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;response_speed&lt;/code&gt; — fast mode costs 2x.&lt;/p&gt;
+
+&lt;h3 id=&quot;the-billing-access-gate&quot;&gt;The Billing Access Gate&lt;/h3&gt;
+
+&lt;p&gt;The display logic reveals thoughtful product thinking:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Subscribers (Max/Pro)&lt;/strong&gt;: Costs are &lt;strong&gt;hidden&lt;/strong&gt; (flat rate — showing costs would be confusing)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;API-key users with admin/billing roles&lt;/strong&gt;: Costs are &lt;strong&gt;displayed&lt;/strong&gt; (they’re paying per-token)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is controlled by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hasConsoleBillingAccess()&lt;/code&gt;, which checks &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DISABLE_COST_WARNINGS&lt;/code&gt; env, subscriber status, auth tokens, and org/workspace roles.&lt;/p&gt;
+
+&lt;h3 id=&quot;what-gets-tracked&quot;&gt;What Gets Tracked&lt;/h3&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;totalCostUSD&lt;/code&gt; — cumulative dollar amount&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;totalAPIDuration&lt;/code&gt; — time spent waiting for API responses&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;totalToolDuration&lt;/code&gt; — time spent executing tools&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;linesAdded / linesRemoved&lt;/code&gt; — code change volume&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;modelUsage&lt;/code&gt; — per-model token breakdown&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fpsMetrics&lt;/code&gt; — terminal rendering performance&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;All of this persists to project config and survives session restarts via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;restoreCostStateForSession()&lt;/code&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;8-the-loneliest-1265&quot;&gt;8. The Loneliest 1,265&lt;/h2&gt;
+
+&lt;p&gt;CodeGraph found &lt;strong&gt;1,265 isolated functions&lt;/strong&gt; — functions with zero callers AND zero callees. Out of 9,848 total, that’s &lt;strong&gt;12.8%&lt;/strong&gt; sitting in complete isolation.&lt;/p&gt;
+
+&lt;p&gt;Where do they live?&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;File&lt;/th&gt;
+      &lt;th&gt;Total Functions&lt;/th&gt;
+      &lt;th&gt;Why Isolated&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bootstrap/state.ts&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;212&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Getters/setters called dynamically&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sessionStorage.ts&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;153&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Dynamic property access&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;yoga-layout/index.ts&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;134&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;FFI binding layer&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bootstrap/state.ts&lt;/code&gt; alone has 212 functions — the densest file in the codebase. It’s a global state machine that vends getters and setters for everything from session IDs to model strings. Static analysis can’t see dynamic property access, so they appear “isolated” even though they’re heavily used at runtime.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;9-the-class-hierarchy-oop-at-the-boundaries&quot;&gt;9. The Class Hierarchy: OOP at the Boundaries&lt;/h2&gt;
+
+&lt;p&gt;With 128 classes in a primarily functional codebase, where does OOP live?&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Class&lt;/th&gt;
+      &lt;th&gt;Methods&lt;/th&gt;
+      &lt;th&gt;Purpose&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Node&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;91&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Yoga layout FFI binding&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cursor&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;59&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Terminal cursor management&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Ink&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;52&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Custom React terminal renderer&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YogaLayoutNode&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;50&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Flexbox layout engine&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WebSocketTransport&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;30&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;WebSocket client&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;TmuxBackend&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;20&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;Tmux pane management&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CCRClient&lt;/code&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;24&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;API transport layer&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The top 4 classes are all &lt;strong&gt;rendering infrastructure&lt;/strong&gt;. The business logic (tools, permissions, cost tracking, buddy) is overwhelmingly functional — closures, hooks, and module-level state. Classes appear only at the boundaries: transport protocols, terminal abstractions, and system backends.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;10-patterns-worth-stealing&quot;&gt;10. Patterns Worth Stealing&lt;/h2&gt;
+
+&lt;h3 id=&quot;deterministic-generation-without-persistence&quot;&gt;Deterministic Generation Without Persistence&lt;/h3&gt;
+
+&lt;p&gt;The buddy system regenerates &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bones&lt;/code&gt; from &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;hash(userId)&lt;/code&gt; every time. Only &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;soul&lt;/code&gt; persists. This eliminates schema migration headaches AND prevents config-file cheating.&lt;/p&gt;
+
+&lt;h3 id=&quot;gate-ordering-by-cost&quot;&gt;Gate Ordering by Cost&lt;/h3&gt;
+
+&lt;p&gt;The dream task checks: in-memory flag → stat a file → list a directory → acquire a lock. Each gate is more expensive than the last, so cheap rejections happen first.&lt;/p&gt;
+
+&lt;h3 id=&quot;single-letter-task-id-prefixes&quot;&gt;Single-Letter Task ID Prefixes&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;b&lt;/code&gt;ash, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;a&lt;/code&gt;gent, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;r&lt;/code&gt;emote, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;t&lt;/code&gt;eammate, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;w&lt;/code&gt;orkflow, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;m&lt;/code&gt;onitor, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;d&lt;/code&gt;ream — instant type identification from the ID string alone.&lt;/p&gt;
+
+&lt;h3 id=&quot;honest-function-names&quot;&gt;Honest Function Names&lt;/h3&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;getFeatureValue_CACHED_MAY_BE_STALE&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;slowOperations.ts&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;writeFileSyncAndFlush_DEPRECATED&lt;/code&gt; — names that force callers to understand the tradeoffs.&lt;/p&gt;
+
+&lt;h3 id=&quot;asynclocalstorage-for-concurrent-identity&quot;&gt;AsyncLocalStorage for Concurrent Identity&lt;/h3&gt;
+
+&lt;p&gt;When multiple agents share a process, don’t use global state for identity. Use AsyncLocalStorage to give each async execution chain its own context.&lt;/p&gt;
+
+&lt;h3 id=&quot;single-permission-gateway&quot;&gt;Single Permission Gateway&lt;/h3&gt;
+
+&lt;p&gt;Route all 42 tools through one function. Adding a new security policy means changing one file, not 42.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Claude Code is not just an AI coding assistant — it’s a &lt;strong&gt;miniature operating system&lt;/strong&gt; for AI agents. Through CodeGraph’s structural analysis, we’ve uncovered:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;A &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;utils&lt;/code&gt; foundation with &lt;strong&gt;5,951 incoming calls&lt;/strong&gt; acting as bedrock&lt;/li&gt;
+  &lt;li&gt;A permission system where &lt;strong&gt;all 42 tools pass through a single gateway&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;A virtual pet with &lt;strong&gt;gacha mechanics and anti-cheat architecture&lt;/strong&gt;&lt;/li&gt;
+  &lt;li&gt;An AI that &lt;strong&gt;dreams about its memories&lt;/strong&gt; during idle hours&lt;/li&gt;
+  &lt;li&gt;A &lt;strong&gt;three-tier multi-agent orchestration system&lt;/strong&gt; spanning tmux, iTerm2, and in-process&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;1,265 isolated functions&lt;/strong&gt; (12.8%) sitting in silence&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The graph never lies. Behind every great product is an architecture that tells its own story — you just need the right tools to read it.&lt;/p&gt;
+</description>
+        <pubDate>Thu, 02 Apr 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/04/02/Dissecting-Claude-Code.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/04/02/Dissecting-Claude-Code.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Following 94 Million Relationships Down the Rabbit Hole</title>
@@ -2771,275 +3380,6 @@ The &lt;a href=&quot;http://ldbcouncil.org/&quot;&gt;Linked Data Benchmark Counc
         <pubDate>Tue, 25 Mar 2025 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>RelGo: Optimizing Relational Databases with GOpt</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-10-title-picture.jpg&quot; alt=&quot;title&quot; /&gt;
-The GraphScope team’s work on proposing RelGo for optimizing SQL/PGQ queries has been accepted by SIGMOD 2025. In this work, RelGo integrates &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt; into relational databases (using DuckDB as an example), enhancing its ability to optimize SQL/PGQ queries and providing better optimization results than DuckDB’s own optimizer.
-This article introduces the main content of RelGo.&lt;/p&gt;
-
-&lt;h2 id=&quot;1-background-and-motivations&quot;&gt;1. Background and Motivations&lt;/h2&gt;
-&lt;p&gt;In the realms of data management and analytics, relational databases have long been the bedrock of structured data storage and retrieval, empowering a plethora of applications, across domains ranging from finance to healthcare. To facilitate tasks like creating tables and retrieving information in a database, the Structured Query Language (SQL) was developed and has been widely adopted by various Relational Database Management Systems (RDBMS). Below is an example of querying on IMDB data with an SQL query:&lt;/p&gt;
-
-&lt;style&gt;
-    img.small_img {
-        zoom: 20% !important;
-        width: unset !important;
-    }
-    img.small_cap {
-        zoom: 10% !important;
-        width: unset !important;
-    }
-&lt;/style&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-plain&quot;&gt;Query 1 (Q1)
-
-SELECT n.name 
-FROM NAME AS n1,
-     CAST_INFO AS ci1,
-     CAST_INFO AS ci2,
-     TITLE AS t1,
-     TITLE AS t2,
-     MOVIE_COMPANIES AS mc1,
-     MOVIE_COMPANIES AS mc2,
-     COMPANY_NAME AS cn
-WHERE n1.id = ci1.person_id
-      AND ci1.movie_id = t1.id
-      AND t1.id = mc1.movie_id
-      AND mc1.company_id = cn.id
-      AND n1.id = ci2.person_id
-      AND ci2.movie_id = t2.id
-      AND t2.id = mc2.movie_id
-      AND mc2.company_id = cn.id
-      AND t1.title &amp;lt;&amp;gt; t2.title;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The relationships between the tables relevant to Q1 in IMDB are illustrated in the following ER diagram&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig1.jpg&quot; style=&quot;zoom:10%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The NAME table and TITLE table store information about persons and movies, respectively. The CAST_INFO table holds the quaternary relationship between persons, movies, roles (characters played in the movies), and professions (such as actor, actress, director, writer, etc.). The COMPANY_NAME table contains the names of movie companies, while the MOVIE_COMPANIES table records the association between movies, movie companies, and company types. Therefore, the SQL query above aims to find individuals who have participated in the production of at least two movies for the same company.&lt;/p&gt;
-
-&lt;p&gt;It’s easy to see that using SQL to describe such queries can sometimes result in very lengthy statements, especially when there’s a need to describe the relationships between tables.&lt;/p&gt;
-
-&lt;p&gt;Another more intuitive example is finding n persons who all know each other. Each time we describe the mutual relationship between two persons, we need to add two join conditions. For example:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-plain&quot;&gt;Person1.id = Knows.person1id AND Person2.id = Knows.person2id
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;Hence, describing n persons knowing each other requires writing at least $n \times (n-1)$ join conditions. Manually writing such query statements is evidently very inefficient.&lt;/p&gt;
-
-&lt;p&gt;When a query requires describing the relationships between tables, using graph queries can be relatively more convenient. The advantage lies in being able to express the query in a graph-like manner. Using Cypher as an example, query Q1 can be expressed as follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-plain&quot;&gt;MATCH (n1:NAME)-[ci1:CAST_INFO]-&amp;gt;(t1:TITLE)-[mc1:MOVIE_COMPANIES]-&amp;gt;(cn:COMPANY_NAME),
-      (n1)-[ci2:CAST_INFO]-&amp;gt;(t2:TITLE)-[mc2:MOVIE_COMPANIES]-&amp;gt;(cn)
-WHERE t1.title &amp;lt;&amp;gt; t2.title
-RETURN n1.name;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This query intuitively describes the following graph pattern:&lt;br /&gt;
-&lt;img src=&quot;/blog/assets/images/relgo/fig2.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;For the scenario of finding n persons knowing each other, using a graph query only requires describing a complete graph with n vertices (i.e., an n-clique). The above example demonstrates that using graph queries can significantly reduce the time database users spend writing SQL, allowing them to express their intended queries more quickly and conveniently.&lt;/p&gt;
-
-&lt;p&gt;Therefore, in ISO SQL:2023, an extension called SQL/PGQ (SQL/Property Graph Queries) has been introduced to support graph queries within SQL expressions. Assuming that each tuple in the NAME, TITLE, and COMPANY_NAME tables represents a vertex, and each tuple in the CAST_INFO and MOVIE_COMPANIES tables represents an edge, we can rewrite query Q1 as follows in SQL/PGQ:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-plain&quot;&gt;SELECT n_name FROM GRAPH_TABLE (G
-    MATCH (n1:NAME)-[ci1:CAST_INFO]-&amp;gt;(t1:TITLE)-[mc1:MOVIE_COMPANIES]-&amp;gt;(cn:COMPANY_NAME),
-      (n1)-[ci2:CAST_INFO]-&amp;gt;(t2:TITLE)-[mc2:MOVIE_COMPANIES]-&amp;gt;(cn)
-    WHERE t1.title &amp;lt;&amp;gt; t2.title
-    COLUMNS (n1.name AS n_name) 
-) g;
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;The SQL/PGQ extension addresses how to write graph queries within SQL expressions. However, once we get the SQL/PGQ query statements, analyzing and optimizing them remains a new challenge brought by SQL/PGQ. Query optimization refers to finding an efficient query plan based on a user-given query to achieve better query performance. Research on relational database query optimizers is typically carried out for the SPJ (selection-projection-join) queries. However, SQL/PGQ queries cannot be expressed as SPJ queries, because the GRAPH_TABLE clause cannot be directly represented through traditional selection, projection, and join operators. Therefore, it is challenging to directly use traditional relational database optimizers to optimize SQL/PGQ statements.&lt;/p&gt;
-
-&lt;p&gt;Addressing this issue, we introduce a new query skeleton called SPJM (selection-projection-join-matching) and subsequently designed and implemented a converged optimization framework named RelGo based on GOpt. Our main contributions can be summarized as follows:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;We define RGMapping to map relational tables to a property graph based on SQL/PGQ statements. Using RGMapping, we have defined a new query skeleton called SPJM, which can be used to express queries that contain both relational and graph queries.&lt;/li&gt;
-  &lt;li&gt;We have developed a theory to transform SPJM queries into SPJ queries, allowing existing relational databases to directly handle SPJM queries. This approach is called the graph-agnostic approach. We have demonstrated that this graph-agnostic method has a significantly larger search space (exponentially larger) compared to our method in some scenarios.&lt;/li&gt;
-  &lt;li&gt;We have designed and implemented RelGo to leverage relational and graph query optimization techniques to optimize SPJM queries. In detail, RelGo employs state-of-the-art graph optimization techniques and implements graph-related physical operations based on graph indexes.&lt;/li&gt;
-  &lt;li&gt;We developed RelGo by integrating it with the industrial relational optimization framework Calcite, and employing DuckDB for execution runtime. We conducted extensive experiments to evaluate its performance. The results on the LDBC Social Network Benchmark indicate that RelGo significantly surpasses the performance of the graph-agnostic baseline, achieving an average speedup of 21.9x over the baseline, which remains 5.4x faster even when graph indexing is enabled.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;This work has been accepted at SIGMOD 2025 (&lt;a href=&quot;https://dl.acm.org/doi/10.1145/3698828&quot;&gt;https://dl.acm.org/doi/10.1145/3698828&lt;/a&gt;，&lt;a href=&quot;https://arxiv.org/pdf/2408.13480&quot;&gt;https://arxiv.org/pdf/2408.13480&lt;/a&gt;).&lt;/p&gt;
-
-&lt;h2 id=&quot;2-concepts-and-spjm-skeleton&quot;&gt;2. Concepts and SPJM Skeleton&lt;/h2&gt;
-
-&lt;p&gt;Let’s start by briefly explaining some of the concepts that will be used in this blog, including Property Graph and RGMapping. In this blog, for the sake of convenience, we will use the terms “table” and “relation” interchangeably.&lt;/p&gt;
-
-&lt;h3 id=&quot;21-concepts&quot;&gt;2.1 Concepts&lt;/h3&gt;
-
-&lt;p&gt;Given an expression that contains both relational queries and graph queries, in order to integrate the query plans of both, it’s necessary to define a method for translating between relational data and graph data. Therefore, we use the following concepts.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;&lt;u&gt;Property Graph&lt;/u&gt;&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;A property graph is composed of vertices and edges, where vertices and edges can have various attributes. In the upper right corner of Figure 3(a), an example of a property graph is provided. This property graph contains a total of 5 vertices, including 3 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt;s and 2 &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt;s. Additionally, the property graph includes 8 edges, each tagged with either &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;&lt;u&gt;RGMapping&lt;/u&gt;&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;RGMapping maps tuples from relational tables to vertices or edges in a property graph. Specifically, RGMapping includes a vertex mapping and an edge mapping, which respectively map tuples from tables to different vertices and edges. To more conveniently describe the definition of RGMapping, we will illustrate this with the following figure.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig3.jpg&quot; /&gt;
-&lt;img src=&quot;/blog/assets/images/relgo/fig3cap.jpg&quot; class=&quot;small_cap&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Fig. 3(a) contains four relational tables: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt;. The relationships between them can be described using the ER diagram in the bottom left corner of Fig. 3(a). In relational data modeling, an ER diagram includes entities and relationships. Consequently, vertices can be mapped from relations corresponding to entities, and edges can be mapped from relations corresponding to relationships. In this example, tuples in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt; tables are mapped to vertices, while tuples in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; tables are mapped to edges. The resulting property graph is shown in the upper right corner of Figure 3(a), labeled as property graph G.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;In the property graph G, p1 represents the tuple with person_id = 1 in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, and k1 represents the tuple with knows_id = 1 in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt; table.&lt;/strong&gt; RGMapping is used to define the mapping relationships between relational tables and the property graph. For ease of explanation, we will refer to tables mapped to vertices as vertex tables and tables mapped to edges as edge tables. For edge tables, it is not sufficient to just know the mapping relationship between a tuple and an edge; it is also necessary to know the association between the edge’s source and target vertices and the vertex tables. Specifically, for the edge table &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; in this example, we can provide the following two association relationships:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/formula1.jpg&quot; alt=&quot;image&quot; style=&quot;zoom:40%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;These two association relationships respectively indicate that for a tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table, which corresponds to an edge in the property graph, the source vertex of the edge corresponds to a tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, and the target vertex corresponds to a tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt; table. The correspondence between tuples is determined based on the values of Likes.pid, Person.person_id, and Message.message_id. Specifically, a tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table is associated with a tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table if and only if the value of the pid attribute matches the value of the person_id attribute. For example, the first row in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table is associated with the first row in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, because l1.pid = p1.person_id. It means that the source vertex of the edge mapped from the first row of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; is mapped from the first row of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;Generally, this association can be derived from the primary-foreign key relationships between relational tables. Specifically, because the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table has foreign keys pid and mid pointing to the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt; tables, respectively, the vertex tables related to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; are &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;With this information, it is possible to convert between relational tables and vertices and edges in the property graph. Therefore, given a relational database, as long as the corresponding RGMapping is defined, part of the relational tables can be converted into a property graph, thereby leveraging the capabilities of a graph optimizer in query optimization.&lt;/p&gt;
-
-&lt;h3 id=&quot;22-spjm-skeleton&quot;&gt;2.2 SPJM Skeleton&lt;/h3&gt;
-
-&lt;p&gt;To represent graph queries, we introduce a new operator into the relational operators, namely the Matching Operator. This operator takes a graph relation and a pattern graph as input and produces a graph table as output. Here, a graph relation is a special type of table. Each tuple in this relation represents a property graph, with each attribute value of the tuple corresponding to a vertex or edge. The table shown at the bottom of Fig. 3(b) is an example of a graph relation.&lt;/p&gt;
-
-&lt;p&gt;For each tuple (i.e., property graph) in the input graph relation, the Matching Operator searches for all subgraphs isomorphic to the input pattern graph. Each row of the graph relation returned by the Matching Operator corresponds to one such found isomorphic subgraph. In this paper, we consider queries that include selection, projection, join, and matching operators. Queries composed of these operators are referred to as SPJM queries.&lt;/p&gt;
-
-&lt;h2 id=&quot;3-optimizing-matching-operator&quot;&gt;3. Optimizing Matching Operator&lt;/h2&gt;
-
-&lt;p&gt;In this section, we focus on handling the matching operator, which plays a distinct role within the SPJM queries. We discuss two main perspectives of optimizing the matching operator: logical transformation and physical implementation. Logical transformation is responsible for transforming a matching operator into a logically equivalent representation, while physical implementation focuses on how the matching operator can be efficiently executed.&lt;/p&gt;
-
-&lt;h3 id=&quot;31-logical-transformation&quot;&gt;3.1 Logical Transformation&lt;/h3&gt;
-
-&lt;p&gt;Given a matching operator, suppose the input pattern graph is as follows:&lt;/p&gt;
-
-&lt;pre&gt;&lt;code class=&quot;language-plain&quot;&gt;MATCH (p1:PERSON)-[e1:KNOWS]-&amp;gt;(p2:PERSON)-[e3:LIKES]-&amp;gt;(m:MESSAGE),
-      (p1)-[e2:LIKES]-&amp;gt;(m)
-RETURN p1.name, p1.place_id, p2.name
-&lt;/code&gt;&lt;/pre&gt;
-
-&lt;p&gt;This pattern graph, as shown in Figure 3(b), searches for two persons who like the same message. The table names in the pattern graph use uppercase letters, such as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;PERSON&lt;/code&gt;. For this query, we propose two transformation methods: one is the graph-agnostic approach, and the other is the graph-aware approach.&lt;/p&gt;
-
-&lt;h4 id=&quot;311-graph-agnostic-approach&quot;&gt;3.1.1 Graph-Agnostic Approach&lt;/h4&gt;
-
-&lt;p&gt;The graph-agnostic approach directly converts the pattern graph into joins between tables based on the RGMapping, thus transforming the SPJM problem into an SPJ problem. Existing relational optimizers can then be used for query optimization. According to the RGMapping described in Section 2 and the ER diagram in Figure 3(a) that describes the relationships between the tables, it is easy to determine that the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; tables are respectively mapped to vertices or edges labeled &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Knows&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; in the graph.&lt;br /&gt;
-Moreover, the following association relationships exist between the vertex tables and edge tables:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/formula2.jpg&quot; alt=&quot;image&quot; style=&quot;zoom:40%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Here, $Person_1$ and $Person_2$ represent two copies of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, containing the same content as the original &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table. Subsequently, each edge in the pattern graph can be obtained through joins between the vertex tables and edge tables. Specifically, the edges in the aforementioned pattern graph can be converted into the following joins:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/formula3.jpg&quot; alt=&quot;image&quot; style=&quot;zoom:40%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Therefore, the matching operator can be converted to:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/formula4.jpg&quot; alt=&quot;image&quot; style=&quot;zoom:40%;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Then, relational optimizers can be used to optimize the query.&lt;/p&gt;
-
-&lt;h4 id=&quot;312-graph-aware-approach&quot;&gt;3.1.2 Graph-Aware Approach&lt;/h4&gt;
-
-&lt;p&gt;In this section, we introduce a graph-aware transformation that incorporates key ideas from the literature on graph optimization. Specifically, we first decompose the pattern graph in Figure 3(b) to obtain the following decomposition tree.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig4.jpg&quot; class=&quot;small_img&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In detail, the tree has a root node that represents the pattern graph, and each non-leaf intermediate node is a sub-pattern (a subgraph of the pattern) , which has left and right child nodes. These two child nodes are both subgraphs of the intermediate node, and by joining the two child nodes, we obtain this intermediate node. Following state-of-the-art graph optimizers, to guarantee a worst-case optimal execution plan, all intermediate sub-patterns in the decomposition tree must be induced subgraphs of the pattern graph.&lt;/p&gt;
-
-&lt;p&gt;The leaf nodes of the decomposition tree must be Minimum Matching Components (MMCs). An MMC can either be a single-vertex pattern or a complete-star pattern. A complete-star pattern must be located in the right subtree, with all the leaf nodes of the star appearing in the left subtree. It is easy to see that a single-edge pattern is a special type of complete-star pattern. This design is mainly to ensure that the execution plan is worst-case optimal.&lt;/p&gt;
-
-&lt;p&gt;The decomposition tree in Fig. 4 contains three MMCs: $\mathcal{P}_2$ (complete-star pattern), $\mathcal{P}_3$ (single-vertex pattern subgraph), and $\mathcal{P}_4$ (single-edge pattern subgraph). After decomposing, for each node in the decomposition tree, we join its left and right child nodes to obtain the result of the current node. For example, when matching the property graph G in Fig. 3(a) with the pattern graph in Fig. 4, the matching result of $\mathcal{P}_1$ is (p1, k1, p2), (p2, k2, p1), (p2, k3, p3), (p3, k4, p2). The matching result of $\mathcal{P}_2$ is (p1, l1, m1, l2, p2), (p2, l2, m1, l1, p1), (p2, l3, m2, l4, p3), (p3, l4, m2, l3, p2).&lt;/p&gt;
-
-&lt;p&gt;By joining these results on vertices $\mathcal{P}_1$ and $\mathcal{P}_2$ in the pattern, we obtain (p1, k1, p2, l1, m1, l2), (p2, k2, p1, l2, m1, l1),  (p2, k3, p3, l3, m2, l4), and (p3, k4, p2, l4, m2, l3). These results are exactly the results of matching the original pattern graph $\mathcal{P}$, as shown in the table below Fig. 3(b).&lt;/p&gt;
-
-&lt;p&gt;We have demonstrated that in some scenarios, the search space of the graph-aware approach is exponentially smaller than that of the graph-agnostic approach. Taking RelGo (graph-aware approach) and Calcite (graph-agnostic approach) as examples, we conducted experiments on the LDBC SNB benchmark (on LDBC30 dataset) and JOB benchmark (on IMDB dataset) to compare their optimization times. The experimental results show that RelGo significantly improves optimization speed compared to Calcite.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig5a.jpg&quot; class=&quot;small_img&quot; /&gt;
-&lt;img src=&quot;/blog/assets/images/relgo/fig5b.jpg&quot; class=&quot;small_img&quot; /&gt;
-&lt;img src=&quot;/blog/assets/images/relgo/fig5cap.jpg&quot; class=&quot;small_img&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;32-physical-implementation&quot;&gt;3.2 Physical Implementation&lt;/h3&gt;
-
-&lt;p&gt;Physical implementation optimization refers to using efficient physical implementations when realizing the operators in the execution plan to make the actual execution more efficient. Referencing GRainDB, we implemented a graph index. The following illustration is an example of a graph index.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig6.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;As shown in Fig. 6, the EV index is built on the edge table. For each tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table (which is an edge table), two new attribute columns, pid_rowid and mid_rowid, are added to record the positions (i.e., row numbers) of the source and target vertices of the corresponding edge in the respective vertex tables. For example, l1 in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table corresponds to an edge whose source vertex is located at the 0-th row of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table and whose target vertex is at the 0-th row of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt; table.&lt;/p&gt;
-
-&lt;p&gt;The VE index is built based on the vertex tables. For each tuple in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, the VE index records the positions of its adjacent edges in the edge table (i.e., row numbers) and the positions of the other endpoints of these edges in the corresponding vertex tables. Specifically, for tuple p1 in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Person&lt;/code&gt; table, the VE index records its adjacent edge’s position at the 0-th row of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Likes&lt;/code&gt; table and the other endpoint of that edge at the 0-th row of the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Message&lt;/code&gt; table.&lt;/p&gt;
-
-&lt;p&gt;Based on these two indexes, when actually joining the vertex and edge tables, it is possible to skip value comparisons and quickly obtain tuples that can be joined.&lt;/p&gt;
-
-&lt;p&gt;Specifically, we implemented three main types of physical implementation optimizations for the decomposition tree:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Given an intermediate node, when its right subtree is an MMC containing only a single edge, the join of its left and right subtrees can be implemented as a combination of the EXPAND_EDGE and GET_VERTEX operators, without flattening the result during the computation of these two operators. For example, consider Figure 5. Suppose a decomposition tree has an intermediate node &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(:PERSON) JOIN (:PERSON)-[:LIKES]-&amp;gt;(:MESSAGE)&lt;/code&gt;. In this case, both the left and right subtrees are MMCs, i.e., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(:PERSON)&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(:PERSON)-[:LIKES]-&amp;gt;(:MESSAGE)&lt;/code&gt;. Assume that a tuple from the matching results of the left subtree is (p2). When joined with the right subtree, the result is (p2, [l2, l3], [m1, m2]). After flattening, the resulting tuples are (p2, l2, m1) and (p2, l3, m2).&lt;/li&gt;
-  &lt;li&gt;Given an intermediate node, when its right subtree is a complete-star pattern, we implemented the EXPAND_INTERSECT operator to avoid flattening the results during computation. Consider the intermediate node &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(:PERSON)-[:KNOWS]-&amp;gt;(:PERSON) JOIN (:PERSON)-[:LIKES]-&amp;gt;(:MESSAGE)&amp;lt;-[:LIKES]-(:PERSON)&lt;/code&gt;, which corresponds to the two child nodes of the root in the decomposition tree shown in Fig. 4. Suppose a tuple from the matching results of the left subtree is (p1, k1, p2), then the EXPAND_INTERSECT operator first applies the EXPAND_EDGE and GET_VERTEX operators on p1 and p2, yielding the results (p1, k1, p2, [l1], [m1]) and (p1, k1, p2, [l2, l3], [m1, m2]). Subsequently, it directly intersects these results to obtain (p1, k1, p2, [(l1, l2, m1)]). Finally, flattening this yields the result (p1, k1, p2, l1, l2, m1).&lt;/li&gt;
-  &lt;li&gt;Whenever possible, use graph indices in the physical implementation to accelerate joins between vertex tables and edge tables.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;4-the-converged-optimization-framework-relgo&quot;&gt;4. The Converged Optimization Framework: RelGo&lt;/h2&gt;
-
-&lt;p&gt;In this section, we specifically introduce the proposed converged optimization framework, RelGo, with its optimization workflow as follows:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig7.jpg&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;As illustrated in Fig. 7, the core workflow of the RelGo framework consists of two components: &lt;strong&gt;graph optimization&lt;/strong&gt; and &lt;strong&gt;relational optimization&lt;/strong&gt;. The graph optimization is responsible for handling the graph component in an SPJM query, leveraging graph optimization techniques to determine the optimal decomposition tree of the matching operator. On the other hand, the relational optimization takes over to optimize the relational component in the query. The order in which these two components are applied is not strictly defined. However, for the purpose of our discussion, we will first focus on the graph optimization and then proceed to the relational optimization.&lt;/p&gt;
-
-&lt;p&gt;RelGo uses GOpt for graph optimization and applies techniques such as FilterIntoMatchRule TrimAndFuseRule during the optimization process. Specifically, the TrimAndFuseRule describes a scenario where the EXPAND_EDGE and GET_VERTEX operators, when executed consecutively without the need to retrieve edge properties, become equivalent to a direct neighbor retrieval operator. Therefore, if the corresponding graph index is constructed, the VE index can be utilized to merge the two operators into a single EXPAND operator, directly retrieving the neighboring vertices.&lt;/p&gt;
-
-&lt;p&gt;Once the graph optimizer has computed the optimal execution plan for the matching operator, the next step is to integrate this plan with the remaining relational operators in the SPJM query. The relational optimization is responsible for optimizing these remaining operators, which are all relational operators.&lt;/p&gt;
-
-&lt;p&gt;Specifically, to prevent the relational optimizer from delving into the internal details of the graph pattern matching process, we introduce a new physical operator called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SCAN_GRAPH_TABLE&lt;/code&gt;, as shown in Fig. 7(c), which encapsulates the optimal execution plan for the matching operator.&lt;/p&gt;
-
-&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SCAN_GRAPH_TABLE&lt;/code&gt; operator acts as a bridge between the graph and relational components of the query. From the perspective of the relational optimizer, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SCAN_GRAPH_TABLE&lt;/code&gt; behaves like a standard SCAN operator, providing a relational interface to the matched results.&lt;/p&gt;
-
-&lt;p&gt;We engineered the frontend of RelGo in Java and built it upon Apache Calcite to utilize its robust relational query optimization infrastructure. Firstly, we enhanced Calcite’s SQL parser to recognize SQL/PGQ extensions, specifically to parse the GRAPH_TABLE clause. We created a new ScanGraphTableRelNode that inherits from Calcite’s core RelNode class, translating the GRAPH_TABLE clause into this newly defined operator within the logical plan. Secondly, we incorporate heuristic rules such as FilterIntoMatchRule and TrimAndFuseRule into Calcite’s rule-based HepPlanner, by specifying the activation conditions and consequent transformations of each rule. For more nuanced optimization, we rely on the VolcanoPlanner, the cost-based planner in Calcite, to optimize the ScanGraphTableRelNode. We devised a top-down search algorithm that assesses the most efficient physical plan based on a cost model, combined with high-order statistics from GLogue for more accurate cost estimation. Lastly, the converged optimizer outputs an optimized and platform-independent plan formatted with Google Protocol Buffers (protobuf), ensuring the adaptability of \name’s output to various backend database systems&lt;/p&gt;
-
-&lt;p&gt;We developed the RelGo framework’s backend in C++ using DuckDB as the relational execution engine to showcase its optimization capabilities. We integrated graph index support in GRainDB. Besides, we craft a new join on DuckDB called EI-Join for the support of EXPAND_INTERSECT. Without graph index, the HASH_JOIN operator is used throughout the entire plan.&lt;/p&gt;
-
-&lt;h2 id=&quot;5-experiments&quot;&gt;5. Experiments&lt;/h2&gt;
-
-&lt;p&gt;To evaluate the quality of the query plans generated by RelGo, we conducted performance testing using two datasets: LDBC and IMDB. The experiments were carried out on the LDBC SNB and JOB benchmarks. The LDBC dataset was generated by the official LDBC Data Generator with scale factors of 10, 30, and 100. The JOB benchmark queries were executed on the IMDB dataset. The baseline methods compared in the experiments include:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;DuckDB：Common relational databases that use graph-agnostic methods for optimization.&lt;/li&gt;
-  &lt;li&gt;GRainDB：GRainDB implements graph indexes on DuckDB. After optimizing the queries using DuckDB’s optimizer, some join operators are replaced with predefined joins utilizing the graph indexes.&lt;/li&gt;
-  &lt;li&gt;Umbra：Its query optimizer can generate query plans that include worst-case optimal joins.&lt;/li&gt;
-  &lt;li&gt;Kùzu: Graph database management systems using the property graph model.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The experimental results are as follows:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig8a.jpg&quot; alt=&quot;LDBC10&quot; class=&quot;small_img&quot; /&gt;
-LDBC10&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig8b.jpg&quot; alt=&quot;LDBC30&quot; class=&quot;small_img&quot; /&gt;
-LDBC30&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig8c.jpg&quot; alt=&quot;LDBC100&quot; class=&quot;small_img&quot; /&gt;
-LDBC100&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/relgo/fig8d.jpg&quot; alt=&quot;JOB&quot; class=&quot;small_img&quot; /&gt;
-&lt;img src=&quot;/blog/assets/images/relgo/fig8e.jpg&quot; alt=&quot;JOB&quot; class=&quot;small_img&quot; /&gt;
-JOB
-&lt;img src=&quot;/blog/assets/images/relgo/fig8cap.jpg&quot; class=&quot;small_img&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Experimental results show that on the LDBC100 dataset, the query plans generated by RelGo have average execution times that are 21.9x, 5.4x, 49.9x, and 188.7x faster than those generated by DuckDB, GRainDB, Umbra, and Kùzu, respectively. This indicates that RelGo has a significant advantage over baseline methods in optimizing graph-related queries.&lt;/p&gt;
-
-&lt;p&gt;Another benchmark, i.e., the JOB benchmark that is established for assessing join optimizations in relational databases, lacks any cyclic-pattern queries. On the JOB benchmark, the query plans generated by RelGo have average execution times that are 8.2x, 4.0x, 1.7x, and 136.1x faster than those generated by DuckDB, GRainDB, Umbra, and Kùzu, respectively. This further demonstrates that RelGo can generate more efficient query plans.&lt;/p&gt;
-
-&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
-&lt;ul&gt;
-  &lt;li&gt;&lt;a href=&quot;https://dl.acm.org/doi/10.1145/3698828&quot;&gt;https://dl.acm.org/doi/10.1145/3698828&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://arxiv.org/pdf/2408.13480&quot;&gt;https://arxiv.org/pdf/2408.13480&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-        <pubDate>Mon, 10 Mar 2025 01:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/03/10/RelGo-Optimizing-Relational-Databases-with-GOpt.html</guid>
         
         
         <category>Tech</category>
