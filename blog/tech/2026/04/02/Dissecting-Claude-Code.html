@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Dissecting Claude Code: A Graph-Powered Deep Dive into an AI Coding Agent's Architecture</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-04-02">02 Apr 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-04-02">02 Apr 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Dissecting Claude Code: A Graph-Powered Deep Dive into an AI Coding Agent's Architecture</h1> -->
+
+        <section class="post-content">
+            <blockquote>
+  <p>We indexed <strong>1,906 source files</strong>, <strong>9,848 functions</strong>, and <strong>22,678 call edges</strong> using <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph</a> — a code intelligence skill powered by <a href="https://github.com/alibaba/neug">NeuG</a>, an open-source embedded graph database — to reveal what lies beneath the surface of one of the most ambitious AI coding tools ever built.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="the-numbers-at-a-glance">The Numbers at a Glance</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>Metric</th>
+      <th>Count</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Source Files</td>
+      <td>1,906</td>
+    </tr>
+    <tr>
+      <td>Functions</td>
+      <td>9,848</td>
+    </tr>
+    <tr>
+      <td>Call Edges</td>
+      <td>22,678</td>
+    </tr>
+    <tr>
+      <td>Import Edges</td>
+      <td>15,743</td>
+    </tr>
+    <tr>
+      <td>Modules</td>
+      <td>306</td>
+    </tr>
+    <tr>
+      <td>Classes</td>
+      <td>128</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Claude Code is a <strong>TypeScript monolith</strong> running on <strong>Bun + Ink</strong> (React for terminals). <code class="language-plaintext highlighter-rouge">main.tsx</code> alone exceeds 4,700 lines, and <code class="language-plaintext highlighter-rouge">REPL.tsx</code> tops 5,000 lines with 288 outgoing function calls — the highest fan-out of any component in the system.</p>
+
+<hr />
+
+<h2 id="1-architecture-five-layers-one-gravity-well">1. Architecture: Five Layers, One Gravity Well</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/01-architecture.png" alt="Architecture Overview" /></p>
+
+<p>CodeGraph’s layer discovery reveals an <strong>onion-ring architecture</strong> with <code class="language-plaintext highlighter-rouge">src/utils</code> as the gravitational center. The five layers, from top to bottom:</p>
+
+<p><strong>Entry Points</strong> — <code class="language-plaintext highlighter-rouge">REPL.tsx</code> (288 calls, 236 imports), <code class="language-plaintext highlighter-rouge">main.tsx</code> (275 calls, 163 imports), and <code class="language-plaintext highlighter-rouge">print.ts</code> (164 calls, CLI pipeline). These are the three doors into Claude Code.</p>
+
+<p><strong>UI Layer</strong> — 131 files including the 113-file <code class="language-plaintext highlighter-rouge">components/</code> directory, <code class="language-plaintext highlighter-rouge">PromptInput</code> (105 outgoing calls), the Buddy virtual pet system, and Ink’s custom terminal renderer (52 methods).</p>
+
+<p><strong>Logic Layer</strong> — 120 hooks, 80+ slash commands, 42 tools (from the 151-function BashTool to the 1-function SleepTool), and 14 keybinding files.</p>
+
+<p><strong>Service Layer</strong> — Analytics (428 callers), MCP protocol (41 files), Permissions (41 files), Bridge remote control (33 files), the Swarm multi-agent system, and 7 task types.</p>
+
+<p><strong>Foundation</strong> — The <code class="language-plaintext highlighter-rouge">utils/</code> directory with 299 files absorbing <strong>5,951 incoming calls</strong> — 6x more than the next highest module. It’s not a utility folder; it’s the bedrock of reality for this codebase.</p>
+
+<h3 id="the-repl-a-component-that-imports-the-universe">The REPL: A Component That Imports the Universe</h3>
+
+<p><code class="language-plaintext highlighter-rouge">REPL.tsx</code> imports from <strong>236 files</strong> — more than any other file in the codebase. It connects to hooks, components, services, bridge, swarm, voice, cost-tracking, MCP, and keybindings. Yet it has <strong>0 callers</strong> (fan-in = 0). It’s the root UI leaf that nobody calls into; it only calls out.</p>
+
+<hr />
+
+<h2 id="2-bridge-functions-the-nervous-system">2. Bridge Functions: The Nervous System</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/02-bridge-functions.png" alt="Bridge Functions" /></p>
+
+<p>A <strong>bridge function</strong> is one called from the most distinct modules — the glue holding disparate subsystems together. CodeGraph identified these top bridges:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Function</th>
+      <th>File</th>
+      <th>Modules Spanned</th>
+      <th>Total Callers</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">logForDebugging</code></td>
+      <td>debug.ts</td>
+      <td><strong>90</strong></td>
+      <td>911</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">logEvent</code></td>
+      <td>analytics/index.ts</td>
+      <td><strong>94</strong></td>
+      <td>428</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">logError</code></td>
+      <td>log.ts</td>
+      <td><strong>77</strong></td>
+      <td>413</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">set</code></td>
+      <td>fileStateCache.ts</td>
+      <td><strong>64</strong></td>
+      <td>290</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">jsonStringify</code></td>
+      <td>slowOperations.ts</td>
+      <td><strong>63</strong></td>
+      <td>248</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">isEnvTruthy</code></td>
+      <td>envUtils.ts</td>
+      <td><strong>47</strong></td>
+      <td>194</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">getGlobalConfig</code></td>
+      <td>config.ts</td>
+      <td><strong>44</strong></td>
+      <td>163</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">getCwd</code></td>
+      <td>cwd.ts</td>
+      <td><strong>43</strong></td>
+      <td>135</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-plaintext highlighter-rouge">logForDebugging</code> is called from <strong>90 out of 306 modules</strong> — nearly 1 in 3 modules feeds debug info through this single function. It’s the all-seeing eye of Claude Code.</p>
+
+<p>Notice the file name <code class="language-plaintext highlighter-rouge">slowOperations.ts</code> housing <code class="language-plaintext highlighter-rouge">jsonStringify</code> (248 callers, 63 modules). The team explicitly wraps JSON operations in a module named “slow” — a candid acknowledgment that serialization is a performance bottleneck they want to track.</p>
+
+<p>The top 3 bridge functions alone account for <strong>1,752 call edges</strong> across <strong>261 module-boundaries</strong>. Removing any one would fracture the entire system.</p>
+
+<hr />
+
+<h2 id="3-the-permission-gateway-a-single-chokepoint">3. The Permission Gateway: A Single Chokepoint</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/03-permission-gateway.png" alt="Permission Gateway" /></p>
+
+<p>One of the most architecturally significant findings: <strong>every tool execution flows through a single function</strong> — <code class="language-plaintext highlighter-rouge">checkPermissionsAndCallTool</code>. It has only <strong>1 caller</strong> (<code class="language-plaintext highlighter-rouge">streamedCheckPermissionsAndCallTool</code>) but calls <strong>30 different functions</strong> spanning telemetry, permission rules, classifier checks, error handling, and analytics.</p>
+
+<p>This is a textbook <strong>Policy Enforcement Point (PEP)</strong> — a single chokepoint where all 42 tools must pass through for authorization. The downstream functions include:</p>
+
+<ul>
+  <li><strong>checkRuleBasedPermissions</strong> — evaluates the rule engine</li>
+  <li><strong>startSpeculativeClassifierCheck</strong> — the “YOLO mode” classifier</li>
+  <li><strong>resolveHookPermissionDecision</strong> — hook-based overrides</li>
+  <li><strong>logEvent + logOTelEvent</strong> — dual telemetry (analytics + OpenTelemetry)</li>
+  <li><strong>startToolSpan / endToolSpan</strong> — tracing boundaries</li>
+  <li><strong>formatZodValidationError</strong> — schema validation</li>
+</ul>
+
+<p>This architecture makes it trivially easy to add security policies, audit logging, and rate limiting without modifying any individual tool.</p>
+
+<h3 id="the-1511-complexity-ratio">The 151:1 Complexity Ratio</h3>
+
+<p>Not all tools are created equal. BashTool has <strong>151 functions</strong> (command parsing, sandboxing, permission verification, timeout management, output capture, cross-platform compatibility). SleepTool has <strong>1 function</strong>. That’s a 151:1 complexity range across a unified interface.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Tool</th>
+      <th>Functions</th>
+      <th>Category</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>BashTool</td>
+      <td><strong>151</strong></td>
+      <td>Shell execution</td>
+    </tr>
+    <tr>
+      <td>PowerShellTool</td>
+      <td><strong>101</strong></td>
+      <td>Windows shell</td>
+    </tr>
+    <tr>
+      <td>AgentTool</td>
+      <td><strong>91</strong></td>
+      <td>Multi-agent orchestration</td>
+    </tr>
+    <tr>
+      <td>LSPTool</td>
+      <td>35</td>
+      <td>Language server</td>
+    </tr>
+    <tr>
+      <td>FileEditTool</td>
+      <td>31</td>
+      <td>File operations</td>
+    </tr>
+    <tr>
+      <td>GrepTool</td>
+      <td>8</td>
+      <td>Search</td>
+    </tr>
+    <tr>
+      <td>SleepTool</td>
+      <td>1</td>
+      <td>Wait</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="4-the-buddy-system-a-gacha-game-inside-a-dev-tool">4. The Buddy System: A Gacha Game Inside a Dev Tool</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/04-buddy-system.png" alt="Buddy System" /></p>
+
+<p>Perhaps the most delightful discovery: Claude Code contains a complete <strong>virtual pet system</strong> with gacha mechanics, ASCII art animations, and RPG stats.</p>
+
+<h3 id="how-companion-generation-works">How Companion Generation Works</h3>
+
+<ol>
+  <li><strong>Hash the User ID</strong> with a salt (<code class="language-plaintext highlighter-rouge">friend-2026-401</code>) using <code class="language-plaintext highlighter-rouge">hashString()</code></li>
+  <li><strong>Seed a Mulberry32 PRNG</strong> with the hash value</li>
+  <li><strong>Roll deterministically</strong> for species, rarity, eyes, hat, and stats</li>
+  <li><strong>Cache the result</strong> (the buddy renders every 500ms, can’t re-roll each frame)</li>
+</ol>
+
+<p>The “bones” (species, rarity, stats) are <strong>regenerated from hash on every read</strong> and never persisted to disk. Only the “soul” (user-chosen name and personality) is saved. This means:</p>
+
+<ul>
+  <li><strong>Anti-cheat</strong>: Users can’t edit their config to fake a Legendary rarity</li>
+  <li><strong>Schema-safe</strong>: Changes to the species array won’t break saved companions</li>
+  <li><strong>Deterministic</strong>: Same user = same companion forever</li>
+</ul>
+
+<h3 id="the-hex-obfuscation-trick">The Hex Obfuscation Trick</h3>
+
+<p>All 18 species names are encoded as hex character codes to dodge a build-time string filter:</p>
+
+<div class="language-typescript highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">const</span> <span class="nx">duck</span> <span class="o">=</span> <span class="nb">String</span><span class="p">.</span><span class="nx">fromCharCode</span><span class="p">(</span><span class="mh">0x64</span><span class="p">,</span> <span class="mh">0x75</span><span class="p">,</span> <span class="mh">0x63</span><span class="p">,</span> <span class="mh">0x6b</span><span class="p">)</span>  <span class="c1">// "duck"</span>
+</code></pre></div></div>
+
+<p>One species name collides with an internal model codename listed in <code class="language-plaintext highlighter-rouge">excluded-strings.txt</code>, so the team encoded ALL species uniformly.</p>
+
+<h3 id="gacha-rarity-distribution">Gacha Rarity Distribution</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th>Rarity</th>
+      <th>Probability</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Common</td>
+      <td>60%</td>
+    </tr>
+    <tr>
+      <td>Uncommon</td>
+      <td>25%</td>
+    </tr>
+    <tr>
+      <td>Rare</td>
+      <td>10%</td>
+    </tr>
+    <tr>
+      <td>Epic</td>
+      <td>4%</td>
+    </tr>
+    <tr>
+      <td>Legendary</td>
+      <td><strong>1%</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Each companion has <strong>5 RPG stats</strong>: DEBUGGING, PATIENCE, CHAOS, WISDOM, SNARK. The ASCII sprites are 5 lines tall, 12 columns wide, with 2-3 frames for idle animation. Frame <code class="language-plaintext highlighter-rouge">-1</code> in the 15-frame idle sequence triggers a rare blink animation.</p>
+
+<p>Here’s an actual duck sprite from the codebase:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    __
+  &lt;(· )___
+   (  ._&gt;
+    `--´
+</code></pre></div></div>
+
+<p>CodeGraph’s impact analysis traces the call chain: <code class="language-plaintext highlighter-rouge">getCompanion()</code> → <code class="language-plaintext highlighter-rouge">CompanionSprite</code> → <code class="language-plaintext highlighter-rouge">PromptInput</code> (105 calls) → <code class="language-plaintext highlighter-rouge">REPL</code> (288 calls) → Terminal UI.</p>
+
+<hr />
+
+<h2 id="5-dream-task-the-ai-that-dreams-while-you-code">5. Dream Task: The AI That Dreams While You Code</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/05-dream-task.png" alt="Dream Task" /></p>
+
+<p>Claude Code has a <strong>background memory consolidation system</strong> that literally runs while you work — the AI “dreams” about past sessions to improve its memory.</p>
+
+<h3 id="the-four-gates-cheapest-first">The Four Gates (Cheapest First)</h3>
+
+<p>Before dreaming begins, four gates must pass — ordered by computational cost:</p>
+
+<ol>
+  <li><strong>Time Gate</strong> (cost: 1 <code class="language-plaintext highlighter-rouge">stat()</code> call) — Has 24 hours elapsed since the last dream?</li>
+  <li><strong>Scan Throttle</strong> (cost: memory timestamp check) — Has 10 minutes passed since the last scan?</li>
+  <li><strong>Session Gate</strong> (cost: <code class="language-plaintext highlighter-rouge">readdir</code>) — Are there 5+ new sessions to consolidate?</li>
+  <li><strong>Lock Gate</strong> (cost: <code class="language-plaintext highlighter-rouge">flock</code>) — Is the file-based mutex free?</li>
+</ol>
+
+<p>This ordering ensures <strong>cheap rejections happen first</strong>. Most API turns exit at gate 1 with a single stat call.</p>
+
+<h3 id="the-four-phases-of-dreaming">The Four Phases of Dreaming</h3>
+
+<p>Once the gates pass, a restricted subagent forks with <strong>read-only Bash permissions</strong> (only <code class="language-plaintext highlighter-rouge">ls</code>, <code class="language-plaintext highlighter-rouge">grep</code>, <code class="language-plaintext highlighter-rouge">cat</code>, <code class="language-plaintext highlighter-rouge">head</code>, <code class="language-plaintext highlighter-rouge">tail</code>):</p>
+
+<ol>
+  <li><strong>Orient</strong> — <code class="language-plaintext highlighter-rouge">ls</code> the memory directory to understand current state</li>
+  <li><strong>Gather</strong> — <code class="language-plaintext highlighter-rouge">grep</code> recent session transcripts for patterns and reusable knowledge</li>
+  <li><strong>Consolidate</strong> — Write/update memory files with distilled knowledge</li>
+  <li><strong>Prune</strong> — Keep the memory index under 25KB, entries under 150 characters</li>
+</ol>
+
+<h3 id="the-filesystem-retry-trick">The Filesystem Retry Trick</h3>
+
+<p>When a dream is killed mid-flight, it calls <code class="language-plaintext highlighter-rouge">rollbackConsolidationLock(priorMtime)</code> to <strong>rewind the lock file’s modification time</strong>. This makes the Time Gate pass again on the next API turn — a retry mechanism built into the filesystem itself.</p>
+
+<hr />
+
+<h2 id="6-swarm-multi-agent-orchestration">6. Swarm: Multi-Agent Orchestration</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/06-swarm-system.png" alt="Swarm System" /></p>
+
+<p>The most architecturally ambitious module: a <strong>three-tier backend abstraction</strong> for spawning and managing teams of AI agents.</p>
+
+<h3 id="backend-detection-priority-chain">Backend Detection Priority Chain</h3>
+
+<p>When a teammate is spawned, the system probes the environment:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Priority</th>
+      <th>Backend</th>
+      <th>Lines</th>
+      <th>Detection Method</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>P1</td>
+      <td><strong>TmuxBackend</strong></td>
+      <td>765</td>
+      <td><code class="language-plaintext highlighter-rouge">ORIGINAL_USER_TMUX</code> env var</td>
+    </tr>
+    <tr>
+      <td>P2</td>
+      <td><strong>ITermBackend</strong></td>
+      <td>370</td>
+      <td><code class="language-plaintext highlighter-rouge">TERM_PROGRAM</code> + <code class="language-plaintext highlighter-rouge">it2 session list</code></td>
+    </tr>
+    <tr>
+      <td>P3</td>
+      <td><strong>InProcessBackend</strong></td>
+      <td>340</td>
+      <td>Always available (fallback)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The <strong>PaneBackendExecutor</strong> adapter wraps tmux/iTerm2 into the same <strong>TeammateExecutor</strong> interface that InProcessBackend implements directly. This lets the system degrade gracefully: tmux → iTerm2 → in-process.</p>
+
+<h3 id="why-asynclocalstorage">Why AsyncLocalStorage?</h3>
+
+<p>When agents are backgrounded (Ctrl+B), multiple agents run <strong>concurrently in the same Node.js process</strong>. AppState is a single shared mutable object. If Agent A’s telemetry reads it, it might get Agent B’s context.</p>
+
+<p>AsyncLocalStorage isolates each async execution chain, giving each agent its own identity bubble — without requiring process isolation.</p>
+
+<h3 id="task-id-design">Task ID Design</h3>
+
+<p>Each task gets a unique ID: a <strong>single-letter prefix</strong> + 8 random base-36 characters:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">b</code> = bash, <code class="language-plaintext highlighter-rouge">a</code> = agent, <code class="language-plaintext highlighter-rouge">r</code> = remote, <code class="language-plaintext highlighter-rouge">t</code> = teammate, <code class="language-plaintext highlighter-rouge">w</code> = workflow, <code class="language-plaintext highlighter-rouge">m</code> = monitor, <code class="language-plaintext highlighter-rouge">d</code> = dream</li>
+</ul>
+
+<p>This gives instant type identification from the ID string alone, with 36^8 ≈ 2.8 trillion combinations.</p>
+
+<hr />
+
+<h2 id="7-cost-tracker-follow-the-money">7. Cost Tracker: Follow the Money</h2>
+
+<p><img src="/blog/assets/images/2026-04-02-claude-code/07-cost-tracker.png" alt="Cost Tracker" /></p>
+
+<p>The cost tracking system handles <strong>7 pricing tiers</strong> with dynamic tier selection for Opus 4.6:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Model</th>
+      <th>Input/1M</th>
+      <th>Output/1M</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Haiku 3.5</td>
+      <td>$0.80</td>
+      <td>$4</td>
+    </tr>
+    <tr>
+      <td>Sonnet</td>
+      <td>$3</td>
+      <td>$15</td>
+    </tr>
+    <tr>
+      <td>Opus 4.5</td>
+      <td>$5</td>
+      <td>$25</td>
+    </tr>
+    <tr>
+      <td>Opus 4/4.1</td>
+      <td>$15</td>
+      <td>$75</td>
+    </tr>
+    <tr>
+      <td>Opus 4.6 (fast)</td>
+      <td><strong>$30</strong></td>
+      <td><strong>$150</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-plaintext highlighter-rouge">getOpus46CostTier(fastMode)</code> dynamically selects the tier based on <code class="language-plaintext highlighter-rouge">response_speed</code> — fast mode costs 2x.</p>
+
+<h3 id="the-billing-access-gate">The Billing Access Gate</h3>
+
+<p>The display logic reveals thoughtful product thinking:</p>
+
+<ul>
+  <li><strong>Subscribers (Max/Pro)</strong>: Costs are <strong>hidden</strong> (flat rate — showing costs would be confusing)</li>
+  <li><strong>API-key users with admin/billing roles</strong>: Costs are <strong>displayed</strong> (they’re paying per-token)</li>
+</ul>
+
+<p>This is controlled by <code class="language-plaintext highlighter-rouge">hasConsoleBillingAccess()</code>, which checks <code class="language-plaintext highlighter-rouge">DISABLE_COST_WARNINGS</code> env, subscriber status, auth tokens, and org/workspace roles.</p>
+
+<h3 id="what-gets-tracked">What Gets Tracked</h3>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">totalCostUSD</code> — cumulative dollar amount</li>
+  <li><code class="language-plaintext highlighter-rouge">totalAPIDuration</code> — time spent waiting for API responses</li>
+  <li><code class="language-plaintext highlighter-rouge">totalToolDuration</code> — time spent executing tools</li>
+  <li><code class="language-plaintext highlighter-rouge">linesAdded / linesRemoved</code> — code change volume</li>
+  <li><code class="language-plaintext highlighter-rouge">modelUsage</code> — per-model token breakdown</li>
+  <li><code class="language-plaintext highlighter-rouge">fpsMetrics</code> — terminal rendering performance</li>
+</ul>
+
+<p>All of this persists to project config and survives session restarts via <code class="language-plaintext highlighter-rouge">restoreCostStateForSession()</code>.</p>
+
+<hr />
+
+<h2 id="8-the-loneliest-1265">8. The Loneliest 1,265</h2>
+
+<p>CodeGraph found <strong>1,265 isolated functions</strong> — functions with zero callers AND zero callees. Out of 9,848 total, that’s <strong>12.8%</strong> sitting in complete isolation.</p>
+
+<p>Where do they live?</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>File</th>
+      <th>Total Functions</th>
+      <th>Why Isolated</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">bootstrap/state.ts</code></td>
+      <td><strong>212</strong></td>
+      <td>Getters/setters called dynamically</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">sessionStorage.ts</code></td>
+      <td><strong>153</strong></td>
+      <td>Dynamic property access</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">yoga-layout/index.ts</code></td>
+      <td><strong>134</strong></td>
+      <td>FFI binding layer</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><code class="language-plaintext highlighter-rouge">bootstrap/state.ts</code> alone has 212 functions — the densest file in the codebase. It’s a global state machine that vends getters and setters for everything from session IDs to model strings. Static analysis can’t see dynamic property access, so they appear “isolated” even though they’re heavily used at runtime.</p>
+
+<hr />
+
+<h2 id="9-the-class-hierarchy-oop-at-the-boundaries">9. The Class Hierarchy: OOP at the Boundaries</h2>
+
+<p>With 128 classes in a primarily functional codebase, where does OOP live?</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Class</th>
+      <th>Methods</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Node</code></td>
+      <td><strong>91</strong></td>
+      <td>Yoga layout FFI binding</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Cursor</code></td>
+      <td><strong>59</strong></td>
+      <td>Terminal cursor management</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">Ink</code></td>
+      <td><strong>52</strong></td>
+      <td>Custom React terminal renderer</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">YogaLayoutNode</code></td>
+      <td><strong>50</strong></td>
+      <td>Flexbox layout engine</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">WebSocketTransport</code></td>
+      <td><strong>30</strong></td>
+      <td>WebSocket client</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">TmuxBackend</code></td>
+      <td><strong>20</strong></td>
+      <td>Tmux pane management</td>
+    </tr>
+    <tr>
+      <td><code class="language-plaintext highlighter-rouge">CCRClient</code></td>
+      <td><strong>24</strong></td>
+      <td>API transport layer</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The top 4 classes are all <strong>rendering infrastructure</strong>. The business logic (tools, permissions, cost tracking, buddy) is overwhelmingly functional — closures, hooks, and module-level state. Classes appear only at the boundaries: transport protocols, terminal abstractions, and system backends.</p>
+
+<hr />
+
+<h2 id="10-patterns-worth-stealing">10. Patterns Worth Stealing</h2>
+
+<h3 id="deterministic-generation-without-persistence">Deterministic Generation Without Persistence</h3>
+
+<p>The buddy system regenerates <code class="language-plaintext highlighter-rouge">bones</code> from <code class="language-plaintext highlighter-rouge">hash(userId)</code> every time. Only <code class="language-plaintext highlighter-rouge">soul</code> persists. This eliminates schema migration headaches AND prevents config-file cheating.</p>
+
+<h3 id="gate-ordering-by-cost">Gate Ordering by Cost</h3>
+
+<p>The dream task checks: in-memory flag → stat a file → list a directory → acquire a lock. Each gate is more expensive than the last, so cheap rejections happen first.</p>
+
+<h3 id="single-letter-task-id-prefixes">Single-Letter Task ID Prefixes</h3>
+
+<p><code class="language-plaintext highlighter-rouge">b</code>ash, <code class="language-plaintext highlighter-rouge">a</code>gent, <code class="language-plaintext highlighter-rouge">r</code>emote, <code class="language-plaintext highlighter-rouge">t</code>eammate, <code class="language-plaintext highlighter-rouge">w</code>orkflow, <code class="language-plaintext highlighter-rouge">m</code>onitor, <code class="language-plaintext highlighter-rouge">d</code>ream — instant type identification from the ID string alone.</p>
+
+<h3 id="honest-function-names">Honest Function Names</h3>
+
+<p><code class="language-plaintext highlighter-rouge">getFeatureValue_CACHED_MAY_BE_STALE</code>, <code class="language-plaintext highlighter-rouge">slowOperations.ts</code>, <code class="language-plaintext highlighter-rouge">writeFileSyncAndFlush_DEPRECATED</code> — names that force callers to understand the tradeoffs.</p>
+
+<h3 id="asynclocalstorage-for-concurrent-identity">AsyncLocalStorage for Concurrent Identity</h3>
+
+<p>When multiple agents share a process, don’t use global state for identity. Use AsyncLocalStorage to give each async execution chain its own context.</p>
+
+<h3 id="single-permission-gateway">Single Permission Gateway</h3>
+
+<p>Route all 42 tools through one function. Adding a new security policy means changing one file, not 42.</p>
+
+<hr />
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Claude Code is not just an AI coding assistant — it’s a <strong>miniature operating system</strong> for AI agents. Through CodeGraph’s structural analysis, we’ve uncovered:</p>
+
+<ul>
+  <li>A <code class="language-plaintext highlighter-rouge">utils</code> foundation with <strong>5,951 incoming calls</strong> acting as bedrock</li>
+  <li>A permission system where <strong>all 42 tools pass through a single gateway</strong></li>
+  <li>A virtual pet with <strong>gacha mechanics and anti-cheat architecture</strong></li>
+  <li>An AI that <strong>dreams about its memories</strong> during idle hours</li>
+  <li>A <strong>three-tier multi-agent orchestration system</strong> spanning tmux, iTerm2, and in-process</li>
+  <li><strong>1,265 isolated functions</strong> (12.8%) sitting in silence</li>
+</ul>
+
+<p>The graph never lies. Behind every great product is an architecture that tells its own story — you just need the right tools to read it.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Dissecting Claude Code: A Graph-Powered Deep Dive into an AI Coding Agent's Architecture&amp;url=https://graphscope.io/tech/2026/04/02/Dissecting-Claude-Code.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/04/02/Dissecting-Claude-Code.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/04/02/Dissecting-Claude-Code.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
