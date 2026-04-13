@@ -5,9 +5,184 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 13 Apr 2026 03:38:51 +0000</pubDate>
-    <lastBuildDate>Mon, 13 Apr 2026 03:38:51 +0000</lastBuildDate>
+    <pubDate>Mon, 13 Apr 2026 10:12:10 +0000</pubDate>
+    <lastBuildDate>Mon, 13 Apr 2026 10:12:10 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>NeuG: One Engine, Two Modes, Outperforming Established Graph Databases</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-13-neug-vs-others-banner.png&quot; alt=&quot;neug-vs-others&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Graph databases have become essential for applications built on relationships — social networks, knowledge graphs, fraud detection, recommendation engines. But integrating a graph database into your application often means managing a separate server process, dealing with network latency, and wrestling with deployment complexity.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;NeuG&lt;/strong&gt; (pronounced “new-gee”) is a new graph database designed to change that. Following the same philosophy as &lt;a href=&quot;https://duckdb.org/&quot;&gt;DuckDB&lt;/a&gt; — but for graph data — NeuG is &lt;strong&gt;lightweight, minimal in dependencies, and easy to embed&lt;/strong&gt;. It runs directly inside your application process as an embedded library, supports full Cypher queries, and delivers sub-millisecond latency on complex graph traversals. Currently available for Python (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt;), with Node.js and more language bindings on the roadmap.&lt;/p&gt;
+
+&lt;p&gt;In this article, we explore what NeuG can do today, how it compares with established graph databases, and why it might be the graph engine your next project needs.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;1-full-cypher-support-ready-out-of-the-box&quot;&gt;1. Full Cypher Support, Ready Out of the Box&lt;/h2&gt;
+
+&lt;p&gt;NeuG provides rich Cypher query language support, including variable-length path matching (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*1..3&lt;/code&gt;), shortest path queries (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;*SHORTEST&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ALL SHORTEST&lt;/code&gt;), subqueries (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL { ... }&lt;/code&gt;), multi-label node matching (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;:POST:COMMENT&lt;/code&gt;), and more.&lt;/p&gt;
+
+&lt;p&gt;Here is a complete Python example showing the full workflow from schema creation, data import, to querying:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug.database&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;social.db&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Define graph schema
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CREATE NODE TABLE Person (id INT64, name STRING, PRIMARY KEY(id))&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CREATE REL TABLE Knows (FROM Person TO Person, since DATE)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Insert data
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CREATE (:Person {id: 1, name: &apos;Alice&apos;})&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CREATE (:Person {id: 2, name: &apos;Bob&apos;})&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CREATE (:Person {id: 3, name: &apos;Carol&apos;})&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    MATCH (a:Person {id:1}), (b:Person {id:2})
+    CREATE (a)-[:Knows {since: date(&apos;2024-01-15&apos;)}]-&amp;gt;(b)
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    MATCH (b:Person {id:2}), (c:Person {id:3})
+    CREATE (b)-[:Knows {since: date(&apos;2024-06-01&apos;)}]-&amp;gt;(c)
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Bulk import from CSV
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;COPY Person FROM &apos;persons.csv&apos; (HEADER=true)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Query: find 2nd-degree friends
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    MATCH (a:Person {name:&apos;Alice&apos;})-[:Knows*1..2]-&amp;gt;(f:Person)
+    RETURN DISTINCT f.name
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;get_bolt_response&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;())&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;NeuG’s Cypher implementation is powered by &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt;’s unified intermediate representation (IR), making it also &lt;strong&gt;GQL-ready&lt;/strong&gt; — when the &lt;a href=&quot;https://www.gqlstandards.org/&quot;&gt;ISO/GQL&lt;/a&gt; standard matures, migration cost will be minimal.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;2-dual-mode-architecture-and-tpap-capabilities&quot;&gt;2. Dual-Mode Architecture and TP/AP Capabilities&lt;/h2&gt;
+
+&lt;p&gt;Most graph databases force you to choose between a heavy client-server deployment and a limited embedded store. NeuG offers both in a single lightweight package — a design unique among graph databases.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-13-neug-vs-others-dual-mode-architecture.png&quot; alt=&quot;NeuG Dual-Mode Architecture&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Embedded Mode&lt;/strong&gt; loads NeuG as a library directly into your process, just like SQLite or DuckDB. No daemon, no configuration files, no ports to manage — your graph database lives entirely inside your application. This mode is ideal for data science workflows, ML/AI pipelines, batch analytics, and rapid prototyping.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Service Mode&lt;/strong&gt; switches from embedded with a single line of code:&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;uri&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;host&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;localhost&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;10000&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;blocking&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;True&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;NeuG then serves over HTTP/RPC with full MVCC transactions and multi-client concurrency, ready for web applications, real-time APIs, and multi-user collaboration.&lt;/p&gt;
+
+&lt;p&gt;In both modes, you use &lt;strong&gt;the same library, the same data, and the same queries&lt;/strong&gt;. This seamless transition means you can develop and validate in embedded mode, then expose the same database as a production service — no data migration, no query rewriting.&lt;/p&gt;
+
+&lt;p&gt;On the capability side, NeuG covers both transactional (TP) and analytical (AP) workloads. ACID transactions and MVCC concurrency control ensure data consistency in service mode; the columnar execution engine with vectorized processing makes complex multi-hop traversals and subgraph matching equally efficient. NeuG also supports a Postgres/DuckDB-style extension model — load data source plugins on demand with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;INSTALL JSON; LOAD JSON;&lt;/code&gt; (supporting JSON, Parquet, S3/OSS), keeping the core engine lean.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;3-performance&quot;&gt;3. Performance&lt;/h2&gt;
+
+&lt;p&gt;NeuG’s dual-mode architecture lets us benchmark each mode against its natural competitor: &lt;strong&gt;embedded mode against &lt;a href=&quot;https://ladybugdb.com/&quot;&gt;LadybugDB&lt;/a&gt; on analytical query latency&lt;/strong&gt;, and &lt;strong&gt;service mode against &lt;a href=&quot;https://neo4j.com/&quot;&gt;Neo4j&lt;/a&gt; on transactional query throughput&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href=&quot;https://neo4j.com/&quot;&gt;Neo4j&lt;/a&gt;&lt;/strong&gt; is the most widely deployed graph database, operating as a standalone server and the de facto standard for transactional graph workloads.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;&lt;a href=&quot;https://ladybugdb.com/&quot;&gt;LadybugDB&lt;/a&gt;&lt;/strong&gt; is an embeddable graph database built on &lt;a href=&quot;https://kuzudb.com/&quot;&gt;Kùzu&lt;/a&gt;. Like NeuG, it runs in-process without a server, making it the closest architectural peer in the embedded graph space.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;All tests use the LDBC SNB SF1 dataset (~3M nodes, ~17M edges) on an Apple Silicon Mac.&lt;/p&gt;
+
+&lt;h3 id=&quot;embedded-mode-lsqb-benchmark-neug-vs-ladybugdb&quot;&gt;Embedded Mode: LSQB Benchmark (NeuG vs LadybugDB)&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://github.com/ldbc/lsqb&quot;&gt;LSQB (Labelled Subgraph Query Benchmark)&lt;/a&gt; contains 9 complex subgraph matching queries that lean toward analytical workloads, making it an excellent test for embedded graph database query optimization and execution.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;Note on KNOWS Edges&lt;/strong&gt;: The original LSQB benchmark assumes KNOWS relationships are bidirectional (i.e., if A knows B, then B also knows A). In our tests, we modified all queries involving KNOWS edges to use directed traversal (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-[:KNOWS]-&amp;gt;&lt;/code&gt;). This adjustment allows the &lt;strong&gt;same LDBC SNB SF1 dataset to be used for both SNB Interactive and LSQB benchmarks&lt;/strong&gt;, since the KNOWS relationships in the original LDBC SNB data are unidirectional. This modification does not affect the fairness of evaluating graph database query optimization and execution capabilities.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;We compared NeuG (single-threaded) against LadybugDB (Kuzu-based, using the best multi-threaded result for each query):&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-13-neug-vs-others-lsqb-embedded-comparison.png&quot; alt=&quot;Embedded Mode: LSQB Benchmark Comparison&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;NeuG wins &lt;strong&gt;8 out of 9 queries&lt;/strong&gt; with just a single thread. On Q3 (triangle pattern within the same country) it achieves a &lt;strong&gt;287x&lt;/strong&gt; speedup; on Q2 (two-hop with filtering) a &lt;strong&gt;91x&lt;/strong&gt; speedup. Even with LadybugDB using up to 8 threads, NeuG single-threaded significantly outperforms on most queries.&lt;/p&gt;
+
+&lt;p&gt;On complex analytical queries involving multi-hop joins, triangle patterns, and long paths, NeuG’s graph-native query optimizer demonstrates an overwhelming advantage. Notably, on Q9 — a simpler short-path traversal where multi-threading typically benefits competitors — NeuG still achieves a &lt;strong&gt;1.7x&lt;/strong&gt; speedup.&lt;/p&gt;
+
+&lt;h3 id=&quot;service-mode-ldbc-snb-interactive-benchmark-neug-vs-neo4j&quot;&gt;Service Mode: LDBC SNB Interactive Benchmark (NeuG vs Neo4j)&lt;/h3&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb-interactive/&quot;&gt;LDBC SNB Interactive&lt;/a&gt; contains 14 complex read queries (IC1–IC14) covering multi-hop friend finding, shortest paths, and aggregation — typical transactional graph workloads. We ran 4 concurrent clients for 300 seconds, randomly issuing these queries against both NeuG in service mode and Neo4j in server mode.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-04-13-neug-vs-others-ldbc-service-throughput.png&quot; alt=&quot;Service Mode: LDBC SNB IC Throughput and Latency&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;NeuG achieves &lt;strong&gt;617 QPS&lt;/strong&gt; — &lt;strong&gt;50.6x&lt;/strong&gt; the throughput of Neo4j. On latency, NeuG’s P50 is just 3.1ms with a P95 of 20.6ms, while Neo4j’s P95 reaches 1,728ms. Over 300 seconds NeuG successfully executed 185,156 queries with zero failures, demonstrating the stability of its service path under high concurrency.&lt;/p&gt;
+
+&lt;h3 id=&quot;why-is-neug-so-fast&quot;&gt;Why Is NeuG So Fast?&lt;/h3&gt;
+
+&lt;p&gt;NeuG’s performance advantage comes from three technical foundations.&lt;/p&gt;
+
+&lt;p&gt;First, NeuG is built on &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope Flex&lt;/a&gt;, the graph engine that &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/&quot;&gt;set the LDBC SNB Interactive Benchmark world record&lt;/a&gt; at &lt;strong&gt;80,000+ QPS&lt;/strong&gt;. This is not a research prototype — it’s the same battle-tested engine proven at enterprise scale at Alibaba. NeuG inherits its optimized CSR storage for cache-friendly traversals, a columnar vectorized execution engine, and efficient memory management.&lt;/p&gt;
+
+&lt;p&gt;Second, unlike most graph databases that reuse relational optimizers, NeuG uses &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt; — a graph-native query optimizer. GOpt performs cost-based optimization with graph-specific cardinality estimation, supports pattern decomposition and worst-case optimal join planning, and reasons about graph topology to select efficient execution strategies. This is exactly why NeuG achieves 287x speedup on LSQB Q3 (triangle patterns) and 91x on Q2 (multi-hop filtering) — complex patterns that traditional optimizers struggle with.&lt;/p&gt;
+
+&lt;p&gt;Third, in embedded mode NeuG executes in-process with zero serialization overhead. For multi-hop traversal queries, this advantage compounds — each hop that would incur a network round-trip in a client-server model is instead a direct memory access.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;reproducibility&quot;&gt;Reproducibility&lt;/h2&gt;
+
+&lt;p&gt;All performance results in this article are independently reproducible. We have published the following resources:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Dataset&lt;/strong&gt;: The LDBC SNB SF1 dataset is available at https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz (~282MB)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Benchmark and Tutorial&lt;/strong&gt;: Benchmark Scripts are in https://github.com/alibaba/neug/tree/main/examples/, tutorial at https://graphscope.io/neug/en/tutorials/benchmark-neug-dual-mode/&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;quick-reproduction&quot;&gt;Quick Reproduction&lt;/h3&gt;
+
+&lt;p&gt;&lt;strong&gt;Embedded Mode (NeuG vs LadybugDB)&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wget https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz
+&lt;span class=&quot;nb&quot;&gt;tar&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-xzf&lt;/span&gt; ldbc-snb-sf1-lsqb.tar.gz
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;neug real_ladybug
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;neug/examples/lsqb_benchmark
+python run_neug_benchmark.py &lt;span class=&quot;nt&quot;&gt;--data-dir&lt;/span&gt; social_network-sf1-CsvComposite-StringDateFormatter
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Service Mode (NeuG vs Neo4j)&lt;/strong&gt;:&lt;/p&gt;
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;wget https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz
+&lt;span class=&quot;nb&quot;&gt;tar&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-xzf&lt;/span&gt; ldbc-snb-sf1-lsqb.tar.gz
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;neug neo4j
+&lt;span class=&quot;c&quot;&gt;# Start Neo4j server (optional, for comparison)&lt;/span&gt;
+docker run &lt;span class=&quot;nt&quot;&gt;-d&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--name&lt;/span&gt; neo4j &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; 7687:7687 &lt;span class=&quot;nt&quot;&gt;-e&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;NEO4J_AUTH&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;neo4j/neo4j123 neo4j:latest
+&lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;neug/examples/ldbc_interactive_benchmark
+python run_interactive_benchmark.py &lt;span class=&quot;nt&quot;&gt;--data-dir&lt;/span&gt; social_network-sf1-CsvComposite-StringDateFormatter
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;If you encounter any issues reproducing these results, please report them on &lt;a href=&quot;https://github.com/alibaba/neug/issues&quot;&gt;GitHub Issues&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2 id=&quot;whats-next&quot;&gt;What’s Next&lt;/h2&gt;
+
+&lt;p&gt;NeuG is under active development. The roadmap includes Node.js bindings (AI Agent integration), graph algorithm extensions (Leiden community detection, PageRank, K-Core), data lake support (S3/OSS + Parquet + GraphAr), and vector database extensions for RAG &amp;amp; GraphRAG workflows.&lt;/p&gt;
+
+&lt;p&gt;If you’re building applications that need fast, embedded graph queries without the operational overhead of a database server, give NeuG a try.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;github.com/alibaba/neug&lt;/a&gt;
+&lt;strong&gt;Install&lt;/strong&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 12 Apr 2026 10:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/04/12/neug-one-engine-two-modes.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/04/12/neug-one-engine-two-modes.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Dissecting Claude Code: A Graph-Powered Deep Dive into an AI Coding Agent&apos;s Architecture</title>
@@ -3052,334 +3227,6 @@ The &lt;a href=&quot;http://ldbcouncil.org/&quot;&gt;Linked Data Benchmark Counc
         <pubDate>Sat, 26 Apr 2025 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2025/04/26/Why-DuckDB-Is-Such-A-Good-Database-Product.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/04/26/Why-DuckDB-Is-Such-A-Good-Database-Product.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>GOpt Optimization Process: An In-depth Case Study Based on LDBC SNB Queries</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2024-02-22-title-picture.jpg&quot; alt=&quot;gopt&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;In today’s data analysis landscape, the optimization of complex graph queries has been a persistent challenge for the industry. GOpt is an optimizer framework designed for complex graph queries and was officially presented at &lt;a href=&quot;https://arxiv.org/abs/2401.17786&quot;&gt;SIGMOD Industry 2025&lt;/a&gt;. Its core objective is to provide an efficient and universal optimization solution that adapts to various graph query languages and execution engines. In this article, we will delve into the key innovations of GOpt in unified graph query optimization and analyze its optimization process through specific query cases from &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb&quot;&gt;LDBC SNB&lt;/a&gt;.&lt;/p&gt;
-
-&lt;p&gt;GOpt achieves breakthroughs in the following areas:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Seamless support for mainstream graph query languages: GOpt is compatible with current leading graph query languages, including &lt;a href=&quot;https://neo4j.com/docs/cypher-manual/current/introduction&quot;&gt;Cypher&lt;/a&gt; and &lt;a href=&quot;https://tinkerpop.apache.org&quot;&gt;Gremlin&lt;/a&gt;, with future plans to further support the graph query standard &lt;a href=&quot;https://www.gqlstandards.org&quot;&gt;GQL&lt;/a&gt;.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;Unified optimization of complex patterns: Deep optimization of various complex patterns such as Triangle, Path, Square, Clique, etc. Figure Fig.1 illustrates the various complex pattern forms supported by GOpt.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/complex_patterns.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.1 Complex Patterns Supported by GOpt.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Support for multi-pattern features in Cypher queries: GOpt first represents multi-patterns according to Cypher semantics as Inner/Left/Anti Joins, converting optimizations between multiple patterns into optimizations for Joins, thus directly reusing mature Join optimization rules from relational databases. Fig.2 showcases the various multi-pattern queries supported by GOpt and their internal representations within GOpt.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/multi_patterns.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.2 Multi-Patterns Supported by GOpt.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Integration with popular graph query execution engines: In a previous article &lt;a href=&quot;https://mp.weixin.qq.com/s/07w8YaH0VmhgJXJkDN0KUg&quot;&gt;Revolution: Enhancing Neo4j Efficiency with GOpt&lt;/a&gt;, we integrated GOpt into the Neo4j engine. Figure Fig.3 compares the execution effects of Neo4j and the GOpt optimization plans on the Neo4j engine. Within the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb&quot;&gt;LDBC Social Network Benchmark (LDBC SNB)&lt;/a&gt; standard test suite (where IC and BI represent Interactive-Complex and Business Intelligence queries respectively), GOpt brings an average improvement of 15.8X for Neo4j. We have further integrated GOpt into the GraphScope engine, achieving an average query performance improvement of 243.4X compared to GraphScope’s built-in rule-based optimizer.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/neo4_vs_gopt.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.3 Time Cost of LDBC Queries on Neo4j.&lt;/div&gt;
-
-&lt;p&gt;In this article, we will further explore points 1, 2, and 3, delving deeply into the optimization process of GOpt. We have chosen standard queries from LDBC SNB as a case study to intuitively demonstrate GOpt’s optimization process. Regarding point 4, GOpt has designed a dedicated Physical Converter layer. However, due to the excessive focus on underlying implementations, we will release subsequent articles on our official account to further decrypt this part, mainly covering: “How to Integrate GOpt with Neo4j?” and “How to Integrate GOpt with DuckDB?”. Stay tuned.&lt;/p&gt;
-
-&lt;h2 id=&quot;optimization-process&quot;&gt;Optimization Process&lt;/h2&gt;
-
-&lt;p&gt;Fig.4 illustrates the system framework of GOpt, which mainly consists of the following three layers:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Query Parser&lt;/strong&gt;: Cypher/Gremlin queries first undergo syntax checking via &lt;a href=&quot;https://www.antlr.org&quot;&gt;Antlr&lt;/a&gt;, followed by conversion of the Antlr AST into an initial GIR structure through the GIRBuilder Tool.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;GIR Optimizer&lt;/strong&gt;: Applies optimizations based on the GIR structure, performing transform operations on the input GIR structure and outputting an optimized GIR structure. Depending on the implementation of transforms, optimizations can be executed based on heuristic or top-down search approaches.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Physical Convertor&lt;/strong&gt;: Further converts the physical execution plan into code that can be executed by backend engines.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/gopt_overview.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.4 System Overview of GOpt.&lt;/div&gt;
-
-&lt;h3 id=&quot;gir-structure&quot;&gt;GIR Structure&lt;/h3&gt;
-
-&lt;p&gt;Firstly, let’s introduce what the GIR structure is. GIR (Graph Intermediate Representation) is a graph query language-independent intermediate data structure for graph queries, encompassing definitions of data models and a series of operator combinations for manipulating these data models.&lt;/p&gt;
-
-&lt;p&gt;The data model in GIR consists of graph data types and basic data types. Graph data types include Vertex (nodes), Edge (relationships), Path (paths), etc. Basic data types refer to Integer (integer), Float (floating point), String (character), Array/Map/Set (composite types), etc. GIR adopts data formats from relational databases: each data tuple contains multiple items, each with a name and a value, where the value type can be either a graph data type or a basic data type.&lt;/p&gt;
-
-&lt;p&gt;Operator combinations in GIR include graph operators and relational operators.&lt;/p&gt;
-
-&lt;p&gt;Graph operators define how queries retrieve graph data, including:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;GET_VERTEX: Represents fetching node data sources from a graph database or retrieving endpoints from input edge data.&lt;/li&gt;
-  &lt;li&gt;EXPAND_EDGE: Represents fetching edge data sources from a graph database or expanding adjacent edges from input node data.&lt;/li&gt;
-  &lt;li&gt;EXPAND_PATH: Represents expanding paths composed of multiple edges from input node data.&lt;/li&gt;
-  &lt;li&gt;MATCH_PATTERN: Expresses the Match Clause in Cypher or Gremlin as a unified structure. In GIR, there are two ways to represent this: a. A composite structure consisting of the aforementioned graph operators, marked by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MATCH_START&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MATCH_END&lt;/code&gt; indicating the start and end of graph operators. b. Represented as a Graph structure using &lt;a href=&quot;https://jgrapht.org&quot;&gt;JGraphT&lt;/a&gt;. These two structures are equivalent and can be converted interchangeably, as shown in Fig.5(c), where the Match Clause in the left-side query is represented uniformly in both forms.&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Relational operators include Filter, Sort, Limit, Unfold, Project, Group, Join, Union. The support for them in GOpt is consistent with traditional databases, hence we will not elaborate further here. As illustrated in Fig.5(c), both Cypher query Fig.5(a) and Gremlin query Fig.5(b) are uniformly represented as corresponding GIR structures.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/GIR.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.5 GIR Representation of Query Example.&lt;/div&gt;
-
-&lt;h2 id=&quot;optimization-strategies&quot;&gt;Optimization Strategies&lt;/h2&gt;
-
-&lt;p&gt;Next, we introduce how GOpt optimizes queries based on the GIR structure. The entire optimization process in the GIR Optimizer can be represented as a Directed Acyclic Graph (DAG). Each node in the DAG represents a Strategy, which embodies the execution of one or more rules. The edges in the DAG represent the sequential order of rule execution. GOpt executes these rules according to the topological sort of the DAG graph. Figure 6 shows a series of Strategies implemented by GOpt and their corresponding DAG relationships.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/DAG.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Figure 6: DAG of Optimization Process in GOpt.&lt;/div&gt;
-
-&lt;p&gt;The interface definition for Strategy is as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;interface&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Strategy&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
-    &lt;span class=&quot;nc&quot;&gt;GIRPlan&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;transform&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;GIRPlan&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;input&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Based on this interface, GOpt provides two types of Strategy implementations: RuleBasedStrategy and PatternStrategy.&lt;/p&gt;
-
-&lt;p&gt;RuleBasedStrategy includes a series of heuristic rules, where each rule specifically implements the transform function to perform equivalent transformations on the input GIRPlan and output the transformed GIRPlan. These rules are partly reused from Calcite, including: FieldTrim, SortProjectTrans, AggJoinTrans. Additionally, to handle specific optimizations related to graph data and operations, GOpt has implemented specialized rules for graph data models, including: FilterIntoPattern, JoinToPattern, ComSubPattern, EVFusion, DegFusion, PKIndex, and LateProject.&lt;/p&gt;
-
-&lt;p&gt;PatternStrategy primarily optimizes the sequence of graph operators within Patterns, referred to as PatternOrders. The transform method takes a Logical GIRPlan, composed of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MATCH_PATTERN&lt;/code&gt; and other relational operators, as shown in Figure 7(a); it outputs a Physical GIRPlan representing the PatternOrder, consisting of a series of physical operators, as shown in Figure 7(b). The transform method executes a top-down search algorithm as described in the &lt;a href=&quot;https://arxiv.org/abs/2401.17786&quot;&gt;GOpt paper&lt;/a&gt;, obtaining a series of PatternOrders along with their respective costs, and selects the PatternOrder with the lowest cost as the output Physical GIRPlan.&lt;/p&gt;
-
-&lt;p&gt;Finally, through the Physical Convertor, the Physical GIRPlan is converted into an Execution Plan supported by various engines. As shown in Figure 7(c), the Physical GIRPlan is converted into an Execution Plan supported by the GraphScope engine, where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Expand(v1-&amp;gt;v2, v3-&amp;gt;v2)&lt;/code&gt; is converted to the ExpandIntersect implementation. In the Neo4j engine, this operator is converted to the ExpandInto implementation, as shown in Figure 7(d).&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/optimize.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Figure 7: Optimization and Physical Conversion of Query Example.&lt;/div&gt;
-
-&lt;h1 id=&quot;case-study&quot;&gt;Case Study&lt;/h1&gt;
-
-&lt;p&gt;We selected a query case from LDBC SNB that involves complex patterns, multiple patterns, and aggregate computations, which are common optimization requirements. We represent this query using Fig.8 and Cypher as follows:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/query_case.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.8 Query Case Description.&lt;/div&gt;
-
-&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// M1&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;person:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PERSON&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:KNOWS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;),&lt;/span&gt;
-      &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;membership:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HASMEMBER&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;forum&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// M2&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:HASCREATOR&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CONTAINEROF&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;forum&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// M3&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:HASCREATOR&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:POST&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:HASTAG&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;tag:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Tag&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Filter&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;person.id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;$personId&lt;/span&gt;
-      &lt;span class=&quot;ow&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;$personId&lt;/span&gt;
-      &lt;span class=&quot;ow&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;membership.joinDate&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;$minDate&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;// Aggregate&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;otherP&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;post&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;post_cnt&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;GOpt first converts the Cypher query into GIR (Graph Intermediate Representation) through the Query Parser, as shown in Fig.9. M1, M2, and M3 form the initial Join structure, followed by a series of relational operations.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_gir.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.9 Initial GIR of the Query Case.&lt;/div&gt;
-
-&lt;p&gt;Next, the GIR Optimizer applies optimizations to the GIR based on strategies defined in the DAG (Directed Acyclic Graph). In the DAG diagram, we highlight the strategies that take effect for this query, as shown in Fig.10.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_dag.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.10 DAG of Optimization Process in the Query Case.&lt;/div&gt;
-
-&lt;h2 id=&quot;optimization-rules&quot;&gt;Optimization Rules&lt;/h2&gt;
-
-&lt;p&gt;We further explain the optimization rules applicable to this query:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;FilterIntoPattern: An extended implementation based on Calcite’s FilterIntoJoin. It pushes filtering conditions further down to graph operation operators within patterns. For example, given the following Cypher query:&lt;/p&gt;
-
-    &lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-   &lt;span class=&quot;c1&quot;&gt;// There is a &amp;lt;Join&amp;gt; between the two patterns in GIR&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e4&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v4&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v3.name&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;China&quot;&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
-    &lt;p&gt;After applying this rule, the optimized query is equivalent to rewriting it as:&lt;/p&gt;
-
-    &lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;   &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;),&lt;/span&gt;
-       &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v3&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;China&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;}),&lt;/span&gt;
-       &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v3&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;China&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;
-   &lt;span class=&quot;c1&quot;&gt;// There is a &amp;lt;Join&amp;gt; between the two patterns in GIR&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v1&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;e4&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v4&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-   &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;v1.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;count&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;v2&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;AggJoinTrans: Pushes aggregate operations down to the Join operator. This optimization rule is inspired by &lt;a href=&quot;https://calcite.apache.org/javadocAggregate/org/apache/calcite/rel/rules/AggregateJoinTransposeRule.html&quot;&gt;relational databases&lt;/a&gt;.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;JoinToPattern: Removes the Join operator between patterns and merges the left and right sub-patterns into a unified pattern. Whether patterns can be merged depends on whether the semantics remain consistent after merging. Based on the semantic requirements of different query languages, we define three types of semantics within patterns:
-    &lt;ul&gt;
-      &lt;li&gt;Homomorphism Semantics: Allows repetition of vertices or edges within the pattern, which is adopted by Gremlin.&lt;/li&gt;
-      &lt;li&gt;Edge-Distinct Semantics: Allows repetition of vertices but not edges within the pattern, which is adopted by Cypher.&lt;/li&gt;
-      &lt;li&gt;Vertex-Distinct Semantics: Allows repetition of edges but not vertices.&lt;/li&gt;
-      &lt;li&gt;Vertex-Edge-Distinct Semantics: Neither vertices nor edges can repeat within the pattern.&lt;/li&gt;
-    &lt;/ul&gt;
-
-    &lt;p&gt;Since the Join between two patterns inherently represents Homomorphism semantics, this rule only applies under that premise.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;PatternStrategy: As described earlier, this strategy applies a Top-Down Search Algorithm to the input pattern structure and selects the optimal PatternOrder based on cost.&lt;/li&gt;
-  &lt;li&gt;ComSubPattern: For the two sub-patterns involved in a Join, extracts their common parts as the original input data. If the common part consists of only a single vertex, the Join operation can be further optimized into an Expand operation.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2 id=&quot;optimization-process-1&quot;&gt;Optimization Process&lt;/h2&gt;
-
-&lt;p&gt;The GIR Optimizer executes specific strategies on the GIR in the order specified by Fig.10:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;FilterIntoPattern is performed first: The filtering conditions &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;{person.id = $personId, otherP &amp;lt;&amp;gt; $personId, membership.joinDate &amp;gt; $minDate}&lt;/code&gt; are pushed down to the graph operators that generate &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;person&lt;/code&gt; nodes, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;otherP&lt;/code&gt; nodes, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;membership&lt;/code&gt; edges.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_filter.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.11 The Optimization of FilterIntoPattern.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Next, AggJoinTrans is executed: This involves splitting the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;{otherP, count(post) as post_cnt;}&lt;/code&gt; related group operation. Part of it is pushed down into the left branch of the Join, while the other part remains after the Join to sum up the previously computed group results to ensure semantic equivalence.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_agg.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.12 The Optimization of AggJoinTrans.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;JoinToPattern is then applied: The Join operation between M1 and M2 is removed, and M1 and M2 are merged into a unified pattern M4. In this example, we assume the patterns conform to Homomorphism semantics, which is a prerequisite for applying this rule.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_join_pat.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.13 The Optimization of JoinToPattern.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;PatternStrategy is executed next: The following figure represents the output Optimal Pattern Order, consisting of a series of physical operators.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_cbo.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.14 The Optimization of PatternStrategies in M3 and M4.&lt;/div&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Finally, ComSubPattern is applied: This optimizes the reusable common results between patterns. As shown in Fig.14, in the left branch of the Join, M4 produces two columns &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;(p2, _cnt)&lt;/code&gt; after performing a Group operation, while the optimized PatternOrder of the right branch M3 starts with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Scan p2(PERSON, id &amp;lt;&amp;gt; $id)&lt;/code&gt;. Given that the common part only contains the single point p2, according to the ComSubPattern rule, the Join structure is further optimized into an Expand operation. Hence, M3 directly continues from the P2 point produced by the Group operation to execute &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Expand p2-&amp;gt;&quot;&quot; (HASCREATOR)&lt;/code&gt;.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_com.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align:center;&quot;&gt;Tab.1 The LDCB&lt;sub&gt;100&lt;/sub&gt; DataSet.&lt;/div&gt;
-
-&lt;h2 id=&quot;experimental-results&quot;&gt;Experimental Results&lt;/h2&gt;
-
-&lt;p&gt;For the aforementioned case study, we conducted two main experiments: ablation tests and Pattern Orders. We used the LDBC&lt;sub&gt;100&lt;/sub&gt; dataset, as shown in Table Tab.1.&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Graph&lt;/th&gt;
-      &lt;th&gt;|V|&lt;/th&gt;
-      &lt;th&gt;|E|&lt;/th&gt;
-      &lt;th&gt;Size&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;sf100&lt;/td&gt;
-      &lt;td&gt;283M&lt;/td&gt;
-      &lt;td&gt;1754M&lt;/td&gt;
-      &lt;td&gt;156GB&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p style=&quot;text-align:center;&quot;&gt;Tab.1 The LDCB&lt;sub&gt;100&lt;/sub&gt; DataSet.&lt;/p&gt;
-
-&lt;p&gt;The system configuration consists of a single node with the following specifications:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;8-core Intel Xeon E5-2620 v4 CPUs at 2.1GHz&lt;/li&gt;
-  &lt;li&gt;512GB memory&lt;/li&gt;
-  &lt;li&gt;10Gbps network.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;We used the &lt;a href=&quot;https://github.com/alibaba/GraphScope/releases/tag/v0.29.0&quot;&gt;GraphScope v0.29.0&lt;/a&gt; system, powered by the underlying &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/interactive_engine/executor/engine/pegasus&quot;&gt;Gaia&lt;/a&gt; engine, with 32 threads.&lt;/p&gt;
-
-&lt;p&gt;The ablation tests primarily compare the individual optimization effects of the rules: FilterIntoPattern, AggJoinTrans, JoinToPattern, and ComSubPattern. To avoid mutual interference between these rules, we sequentially added them in the order defined in Fig.10 and compared the execution time after each rule was added. The results are shown in Table Tab.2.&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Rules&lt;/th&gt;
-      &lt;th&gt;Time Cost (ms)&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;None&lt;/td&gt;
-      &lt;td&gt;770573&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;+FilterIntoPattern&lt;/td&gt;
-      &lt;td&gt;234313&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;+AggJoinTrans&lt;/td&gt;
-      &lt;td&gt;214955&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;+JoinToPattern&lt;/td&gt;
-      &lt;td&gt;64466&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;+ComSubPattern&lt;/td&gt;
-      &lt;td&gt;7014&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;div style=&quot;text-align:center;&quot;&gt;Tab.2 Time Cost of Ablation Tests in the Query Case.&lt;/div&gt;
-
-&lt;p&gt;The Pattern Orders experiment compares the optimal order generated by PatternStrategy with two other randomly chosen orders. Figure Fig.16 illustrates the execution sequence of the three Pattern Orders and annotates the actual intermediate data volume produced at each step. Finally, we compare the execution times of the three orders in Table Tab.3.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-03-25-gopt/case_orders.png&quot; alt=&quot;image&quot; /&gt;&lt;/p&gt;
-&lt;div style=&quot;text-align: center;&quot;&gt;Fig.16 Pattern Orders of GOpt-plan, Alt-plan1, Alt-plan2.&lt;/div&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Rules&lt;/th&gt;
-      &lt;th&gt;Time Cost (ms)&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;GOpt-plan&lt;/td&gt;
-      &lt;td&gt;7014&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Alt-plan1&lt;/td&gt;
-      &lt;td&gt;22211&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Alt-plan2&lt;/td&gt;
-      &lt;td&gt;194047&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;div style=&quot;text-align:center;&quot;&gt;Tab.3 Time Cost of Pattern Orders in the Query Case.&lt;/div&gt;
-</description>
-        <pubDate>Tue, 25 Mar 2025 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/03/25/GOpt-Optimization-Process.html</guid>
         
         
         <category>Tech</category>

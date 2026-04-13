@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">NeuG: One Engine, Two Modes, Outperforming Established Graph Databases</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-04-12">12 Apr 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-04-12">12 Apr 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">NeuG: One Engine, Two Modes, Outperforming Established Graph Databases</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-04-13-neug-vs-others-banner.png" alt="neug-vs-others" /></p>
+
+<p>Graph databases have become essential for applications built on relationships — social networks, knowledge graphs, fraud detection, recommendation engines. But integrating a graph database into your application often means managing a separate server process, dealing with network latency, and wrestling with deployment complexity.</p>
+
+<p><strong>NeuG</strong> (pronounced “new-gee”) is a new graph database designed to change that. Following the same philosophy as <a href="https://duckdb.org/">DuckDB</a> — but for graph data — NeuG is <strong>lightweight, minimal in dependencies, and easy to embed</strong>. It runs directly inside your application process as an embedded library, supports full Cypher queries, and delivers sub-millisecond latency on complex graph traversals. Currently available for Python (<code class="language-plaintext highlighter-rouge">pip install neug</code>), with Node.js and more language bindings on the roadmap.</p>
+
+<p>In this article, we explore what NeuG can do today, how it compares with established graph databases, and why it might be the graph engine your next project needs.</p>
+
+<hr />
+
+<h2 id="1-full-cypher-support-ready-out-of-the-box">1. Full Cypher Support, Ready Out of the Box</h2>
+
+<p>NeuG provides rich Cypher query language support, including variable-length path matching (<code class="language-plaintext highlighter-rouge">*1..3</code>), shortest path queries (<code class="language-plaintext highlighter-rouge">*SHORTEST</code>, <code class="language-plaintext highlighter-rouge">ALL SHORTEST</code>), subqueries (<code class="language-plaintext highlighter-rouge">CALL { ... }</code>), multi-label node matching (<code class="language-plaintext highlighter-rouge">:POST:COMMENT</code>), and more.</p>
+
+<p>Here is a complete Python example showing the full workflow from schema creation, data import, to querying:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">neug.database</span> <span class="kn">import</span> <span class="n">Database</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="s">"social.db"</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="c1"># Define graph schema
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CREATE NODE TABLE Person (id INT64, name STRING, PRIMARY KEY(id))"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CREATE REL TABLE Knows (FROM Person TO Person, since DATE)"</span><span class="p">)</span>
+
+<span class="c1"># Insert data
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CREATE (:Person {id: 1, name: 'Alice'})"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CREATE (:Person {id: 2, name: 'Bob'})"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CREATE (:Person {id: 3, name: 'Carol'})"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    MATCH (a:Person {id:1}), (b:Person {id:2})
+    CREATE (a)-[:Knows {since: date('2024-01-15')}]-&gt;(b)
+"""</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    MATCH (b:Person {id:2}), (c:Person {id:3})
+    CREATE (b)-[:Knows {since: date('2024-06-01')}]-&gt;(c)
+"""</span><span class="p">)</span>
+
+<span class="c1"># Bulk import from CSV
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"COPY Person FROM 'persons.csv' (HEADER=true)"</span><span class="p">)</span>
+
+<span class="c1"># Query: find 2nd-degree friends
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    MATCH (a:Person {name:'Alice'})-[:Knows*1..2]-&gt;(f:Person)
+    RETURN DISTINCT f.name
+"""</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="n">result</span><span class="p">.</span><span class="n">get_bolt_response</span><span class="p">())</span>
+
+<span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">db</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>NeuG’s Cypher implementation is powered by <a href="https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope">GOpt</a>’s unified intermediate representation (IR), making it also <strong>GQL-ready</strong> — when the <a href="https://www.gqlstandards.org/">ISO/GQL</a> standard matures, migration cost will be minimal.</p>
+
+<hr />
+
+<h2 id="2-dual-mode-architecture-and-tpap-capabilities">2. Dual-Mode Architecture and TP/AP Capabilities</h2>
+
+<p>Most graph databases force you to choose between a heavy client-server deployment and a limited embedded store. NeuG offers both in a single lightweight package — a design unique among graph databases.</p>
+
+<p><img src="/blog/assets/images/2026-04-13-neug-vs-others-dual-mode-architecture.png" alt="NeuG Dual-Mode Architecture" /></p>
+
+<p><strong>Embedded Mode</strong> loads NeuG as a library directly into your process, just like SQLite or DuckDB. No daemon, no configuration files, no ports to manage — your graph database lives entirely inside your application. This mode is ideal for data science workflows, ML/AI pipelines, batch analytics, and rapid prototyping.</p>
+
+<p><strong>Service Mode</strong> switches from embedded with a single line of code:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">uri</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">serve</span><span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="s">"localhost"</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>NeuG then serves over HTTP/RPC with full MVCC transactions and multi-client concurrency, ready for web applications, real-time APIs, and multi-user collaboration.</p>
+
+<p>In both modes, you use <strong>the same library, the same data, and the same queries</strong>. This seamless transition means you can develop and validate in embedded mode, then expose the same database as a production service — no data migration, no query rewriting.</p>
+
+<p>On the capability side, NeuG covers both transactional (TP) and analytical (AP) workloads. ACID transactions and MVCC concurrency control ensure data consistency in service mode; the columnar execution engine with vectorized processing makes complex multi-hop traversals and subgraph matching equally efficient. NeuG also supports a Postgres/DuckDB-style extension model — load data source plugins on demand with <code class="language-plaintext highlighter-rouge">INSTALL JSON; LOAD JSON;</code> (supporting JSON, Parquet, S3/OSS), keeping the core engine lean.</p>
+
+<hr />
+
+<h2 id="3-performance">3. Performance</h2>
+
+<p>NeuG’s dual-mode architecture lets us benchmark each mode against its natural competitor: <strong>embedded mode against <a href="https://ladybugdb.com/">LadybugDB</a> on analytical query latency</strong>, and <strong>service mode against <a href="https://neo4j.com/">Neo4j</a> on transactional query throughput</strong>.</p>
+
+<ul>
+  <li><strong><a href="https://neo4j.com/">Neo4j</a></strong> is the most widely deployed graph database, operating as a standalone server and the de facto standard for transactional graph workloads.</li>
+  <li><strong><a href="https://ladybugdb.com/">LadybugDB</a></strong> is an embeddable graph database built on <a href="https://kuzudb.com/">Kùzu</a>. Like NeuG, it runs in-process without a server, making it the closest architectural peer in the embedded graph space.</li>
+</ul>
+
+<p>All tests use the LDBC SNB SF1 dataset (~3M nodes, ~17M edges) on an Apple Silicon Mac.</p>
+
+<h3 id="embedded-mode-lsqb-benchmark-neug-vs-ladybugdb">Embedded Mode: LSQB Benchmark (NeuG vs LadybugDB)</h3>
+
+<p><a href="https://github.com/ldbc/lsqb">LSQB (Labelled Subgraph Query Benchmark)</a> contains 9 complex subgraph matching queries that lean toward analytical workloads, making it an excellent test for embedded graph database query optimization and execution.</p>
+
+<blockquote>
+  <p><strong>Note on KNOWS Edges</strong>: The original LSQB benchmark assumes KNOWS relationships are bidirectional (i.e., if A knows B, then B also knows A). In our tests, we modified all queries involving KNOWS edges to use directed traversal (<code class="language-plaintext highlighter-rouge">-[:KNOWS]-&gt;</code>). This adjustment allows the <strong>same LDBC SNB SF1 dataset to be used for both SNB Interactive and LSQB benchmarks</strong>, since the KNOWS relationships in the original LDBC SNB data are unidirectional. This modification does not affect the fairness of evaluating graph database query optimization and execution capabilities.</p>
+</blockquote>
+
+<p>We compared NeuG (single-threaded) against LadybugDB (Kuzu-based, using the best multi-threaded result for each query):</p>
+
+<p><img src="/blog/assets/images/2026-04-13-neug-vs-others-lsqb-embedded-comparison.png" alt="Embedded Mode: LSQB Benchmark Comparison" /></p>
+
+<p>NeuG wins <strong>8 out of 9 queries</strong> with just a single thread. On Q3 (triangle pattern within the same country) it achieves a <strong>287x</strong> speedup; on Q2 (two-hop with filtering) a <strong>91x</strong> speedup. Even with LadybugDB using up to 8 threads, NeuG single-threaded significantly outperforms on most queries.</p>
+
+<p>On complex analytical queries involving multi-hop joins, triangle patterns, and long paths, NeuG’s graph-native query optimizer demonstrates an overwhelming advantage. Notably, on Q9 — a simpler short-path traversal where multi-threading typically benefits competitors — NeuG still achieves a <strong>1.7x</strong> speedup.</p>
+
+<h3 id="service-mode-ldbc-snb-interactive-benchmark-neug-vs-neo4j">Service Mode: LDBC SNB Interactive Benchmark (NeuG vs Neo4j)</h3>
+
+<p><a href="https://ldbcouncil.org/benchmarks/snb-interactive/">LDBC SNB Interactive</a> contains 14 complex read queries (IC1–IC14) covering multi-hop friend finding, shortest paths, and aggregation — typical transactional graph workloads. We ran 4 concurrent clients for 300 seconds, randomly issuing these queries against both NeuG in service mode and Neo4j in server mode.</p>
+
+<p><img src="/blog/assets/images/2026-04-13-neug-vs-others-ldbc-service-throughput.png" alt="Service Mode: LDBC SNB IC Throughput and Latency" /></p>
+
+<p>NeuG achieves <strong>617 QPS</strong> — <strong>50.6x</strong> the throughput of Neo4j. On latency, NeuG’s P50 is just 3.1ms with a P95 of 20.6ms, while Neo4j’s P95 reaches 1,728ms. Over 300 seconds NeuG successfully executed 185,156 queries with zero failures, demonstrating the stability of its service path under high concurrency.</p>
+
+<h3 id="why-is-neug-so-fast">Why Is NeuG So Fast?</h3>
+
+<p>NeuG’s performance advantage comes from three technical foundations.</p>
+
+<p>First, NeuG is built on <a href="https://graphscope.io">GraphScope Flex</a>, the graph engine that <a href="https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/">set the LDBC SNB Interactive Benchmark world record</a> at <strong>80,000+ QPS</strong>. This is not a research prototype — it’s the same battle-tested engine proven at enterprise scale at Alibaba. NeuG inherits its optimized CSR storage for cache-friendly traversals, a columnar vectorized execution engine, and efficient memory management.</p>
+
+<p>Second, unlike most graph databases that reuse relational optimizers, NeuG uses <a href="https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope">GOpt</a> — a graph-native query optimizer. GOpt performs cost-based optimization with graph-specific cardinality estimation, supports pattern decomposition and worst-case optimal join planning, and reasons about graph topology to select efficient execution strategies. This is exactly why NeuG achieves 287x speedup on LSQB Q3 (triangle patterns) and 91x on Q2 (multi-hop filtering) — complex patterns that traditional optimizers struggle with.</p>
+
+<p>Third, in embedded mode NeuG executes in-process with zero serialization overhead. For multi-hop traversal queries, this advantage compounds — each hop that would incur a network round-trip in a client-server model is instead a direct memory access.</p>
+
+<hr />
+
+<h2 id="reproducibility">Reproducibility</h2>
+
+<p>All performance results in this article are independently reproducible. We have published the following resources:</p>
+
+<ul>
+  <li><strong>Dataset</strong>: The LDBC SNB SF1 dataset is available at https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz (~282MB)</li>
+  <li><strong>Benchmark and Tutorial</strong>: Benchmark Scripts are in https://github.com/alibaba/neug/tree/main/examples/, tutorial at https://graphscope.io/neug/en/tutorials/benchmark-neug-dual-mode/</li>
+</ul>
+
+<h3 id="quick-reproduction">Quick Reproduction</h3>
+
+<p><strong>Embedded Mode (NeuG vs LadybugDB)</strong>:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz
+<span class="nb">tar</span> <span class="nt">-xzf</span> ldbc-snb-sf1-lsqb.tar.gz
+pip <span class="nb">install </span>neug real_ladybug
+<span class="nb">cd </span>neug/examples/lsqb_benchmark
+python run_neug_benchmark.py <span class="nt">--data-dir</span> social_network-sf1-CsvComposite-StringDateFormatter
+</code></pre></div></div>
+
+<p><strong>Service Mode (NeuG vs Neo4j)</strong>:</p>
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>wget https://neug.oss-cn-hangzhou.aliyuncs.com/datasets/ldbc-snb-sf1-lsqb.tar.gz
+<span class="nb">tar</span> <span class="nt">-xzf</span> ldbc-snb-sf1-lsqb.tar.gz
+pip <span class="nb">install </span>neug neo4j
+<span class="c"># Start Neo4j server (optional, for comparison)</span>
+docker run <span class="nt">-d</span> <span class="nt">--name</span> neo4j <span class="nt">-p</span> 7687:7687 <span class="nt">-e</span> <span class="nv">NEO4J_AUTH</span><span class="o">=</span>neo4j/neo4j123 neo4j:latest
+<span class="nb">cd </span>neug/examples/ldbc_interactive_benchmark
+python run_interactive_benchmark.py <span class="nt">--data-dir</span> social_network-sf1-CsvComposite-StringDateFormatter
+</code></pre></div></div>
+
+<p>If you encounter any issues reproducing these results, please report them on <a href="https://github.com/alibaba/neug/issues">GitHub Issues</a>.</p>
+
+<h2 id="whats-next">What’s Next</h2>
+
+<p>NeuG is under active development. The roadmap includes Node.js bindings (AI Agent integration), graph algorithm extensions (Leiden community detection, PageRank, K-Core), data lake support (S3/OSS + Parquet + GraphAr), and vector database extensions for RAG &amp; GraphRAG workflows.</p>
+
+<p>If you’re building applications that need fast, embedded graph queries without the operational overhead of a database server, give NeuG a try.</p>
+
+<p><strong>GitHub</strong>: <a href="https://github.com/alibaba/neug">github.com/alibaba/neug</a>
+<strong>Install</strong>: <code class="language-plaintext highlighter-rouge">pip install neug</code></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=NeuG: One Engine, Two Modes, Outperforming Established Graph Databases&amp;url=https://graphscope.io/tech/2026/04/12/neug-one-engine-two-modes.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/04/12/neug-one-engine-two-modes.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/04/12/neug-one-engine-two-modes.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
