@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Star Counts Lied to Us: We Gave 74 Open Source Projects a Graph Database Health Check</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-04-20">20 Apr 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-04-20">20 Apr 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Star Counts Lied to Us: We Gave 74 Open Source Projects a Graph Database Health Check</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-03-06-github-stars-title.png" alt="github-stars-title" />
+When you pick an open source project on GitHub, what do you look at first? For most people, the answer is Star count. But can Star count really tell you whether a project is healthy and worth relying on long-term?</p>
+
+<p>Ollama has <strong>250K Stars</strong> on GitHub — it’s the hottest local LLM tool out there. If you had to guess its community health ranking, where would you place it?</p>
+
+<p><strong>Answer: #68 out of 74 projects, in the red zone.</strong></p>
+
+<p>Monthly active users dropped from a peak of 1,128 to just 150. Core developers shrank from 102 down to as low as 13, scoring only <strong>8.8</strong> on personnel retention (out of 100) — almost no one stayed. Meanwhile, vLLM in the same space has less than half of Ollama’s Stars but ranks <strong>#7</strong> in health, with a maintenance score of 90.6 and four consecutive years of positive talent growth.</p>
+
+<p><strong>A 250K-Star project is less healthy than a 50K-Star one?</strong> This isn’t an outlier — it’s a pattern we found repeatedly across 74 projects. Star count measures “how many people passed by,” not “how many people stayed.”</p>
+
+<p>All graph data storage, querying, and analysis in this study were powered by <a href="https://github.com/alibaba/neug">NeuG</a> embedded graph database.</p>
+
+<hr />
+
+<h2 id="why-we-did-this">Why We Did This</h2>
+
+<p>How do you actually measure the health of an open source community? Stars, Forks, commit frequency — these cross-sectional counts describe “how much happened,” not “whether the community structure is healthy.” Some projects looked their most “prosperous” with great Star and commit numbers, monthly active users exceeding 2,000 — only to drop to single digits two years later. <strong>Cross-sectional counts never warned of these collapses.</strong></p>
+
+<p><strong>Especially under the AI wave, hype makes judgment harder.</strong> When an LLM repository sees 60K events and tens of thousands of Stars in its first month, every cross-sectional metric screams “boom” — but three months later it may be down to double-digit activity. Hype creates the illusion that “everything is fine,” masking the fact that the collaboration network is unraveling.</p>
+
+<p>We needed an evaluation method that cuts through the hype — not asking “how many events happened,” but asking <strong>“whether the collaboration network’s topology is healthy.”</strong></p>
+
+<p>So we did this: we modeled GitHub collaboration behavior as a <strong>time-evolving graph network</strong> and gave 74 representative open source projects a “health check” across <strong>four dimensions: maintainer burnout risk, newcomer onboarding path, community interaction quality, and personnel flow trends.</strong> Covering 10 tracks including AI/ML, programming languages, front-end, cloud-native, and big data, spanning 2021-2025 across 60 months. All graph data storage and analysis were powered by <strong><a href="https://github.com/alibaba/neug">NeuG</a></strong> embedded graph database, whose high-performance analytics engine made bulk k-core decomposition, BFS shortest path, and clustering coefficient computation across thousands of monthly graph snapshots possible.</p>
+
+<hr />
+
+<h2 id="five-findings-you-might-not-expect">Five Findings You Might Not Expect</h2>
+
+<h3 id="finding-1-the-most-starred-projects-are-often-not-the-healthiest">Finding 1: The Most-Starred Projects Are Often Not the Healthiest</h3>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-01.png" alt="Star Count vs Health" /></p>
+
+<p>Ollama (250K Stars, #68), Next.js (130K Stars, #62), React (230K Stars, #48) — these household names rank in the mid-to-lower tier for health. Instead, “quietly doing the work” projects like Elasticsearch (#4), vLLM (#7), and DuckDB (#37, perfect atmosphere score) perform best.</p>
+
+<blockquote>
+  <p>The key signal isn’t “how many people visited,” but “whether the collaboration network is tight and whether talent stays.”</p>
+</blockquote>
+
+<h3 id="finding-2-llm-model-repositories-score-universally-low">Finding 2: LLM Model Repositories Score Universally Low</h3>
+
+<p>baichuan2 (19.6), deepseek-v3 (33.7), yi (28.5), chatglm3 (48.1) — the LLM track averages only <strong>39.9</strong>, with 5 out of 6 projects scoring below 50, the lowest among all tracks.</p>
+
+<p>Two notable patterns in the data:</p>
+
+<p><strong>1. “Peak at launch” exponential decay</strong>: baichuan2 started with 2,925 events in month one, dropping to just 43 after 12 months; yi went from 5,908 to 239 after 9 months; deepseek-v3 plummeted from a peak of 61,174 to 309 after 13 months. <strong>Tool projects like vLLM do the opposite — growing steadily from 3,574 to 12,614, getting more alive the more they’re used.</strong></p>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-02.png" alt="Decay Curves" /></p>
+
+<p><strong>2. Near-total core team turnover</strong>: The initial core developers of all 6 LLM repositories <strong>almost entirely turned over</strong>. baichuan2 shrank from 41 core contributors to 2, chatglm3 from 20 to 2 — mostly new faces.</p>
+
+<p>A possible explanation: LLM GitHub repositories are closer to “model launch pages” than long-term collaborative community projects — after the model ships, R&amp;D focus naturally shifts elsewhere, and the real community ecosystem (fine-tuning discussions, weight distribution) happens more on platforms like HuggingFace. This also means <strong>tens of thousands of Stars and events in the first month reflect attention rather than community stickiness</strong>, and when making technology choices, you should be aware of the gap between hype and long-term community activity.</p>
+
+<h3 id="finding-3-maintainer-health-and-personnel-flow-are-the-twin-pillars">Finding 3: Maintainer Health and Personnel Flow Are the “Twin Pillars”</h3>
+
+<p>Across the 74 projects, the two dimensions most correlated with total score are maintainer health (r=0.817) and personnel flow (r=0.755), with newcomer friendliness close behind (r=0.578). <strong>Maintainers doing well → talent stays → community is healthy.</strong></p>
+
+<h3 id="finding-4-the-closer-to-infrastructure-the-more-cycle-resistant-the-community">Finding 4: The Closer to Infrastructure, the More Cycle-Resistant the Community</h3>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-04.png" alt="Track Scores" /></p>
+
+<p>The AI ecosystem shows a clear three-tier gradient — infrastructure frameworks (PyTorch/Transformers, avg 59.7) &gt; application orchestration layer (LangChain/AutoGen, 53.2) &gt; model release layer (39.9). Infrastructure has technical moats for protection; the orchestration layer is too easily replaceable, and once the hype fades, people scatter.</p>
+
+<h3 id="finding-5-false-prosperity-has-a-mathematical-signature--high-event-volume--low-clustering-coefficient">Finding 5: “False Prosperity” Has a Mathematical Signature — High Event Volume + Low Clustering Coefficient</h3>
+
+<p>LangChain peaked at 2,022 monthly active users and 14,796 monthly events — two years later, MAU dropped to 173 (↓91%). AutoGen’s change was even more dramatic, dropping from 328 to <strong>2 users</strong> (↓99.4%), with the collaboration network’s clustering coefficient falling to <strong>0.000</strong>. When the Star chart looks fine but the network clustering coefficient keeps declining, it means collaboration relationships are loosening and deserves attention.</p>
+
+<hr />
+
+<h2 id="counter-intuitive-cases-three-comparisons-you-didnt-see-coming">Counter-Intuitive Cases: Three Comparisons You Didn’t See Coming</h2>
+
+<h3 id="1-ollama-vs-vllm-ice-and-fire-in-the-same-track">1. Ollama vs vLLM: Ice and Fire in the Same Track</h3>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-03.png" alt="Ollama vs vLLM MAU Comparison" /></p>
+
+<p>Both projects are LLM inference tools — the former for individual users (local deployment), the latter for enterprises (high-throughput inference).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center">Ollama</th>
+      <th style="text-align: center">vLLM</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">GitHub Star</td>
+      <td style="text-align: center">~250K</td>
+      <td style="text-align: center">~50K</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Overall Rank</strong></td>
+      <td style="text-align: center"><strong>#68 (36.8)</strong></td>
+      <td style="text-align: center"><strong>#7 (76.5)</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Maintainer Health</td>
+      <td style="text-align: center">34.0</td>
+      <td style="text-align: center"><strong>90.6</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Personnel Flow</td>
+      <td style="text-align: center"><strong>8.8</strong></td>
+      <td style="text-align: center">84.5</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Burnout Risk</td>
+      <td style="text-align: center">High</td>
+      <td style="text-align: center">Healthy</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">MAU Peak→Trough</td>
+      <td style="text-align: center">1,128 → 150 (-87%)</td>
+      <td style="text-align: center">Peak at 1,306</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Core Developers</td>
+      <td style="text-align: center">102 → 24 (once down to 13)</td>
+      <td style="text-align: center">Stable 15-30</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Talent Trend</td>
+      <td style="text-align: center">2025 -9.6%, 2026 <strong>-83.3%</strong></td>
+      <td style="text-align: center">4 consecutive years of positive growth</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>What’s Ollama’s challenge?</strong> A personnel flow score of 8.8 indicates insufficient contributor retention. The rapid influx of +100% in 2023 turned into a massive outflow of -83.3% by 2026. A maintainer health score of 34.0 reflects significant core team contraction with high burnout risk.</p>
+
+<p>In contrast, vLLM scores 90.6 on maintenance, maintains a stable core developer base of 15-30 people long-term, and has seen positive talent growth for 4 consecutive years (though the growth rate is slowing, it remains positive). This is a textbook case of “healthy sustainable growth.”</p>
+
+<blockquote>
+  <p><strong>Takeaway</strong>: This is a noteworthy <strong>“hype vs health misalignment” phenomenon</strong> — Star count measures “how many people pay attention,” while health measures “how many people keep participating.” A project can have 250K Stars but only 24 core developers — the higher the attention, the easier this gap is to overlook. When making technology choices in the AI track, <strong>we recommend checking whether Star growth rate matches core contributor growth rate.</strong></p>
+</blockquote>
+
+<hr />
+
+<h3 id="2-openclaw-vs-autogpt-after-lightning-fast-rise-landing-or-crashing">2. OpenClaw vs AutoGPT: After Lightning-Fast Rise, Landing or Crashing?</h3>
+
+<p>OpenClaw shot to <strong>#1 overall (92.4 points)</strong> with just 2 months of data. Let’s put it alongside another project that once had a “lightning-fast rise” — AutoGPT from 2023.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left"> </th>
+      <th style="text-align: center">OpenClaw (2026)</th>
+      <th style="text-align: center">AutoGPT (2023)</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left"><strong>Explosion Month Events</strong></td>
+      <td style="text-align: center">100,277</td>
+      <td style="text-align: center">82,469</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Explosion Month MAU</strong></td>
+      <td style="text-align: center">3,382</td>
+      <td style="text-align: center">1,985</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Explosion Month Core Devs</strong></td>
+      <td style="text-align: center">25</td>
+      <td style="text-align: center">108</td>
+    </tr>
+    <tr>
+      <td style="text-align: left"><strong>Next Month MAU</strong></td>
+      <td style="text-align: center">2,349 (-30.5%)</td>
+      <td style="text-align: center">849 (-57%)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>AutoGPT’s story is a <strong>successful “landing”</strong> case. After its April 2023 explosion (82K events), MAU dropped from 1,985 to 849 (-57%) the next month, and core developers plummeted from 108 to 14 — but it didn’t die. It stabilized at 3,000-6,000 monthly events in 2024-2025, with talent flow recovering from -33% bleeding to +9.4% and +22.4% positive growth. AutoGPT spent two years rebuilding a smaller but healthier community and currently ranks #22.</p>
+
+<p>OpenClaw now stands at the same crossroads. February’s 100K events and 3,382 MAU represent the largest single-month surge among all 74 projects. And OpenClaw has a feature AutoGPT didn’t have: <strong>AI Agents deeply embedded in the development workflow</strong>. Bots like greptile-apps[bot] and openclaw-barnacle[bot] consistently rank among the top core contributors — a pattern that barely exists in traditional projects. However, OpenClaw’s March MAU dropped to 2,349, a 30.5% decline. Historically, AutoGPT experienced a 57% MAU drop after a similar-scale explosion; while OpenClaw’s decline is milder, it hasn’t escaped this pattern either.</p>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-05.png" alt="Fate Lines" /></p>
+
+<p>The iron law of “easy to explode, hard to sustain” doesn’t change just because of AI Agents. Among the 74 projects, others with similar explosions include Stable Diffusion WebUI (October 2022 peak of 1,834 MAU → only 30 by end of 2025, near stagnation) and LangChain (September 2023 peak of 2,022 MAU → only 173 by 2025, running on low power). Three paths lie ahead:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Fate</th>
+      <th style="text-align: left">Representative</th>
+      <th style="text-align: left">Key Difference</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Successful Landing</td>
+      <td style="text-align: left">AutoGPT</td>
+      <td style="text-align: left">Rebuilt core team after decline, talent returned to positive growth</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Low-Power Operation</td>
+      <td style="text-align: left">LangChain</td>
+      <td style="text-align: left">Scale contracted 91%, but collaboration structure remains (clustering coefficient 0.15-0.27)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Near Stagnation</td>
+      <td style="text-align: left">SD WebUI</td>
+      <td style="text-align: left">Maintained by few, collaboration network becoming sparse</td>
+    </tr>
+  </tbody>
+</table>
+
+<blockquote>
+  <p><strong>Can OpenClaw avoid SD WebUI’s fate and replicate AutoGPT’s “landing”?</strong> The key lies in whether it can convert the first-month influx of participants into stable core contributors over the next 6 months.</p>
+</blockquote>
+
+<hr />
+
+<h3 id="3-nextjs-hot-front-end-framework-atmosphere-dimension-needs-work">3. Next.js: Hot Front-End Framework, Atmosphere Dimension Needs Work</h3>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Dimension</th>
+      <th style="text-align: center">Next.js</th>
+      <th style="text-align: center">Contrast: DuckDB</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Atmosphere Score</td>
+      <td style="text-align: center"><strong>21.7</strong> (#73)</td>
+      <td style="text-align: center"><strong>100.0</strong> (#1)</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Toxicity Rate</td>
+      <td style="text-align: center">Peak <strong>17.68%</strong></td>
+      <td style="text-align: center"><strong>0.0%</strong></td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Overall Rank</td>
+      <td style="text-align: center">#62 (50.2)</td>
+      <td style="text-align: center">#37 (64.5)</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="/blog/assets/images/2026-03-06-github-stars-06.png" alt="Next.js Toxicity" /></p>
+
+<p>Vercel’s flagship project Next.js has 130K+ Stars, and its position in the front-end ecosystem needs no elaboration. But its community atmosphere score is only <strong>21.7</strong> (out of 100), ranking second-to-last among 74 projects.</p>
+
+<p>The main reason is <strong>rising negative comment ratio</strong>. Using the ToxiCR model, we scanned 6.74 million comments on Next.js and found its toxicity rate rose from ~2% in mid-2022 to 15%, reaching <strong>17.68%</strong> in April 2025 — well above the 5% healthy baseline.</p>
+
+<p>By contrast, DuckDB’s toxicity rate has remained at <strong>0.0%</strong> with a perfect atmosphere score. DuckDB has only 100-180 monthly active users, but the community has virtually no negative interactions. This is a “small but refined” technology-driven community — modest in scale, but exceptionally high in collaboration quality.</p>
+
+<blockquote>
+  <p><strong>Takeaway</strong>: Community scale and community quality are two different dimensions. Large projects without effective community management may see negative interactions affect contributor willingness to participate, creating a vicious cycle.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="method-at-a-glance-health-checks-on-time-series-collaboration-graphs">Method at a Glance: Health Checks on Time-Series Collaboration Graphs</h2>
+
+<p>We built three types of monthly graphs from GitHub Archive’s full event data:</p>
+
+<ul>
+  <li><strong>Actor-Actor Collaboration Graph</strong>: PR merges, code reviews, Issue discussion relationships between developers, used to identify core developers and calculate collaboration density</li>
+  <li><strong>Actor-Repo Contribution Graph</strong>: Developer-to-repository contribution relationships, used to track cross-project talent flow</li>
+  <li><strong>Actor-Discussion Participation Graph</strong>: Developer-to-Issue/PR participation relationships, used to evaluate community atmosphere</li>
+</ul>
+
+<p>We extracted monthly time series from these graphs using topological metrics like <strong>weighted degree centrality, k-core decomposition, BFS shortest path, and clustering coefficient</strong>, then performed “long-term trend + fluctuation stability” two-layer analysis on the sequences to synthesize four dimension scores (each weighted 25%).</p>
+
+<table>
+  <thead>
+    <tr>
+      <th style="text-align: left">Dimension</th>
+      <th style="text-align: left">What It Measures</th>
+      <th style="text-align: left">Key Graph Metrics</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td style="text-align: left">Maintainer Burnout Risk</td>
+      <td style="text-align: left">Whether core maintainers are declining</td>
+      <td style="text-align: left">k-core decomposition, clustering coefficient, Bus Factor</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Newcomer Friendliness</td>
+      <td style="text-align: left">Whether newcomers can reach the core circle</td>
+      <td style="text-align: left">BFS shortest path, core unreachable rate</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Community Atmosphere</td>
+      <td style="text-align: left">Communication quality and response efficiency</td>
+      <td style="text-align: left">Toxicity detection (ToxiCR), response time, closure rate</td>
+    </tr>
+    <tr>
+      <td style="text-align: left">Personnel Flow</td>
+      <td style="text-align: left">Whether the talent pool is growing or shrinking</td>
+      <td style="text-align: left">Annual net growth rate trend</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr />
+
+<h2 id="advice-for-different-readers">Advice for Different Readers</h2>
+
+<p><strong>Technology Evaluators</strong>: When adopting AI application-layer frameworks, don’t be blinded by Star count. Check <strong>Issue closure rate</strong> and <strong>core contributor count</strong> — if core maintainers are fewer than 3, or if there’s been net personnel outflow for 2 consecutive years, evaluate alternatives. Prioritize dependency on infrastructure layers (PyTorch, Elasticsearch) rather than orchestration layers (LangChain, AutoGen).</p>
+
+<p><strong>Community Managers</strong>: Shift from “attracting eyeballs” to “filtering core contributors.” Elasticsearch’s counter-cyclical growth proves that a mature project’s core competitiveness isn’t widening the funnel mouth, but <strong>optimizing the funnel neck</strong> — making capable contributors enter the core layer more smoothly. Watch personnel flow trends — sustained talent outflow over 2-3 years is an earlier warning signal than Star count decline.</p>
+
+<p><strong>Open Source Contributors</strong>: Prioritize joining projects with <strong>high network clustering coefficient and stable core layers</strong> (PyTorch, Rust, Kubernetes). The deep collaboration relationships you build in these projects have far stronger cycle-crossing capability than mastering any single application-layer framework.</p>
+
+<hr />
+
+<p><em>This study is based on GitHub Archive full data from 2021-2025, covering 74 projects, 60 months, and 6.74 million comments. All graph data storage and analysis were powered by <a href="https://github.com/alibaba/neug">NeuG</a> embedded graph database. For complete methodology, scoring criteria, and raw data, see the <a href="https://neug.oss-cn-beijing.aliyuncs.com/articles/github_analysis_report_full_0316.pdf">full report</a>.</em></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Star Counts Lied to Us: We Gave 74 Open Source Projects a Graph Database Health Check&amp;url=https://graphscope.io/tech/2026/04/20/Star-Counts-Lied-Graph-Database-Health-Check.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/04/20/Star-Counts-Lied-Graph-Database-Health-Check.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/04/20/Star-Counts-Lied-Graph-Database-Health-Check.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
