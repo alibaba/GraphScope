@@ -18,6 +18,7 @@ https://slack.graphscope.io
 
 https://graphscope.io/blog/
 
+https://graphscope.io/blog/tech/2026/04/20/Star-Counts-Lied-Graph-Database-Health-Check
 https://graphscope.io/blog/tech/2026/04/12/NeuG-One-Engine-Two-Modes
 https://graphscope.io/blog/tech/2026/04/02/Dissecting-Claude-Code
 https://graphscope.io/blog/tech/2026/03/24/Following-94-Million-Relationships
