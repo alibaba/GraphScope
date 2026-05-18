@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">You and Your LLM Can't Review Thousands of PRs at Once — But a Graph Database Can</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-05-17">17 May 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-05-17">17 May 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">You and Your LLM Can't Review Thousands of PRs at Once — But a Graph Database Can</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-05-18-codegraph-pr-review-title.jpg" alt="codegraph-pr-review" />
+146 open PRs. 83 of them clustered into conflict groups. Some modifying the same function across 5 different branches. This isn’t a hypothetical — it’s the real state of the <a href="https://github.com/qwenLM/qwen-code">qwen-code</a> repository on a random Tuesday in May 2026. And qwen-code isn’t even the extreme case — projects like OpenClaw and Hermes routinely carry thousands of open PRs.</p>
+
+<p><img src="/blog/assets/images/2026-05-18-codegraph-pr-review-overwhelm.jpg" alt="PR flood" /></p>
+
+<p>Manually reviewing this many PRs is impractical, and hidden conflicts between them are nearly impossible to spot — even for an LLM. This post shows how <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph</a> — a code analysis tool powered by the <a href="https://github.com/alibaba/neug">NeuG</a> embedded graph database — transforms PR management from “intuition-driven” to “data-driven,” using a real-world analysis of qwen-code’s 146 open PRs.</p>
+
+<hr />
+
+<h2 id="the-pr-review-bottleneck-why-neither-you-nor-your-llm-can-keep-up">The PR Review Bottleneck: Why Neither You Nor Your LLM Can Keep Up</h2>
+
+<p>Picture this: you’re the maintainer of a popular open-source project. You open GitHub in the morning and find 146 PRs waiting for review. They come from contributors around the world — some touch core configuration, some refactor the tool invocation pipeline, some just fix a typo in the docs. Worse still, several of them modify the same function — merging any one could break the others.</p>
+
+<p>Traditional manual review has three fundamental limits:</p>
+
+<ul>
+  <li><strong>Scale</strong>: you can only review one PR at a time, and 146 doesn’t fit in anyone’s morning.</li>
+  <li><strong>Association blindness</strong>: no human can mentally track which PRs touch the same function, let alone whether PR A and PR B both modify the same underlying logic.</li>
+  <li><strong>Gut-based risk</strong>: “this looks risky” isn’t a metric — there’s no structural risk assessment.</li>
+</ul>
+
+<p>What about using LLMs? Current AI Code Review solutions feed PR diffs one by one to a language model. This works at small scale, but at 146 PRs, token consumption explodes — and more critically, <strong>LLMs cannot natively perform cross-PR correlation analysis</strong>. Each invocation sees only a single PR’s diff and cannot answer global questions like “which other PRs touch the same function as this one?”</p>
+
+<p>CodeGraph takes a different path: <strong>structural analysis via graph database, not only text comprehension via LLM</strong>. It indexes a code repository into a queryable knowledge graph — functions, call chains, classes, files, PRs — then runs risk scoring, conflict detection, and blast radius computation as graph queries. Zero token cost, yet capable of answering the global correlation questions that neither humans nor LLMs handle well.</p>
+
+<hr />
+
+<h2 id="how-codegraph-works-from-repository-to-knowledge-graph">How CodeGraph Works: From Repository to Knowledge Graph</h2>
+
+<p>CodeGraph is built on <a href="https://github.com/alibaba/neug"><strong>NeuG</strong></a> — an open-source, embedded graph database that speaks Neo4j-compatible Cypher. NeuG runs in-process (no server deployment needed), giving you the expressive power of graph queries with the simplicity of a local database file.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">pr-review</code> workflow consists of two phases:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Phase 1: Analyze + Detect + Persist</span>
+codegraph pr-review prepare <span class="nt">--db</span> .codegraph <span class="nt">--repo</span> owner/repo
+
+<span class="c"># Phase 2: Label + Comment on GitHub</span>
+codegraph pr-review label <span class="nt">--db</span> .codegraph <span class="nt">--repo</span> owner/repo
+</code></pre></div></div>
+
+<p>During <code class="language-plaintext highlighter-rouge">prepare</code>, CodeGraph fetches all open PRs, parses their diffs at function granularity, and writes the results into the graph database — PR nodes, Function nodes, and <code class="language-plaintext highlighter-rouge">CHANGES</code> edges connecting them. This data coexists with the existing code structure graph (call relationships, file ownership, class hierarchies), enabling cross-PR and cross-code queries in a unified model.</p>
+
+<p>The key insight: once PRs are modeled as graph nodes connected to the functions they modify, questions like “which PRs conflict?” become simple graph traversals — no pairwise diff comparison needed.</p>
+
+<hr />
+
+<h2 id="146-prs-in-qwenlmqwen-code-a-real-world-analysis">146 PRs in QwenLM/qwen-code: A Real-World Analysis</h2>
+
+<p>We ran CodeGraph on <strong>QwenLM/qwen-code</strong> — an active open-source AI coding assistant project. At the time of analysis (commit <a href="https://github.com/QwenLM/qwen-code/commit/870bdf2a9d6fbd324d6d5d25735b2932dc4e402d"><code class="language-plaintext highlighter-rouge">870bdf2a</code></a>, 2026-05-13), it had <strong>146 open PRs</strong>. Here’s what CodeGraph found.</p>
+
+<h3 id="per-pr-risk-scoring">Per-PR Risk Scoring</h3>
+
+<p>For each PR, CodeGraph performs <strong>structural risk scoring</strong> — not by counting diff lines, but by parsing every hunk to identify modified, added, and deleted functions, then computing a composite score from:</p>
+
+<ul>
+  <li><strong>Interface change</strong>: modifying an abstract class or interface definition (e.g., a <code class="language-plaintext highlighter-rouge">Tool</code> base class method signature)</li>
+  <li><strong>Config file</strong>: touching config/schema files (e.g., <code class="language-plaintext highlighter-rouge">settings.json</code>, <code class="language-plaintext highlighter-rouge">tsconfig.json</code>)</li>
+  <li><strong>Cross-module</strong>: spanning multiple modules (e.g., modifying both <code class="language-plaintext highlighter-rouge">cli/</code> and <code class="language-plaintext highlighter-rouge">core/</code>)</li>
+  <li><strong>Dead code</strong>: introducing uncalled functions</li>
+  <li><strong>Blast radius</strong>: the upstream/downstream call scope of modified functions (<code class="language-plaintext highlighter-rouge">fan_in × fan_out</code>)</li>
+</ul>
+
+<p>Each PR receives a risk level — <strong>LOW / MEDIUM / HIGH / CRITICAL</strong>:</p>
+
+<p><strong>Risk distribution:</strong> 🔴 CRITICAL: 10 · 🟠 HIGH: 32 · 🟡 MEDIUM: 63 · 🟢 LOW: 40</p>
+
+<h3 id="cross-pr-conflict-detection">Cross-PR Conflict Detection</h3>
+
+<p>This is CodeGraph’s most distinctive capability. When two PRs modify the same function, they become connected through that Function node in the graph. Finding all such conflicts is a single Cypher query:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">pr1:</span><span class="n">PR</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="py">c1:</span><span class="n">CHANGES</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">f:</span><span class="n">Function</span><span class="ss">)</span><span class="o">&lt;-</span><span class="ss">[</span><span class="py">c2:</span><span class="n">CHANGES</span><span class="ss">]</span><span class="o">-</span><span class="ss">(</span><span class="py">pr2:</span><span class="n">PR</span><span class="ss">)</span>
+<span class="k">WHERE</span> <span class="n">pr1.id</span> <span class="o">&lt;</span> <span class="n">pr2.id</span>
+  <span class="ow">AND</span> <span class="n">c1.info</span> <span class="ow">IN</span> <span class="ss">[</span><span class="s1">'hunk'</span><span class="ss">,</span> <span class="s1">'deleted'</span><span class="ss">]</span>
+  <span class="ow">AND</span> <span class="n">c2.info</span> <span class="ow">IN</span> <span class="ss">[</span><span class="s1">'hunk'</span><span class="ss">,</span> <span class="s1">'deleted'</span><span class="ss">]</span>
+<span class="k">RETURN</span> <span class="n">pr1.id</span><span class="ss">,</span> <span class="n">pr2.id</span><span class="ss">,</span> <span class="n">f.name</span><span class="ss">,</span> <span class="n">f.file_path</span><span class="ss">;</span>
+</code></pre></div></div>
+
+<p>On top of these pairwise conflicts, a <strong>Disjoint Set Union (DSU) algorithm</strong> computes connected components — each component becomes a “conflict group” of PRs that share modification targets, directly or transitively.</p>
+
+<p>Result: <strong>83 of 146 PRs</strong> clustered into 4 conflict groups.</p>
+
+<p><img src="/blog/assets/images/2026-05-18-codegraph-pr-review-conflict-overview.jpg" alt="Cross-PR Conflict Overview" /></p>
+
+<h3 id="the-three-categories">The Three Categories</h3>
+
+<p>CodeGraph automatically classified all 146 PRs into actionable categories:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Count</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Auto-merge candidates</td>
+      <td>31</td>
+      <td>LOW risk, zero conflicts — fast-track merge</td>
+    </tr>
+    <tr>
+      <td>Independent review</td>
+      <td>32</td>
+      <td>Non-trivial risk but no cross-PR conflicts — review in any order</td>
+    </tr>
+    <tr>
+      <td>Conflict groups</td>
+      <td>83 (4 groups)</td>
+      <td>Shared function modifications — coordinated review needed</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Auto-merge candidates</strong> (31 PRs) are the low-hanging fruit — release automation, pure docs, config bumps. These can go through a “lightweight review” track without blocking anything:</p>
+
+<ul>
+  <li><strong>#4100</strong> <code class="language-plaintext highlighter-rouge">chore(release): v0.15.11</code> — Release automation, zero risk</li>
+  <li><strong>#4051</strong> <code class="language-plaintext highlighter-rouge">docs: --json-schema structured output user and design docs</code> — Pure documentation</li>
+</ul>
+
+<p><strong>Independent review</strong> (32 PRs) carry real risk but can be reviewed in isolation:</p>
+
+<ul>
+  <li><strong>#439</strong> <code class="language-plaintext highlighter-rouge">feat(tools): Include the new content after edits</code> — <strong>CRITICAL</strong>, <strong>blast radius = 100</strong>. Touches both config schema and the tool pipeline, but conflicts with no other PR.</li>
+</ul>
+
+<p><strong>Conflict Group 1</strong> (77 PRs) is the real battleground — the repository’s most complex conflict network, with all PRs connected through shared function modifications:</p>
+
+<ul>
+  <li><strong>#3982</strong> <code class="language-plaintext highlighter-rouge">refactor(core): collapse three task registries into one</code> — <strong>CRITICAL</strong>, blast radius = 132, interface changes across 5 files</li>
+  <li><strong>#4088</strong> <code class="language-plaintext highlighter-rouge">feat(cli): add session-scoped /goal command</code> — <strong>CRITICAL</strong>, blast radius = 140, touching the hooks execution pipeline</li>
+</ul>
+
+<p>The root cause: qwen-code is a CLI + Core + VSCode extension multi-surface project. Functions like <code class="language-plaintext highlighter-rouge">loadCliConfig</code>, <code class="language-plaintext highlighter-rouge">LoadedSettings.loadSettings</code>, and <code class="language-plaintext highlighter-rouge">sendMessageStream</code> are natural convergence points — different contributors touching these hub functions from feature branches inevitably get clustered into one connected component.</p>
+
+<h3 id="pushing-results-to-github">Pushing Results to GitHub</h3>
+
+<p>CodeGraph doesn’t stop at analysis — it <strong>pushes results directly to GitHub</strong> via <code class="language-plaintext highlighter-rouge">codegraph pr-review label</code>:</p>
+
+<p><img src="/blog/assets/images/2026-05-18-codegraph-pr-review-label.jpg" alt="PR Label Example" /></p>
+
+<ul>
+  <li><strong>Labels each PR</strong> with its classification (<code class="language-plaintext highlighter-rouge">auto-merge-candidate</code> / <code class="language-plaintext highlighter-rouge">independent-review</code> / <code class="language-plaintext highlighter-rouge">conflicting-group-N</code>) — visible directly in the PR list.</li>
+  <li><strong>Posts comments on conflict-group PRs</strong> listing specific conflicting PR numbers and shared function names. Contributors see “Your changes potentially conflict with #3455 and #2220 on function <code class="language-plaintext highlighter-rouge">loadCliConfig</code>” without maintainers lifting a finger.</li>
+</ul>
+
+<p>A <code class="language-plaintext highlighter-rouge">--dry-run</code> mode lets you preview before execution:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>codegraph pr-review label <span class="nt">--db</span> .codegraph <span class="nt">--dry-run</span>
+</code></pre></div></div>
+
+<hr />
+
+<h2 id="why-graph-not-llm">Why Graph, Not LLM?</h2>
+
+<p>The natural question: why not just throw all 146 diffs at an LLM?</p>
+
+<p>The answer is structural. LLMs process text sequentially — each invocation sees one PR’s diff in isolation. To detect that #3982 and #4088 both modify <code class="language-plaintext highlighter-rouge">loadCliConfig</code>, you’d need to feed all 146 diffs into a single context (impossible at current context lengths) or build an explicit external index (which is exactly what a graph database is).</p>
+
+<p>CodeGraph flips the model: <strong>structural analysis first, LLM second</strong>. Risk scoring, conflict detection, and blast radius are pure graph queries — zero tokens. The LLM budget gets saved for the PRs that actually need deep semantic reasoning: “Is this refactor safe? Does this new error handling cover all edge cases?” Graph analysis tells you <em>where</em> to look; the LLM tells you <em>what</em> to think about what you find.</p>
+
+<p>This isn’t a replacement for AI Code Review — it’s the <strong>upstream infrastructure</strong> that makes AI Code Review tractable at scale.</p>
+
+<hr />
+
+<h2 id="takeaways">Takeaways</h2>
+
+<p><strong>For maintainers of active projects:</strong> If your PR queue regularly exceeds what you can mentally model, graph-based conflict detection gives you the “map of the battlefield” before you start reviewing. The 21% auto-merge identification alone justifies the setup.</p>
+
+<p><strong>For teams using AI Code Review tools:</strong> CodeGraph is the pre-filter that tells you which PRs to feed to your LLM reviewer and in what order. Don’t spend tokens on PRs that are safe to merge, and don’t review PRs in isolation when they have hidden dependencies.</p>
+
+<p><strong>For anyone building developer tooling:</strong> The pattern of “model code as a graph, query relationships as Cypher” is broadly applicable beyond PR review — dead code detection, impact analysis, architectural enforcement, bug root cause tracing. The <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph skill documentation</a> covers the full capabilities.</p>
+
+<hr />
+
+<h2 id="try-it-on-your-own-repository">Try It on Your Own Repository</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c"># Install</span>
+pip <span class="nb">install </span>codegraph-ai
+
+<span class="c"># Index your repository</span>
+codegraph init <span class="nt">--repo</span> <span class="nb">.</span> <span class="nt">--lang</span> auto <span class="nt">--commits</span> 500
+
+<span class="c"># Run PR review</span>
+codegraph pr-review prepare <span class="nt">--db</span> .codegraph <span class="nt">--repo</span> owner/repo
+codegraph pr-review label <span class="nt">--db</span> .codegraph <span class="nt">--repo</span> owner/repo <span class="nt">--dry-run</span>
+</code></pre></div></div>
+
+<p>The full analysis toolkit — call graphs, dead code, architectural reports, module coupling, bug root cause tracing — is documented in the <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph skill reference</a>. The underlying graph engine <a href="https://github.com/alibaba/neug">NeuG</a> is open-source and designed for embedding into developer tools.</p>
+
+<hr />
+
+<p><strong>Links:</strong> <a href="https://github.com/alibaba/neug">NeuG</a> · <a href="https://github.com/alibaba/neug/tree/main/skills/codegraph">CodeGraph</a> · <a href="https://github.com/QwenLM/qwen-code">QwenLM/qwen-code</a></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=You and Your LLM Can't Review Thousands of PRs at Once — But a Graph Database Can&amp;url=https://graphscope.io/tech/2026/05/17/Graph-Database-Driven-PR-Review.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/05/17/Graph-Database-Driven-PR-Review.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/05/17/Graph-Database-Driven-PR-Review.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
