@@ -5,9 +5,215 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Tue, 21 Apr 2026 12:23:23 +0000</pubDate>
-    <lastBuildDate>Tue, 21 Apr 2026 12:23:23 +0000</lastBuildDate>
+    <pubDate>Mon, 18 May 2026 06:19:10 +0000</pubDate>
+    <lastBuildDate>Mon, 18 May 2026 06:19:10 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>You and Your LLM Can&apos;t Review Thousands of PRs at Once — But a Graph Database Can</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-18-codegraph-pr-review-title.jpg&quot; alt=&quot;codegraph-pr-review&quot; /&gt;
+146 open PRs. 83 of them clustered into conflict groups. Some modifying the same function across 5 different branches. This isn’t a hypothetical — it’s the real state of the &lt;a href=&quot;https://github.com/qwenLM/qwen-code&quot;&gt;qwen-code&lt;/a&gt; repository on a random Tuesday in May 2026. And qwen-code isn’t even the extreme case — projects like OpenClaw and Hermes routinely carry thousands of open PRs.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-18-codegraph-pr-review-overwhelm.jpg&quot; alt=&quot;PR flood&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Manually reviewing this many PRs is impractical, and hidden conflicts between them are nearly impossible to spot — even for an LLM. This post shows how &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph&lt;/a&gt; — a code analysis tool powered by the &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; embedded graph database — transforms PR management from “intuition-driven” to “data-driven,” using a real-world analysis of qwen-code’s 146 open PRs.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-pr-review-bottleneck-why-neither-you-nor-your-llm-can-keep-up&quot;&gt;The PR Review Bottleneck: Why Neither You Nor Your LLM Can Keep Up&lt;/h2&gt;
+
+&lt;p&gt;Picture this: you’re the maintainer of a popular open-source project. You open GitHub in the morning and find 146 PRs waiting for review. They come from contributors around the world — some touch core configuration, some refactor the tool invocation pipeline, some just fix a typo in the docs. Worse still, several of them modify the same function — merging any one could break the others.&lt;/p&gt;
+
+&lt;p&gt;Traditional manual review has three fundamental limits:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Scale&lt;/strong&gt;: you can only review one PR at a time, and 146 doesn’t fit in anyone’s morning.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Association blindness&lt;/strong&gt;: no human can mentally track which PRs touch the same function, let alone whether PR A and PR B both modify the same underlying logic.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Gut-based risk&lt;/strong&gt;: “this looks risky” isn’t a metric — there’s no structural risk assessment.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;What about using LLMs? Current AI Code Review solutions feed PR diffs one by one to a language model. This works at small scale, but at 146 PRs, token consumption explodes — and more critically, &lt;strong&gt;LLMs cannot natively perform cross-PR correlation analysis&lt;/strong&gt;. Each invocation sees only a single PR’s diff and cannot answer global questions like “which other PRs touch the same function as this one?”&lt;/p&gt;
+
+&lt;p&gt;CodeGraph takes a different path: &lt;strong&gt;structural analysis via graph database, not only text comprehension via LLM&lt;/strong&gt;. It indexes a code repository into a queryable knowledge graph — functions, call chains, classes, files, PRs — then runs risk scoring, conflict detection, and blast radius computation as graph queries. Zero token cost, yet capable of answering the global correlation questions that neither humans nor LLMs handle well.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;how-codegraph-works-from-repository-to-knowledge-graph&quot;&gt;How CodeGraph Works: From Repository to Knowledge Graph&lt;/h2&gt;
+
+&lt;p&gt;CodeGraph is built on &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;&lt;strong&gt;NeuG&lt;/strong&gt;&lt;/a&gt; — an open-source, embedded graph database that speaks Neo4j-compatible Cypher. NeuG runs in-process (no server deployment needed), giving you the expressive power of graph queries with the simplicity of a local database file.&lt;/p&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pr-review&lt;/code&gt; workflow consists of two phases:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Phase 1: Analyze + Detect + Persist&lt;/span&gt;
+codegraph pr-review prepare &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; .codegraph &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; owner/repo
+
+&lt;span class=&quot;c&quot;&gt;# Phase 2: Label + Comment on GitHub&lt;/span&gt;
+codegraph pr-review label &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; .codegraph &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; owner/repo
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;During &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;prepare&lt;/code&gt;, CodeGraph fetches all open PRs, parses their diffs at function granularity, and writes the results into the graph database — PR nodes, Function nodes, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CHANGES&lt;/code&gt; edges connecting them. This data coexists with the existing code structure graph (call relationships, file ownership, class hierarchies), enabling cross-PR and cross-code queries in a unified model.&lt;/p&gt;
+
+&lt;p&gt;The key insight: once PRs are modeled as graph nodes connected to the functions they modify, questions like “which PRs conflict?” become simple graph traversals — no pairwise diff comparison needed.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;146-prs-in-qwenlmqwen-code-a-real-world-analysis&quot;&gt;146 PRs in QwenLM/qwen-code: A Real-World Analysis&lt;/h2&gt;
+
+&lt;p&gt;We ran CodeGraph on &lt;strong&gt;QwenLM/qwen-code&lt;/strong&gt; — an active open-source AI coding assistant project. At the time of analysis (commit &lt;a href=&quot;https://github.com/QwenLM/qwen-code/commit/870bdf2a9d6fbd324d6d5d25735b2932dc4e402d&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;870bdf2a&lt;/code&gt;&lt;/a&gt;, 2026-05-13), it had &lt;strong&gt;146 open PRs&lt;/strong&gt;. Here’s what CodeGraph found.&lt;/p&gt;
+
+&lt;h3 id=&quot;per-pr-risk-scoring&quot;&gt;Per-PR Risk Scoring&lt;/h3&gt;
+
+&lt;p&gt;For each PR, CodeGraph performs &lt;strong&gt;structural risk scoring&lt;/strong&gt; — not by counting diff lines, but by parsing every hunk to identify modified, added, and deleted functions, then computing a composite score from:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Interface change&lt;/strong&gt;: modifying an abstract class or interface definition (e.g., a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Tool&lt;/code&gt; base class method signature)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Config file&lt;/strong&gt;: touching config/schema files (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;settings.json&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;tsconfig.json&lt;/code&gt;)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cross-module&lt;/strong&gt;: spanning multiple modules (e.g., modifying both &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cli/&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;core/&lt;/code&gt;)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Dead code&lt;/strong&gt;: introducing uncalled functions&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Blast radius&lt;/strong&gt;: the upstream/downstream call scope of modified functions (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;fan_in × fan_out&lt;/code&gt;)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Each PR receives a risk level — &lt;strong&gt;LOW / MEDIUM / HIGH / CRITICAL&lt;/strong&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Risk distribution:&lt;/strong&gt; 🔴 CRITICAL: 10 · 🟠 HIGH: 32 · 🟡 MEDIUM: 63 · 🟢 LOW: 40&lt;/p&gt;
+
+&lt;h3 id=&quot;cross-pr-conflict-detection&quot;&gt;Cross-PR Conflict Detection&lt;/h3&gt;
+
+&lt;p&gt;This is CodeGraph’s most distinctive capability. When two PRs modify the same function, they become connected through that Function node in the graph. Finding all such conflicts is a single Cypher query:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;pr1:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PR&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;c1:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CHANGES&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;c2:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CHANGES&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;pr2:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PR&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pr1.id&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pr2.id&lt;/span&gt;
+  &lt;span class=&quot;ow&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c1.info&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;IN&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;hunk&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;deleted&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;
+  &lt;span class=&quot;ow&quot;&gt;AND&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;c2.info&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;IN&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;hunk&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;deleted&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pr1.id&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;pr2.id&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.file_path&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;On top of these pairwise conflicts, a &lt;strong&gt;Disjoint Set Union (DSU) algorithm&lt;/strong&gt; computes connected components — each component becomes a “conflict group” of PRs that share modification targets, directly or transitively.&lt;/p&gt;
+
+&lt;p&gt;Result: &lt;strong&gt;83 of 146 PRs&lt;/strong&gt; clustered into 4 conflict groups.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-18-codegraph-pr-review-conflict-overview.jpg&quot; alt=&quot;Cross-PR Conflict Overview&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;the-three-categories&quot;&gt;The Three Categories&lt;/h3&gt;
+
+&lt;p&gt;CodeGraph automatically classified all 146 PRs into actionable categories:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Category&lt;/th&gt;
+      &lt;th&gt;Count&lt;/th&gt;
+      &lt;th&gt;Action&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Auto-merge candidates&lt;/td&gt;
+      &lt;td&gt;31&lt;/td&gt;
+      &lt;td&gt;LOW risk, zero conflicts — fast-track merge&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Independent review&lt;/td&gt;
+      &lt;td&gt;32&lt;/td&gt;
+      &lt;td&gt;Non-trivial risk but no cross-PR conflicts — review in any order&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Conflict groups&lt;/td&gt;
+      &lt;td&gt;83 (4 groups)&lt;/td&gt;
+      &lt;td&gt;Shared function modifications — coordinated review needed&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;strong&gt;Auto-merge candidates&lt;/strong&gt; (31 PRs) are the low-hanging fruit — release automation, pure docs, config bumps. These can go through a “lightweight review” track without blocking anything:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;#4100&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;chore(release): v0.15.11&lt;/code&gt; — Release automation, zero risk&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;#4051&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;docs: --json-schema structured output user and design docs&lt;/code&gt; — Pure documentation&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Independent review&lt;/strong&gt; (32 PRs) carry real risk but can be reviewed in isolation:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;#439&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;feat(tools): Include the new content after edits&lt;/code&gt; — &lt;strong&gt;CRITICAL&lt;/strong&gt;, &lt;strong&gt;blast radius = 100&lt;/strong&gt;. Touches both config schema and the tool pipeline, but conflicts with no other PR.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;strong&gt;Conflict Group 1&lt;/strong&gt; (77 PRs) is the real battleground — the repository’s most complex conflict network, with all PRs connected through shared function modifications:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;#3982&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;refactor(core): collapse three task registries into one&lt;/code&gt; — &lt;strong&gt;CRITICAL&lt;/strong&gt;, blast radius = 132, interface changes across 5 files&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;#4088&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;feat(cli): add session-scoped /goal command&lt;/code&gt; — &lt;strong&gt;CRITICAL&lt;/strong&gt;, blast radius = 140, touching the hooks execution pipeline&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;The root cause: qwen-code is a CLI + Core + VSCode extension multi-surface project. Functions like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;loadCliConfig&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LoadedSettings.loadSettings&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;sendMessageStream&lt;/code&gt; are natural convergence points — different contributors touching these hub functions from feature branches inevitably get clustered into one connected component.&lt;/p&gt;
+
+&lt;h3 id=&quot;pushing-results-to-github&quot;&gt;Pushing Results to GitHub&lt;/h3&gt;
+
+&lt;p&gt;CodeGraph doesn’t stop at analysis — it &lt;strong&gt;pushes results directly to GitHub&lt;/strong&gt; via &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;codegraph pr-review label&lt;/code&gt;:&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-18-codegraph-pr-review-label.jpg&quot; alt=&quot;PR Label Example&quot; /&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Labels each PR&lt;/strong&gt; with its classification (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;auto-merge-candidate&lt;/code&gt; / &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;independent-review&lt;/code&gt; / &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;conflicting-group-N&lt;/code&gt;) — visible directly in the PR list.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Posts comments on conflict-group PRs&lt;/strong&gt; listing specific conflicting PR numbers and shared function names. Contributors see “Your changes potentially conflict with #3455 and #2220 on function &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;loadCliConfig&lt;/code&gt;” without maintainers lifting a finger.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;A &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;--dry-run&lt;/code&gt; mode lets you preview before execution:&lt;/p&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph pr-review label &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; .codegraph &lt;span class=&quot;nt&quot;&gt;--dry-run&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;why-graph-not-llm&quot;&gt;Why Graph, Not LLM?&lt;/h2&gt;
+
+&lt;p&gt;The natural question: why not just throw all 146 diffs at an LLM?&lt;/p&gt;
+
+&lt;p&gt;The answer is structural. LLMs process text sequentially — each invocation sees one PR’s diff in isolation. To detect that #3982 and #4088 both modify &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;loadCliConfig&lt;/code&gt;, you’d need to feed all 146 diffs into a single context (impossible at current context lengths) or build an explicit external index (which is exactly what a graph database is).&lt;/p&gt;
+
+&lt;p&gt;CodeGraph flips the model: &lt;strong&gt;structural analysis first, LLM second&lt;/strong&gt;. Risk scoring, conflict detection, and blast radius are pure graph queries — zero tokens. The LLM budget gets saved for the PRs that actually need deep semantic reasoning: “Is this refactor safe? Does this new error handling cover all edge cases?” Graph analysis tells you &lt;em&gt;where&lt;/em&gt; to look; the LLM tells you &lt;em&gt;what&lt;/em&gt; to think about what you find.&lt;/p&gt;
+
+&lt;p&gt;This isn’t a replacement for AI Code Review — it’s the &lt;strong&gt;upstream infrastructure&lt;/strong&gt; that makes AI Code Review tractable at scale.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;takeaways&quot;&gt;Takeaways&lt;/h2&gt;
+
+&lt;p&gt;&lt;strong&gt;For maintainers of active projects:&lt;/strong&gt; If your PR queue regularly exceeds what you can mentally model, graph-based conflict detection gives you the “map of the battlefield” before you start reviewing. The 21% auto-merge identification alone justifies the setup.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;For teams using AI Code Review tools:&lt;/strong&gt; CodeGraph is the pre-filter that tells you which PRs to feed to your LLM reviewer and in what order. Don’t spend tokens on PRs that are safe to merge, and don’t review PRs in isolation when they have hidden dependencies.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;For anyone building developer tooling:&lt;/strong&gt; The pattern of “model code as a graph, query relationships as Cypher” is broadly applicable beyond PR review — dead code detection, impact analysis, architectural enforcement, bug root cause tracing. The &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph skill documentation&lt;/a&gt; covers the full capabilities.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;try-it-on-your-own-repository&quot;&gt;Try It on Your Own Repository&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Install&lt;/span&gt;
+pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;codegraph-ai
+
+&lt;span class=&quot;c&quot;&gt;# Index your repository&lt;/span&gt;
+codegraph init &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--lang&lt;/span&gt; auto &lt;span class=&quot;nt&quot;&gt;--commits&lt;/span&gt; 500
+
+&lt;span class=&quot;c&quot;&gt;# Run PR review&lt;/span&gt;
+codegraph pr-review prepare &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; .codegraph &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; owner/repo
+codegraph pr-review label &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; .codegraph &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; owner/repo &lt;span class=&quot;nt&quot;&gt;--dry-run&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The full analysis toolkit — call graphs, dead code, architectural reports, module coupling, bug root cause tracing — is documented in the &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph skill reference&lt;/a&gt;. The underlying graph engine &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; is open-source and designed for embedding into developer tools.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;Links:&lt;/strong&gt; &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; · &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph&lt;/a&gt; · &lt;a href=&quot;https://github.com/QwenLM/qwen-code&quot;&gt;QwenLM/qwen-code&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Sun, 17 May 2026 10:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/05/17/Graph-Database-Driven-PR-Review.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/05/17/Graph-Database-Driven-PR-Review.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Star Counts Lied to Us: We Gave 74 Open Source Projects a Graph Database Health Check</title>
@@ -3036,69 +3242,6 @@ Documentation: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduct
         <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>New Breakthrough in Declarative Graph Benchmarking: GraphScope Flex Shatters LDBC SNB Interactive Benchmark World Record</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2023-07-20-title.jpg&quot; alt=&quot;release-note&quot; /&gt;
-The &lt;a href=&quot;http://ldbcouncil.org/&quot;&gt;Linked Data Benchmark Council (LDBC)&lt;/a&gt; has released the latest results of its SNB Interactive Benchmark (via Declarative Queries), where &lt;a href=&quot;https://github.com/alibaba/GraphScope/tree/main/flex&quot;&gt;GraphScope Flex&lt;/a&gt; achieved a historic breakthrough with a throughput exceeding &lt;strong&gt;80,000&lt;/strong&gt; QPS (queries per second) – nearly &lt;strong&gt;twice&lt;/strong&gt; the performance of the previous record holder!&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2025-06-13-ldbc-record.png&quot; alt=&quot;ldbc-record&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;LDBC is an internationally recognized authority in graph data and computing. Its Social Network Benchmark (SNB) simulates a Facebook-like social graph, covering CRUD operations, shortest-path queries, multi-hop traversals, and more, making it the industry’s gold standard for transactional online query performance evaluation. SNB supports two implementation approaches:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Imperative&lt;/strong&gt;: Requires graph experts to manually write and optimize queries in programming languages like C++.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Declarative&lt;/strong&gt;: Uses graph query languages like Cypher, with the system automatically optimizing execution.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;In this benchmark, GraphScope Flex exclusively used declarative Cypher queries for all test cases, demonstrating not only its leadership in declarative query optimization and execution but also its full-stack technical prowess – from underlying storage to high-level optimization.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;full-stack-optimization-synergistic-advancements-in-storage-and-compute&quot;&gt;Full-Stack Optimization: Synergistic Advancements in Storage and Compute&lt;/h2&gt;
-
-&lt;p&gt;GraphScope Flex’s record-breaking performance is built on innovations across storage, compute, and scheduling:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Efficient Storage Structure&lt;/strong&gt;: Employs a compact adjacency list format with vertex/edge compression and memory layout optimizations, enabling larger graph datasets on the same hardware.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Intelligent Memory Management&lt;/strong&gt;: Enhances traversal locality via prefetching and caching, significantly reducing memory access latency.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;High-Concurrency Transaction Support&lt;/strong&gt;: Leverages MVCC (Multi-Version Concurrency Control) for high-throughput queries while maintaining low-latency data modification.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;End-to-End Vertical Optimization&lt;/strong&gt;: Coordinated optimizations across storage, compute, and scheduling layers ensure peak performance.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;a-milestone-in-declarative-graph-query-optimization&quot;&gt;A Milestone in Declarative Graph Query Optimization&lt;/h2&gt;
-
-&lt;p&gt;Powered by its robust infrastructure, GraphScope Flex employs its in-house &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt Optimization Framework&lt;/a&gt; to intelligently transform declarative queries into high-performance execution plans:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Rule-Based Optimization (RBO)&lt;/strong&gt;: Pluggble heuristic rules (e.g., filter pushdown, field trimming, join fusion) optimize query plans, minimizing intermediate results and boosting efficiency.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Automatic Type Inference&lt;/strong&gt;: Dynamically deduces implicit type constraints in patterns, validating them against the data graph to avoid invalid traversals and improve cardinality estimation.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Cost-Based Optimization (CBO)&lt;/strong&gt;: Uses high-order statistics and backend-registered cost models to search for optimal execution plans via branch-and-bound strategies, balancing data characteristics and system-specific implementations.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;The research behind GOpt has been accepted by &lt;a href=&quot;https://2025.sigmod.org/sigmod_industry_papers.shtml&quot;&gt;SIGMOD 2025&lt;/a&gt;. Additionally, we’ve published a detailed paper on arXiv outlining GraphScope’s optimizations for the LDBC SNB benchmark (&lt;a href=&quot;https://arxiv.org/abs/2503.22091&quot;&gt;paper link&lt;/a&gt;).&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;leading-in-both-declarative-and-imperative-snb-leaderboard&quot;&gt;Leading in Both Declarative and Imperative SNB Leaderboard&lt;/h2&gt;
-
-&lt;p&gt;GraphScope currently holds the performance record for &lt;strong&gt;imperative queries&lt;/strong&gt; in the LDBC SNB Interactive benchmark. This latest breakthrough in declarative queries further cements its technical leadership – its declarative performance even surpasses other players’ records in imperative scenarios. This achievement proves that GraphScope Flex’s auto-optimized declarative queries are not only &lt;strong&gt;highly efficient&lt;/strong&gt; and &lt;strong&gt;user-friendly&lt;/strong&gt;, but also exceed manually tuned imperative solutions, dramatically lowering the barrier to high-performance graph querying.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;acknowledgments&quot;&gt;Acknowledgments&lt;/h2&gt;
-&lt;p&gt;The GraphScope team gratefully acknowledges the research contributions of Prof. Cheng Li (University of Science and Technology of China) and Prof. Ying Zhang (Zhejiang Gongshang University). Their rigorous prototype validation and performance benchmarking were instrumental in enhancing​the system’s performance during this benchmark evaluation.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 12 Jun 2025 15:03:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2025/06/12/graphscope-flex-achieved-record-breaking-on-ldbc-snb-interactive-workload-declarative.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2025/06/12/graphscope-flex-achieved-record-breaking-on-ldbc-snb-interactive-workload-declarative.html</guid>
         
         
         <category>Tech</category>
