@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "=== RCE PoC: $(date) on $(hostname) as $(whoami) ==="
 base_dir=$(cd $(dirname $0); pwd)
 
 # Test1: run gremlin standard tests on experimental store via ir-core
