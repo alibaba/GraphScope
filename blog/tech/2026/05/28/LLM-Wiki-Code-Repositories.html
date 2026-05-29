@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Feeding Code Repositories into LLM Wiki: 6x Token Savings in One Knowledge Build</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-05-28">28 May 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-05-28">28 May 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Feeding Code Repositories into LLM Wiki: 6x Token Savings in One Knowledge Build</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-05-28-llm-wiki-banner.png" alt="llm-wiki-code-banner" />
+Andrej Karpathy’s <strong>LLM Wiki</strong> reshapes the knowledge-base paradigm: no chunking, no vector index. The LLM itself handles create / read / update / delete on the knowledge, and the wiki evolves dynamically with use.</p>
+
+<p>If vector-retrieval knowledge bases are the “<strong>interpreter</strong>” of knowledge, LLM Wiki is the “<strong>compiler</strong>.” Raw sources are not re-read on every query — they are <em>compiled</em> into concise wiki summaries, and the LLM answers from those summaries whenever they suffice.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image0.png" alt="llm-wiki-concept" /></p>
+
+<p>Karpathy’s proposal collected millions of views and thousands of GitHub stars in weeks, sparking a wave of reproductions. But almost every reproduction stops at <strong>textual data</strong> — papers, technical docs, study notes. Our day-to-day workflow involves frequent competitor-code surveys and architectural comparisons, which prompted a different question: <strong>what if we feed the code repository itself into the wiki?</strong></p>
+
+<hr />
+
+<h2 id="1-repository-aware-knowledge-management">1. Repository-Aware Knowledge Management</h2>
+
+<p>Document-level reproductions can ingest an entire file into the context window and let the LLM extract, summarize, and link. Code repositories break this assumption — <strong>context blows up, knowledge density is high, and structures are hierarchical</strong>. We had to redesign the pipeline to handle code.</p>
+
+<h3 id="11-three-layer-directory-structure">1.1 Three-Layer Directory Structure</h3>
+
+<p>We keep the canonical LLM Wiki layout — <code class="language-plaintext highlighter-rouge">raw / wiki / schema</code> — but each layer carries different semantics when the source is code.</p>
+
+<h4 id="raw-directory"><code class="language-plaintext highlighter-rouge">raw</code> Directory</h4>
+
+<p>Most LLM Wiki implementations store original files in <code class="language-plaintext highlighter-rouge">raw</code> for <strong>answer authenticity</strong>. That works for plain text. It does not work for code: repositories are large and change constantly. For reference, the three databases we benchmarked weigh in at <strong>MySQL 6.36 GB · PostgreSQL 958 MB · NeuG 38 MB</strong> — well past what we want to drag around inside a knowledge base.</p>
+
+<p>Our solution: use <strong>Git submodules</strong>. A submodule is just a pointer to a specific branch of a specific repository — the code is downloaded only when the LLM explicitly needs to read the source. Submodules also give <strong>incremental updates</strong> for free: a <code class="language-plaintext highlighter-rouge">git diff</code> between two branches tells us exactly which wiki entries need refreshing, so we never re-ingest the entire repo.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image1.png" alt="raw-directory-structure" /></p>
+
+<h4 id="wiki-directory"><code class="language-plaintext highlighter-rouge">wiki</code> Directory</h4>
+
+<p>Code repositories are too large to be summarized into a single wiki page. We <strong>partition the codebase into modules</strong>, and each module gets its own wiki page describing its function. These pages mirror the style of text-derived wikis — abstract, tags, dense reference links — so users can locate facts quickly and the LLM has fewer chances to hallucinate.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image2.png" alt="wiki-module-pages" /></p>
+
+<p>Beyond modules, individual code components can also link to <strong>concept pages</strong>. PostgreSQL and MySQL both implement cost-based optimization; during ingestion, the LLM updates the shared concept page with content from both repositories, <strong>forming cross-repository comparisons and associations naturally</strong>.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image3.png" alt="concept-pages-cross-repo" /></p>
+
+<h4 id="schema-directory"><code class="language-plaintext highlighter-rouge">schema</code> Directory</h4>
+
+<p>The <code class="language-plaintext highlighter-rouge">schema</code> directory holds the rules the LLM uses to manage the wiki. Because code repositories have their own quirks around storage, extraction, and querying, we wrote a <strong>dedicated prompt set</strong> to standardize the pipeline — covered in the next section.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image4.png" alt="schema-directory" /></p>
+
+<h3 id="12-knowledge-ingestion">1.2 Knowledge Ingestion</h3>
+
+<p>LLM Wiki defines three core operations: <strong>Ingest</strong>, <strong>Query</strong>, and <strong>Linter</strong>. Query and Linter reuse the existing wiki as-is, so the real challenge is producing accurate wikis during Ingest.</p>
+
+<p>A code repository will not fit into the context window the way a plain document does. We surveyed tools like <strong>DeepWiki</strong> and <strong>RepoWiki</strong>, then adopted a <strong>two-stage generation</strong> strategy:</p>
+
+<ul>
+  <li><strong>Architecture phase.</strong> The LLM scans descriptive metadata — README, top-level docs, directory tree, build/config scripts — to form a high-level understanding of the project. It partitions the repository into modules and creates a placeholder wiki page per module. This stage only fixes module <em>names</em> — no content yet.</li>
+  <li><strong>Detail phase.</strong> With the partitioning settled, the LLM reads the actual code for each module and fills in the detailed wiki content.</li>
+</ul>
+
+<p>This separation lets the LLM <strong>autonomously decide how many wiki pages a repository needs</strong> based on scale and complexity, keeping each module’s code small enough to fit context. It also gives the user a cheap checkpoint: inspect the module partitioning before paying for the expensive detail phase.</p>
+
+<hr />
+
+<h2 id="2-aligning-concepts-and-modules">2. Aligning Concepts and Modules</h2>
+
+<h3 id="21-concept-alignment">2.1 Concept Alignment</h3>
+
+<p>Extracting concepts from raw documents is the heart of building a knowledge base — shared concepts are what turn isolated documents into a graph.</p>
+
+<p>Before LLMs this was hard: “data modification” and “data update” mean the same thing; “quantization trading” and “quantization compression” do not. Modern LLMs, with proper context, <strong>can do concept alignment almost perfectly</strong>. Across the LLM Wiki implementations we surveyed, the pattern boils down to three rules:</p>
+
+<blockquote>
+  <p>Read every existing concept already in the LLM Wiki.</p>
+
+  <p>Summarize 3–5 concepts from the new document.</p>
+
+  <p>Allow at most one new concept to be introduced.</p>
+</blockquote>
+
+<p>Compared to free-form summarization, this disciplines the LLM into <strong>matching and updating existing concepts</strong> instead of inventing new ones — which is what keeps the wiki from fragmenting into noise.</p>
+
+<h3 id="22-module-alignment">2.2 Module Alignment</h3>
+
+<p>Inspired by the concept-alignment trick, we inject the wiki directories of previously-ingested repositories into the context before parsing a new one. The LLM is told to reference existing module titles when partitioning the new repository.</p>
+
+<p>This turns module partitioning <strong>from “fill in the blank” into “multiple choice”</strong>. Instead of brainstorming module names, the LLM reverse-checks whether each known module exists in the new codebase, and only invents a new label when the functionality genuinely has no analogue.</p>
+
+<h3 id="23-experimental-comparison">2.3 Experimental Comparison</h3>
+
+<p>We partitioned PostgreSQL twice — once on its own, once with reference to MySQL and NeuG wikis.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th><strong>Independent Partitioning</strong></th>
+      <th><strong>Aligned Partitioning (with Reference)</strong></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Processing Pipeline</td>
+      <td>SQL Frontend<br />Optimizer<br />Execution</td>
+    </tr>
+    <tr>
+      <td>Storage</td>
+      <td>Storage</td>
+    </tr>
+    <tr>
+      <td>Transaction</td>
+      <td>Transaction<br />WAL Recovery</td>
+    </tr>
+    <tr>
+      <td>Replication</td>
+      <td>Replication</td>
+    </tr>
+    <tr>
+      <td>Utility &amp; Client Tools</td>
+      <td>Utilities</td>
+    </tr>
+    <tr>
+      <td>Build System</td>
+      <td>—</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Neither result is strictly “wrong” on content. But critical architectural pieces like the <strong>Optimizer</strong> and <strong>WAL</strong> rarely have explicit textual descriptions and account for only a small fraction of the file count, so they get <strong>drowned out</strong> in independent extraction.</p>
+
+<p>In database engineering, Optimizer and WAL are pivotal — surrounded by theory, papers, and operational lore. Surfacing them as separate modules is clearly better. Conversely, support pieces like the <strong>Build System</strong> are less central and lack analogues in other databases, so dropping them from the wiki is a reasonable trade.</p>
+
+<hr />
+
+<h2 id="3-team-collaboration">3. Team Collaboration</h2>
+
+<p>Karpathy’s framing — and most reproductions — treat LLM Wiki as a <strong>personal knowledge base</strong>: open an LLM tool inside the wiki directory and chat. That leaves two gaps: invoking the wiki <em>from inside other projects</em>, and sharing the wiki <em>across users</em>.</p>
+
+<h3 id="31-cross-project-sharing">3.1 Cross-Project Sharing</h3>
+
+<p>To let any project talk to the wiki, we packaged it as a <strong>skill</strong>. We renamed <code class="language-plaintext highlighter-rouge">AGENT.md</code> to <code class="language-plaintext highlighter-rouge">SKILL.md</code> and dropped the whole folder under <code class="language-plaintext highlighter-rouge">.agents/skills/llm-wiki</code>. Any project can now invoke the wiki through the standard skill mechanism:</p>
+
+<blockquote>
+  <p><code class="language-plaintext highlighter-rouge">paper-101.pdf</code> /neug-wiki add this paper to the wiki.</p>
+</blockquote>
+
+<h3 id="32-cross-user-sharing">3.2 Cross-User Sharing</h3>
+
+<p>For multi-user access we host the LLM Wiki on GitHub. Setup is one command: <code class="language-plaintext highlighter-rouge">cd .agents/skills/llm-wiki &amp;&amp; git clone …</code>. Coding tools parse the skill on clone.</p>
+
+<p>GitHub’s read path is easy — users pull the whole wiki and the LLM reads it locally. The write path is where it gets interesting: shared editing brings <strong>concurrency conflicts</strong>. We resolve this by requiring every update — almost always an ingest — to go through a <strong>Pull Request</strong>. The full workflow is orchestrated inside SKILL.md so users only confirm at the web interface; everything else is automated.</p>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image5.png" alt="cross-user-pr-workflow" /></p>
+
+<h3 id="33-linter-and-ci-checks">3.3 Linter and CI Checks</h3>
+
+<p>Hosting on GitHub lets us encode wiki rules into the <strong>CI pipeline</strong>. We split rules into two kinds:</p>
+
+<ul>
+  <li>
+    <p><strong>Mandatory rules</strong> — must hold on every update; violations block the merge. Examples: link paths must resolve, the <code class="language-plaintext highlighter-rouge">raw</code> directory is append-only, file sizes are capped. One check rejects accidentally-uploaded <code class="language-plaintext highlighter-rouge">SKILL.md</code> files because they would confuse other skills’ registration.</p>
+
+    <p><img src="/blog/assets/images/2026-05-28-llm-wiki-image6.png" alt="ci-mandatory-rules" /></p>
+  </li>
+  <li>
+    <p><strong>Advisory rules</strong> — judgment calls a rigid rule cannot make. These get surfaced as PR comments for the user to confirm. A healthy PR uploads raw data, summarizes it, extracts concepts, and updates wikis. If something is off — say one raw file produced two wikis — the system flags it and asks for confirmation.</p>
+  </li>
+</ul>
+
+<p><img src="/blog/assets/images/2026-05-28-llm-wiki-image7.png" alt="ci-advisory-rules" /></p>
+
+<hr />
+
+<h2 id="4-case-study-6x-token-savings-on-a-single-query">4. Case Study: 6x Token Savings on a Single Query</h2>
+
+<p>Competitive-implementation comparison is one of the most common queries we run during technology selection. We selected two well-known databases — <strong>MySQL</strong> and <strong>PostgreSQL</strong> — and our team’s open-source <strong>NeuG</strong>, then asked the LLM Wiki to compare their transaction-management designs side by side.</p>
+
+<h3 id="41-data-preparation">4.1 Data Preparation</h3>
+
+<p>All three repositories were ingested through the full pipeline. Two arms:</p>
+
+<ul>
+  <li><strong>Experimental</strong> — the LLM answers from the wiki.</li>
+  <li><strong>Control</strong> — the LLM answers by reading the raw code.</li>
+</ul>
+
+<h3 id="42-response-quality">4.2 Response Quality</h3>
+
+<p>Answers vary in wording; we compare the structural outlines.</p>
+
+<p><strong>Experimental (with wiki):</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Comparative Analysis Report on Transaction Strategies of Three Major Databases
+## I. Overall Architecture Overview
+## II. MVCC Implementation Comparison
+## III. Lock Mechanism Comparison
+## IV. Isolation Level Comparison
+## V. WAL and Crash Recovery
+## VI. Garbage Collection / Space Reclamation
+## VII. Featured Mechanisms
+## VIII. Summary
+</code></pre></div></div>
+
+<p><strong>Control (raw code only):</strong></p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code># Report on Transaction Strategies of Three Databases
+## I. Transaction Architecture Overview
+## II. Transaction Isolation Levels
+## III. MVCC Implementation Details
+## IV. Concurrency Control Mechanisms
+## V. WAL (Write-Ahead Logging) Mechanism
+## VI. Transaction Commit Process
+## VII. Two-Phase Commit (XA / 2PC) and Distributed Transactions
+## VIII. Savepoints and Sub-transactions
+## IX. Deadlock Detection
+## X. Overall Assessment
+</code></pre></div></div>
+
+<p>Both arms surfaced the key modules — <strong>MVCC, concurrency control, isolation levels, WAL</strong>. The control arm, with code in context, leans toward implementation-level details. The experimental arm, reading the wiki, leans toward architectural framing — but answers the question completely without ever touching the source. <strong>From a “technical summary” standpoint, both responses were high-quality.</strong></p>
+
+<h3 id="43-resource-overhead">4.3 Resource Overhead</h3>
+
+<p>Since multi-turn context inflates raw token counts and pricing varies by token type, we use final billed credits as the apples-to-apples baseline. Both runs used DeepSeek-V4-Pro with cleared memory.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Group</th>
+      <th>Context Length</th>
+      <th>Credit Cost</th>
+      <th>Money Cost</th>
+      <th>Execution Time</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Experimental</td>
+      <td>30k</td>
+      <td>3.11</td>
+      <td>$0.04</td>
+      <td>3 min</td>
+    </tr>
+    <tr>
+      <td>Control</td>
+      <td>110k</td>
+      <td>18.44</td>
+      <td>$0.27</td>
+      <td>13 min</td>
+    </tr>
+    <tr>
+      <td><strong>Improvement</strong></td>
+      <td><strong>3.66x</strong></td>
+      <td><strong>5.92x</strong></td>
+      <td><strong>6.75x</strong></td>
+      <td><strong>4.33x</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Using the wiki cut token consumption to roughly <strong>1/6</strong>. Since generation speed is roughly fixed, lower token consumption translates directly into <strong>&gt;4x faster execution</strong>. A token-efficient query saves money — and it saves time.</p>
+
+<hr />
+
+<h2 id="5-conclusion-and-outlook">5. Conclusion and Outlook</h2>
+
+<p>This <strong>LLM Wiki + Code</strong> practice is our first attempt at extending wiki-style data management into multi-modal territory. We believe an LLM-managed wiki, like the LLM itself, should be capable of <strong>ingesting and emitting data in arbitrary formats</strong>. This management style also breaks the boundary between data sources: with the LLM’s understanding doing the bridging, <strong>all data — text, code, and beyond — can live in a single unified knowledge base</strong>.</p>
+
+<hr />
+
+<p><strong>Links:</strong> <a href="https://github.com/alibaba/neug">NeuG</a> · <a href="https://github.com/karpathy/llm-wiki">LLM Wiki (Karpathy)</a></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Feeding Code Repositories into LLM Wiki: 6x Token Savings in One Knowledge Build&amp;url=https://graphscope.io/tech/2026/05/28/LLM-Wiki-Code-Repositories.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/05/28/LLM-Wiki-Code-Repositories.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/05/28/LLM-Wiki-Code-Repositories.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

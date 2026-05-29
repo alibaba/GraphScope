@@ -5,9 +5,284 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 18 May 2026 06:19:10 +0000</pubDate>
-    <lastBuildDate>Mon, 18 May 2026 06:19:10 +0000</lastBuildDate>
+    <pubDate>Fri, 29 May 2026 04:01:59 +0000</pubDate>
+    <lastBuildDate>Fri, 29 May 2026 04:01:59 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>Feeding Code Repositories into LLM Wiki: 6x Token Savings in One Knowledge Build</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-banner.png&quot; alt=&quot;llm-wiki-code-banner&quot; /&gt;
+Andrej Karpathy’s &lt;strong&gt;LLM Wiki&lt;/strong&gt; reshapes the knowledge-base paradigm: no chunking, no vector index. The LLM itself handles create / read / update / delete on the knowledge, and the wiki evolves dynamically with use.&lt;/p&gt;
+
+&lt;p&gt;If vector-retrieval knowledge bases are the “&lt;strong&gt;interpreter&lt;/strong&gt;” of knowledge, LLM Wiki is the “&lt;strong&gt;compiler&lt;/strong&gt;.” Raw sources are not re-read on every query — they are &lt;em&gt;compiled&lt;/em&gt; into concise wiki summaries, and the LLM answers from those summaries whenever they suffice.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image0.png&quot; alt=&quot;llm-wiki-concept&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Karpathy’s proposal collected millions of views and thousands of GitHub stars in weeks, sparking a wave of reproductions. But almost every reproduction stops at &lt;strong&gt;textual data&lt;/strong&gt; — papers, technical docs, study notes. Our day-to-day workflow involves frequent competitor-code surveys and architectural comparisons, which prompted a different question: &lt;strong&gt;what if we feed the code repository itself into the wiki?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;1-repository-aware-knowledge-management&quot;&gt;1. Repository-Aware Knowledge Management&lt;/h2&gt;
+
+&lt;p&gt;Document-level reproductions can ingest an entire file into the context window and let the LLM extract, summarize, and link. Code repositories break this assumption — &lt;strong&gt;context blows up, knowledge density is high, and structures are hierarchical&lt;/strong&gt;. We had to redesign the pipeline to handle code.&lt;/p&gt;
+
+&lt;h3 id=&quot;11-three-layer-directory-structure&quot;&gt;1.1 Three-Layer Directory Structure&lt;/h3&gt;
+
+&lt;p&gt;We keep the canonical LLM Wiki layout — &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raw / wiki / schema&lt;/code&gt; — but each layer carries different semantics when the source is code.&lt;/p&gt;
+
+&lt;h4 id=&quot;raw-directory&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raw&lt;/code&gt; Directory&lt;/h4&gt;
+
+&lt;p&gt;Most LLM Wiki implementations store original files in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raw&lt;/code&gt; for &lt;strong&gt;answer authenticity&lt;/strong&gt;. That works for plain text. It does not work for code: repositories are large and change constantly. For reference, the three databases we benchmarked weigh in at &lt;strong&gt;MySQL 6.36 GB · PostgreSQL 958 MB · NeuG 38 MB&lt;/strong&gt; — well past what we want to drag around inside a knowledge base.&lt;/p&gt;
+
+&lt;p&gt;Our solution: use &lt;strong&gt;Git submodules&lt;/strong&gt;. A submodule is just a pointer to a specific branch of a specific repository — the code is downloaded only when the LLM explicitly needs to read the source. Submodules also give &lt;strong&gt;incremental updates&lt;/strong&gt; for free: a &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;git diff&lt;/code&gt; between two branches tells us exactly which wiki entries need refreshing, so we never re-ingest the entire repo.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image1.png&quot; alt=&quot;raw-directory-structure&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;wiki-directory&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;wiki&lt;/code&gt; Directory&lt;/h4&gt;
+
+&lt;p&gt;Code repositories are too large to be summarized into a single wiki page. We &lt;strong&gt;partition the codebase into modules&lt;/strong&gt;, and each module gets its own wiki page describing its function. These pages mirror the style of text-derived wikis — abstract, tags, dense reference links — so users can locate facts quickly and the LLM has fewer chances to hallucinate.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image2.png&quot; alt=&quot;wiki-module-pages&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Beyond modules, individual code components can also link to &lt;strong&gt;concept pages&lt;/strong&gt;. PostgreSQL and MySQL both implement cost-based optimization; during ingestion, the LLM updates the shared concept page with content from both repositories, &lt;strong&gt;forming cross-repository comparisons and associations naturally&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image3.png&quot; alt=&quot;concept-pages-cross-repo&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;schema-directory&quot;&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;schema&lt;/code&gt; Directory&lt;/h4&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;schema&lt;/code&gt; directory holds the rules the LLM uses to manage the wiki. Because code repositories have their own quirks around storage, extraction, and querying, we wrote a &lt;strong&gt;dedicated prompt set&lt;/strong&gt; to standardize the pipeline — covered in the next section.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image4.png&quot; alt=&quot;schema-directory&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;12-knowledge-ingestion&quot;&gt;1.2 Knowledge Ingestion&lt;/h3&gt;
+
+&lt;p&gt;LLM Wiki defines three core operations: &lt;strong&gt;Ingest&lt;/strong&gt;, &lt;strong&gt;Query&lt;/strong&gt;, and &lt;strong&gt;Linter&lt;/strong&gt;. Query and Linter reuse the existing wiki as-is, so the real challenge is producing accurate wikis during Ingest.&lt;/p&gt;
+
+&lt;p&gt;A code repository will not fit into the context window the way a plain document does. We surveyed tools like &lt;strong&gt;DeepWiki&lt;/strong&gt; and &lt;strong&gt;RepoWiki&lt;/strong&gt;, then adopted a &lt;strong&gt;two-stage generation&lt;/strong&gt; strategy:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Architecture phase.&lt;/strong&gt; The LLM scans descriptive metadata — README, top-level docs, directory tree, build/config scripts — to form a high-level understanding of the project. It partitions the repository into modules and creates a placeholder wiki page per module. This stage only fixes module &lt;em&gt;names&lt;/em&gt; — no content yet.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Detail phase.&lt;/strong&gt; With the partitioning settled, the LLM reads the actual code for each module and fills in the detailed wiki content.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This separation lets the LLM &lt;strong&gt;autonomously decide how many wiki pages a repository needs&lt;/strong&gt; based on scale and complexity, keeping each module’s code small enough to fit context. It also gives the user a cheap checkpoint: inspect the module partitioning before paying for the expensive detail phase.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;2-aligning-concepts-and-modules&quot;&gt;2. Aligning Concepts and Modules&lt;/h2&gt;
+
+&lt;h3 id=&quot;21-concept-alignment&quot;&gt;2.1 Concept Alignment&lt;/h3&gt;
+
+&lt;p&gt;Extracting concepts from raw documents is the heart of building a knowledge base — shared concepts are what turn isolated documents into a graph.&lt;/p&gt;
+
+&lt;p&gt;Before LLMs this was hard: “data modification” and “data update” mean the same thing; “quantization trading” and “quantization compression” do not. Modern LLMs, with proper context, &lt;strong&gt;can do concept alignment almost perfectly&lt;/strong&gt;. Across the LLM Wiki implementations we surveyed, the pattern boils down to three rules:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Read every existing concept already in the LLM Wiki.&lt;/p&gt;
+
+  &lt;p&gt;Summarize 3–5 concepts from the new document.&lt;/p&gt;
+
+  &lt;p&gt;Allow at most one new concept to be introduced.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Compared to free-form summarization, this disciplines the LLM into &lt;strong&gt;matching and updating existing concepts&lt;/strong&gt; instead of inventing new ones — which is what keeps the wiki from fragmenting into noise.&lt;/p&gt;
+
+&lt;h3 id=&quot;22-module-alignment&quot;&gt;2.2 Module Alignment&lt;/h3&gt;
+
+&lt;p&gt;Inspired by the concept-alignment trick, we inject the wiki directories of previously-ingested repositories into the context before parsing a new one. The LLM is told to reference existing module titles when partitioning the new repository.&lt;/p&gt;
+
+&lt;p&gt;This turns module partitioning &lt;strong&gt;from “fill in the blank” into “multiple choice”&lt;/strong&gt;. Instead of brainstorming module names, the LLM reverse-checks whether each known module exists in the new codebase, and only invents a new label when the functionality genuinely has no analogue.&lt;/p&gt;
+
+&lt;h3 id=&quot;23-experimental-comparison&quot;&gt;2.3 Experimental Comparison&lt;/h3&gt;
+
+&lt;p&gt;We partitioned PostgreSQL twice — once on its own, once with reference to MySQL and NeuG wikis.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;&lt;strong&gt;Independent Partitioning&lt;/strong&gt;&lt;/th&gt;
+      &lt;th&gt;&lt;strong&gt;Aligned Partitioning (with Reference)&lt;/strong&gt;&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Processing Pipeline&lt;/td&gt;
+      &lt;td&gt;SQL Frontend&lt;br /&gt;Optimizer&lt;br /&gt;Execution&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Storage&lt;/td&gt;
+      &lt;td&gt;Storage&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Transaction&lt;/td&gt;
+      &lt;td&gt;Transaction&lt;br /&gt;WAL Recovery&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Replication&lt;/td&gt;
+      &lt;td&gt;Replication&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Utility &amp;amp; Client Tools&lt;/td&gt;
+      &lt;td&gt;Utilities&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Build System&lt;/td&gt;
+      &lt;td&gt;—&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Neither result is strictly “wrong” on content. But critical architectural pieces like the &lt;strong&gt;Optimizer&lt;/strong&gt; and &lt;strong&gt;WAL&lt;/strong&gt; rarely have explicit textual descriptions and account for only a small fraction of the file count, so they get &lt;strong&gt;drowned out&lt;/strong&gt; in independent extraction.&lt;/p&gt;
+
+&lt;p&gt;In database engineering, Optimizer and WAL are pivotal — surrounded by theory, papers, and operational lore. Surfacing them as separate modules is clearly better. Conversely, support pieces like the &lt;strong&gt;Build System&lt;/strong&gt; are less central and lack analogues in other databases, so dropping them from the wiki is a reasonable trade.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;3-team-collaboration&quot;&gt;3. Team Collaboration&lt;/h2&gt;
+
+&lt;p&gt;Karpathy’s framing — and most reproductions — treat LLM Wiki as a &lt;strong&gt;personal knowledge base&lt;/strong&gt;: open an LLM tool inside the wiki directory and chat. That leaves two gaps: invoking the wiki &lt;em&gt;from inside other projects&lt;/em&gt;, and sharing the wiki &lt;em&gt;across users&lt;/em&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;31-cross-project-sharing&quot;&gt;3.1 Cross-Project Sharing&lt;/h3&gt;
+
+&lt;p&gt;To let any project talk to the wiki, we packaged it as a &lt;strong&gt;skill&lt;/strong&gt;. We renamed &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;AGENT.md&lt;/code&gt; to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SKILL.md&lt;/code&gt; and dropped the whole folder under &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;.agents/skills/llm-wiki&lt;/code&gt;. Any project can now invoke the wiki through the standard skill mechanism:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;paper-101.pdf&lt;/code&gt; /neug-wiki add this paper to the wiki.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;32-cross-user-sharing&quot;&gt;3.2 Cross-User Sharing&lt;/h3&gt;
+
+&lt;p&gt;For multi-user access we host the LLM Wiki on GitHub. Setup is one command: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;cd .agents/skills/llm-wiki &amp;amp;&amp;amp; git clone …&lt;/code&gt;. Coding tools parse the skill on clone.&lt;/p&gt;
+
+&lt;p&gt;GitHub’s read path is easy — users pull the whole wiki and the LLM reads it locally. The write path is where it gets interesting: shared editing brings &lt;strong&gt;concurrency conflicts&lt;/strong&gt;. We resolve this by requiring every update — almost always an ingest — to go through a &lt;strong&gt;Pull Request&lt;/strong&gt;. The full workflow is orchestrated inside SKILL.md so users only confirm at the web interface; everything else is automated.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image5.png&quot; alt=&quot;cross-user-pr-workflow&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;33-linter-and-ci-checks&quot;&gt;3.3 Linter and CI Checks&lt;/h3&gt;
+
+&lt;p&gt;Hosting on GitHub lets us encode wiki rules into the &lt;strong&gt;CI pipeline&lt;/strong&gt;. We split rules into two kinds:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Mandatory rules&lt;/strong&gt; — must hold on every update; violations block the merge. Examples: link paths must resolve, the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;raw&lt;/code&gt; directory is append-only, file sizes are capped. One check rejects accidentally-uploaded &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;SKILL.md&lt;/code&gt; files because they would confuse other skills’ registration.&lt;/p&gt;
+
+    &lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image6.png&quot; alt=&quot;ci-mandatory-rules&quot; /&gt;&lt;/p&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;strong&gt;Advisory rules&lt;/strong&gt; — judgment calls a rigid rule cannot make. These get surfaced as PR comments for the user to confirm. A healthy PR uploads raw data, summarizes it, extracts concepts, and updates wikis. If something is off — say one raw file produced two wikis — the system flags it and asks for confirmation.&lt;/p&gt;
+  &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-05-28-llm-wiki-image7.png&quot; alt=&quot;ci-advisory-rules&quot; /&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;4-case-study-6x-token-savings-on-a-single-query&quot;&gt;4. Case Study: 6x Token Savings on a Single Query&lt;/h2&gt;
+
+&lt;p&gt;Competitive-implementation comparison is one of the most common queries we run during technology selection. We selected two well-known databases — &lt;strong&gt;MySQL&lt;/strong&gt; and &lt;strong&gt;PostgreSQL&lt;/strong&gt; — and our team’s open-source &lt;strong&gt;NeuG&lt;/strong&gt;, then asked the LLM Wiki to compare their transaction-management designs side by side.&lt;/p&gt;
+
+&lt;h3 id=&quot;41-data-preparation&quot;&gt;4.1 Data Preparation&lt;/h3&gt;
+
+&lt;p&gt;All three repositories were ingested through the full pipeline. Two arms:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Experimental&lt;/strong&gt; — the LLM answers from the wiki.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Control&lt;/strong&gt; — the LLM answers by reading the raw code.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;42-response-quality&quot;&gt;4.2 Response Quality&lt;/h3&gt;
+
+&lt;p&gt;Answers vary in wording; we compare the structural outlines.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Experimental (with wiki):&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Comparative Analysis Report on Transaction Strategies of Three Major Databases
+## I. Overall Architecture Overview
+## II. MVCC Implementation Comparison
+## III. Lock Mechanism Comparison
+## IV. Isolation Level Comparison
+## V. WAL and Crash Recovery
+## VI. Garbage Collection / Space Reclamation
+## VII. Featured Mechanisms
+## VIII. Summary
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Control (raw code only):&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;# Report on Transaction Strategies of Three Databases
+## I. Transaction Architecture Overview
+## II. Transaction Isolation Levels
+## III. MVCC Implementation Details
+## IV. Concurrency Control Mechanisms
+## V. WAL (Write-Ahead Logging) Mechanism
+## VI. Transaction Commit Process
+## VII. Two-Phase Commit (XA / 2PC) and Distributed Transactions
+## VIII. Savepoints and Sub-transactions
+## IX. Deadlock Detection
+## X. Overall Assessment
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Both arms surfaced the key modules — &lt;strong&gt;MVCC, concurrency control, isolation levels, WAL&lt;/strong&gt;. The control arm, with code in context, leans toward implementation-level details. The experimental arm, reading the wiki, leans toward architectural framing — but answers the question completely without ever touching the source. &lt;strong&gt;From a “technical summary” standpoint, both responses were high-quality.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;43-resource-overhead&quot;&gt;4.3 Resource Overhead&lt;/h3&gt;
+
+&lt;p&gt;Since multi-turn context inflates raw token counts and pricing varies by token type, we use final billed credits as the apples-to-apples baseline. Both runs used DeepSeek-V4-Pro with cleared memory.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Group&lt;/th&gt;
+      &lt;th&gt;Context Length&lt;/th&gt;
+      &lt;th&gt;Credit Cost&lt;/th&gt;
+      &lt;th&gt;Money Cost&lt;/th&gt;
+      &lt;th&gt;Execution Time&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Experimental&lt;/td&gt;
+      &lt;td&gt;30k&lt;/td&gt;
+      &lt;td&gt;3.11&lt;/td&gt;
+      &lt;td&gt;$0.04&lt;/td&gt;
+      &lt;td&gt;3 min&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Control&lt;/td&gt;
+      &lt;td&gt;110k&lt;/td&gt;
+      &lt;td&gt;18.44&lt;/td&gt;
+      &lt;td&gt;$0.27&lt;/td&gt;
+      &lt;td&gt;13 min&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;strong&gt;Improvement&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;3.66x&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;5.92x&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;6.75x&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;4.33x&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Using the wiki cut token consumption to roughly &lt;strong&gt;1/6&lt;/strong&gt;. Since generation speed is roughly fixed, lower token consumption translates directly into &lt;strong&gt;&amp;gt;4x faster execution&lt;/strong&gt;. A token-efficient query saves money — and it saves time.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;5-conclusion-and-outlook&quot;&gt;5. Conclusion and Outlook&lt;/h2&gt;
+
+&lt;p&gt;This &lt;strong&gt;LLM Wiki + Code&lt;/strong&gt; practice is our first attempt at extending wiki-style data management into multi-modal territory. We believe an LLM-managed wiki, like the LLM itself, should be capable of &lt;strong&gt;ingesting and emitting data in arbitrary formats&lt;/strong&gt;. This management style also breaks the boundary between data sources: with the LLM’s understanding doing the bridging, &lt;strong&gt;all data — text, code, and beyond — can live in a single unified knowledge base&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;p&gt;&lt;strong&gt;Links:&lt;/strong&gt; &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; · &lt;a href=&quot;https://github.com/karpathy/llm-wiki&quot;&gt;LLM Wiki (Karpathy)&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 28 May 2026 10:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/05/28/LLM-Wiki-Code-Repositories.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/05/28/LLM-Wiki-Code-Repositories.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>You and Your LLM Can&apos;t Review Thousands of PRs at Once — But a Graph Database Can</title>
@@ -2779,469 +3054,6 @@ Documentation: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduct
         <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>NeuG&apos;s High-Performance MVCC for Graph Workloads</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-neug-transaction-title.jpg&quot; alt=&quot;neug-transaction-title&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;This article provides an in-depth look at NeuG’s transaction mechanism, which powers its high-throughput Transactional Processing (TP) capabilities while maintaining serializable isolation guarantees.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;NeuG Repository&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;executive-summary&quot;&gt;Executive Summary&lt;/h2&gt;
-
-&lt;p&gt;NeuG is an embedded graph database supporting both Transactional Processing (TP) and Analytical Processing (AP) workloads through distinct execution models.&lt;/p&gt;
-
-&lt;h3 id=&quot;operational-models--concurrency&quot;&gt;Operational Models &amp;amp; Concurrency&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Embedded mode&lt;/strong&gt;: Analytical queries run in embedded mode with concurrency managed at the Connection level. Within a given AP Connection, all queries (reads or writes) are executed serially. This model does not utilize the fine-grained parallel MVCC mechanism detailed for TP.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Service mode&lt;/strong&gt;: High-throughput TP operations are achieved via a single Write Connection managed by an internal service layer. This connection spawns multiple worker threads that execute in parallel, utilizing the MVCC and version management system described herein to enable lock-free read-insert parallelism and serializable isolation.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;&lt;strong&gt;Scope&lt;/strong&gt;: This document details the transaction mechanism powering the TP execution model. AP mode uses a simpler, connection-serialized approach for consistency.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;core-architecture--design-philosophy&quot;&gt;Core Architecture &amp;amp; Design Philosophy&lt;/h2&gt;
-
-&lt;p&gt;The transaction design is driven by the need for maximal throughput on common graph operations. Recognizing that a dominant pattern is highly concurrent reads mixed with blind inserts, the system categorizes transactions to eliminate unnecessary synchronization. A global versioning system creates immutable snapshots for readers, while inserters proceed in parallel, coordinated only when modifying the same adjacency list.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;transaction-classification&quot;&gt;Transaction Classification&lt;/h2&gt;
-
-&lt;p&gt;NeuG categorizes transactions into three types to optimize concurrency:&lt;/p&gt;
-
-&lt;style&gt;
-.transaction-table {
-  width: 100%;
-  table-layout: fixed;
-}
-.transaction-table td, .transaction-table th {
-  padding: 12px 15px;
-  vertical-align: top;
-  word-wrap: break-word;
-}
-.transaction-table th:nth-child(1), .transaction-table td:nth-child(1) { width: 10%; white-space: nowrap; }
-.transaction-table th:nth-child(2), .transaction-table td:nth-child(2) { width: 20%; }
-.transaction-table th:nth-child(3), .transaction-table td:nth-child(3) { width: 30%; }
-.transaction-table th:nth-child(4), .transaction-table td:nth-child(4) { width: 40%; }
-&lt;/style&gt;
-
-&lt;table class=&quot;transaction-table&quot;&gt;
-&lt;thead&gt;
-&lt;tr&gt;
-&lt;th&gt;Type&lt;/th&gt;
-&lt;th&gt;Purpose&lt;/th&gt;
-&lt;th&gt;Key Property&lt;/th&gt;
-&lt;th&gt;Concurrency&lt;/th&gt;
-&lt;/tr&gt;
-&lt;/thead&gt;
-&lt;tbody&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;b&gt;Read&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Graph traversal, point lookup&lt;/td&gt;
-&lt;td&gt;Pure read; sees a versioned snapshot&lt;/td&gt;
-&lt;td&gt;Parallel with all Inserts via MVCC&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;b&gt;Insert&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Add vertices/edges&lt;/td&gt;
-&lt;td&gt;Blind write; does not read existing graph&lt;/td&gt;
-&lt;td&gt;Parallel with all Reads; fine-grained locks for edge adjacency lists&lt;/td&gt;
-&lt;/tr&gt;
-&lt;tr&gt;
-&lt;td&gt;&lt;b&gt;Update&lt;/b&gt;&lt;/td&gt;
-&lt;td&gt;Complex CRUD&lt;/td&gt;
-&lt;td&gt;Sees its own writes; can abort/rollback&lt;/td&gt;
-&lt;td&gt;Currently exclusive; future two-phase design&lt;/td&gt;
-&lt;/tr&gt;
-&lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;&lt;em&gt;Focus: This article details the mechanisms for Read and Insert transactions within the TP worker pool.&lt;/em&gt;&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;version-management-the-foundation-of-consistency&quot;&gt;Version Management: The Foundation of Consistency&lt;/h2&gt;
-
-&lt;p&gt;NeuG maintains a global, monotonically increasing version timeline through two counters:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Global Write Version (GWV)&lt;/strong&gt;: Atomic counter assigning unique IDs to write transactions&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Global Read Version (GRV)&lt;/strong&gt;: The highest version where all prior writes are guaranteed committed&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;transaction-version-assignment&quot;&gt;Transaction Version Assignment&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Read Transaction&lt;/strong&gt;: Starts with the current GRV as its snapshot version. GRV remains unchanged.&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Insert Transaction&lt;/strong&gt;: Acquires the current GWV as its write version; GWV is atomically incremented.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;grv-advancement-logic&quot;&gt;GRV Advancement Logic&lt;/h3&gt;
-
-&lt;p&gt;GRV advances only when a contiguous prefix of the version sequence is complete. A bit-set tracks completion within a sliding window.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-grv-advancement.png&quot; alt=&quot;GRV Advancement&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The example above demonstrates how GRV advances only when a contiguous prefix of transaction versions have completed. Although v₄ was already committed in STATE 1, GRV could not advance beyond v₀ because v₁ was still pending. Once v₁ commits, the continuous sequence v₀-v₂ becomes complete, allowing GRV to advance to v₂.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;mvcc-storage--visibility&quot;&gt;MVCC Storage &amp;amp; Visibility&lt;/h2&gt;
-
-&lt;p&gt;NeuG implements a lightweight MVCC model optimized for graph workloads:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Single-Version Model&lt;/strong&gt;: Each vertex/edge stores exactly one &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;write_version&lt;/code&gt; (its creation version)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Visibility Rule&lt;/strong&gt;: A Read transaction with version &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Tₓ&lt;/code&gt; sees an element if and only if:
-    &lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;element.write_version ≤ Tₓ
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This single-version approach simplifies storage and memory management while providing snapshot isolation for readers.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;concurrency-and-isolation-guarantees&quot;&gt;Concurrency and Isolation Guarantees&lt;/h2&gt;
-
-&lt;h3 id=&quot;read-insert-parallelism&quot;&gt;Read-Insert Parallelism&lt;/h3&gt;
-
-&lt;p&gt;Lock-free parallelism between reads and inserts is achieved because:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;No Read-Write Conflicts&lt;/strong&gt;: Insert transactions perform zero reads on existing graph data&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Non-Blocking Snapshot Reads&lt;/strong&gt;: Reads operate on an immutable version snapshot&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;write-write-coordination&quot;&gt;Write-Write Coordination&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Vertex Insertion&lt;/strong&gt;: Uniqueness is the caller’s precondition (assumed non-existent)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Edge Insertion&lt;/strong&gt;: Fine-grained, per-vertex adjacency locks prevent corruption when concurrent transactions add edges from the same source vertex. Lock atomicity prevents deadlocks.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;serializable-isolation-guarantee&quot;&gt;Serializable Isolation Guarantee&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Reads&lt;/strong&gt;: A single version snapshot is inherently serializable&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Inserts&lt;/strong&gt;: Linearized by GWV assignment and persisted via WAL (see below). No internal read-dependencies ensure a deterministic, serializable order.&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;insert-transaction-lifecycle--durability&quot;&gt;Insert Transaction Lifecycle &amp;amp; Durability&lt;/h2&gt;
-
-&lt;p&gt;The lifecycle of an Insert transaction follows a carefully designed protocol to ensure both performance and durability:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1. START &amp;amp; VERSION
-   └── Assign GWV (e.g., v₇); atomically increment GWV to v₈
-
-2. PREPROCESSING (Read-Only Phase)
-   └── Validate IDs, schema, encode properties
-   └── No graph modifications
-
-3. COMMIT PERSISTENCE (Write-Ahead Log - WAL)
-   └── Flush all mutation data to durable WAL
-   └── This point defines durability
-   └── On abort: log a minimal abort marker
-
-4. ATOMIC APPLY
-   └── Acquire necessary per-vertex adjacency locks
-   └── Apply all vertex/edge inserts atomically, stamping with version v₇
-   └── Update indexes
-
-5. COMPLETION
-   └── Mark transaction v₇ as complete in tracking bit-set
-   └── Advance GRV if possible (e.g., from v₆ to v₇)
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;recovery&quot;&gt;Recovery&lt;/h3&gt;
-
-&lt;p&gt;After a crash, the system restores the last checkpoint and replays all committed WAL entries to guarantee durability. This design ensures that no committed transaction is lost while minimizing recovery time.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;performance-characteristics&quot;&gt;Performance Characteristics&lt;/h2&gt;
-
-&lt;p&gt;The design choices in NeuG’s transaction mechanism deliver several performance benefits:&lt;/p&gt;
-
-&lt;h3 id=&quot;high-read-throughput&quot;&gt;High Read Throughput&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Zero Lock Contention&lt;/strong&gt;: Read transactions never block on locks&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;No Version Chain Traversal&lt;/strong&gt;: Single-version model eliminates multi-version lookup overhead&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Snapshot Isolation&lt;/strong&gt;: Readers see a consistent view without coordination&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;efficient-insert-processing&quot;&gt;Efficient Insert Processing&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Parallel Execution&lt;/strong&gt;: Multiple insert transactions execute simultaneously&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Fine-Grained Locking&lt;/strong&gt;: Only edges sharing the same source vertex require coordination&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Minimal Synchronization&lt;/strong&gt;: No read-write conflicts to manage&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;predictable-latency&quot;&gt;Predictable Latency&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Lock-Free Reads&lt;/strong&gt;: Query latency is independent of write workload&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Deterministic Version Assignment&lt;/strong&gt;: Clear ordering of all transactions&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;WAL-Based Durability&lt;/strong&gt;: Fast commit with background persistence&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;design-trade-offs&quot;&gt;Design Trade-offs&lt;/h2&gt;
-
-&lt;h3 id=&quot;advantages&quot;&gt;Advantages&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;Optimal for Read-Heavy Workloads&lt;/strong&gt;: Zero overhead for the common case of concurrent reads&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Simple Implementation&lt;/strong&gt;: Single-version storage reduces complexity&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Strong Guarantees&lt;/strong&gt;: Serializable isolation without complex protocols&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Predictable Performance&lt;/strong&gt;: Lock-free reads provide consistent latency&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;current-limitations&quot;&gt;Current Limitations&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;Update Transactions&lt;/strong&gt;: Currently serialized; future work will enable greater concurrency&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Delete Operations&lt;/strong&gt;: Handled through Update transactions&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Long-Running Transactions&lt;/strong&gt;: May delay GRV advancement temporarily&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;use-cases&quot;&gt;Use Cases&lt;/h2&gt;
-
-&lt;p&gt;NeuG’s transaction mechanism is particularly well-suited for:&lt;/p&gt;
-
-&lt;h3 id=&quot;real-time-graph-analytics&quot;&gt;Real-Time Graph Analytics&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Social Network Analysis&lt;/strong&gt;: Concurrent queries on user relationships while ingesting new connections&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Recommendation Systems&lt;/strong&gt;: Read-heavy workloads with periodic batch inserts&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Fraud Detection&lt;/strong&gt;: Real-time pattern matching on continuously growing transaction graphs&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;knowledge-graph-applications&quot;&gt;Knowledge Graph Applications&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;RAG Systems&lt;/strong&gt;: High-throughput entity lookups while incrementally building the knowledge base&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;AI Agents&lt;/strong&gt;: Parallel knowledge retrieval with concurrent fact insertion&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Semantic Search&lt;/strong&gt;: Snapshot-consistent queries during graph expansion&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;edge-computing&quot;&gt;Edge Computing&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Local-First Applications&lt;/strong&gt;: Embedded TP capabilities without distributed coordination&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;IoT Data Processing&lt;/strong&gt;: Continuous sensor data ingestion with real-time queries&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Mobile Applications&lt;/strong&gt;: ACID guarantees in resource-constrained environments&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;future-work&quot;&gt;Future Work&lt;/h2&gt;
-
-&lt;p&gt;The NeuG team is actively working on several enhancements to the transaction system:&lt;/p&gt;
-
-&lt;h3 id=&quot;two-phase-update-transactions&quot;&gt;Two-Phase Update Transactions&lt;/h3&gt;
-
-&lt;p&gt;Refining the Update transaction model to allow greater concurrency through:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Optimistic concurrency control&lt;/li&gt;
-  &lt;li&gt;Conflict detection and resolution&lt;/li&gt;
-  &lt;li&gt;Selective retry mechanisms&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;distributed-transactions&quot;&gt;Distributed Transactions&lt;/h3&gt;
-
-&lt;p&gt;Extending the mechanism for distributed deployment:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Multi-node version coordination&lt;/li&gt;
-  &lt;li&gt;Distributed WAL replication&lt;/li&gt;
-  &lt;li&gt;Cross-shard transaction support&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;advanced-optimizations&quot;&gt;Advanced Optimizations&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Adaptive Concurrency Control&lt;/strong&gt;: Dynamic adjustment based on workload patterns&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Version Garbage Collection&lt;/strong&gt;: Automatic cleanup of old versions&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Intelligent Lock Management&lt;/strong&gt;: Reducing lock contention for hot vertices&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;implementation-details&quot;&gt;Implementation Details&lt;/h2&gt;
-
-&lt;p&gt;For developers interested in the technical implementation:&lt;/p&gt;
-
-&lt;h3 id=&quot;version-counter-design&quot;&gt;Version Counter Design&lt;/h3&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;VersionManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;__init__&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gwv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AtomicCounter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# Global Write Version
-&lt;/span&gt;        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;AtomicCounter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# Global Read Version
-&lt;/span&gt;        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completion_bits&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;SlidingBitSet&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    
-    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;assign_write_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gwv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;fetch_and_increment&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    
-    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;get_read_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;grv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-    
-    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;mark_complete&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;completion_bits&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;set&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-        &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;try_advance_grv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;adjacency-lock-protocol&quot;&gt;Adjacency Lock Protocol&lt;/h3&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;EdgeInserter&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;insert_edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;):&lt;/span&gt;
-        &lt;span class=&quot;c1&quot;&gt;# Acquire lock on source vertex&apos;s adjacency list
-&lt;/span&gt;        &lt;span class=&quot;k&quot;&gt;with&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;vertex_locks&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]:&lt;/span&gt;
-            &lt;span class=&quot;c1&quot;&gt;# Stamp with transaction version
-&lt;/span&gt;            &lt;span class=&quot;n&quot;&gt;edge&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;dst&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;properties&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tx_version&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-            &lt;span class=&quot;bp&quot;&gt;self&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;adjacency_lists&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;src&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;].&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;append&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edge&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;wal-format&quot;&gt;WAL Format&lt;/h3&gt;
-
-&lt;p&gt;Each WAL entry contains:&lt;/p&gt;
-&lt;ul&gt;
-  &lt;li&gt;Transaction ID (version)&lt;/li&gt;
-  &lt;li&gt;Operation type (INSERT/UPDATE/ABORT)&lt;/li&gt;
-  &lt;li&gt;Payload (vertices/edges with properties)&lt;/li&gt;
-  &lt;li&gt;Checksum for integrity&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;comparison-with-other-approaches&quot;&gt;Comparison with Other Approaches&lt;/h2&gt;
-
-&lt;h3 id=&quot;vs-traditional-rdbms-mvcc&quot;&gt;vs. Traditional RDBMS MVCC&lt;/h3&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Feature&lt;/th&gt;
-      &lt;th&gt;NeuG&lt;/th&gt;
-      &lt;th&gt;Traditional RDBMS&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Version Storage&lt;/td&gt;
-      &lt;td&gt;Single version per element&lt;/td&gt;
-      &lt;td&gt;Multi-version chains&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Read Overhead&lt;/td&gt;
-      &lt;td&gt;Zero lock contention&lt;/td&gt;
-      &lt;td&gt;May need version traversal&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Write Model&lt;/td&gt;
-      &lt;td&gt;Optimized for blind inserts&lt;/td&gt;
-      &lt;td&gt;General-purpose updates&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Isolation Level&lt;/td&gt;
-      &lt;td&gt;Serializable&lt;/td&gt;
-      &lt;td&gt;Typically snapshot isolation&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;h3 id=&quot;vs-graph-specific-systems&quot;&gt;vs. Graph-Specific Systems&lt;/h3&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Feature&lt;/th&gt;
-      &lt;th&gt;NeuG&lt;/th&gt;
-      &lt;th&gt;Neo4j&lt;/th&gt;
-      &lt;th&gt;JanusGraph&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Concurrency Model&lt;/td&gt;
-      &lt;td&gt;MVCC&lt;/td&gt;
-      &lt;td&gt;Lock-based&lt;/td&gt;
-      &lt;td&gt;Optimistic locking&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Read Parallelism&lt;/td&gt;
-      &lt;td&gt;Lock-free&lt;/td&gt;
-      &lt;td&gt;Lock-based&lt;/td&gt;
-      &lt;td&gt;Lock-free&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Transaction Scope&lt;/td&gt;
-      &lt;td&gt;Local (embedded)&lt;/td&gt;
-      &lt;td&gt;Local&lt;/td&gt;
-      &lt;td&gt;Distributed&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;Performance Focus&lt;/td&gt;
-      &lt;td&gt;TP workloads&lt;/td&gt;
-      &lt;td&gt;Mixed OLTP&lt;/td&gt;
-      &lt;td&gt;OLAP-oriented&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;NeuG’s transaction mechanism delivers high-throughput serializable isolation for graph workloads by:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;Categorizing transactions&lt;/strong&gt; into Read and Insert types&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Isolating them&lt;/strong&gt; via MVCC and versioned snapshots&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Synchronizing writes&lt;/strong&gt; with fine-grained locking and a global version order&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Guaranteeing durability&lt;/strong&gt; with a WAL-based commit protocol&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;This design provides an optimal balance between performance, simplicity, and correctness for embedded graph database workloads. The system achieves lock-free read scalability while maintaining strong consistency guarantees—making it ideal for modern AI and analytics applications that require both high throughput and transactional integrity.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;learn-more&quot;&gt;Learn More&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Documentation&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Previous Post&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html&quot;&gt;Opensourcing NeuG&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;&lt;strong&gt;Building robust graph transactions for the embedded era.&lt;/strong&gt;&lt;/p&gt;
-</description>
-        <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html</guid>
         
         
         <category>Tech</category>
