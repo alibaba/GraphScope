@@ -3,220 +3,357 @@
 7:I[6423,[],""]
 4:["lang","zh","d"]
 5:["mdxPath","data_io","oc"]
-0:["uM78pdV01QgW3EI3pRSZt",[[["",{"children":[["lang","zh","d"],{"children":[["mdxPath","data_io","oc"],{"children":["__PAGE__?{\"lang\":\"zh\",\"mdxPath\":[\"data_io\"]}",{}]}]}]},"$undefined","$undefined",true],["",{"children":[["lang","zh","d"],{"children":[["mdxPath","data_io","oc"],{"children":["__PAGE__",{},[["$L1","$L2",null],null],null]},[null,["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children","$4","children","$5","children"],"error":"$6","errorStyles":[],"errorScripts":[],"template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/neug/_next/static/css/1755c0bfaffa4a0c.css","precedence":"next","crossOrigin":"$undefined"}]],"$L8"],null],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/neug/_next/static/css/16fb04f3f0386afc.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"suppressHydrationWarning":true,"children":[["$","head",null,{"children":["$undefined",["$","style",null,{"children":":root {\n  --nextra-primary-hue: 215deg;\n  --nextra-primary-saturation: 95%;\n  --nextra-primary-lightness: 45%;\n  --nextra-bg: 250,250,250;\n  --nextra-content-width: 90rem;\n}\n.dark {\n  --nextra-primary-hue: 215deg;\n  --nextra-primary-saturation: 95%;\n  --nextra-primary-lightness: 55%;\n  --nextra-bg: 17,17,17;\n}\n::selection {\n  background: hsla(var(--nextra-primary-hue),var(--nextra-primary-saturation),var(--nextra-primary-lightness),.3);\n}\nhtml {\n  background: rgb(var(--nextra-bg));\n}"}],["$","meta",null,{"name":"theme-color","media":"(prefers-color-scheme: light)","content":"rgb(250,250,250)"}],["$","meta",null,{"name":"theme-color","media":"(prefers-color-scheme: dark)","content":"rgb(17,17,17)"}],"$undefined"]}],["$","body",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}]}]]}]],null],null],["$L9",null]]]]
-a:I[4108,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ThemeConfigProvider"]
-b:I[6016,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"LastUpdated"]
-c:I[763,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"Search"]
-d:I[5922,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ThemeProvider"]
-e:I[4328,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"SkipNavLink"]
-f:I[7691,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ConfigProvider"]
+0:["ezWbGEXdq8MyqkMHsN2UN",[[["",{"children":[["lang","zh","d"],{"children":[["mdxPath","data_io","oc"],{"children":["__PAGE__?{\"lang\":\"zh\",\"mdxPath\":[\"data_io\"]}",{}]}]}]},"$undefined","$undefined",true],["",{"children":[["lang","zh","d"],{"children":[["mdxPath","data_io","oc"],{"children":["__PAGE__",{},[["$L1","$L2",null],null],null]},[null,["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children","$4","children","$5","children"],"error":"$6","errorStyles":[],"errorScripts":[],"template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":"$undefined","notFoundStyles":"$undefined"}]],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/neug/_next/static/css/420414c4497124cb.css","precedence":"next","crossOrigin":"$undefined"}]],"$L8"],null],null]},[[[["$","link","0",{"rel":"stylesheet","href":"/neug/_next/static/css/16fb04f3f0386afc.css","precedence":"next","crossOrigin":"$undefined"}]],["$","html",null,{"suppressHydrationWarning":true,"children":[["$","head",null,{"children":["$undefined",["$","style",null,{"children":":root {\n  --nextra-primary-hue: 215deg;\n  --nextra-primary-saturation: 95%;\n  --nextra-primary-lightness: 45%;\n  --nextra-bg: 250,250,250;\n  --nextra-content-width: 90rem;\n}\n.dark {\n  --nextra-primary-hue: 215deg;\n  --nextra-primary-saturation: 95%;\n  --nextra-primary-lightness: 55%;\n  --nextra-bg: 17,17,17;\n}\n::selection {\n  background: hsla(var(--nextra-primary-hue),var(--nextra-primary-saturation),var(--nextra-primary-lightness),.3);\n}\nhtml {\n  background: rgb(var(--nextra-bg));\n}"}],["$","meta",null,{"name":"theme-color","media":"(prefers-color-scheme: light)","content":"rgb(250,250,250)"}],["$","meta",null,{"name":"theme-color","media":"(prefers-color-scheme: dark)","content":"rgb(17,17,17)"}],"$undefined"]}],["$","body",null,{"children":["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children"],"error":"$undefined","errorStyles":"$undefined","errorScripts":"$undefined","template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":[["$","title",null,{"children":"404: This page could not be found."}],["$","div",null,{"style":{"fontFamily":"system-ui,\"Segoe UI\",Roboto,Helvetica,Arial,sans-serif,\"Apple Color Emoji\",\"Segoe UI Emoji\"","height":"100vh","textAlign":"center","display":"flex","flexDirection":"column","alignItems":"center","justifyContent":"center"},"children":["$","div",null,{"children":[["$","style",null,{"dangerouslySetInnerHTML":{"__html":"body{color:#000;background:#fff;margin:0}.next-error-h1{border-right:1px solid rgba(0,0,0,.3)}@media (prefers-color-scheme:dark){body{color:#fff;background:#000}.next-error-h1{border-right:1px solid rgba(255,255,255,.3)}}"}}],["$","h1",null,{"className":"next-error-h1","style":{"display":"inline-block","margin":"0 20px 0 0","padding":"0 23px 0 0","fontSize":24,"fontWeight":500,"verticalAlign":"top","lineHeight":"49px"},"children":"404"}],["$","div",null,{"style":{"display":"inline-block"},"children":["$","h2",null,{"style":{"fontSize":14,"fontWeight":400,"lineHeight":"49px","margin":0},"children":"This page could not be found."}]}]]}]}]],"notFoundStyles":[]}]}]]}]],null],null],["$L9",null]]]]
+a:I[4108,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ThemeConfigProvider"]
+b:I[6016,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"LastUpdated"]
+c:I[763,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"Search"]
+d:I[5922,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ThemeProvider"]
+e:I[4328,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"SkipNavLink"]
+f:I[7691,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ConfigProvider"]
 10:I[2972,["972","static/chunks/972-deabd98c514f1eda.js","97","static/chunks/app/%5Blang%5D/not-found-328ef61f34194bc1.js"],""]
-11:I[8212,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ClientNavbar"]
-13:I[1995,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"VersionBadge"]
-14:I[530,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"LanguageDropdown"]
-15:I[7191,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"MobileNav"]
+11:I[8212,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ClientNavbar"]
+13:I[1995,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"VersionBadge"]
+14:I[530,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"LanguageDropdown"]
+15:I[7191,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"MobileNav"]
 16:I[6480,["450","static/chunks/app/%5Blang%5D/error-357f8f7a1db2218f.js"],"default"]
-17:I[8960,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"TOCProvider"]
-18:I[7191,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"Sidebar"]
-19:I[2661,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ClientWrapper"]
-1b:I[6099,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"HeadingAnchor"]
-1c:I[8451,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-71b4e176438b3d1a.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ToggleWordWrapButton"]
-12:T481,M12 3C7.0275 3 3 7.12937 3 12.2276C3 16.3109 5.57625 19.7597 9.15374 20.9824C9.60374 21.0631 9.77249 20.7863 9.77249 20.5441C9.77249 20.3249 9.76125 19.5982 9.76125 18.8254C7.5 19.2522 6.915 18.2602 6.735 17.7412C6.63375 17.4759 6.19499 16.6569 5.8125 16.4378C5.4975 16.2647 5.0475 15.838 5.80124 15.8264C6.51 15.8149 7.01625 16.4954 7.18499 16.7723C7.99499 18.1679 9.28875 17.7758 9.80625 17.5335C9.885 16.9337 10.1212 16.53 10.38 16.2993C8.3775 16.0687 6.285 15.2728 6.285 11.7432C6.285 10.7397 6.63375 9.9092 7.20749 9.26326C7.1175 9.03257 6.8025 8.08674 7.2975 6.81794C7.2975 6.81794 8.05125 6.57571 9.77249 7.76377C10.4925 7.55615 11.2575 7.45234 12.0225 7.45234C12.7875 7.45234 13.5525 7.55615 14.2725 7.76377C15.9937 6.56418 16.7475 6.81794 16.7475 6.81794C17.2424 8.08674 16.9275 9.03257 16.8375 9.26326C17.4113 9.9092 17.76 10.7281 17.76 11.7432C17.76 15.2843 15.6563 16.0687 13.6537 16.2993C13.98 16.5877 14.2613 17.1414 14.2613 18.0065C14.2613 19.2407 14.25 20.2326 14.25 20.5441C14.25 20.7863 14.4188 21.0746 14.8688 20.9824C16.6554 20.364 18.2079 19.1866 19.3078 17.6162C20.4077 16.0457 20.9995 14.1611 21 12.2276C21 7.12937 16.9725 3 12 3Z8:["$","$La",null,{"value":{"children":"$undefined","darkMode":true,"docsRepositoryBase":"https://github.com/alibaba/neug/blob/main/doc","editLink":"Edit this page","feedback":{"content":"Question? Give us feedback","labels":"feedback"},"i18n":[{"locale":"en","name":"English"},{"locale":"zh","name":"中文"}],"lastUpdated":["$","$Lb",null,{}],"navigation":{"next":true,"prev":true},"search":["$","$Lc",null,{}],"sidebar":{"defaultMenuCollapseLevel":1,"defaultOpen":true,"toggleButton":true,"autoCollapse":true},"themeSwitch":{"dark":"Dark","light":"Light","system":"System"},"toc":{"backToTop":"Scroll to top","float":true,"title":"On This Page"}},"children":["$","$Ld",null,{"attribute":"class","defaultTheme":"light","disableTransitionOnChange":true,"storageKey":"theme","children":[["$","$Le",null,{}],"$undefined",["$","$Lf",null,{"pageMap":[{"data":{"overview":{"title":"概述"},"installation":{"title":"安装"},"getting_started":{"title":"快速入门"},"tutorials":{"title":"教程"},"data_io":{"title":"数据导入导出"},"cypher_manual":{"title":"Cypher 手册"},"extensions":{"title":"扩展"},"transaction":{"title":"事务"},"user_clients":{"title":"客户端工具"},"reference":{"title":"API 参考"},"development":{"title":"开发指南"}}},{"name":"overview","route":"/zh/overview","children":[{"data":{"introduction":{"title":"简介"}}},{"name":"introduction","route":"/zh/overview/introduction","frontMatter":{"title":"简介","filePath":"content/zh/overview/introduction.md"},"title":"简介"}],"title":"概述"},{"name":"installation","route":"/zh/installation","children":[{"data":{"installation":{"title":"安装指南"}}},{"name":"installation","route":"/zh/installation/installation","frontMatter":{"title":"安装","filePath":"content/zh/installation/installation.md"},"title":"安装指南"}],"title":"安装"},{"name":"getting_started","route":"/zh/getting_started","children":[{"data":{"getting_started":{"title":"快速入门"},"neug_ui":{"title":"NeuG UI"}}},{"name":"getting_started","route":"/zh/getting_started/getting_started","frontMatter":{"title":"快速入门","filePath":"content/zh/getting_started/getting_started.md"},"title":"快速入门"},{"name":"neug_ui","route":"/zh/getting_started/neug_ui","frontMatter":{"title":"NeuG Web UI","filePath":"content/zh/getting_started/neug_ui.md"},"title":"NeuG UI"}],"title":"快速入门"},{"name":"tutorials","route":"/zh/tutorials","children":[{"data":{"tinysnb_tutorial":{"title":"探索社交网络"},"codegraph-openclaw-example":{"title":"基于 OpenClaw 的 CodeGraph"},"benchmark-neug-dual-mode":{"title":"NeuG 基准测试：双模式图数据库"}}},{"name":"tinysnb_tutorial","route":"/zh/tutorials/tinysnb_tutorial","frontMatter":{"title":"使用 NeuG 探索社交网络","filePath":"content/zh/tutorials/tinysnb_tutorial.md"},"title":"探索社交网络"},{"name":"codegraph-openclaw-example","route":"/zh/tutorials/codegraph-openclaw-example","frontMatter":{"title":"CodeGraph：使用知识图谱进行代码分析","filePath":"content/zh/tutorials/codegraph-openclaw-example.md"},"title":"基于 OpenClaw 的 CodeGraph"},{"name":"benchmark-neug-dual-mode","route":"/zh/tutorials/benchmark-neug-dual-mode","frontMatter":{"title":"NeuG 性能评测：双模式图数据库","filePath":"content/zh/tutorials/benchmark-neug-dual-mode.md"},"title":"NeuG 基准测试：双模式图数据库"}],"title":"教程"},{"name":"data_io","route":"/zh/data_io","children":[{"data":{"index":{"title":"概述"},"load_data":{"title":"加载数据"},"import_data":{"title":"导入数据"},"export_data":{"title":"导出数据"}}},{"name":"index","route":"/zh/data_io","frontMatter":{"title":"概述","filePath":"content/zh/data_io/index.md"},"title":"概述"},{"name":"load_data","route":"/zh/data_io/load_data","frontMatter":{"title":"加载数据","filePath":"content/zh/data_io/load_data.md"},"title":"加载数据"},{"name":"import_data","route":"/zh/data_io/import_data","frontMatter":{"title":"COPY FROM","filePath":"content/zh/data_io/import_data.md"},"title":"导入数据"},{"name":"export_data","route":"/zh/data_io/export_data","frontMatter":{"title":"导出数据","filePath":"content/zh/data_io/export_data.md"},"title":"导出数据"}],"title":"数据导入导出"},{"name":"cypher_manual","route":"/zh/cypher_manual","children":[{"data":{"data_types":{"title":"数据类型"},"ddl_clause":{"title":"DDL 子句"},"dml_clause":{"title":"DML 子句"},"expression":{"title":"表达式"},"query_clauses":{"title":"查询子句"}}},{"name":"index","route":"/zh/cypher_manual","frontMatter":{"title":"概述","filePath":"content/zh/cypher_manual/index.md"},"title":"概述"},{"name":"data_types","route":"/zh/cypher_manual/data_types","frontMatter":{"title":"数据类型","filePath":"content/zh/cypher_manual/data_types.md"},"title":"数据类型"},{"name":"ddl_clause","route":"/zh/cypher_manual/ddl_clause","frontMatter":{"title":"DDL 语句","filePath":"content/zh/cypher_manual/ddl_clause.md"},"title":"DDL 子句"},{"name":"dml_clause","route":"/zh/cypher_manual/dml_clause","frontMatter":{"title":"DML 语句","filePath":"content/zh/cypher_manual/dml_clause.md"},"title":"DML 子句"},{"name":"expression","route":"/zh/cypher_manual/expression","children":[{"data":{"arithmetic_op":{"title":"算术运算符"},"comparison_op":{"title":"比较运算符"},"logical_op":{"title":"逻辑运算符"},"null_op":{"title":"空值运算符"},"list_op":{"title":"列表运算符"},"cast_func":{"title":"类型转换函数"},"agg_func":{"title":"聚合函数"},"graph_func":{"title":"图函数"},"temporal_func":{"title":"时间函数"}}},{"name":"index","route":"/zh/cypher_manual/expression","frontMatter":{"title":"表达式","filePath":"content/zh/cypher_manual/expression/index.md"},"title":"表达式"},{"name":"arithmetic_op","route":"/zh/cypher_manual/expression/arithmetic_op","frontMatter":{"title":"算术运算符","filePath":"content/zh/cypher_manual/expression/arithmetic_op.md"},"title":"算术运算符"},{"name":"comparison_op","route":"/zh/cypher_manual/expression/comparison_op","frontMatter":{"title":"比较运算符","filePath":"content/zh/cypher_manual/expression/comparison_op.md"},"title":"比较运算符"},{"name":"logical_op","route":"/zh/cypher_manual/expression/logical_op","frontMatter":{"title":"逻辑运算符","filePath":"content/zh/cypher_manual/expression/logical_op.md"},"title":"逻辑运算符"},{"name":"null_op","route":"/zh/cypher_manual/expression/null_op","frontMatter":{"title":"空值运算符","filePath":"content/zh/cypher_manual/expression/null_op.md"},"title":"空值运算符"},{"name":"list_op","route":"/zh/cypher_manual/expression/list_op","frontMatter":{"title":"列表运算符","filePath":"content/zh/cypher_manual/expression/list_op.md"},"title":"列表运算符"},{"name":"cast_func","route":"/zh/cypher_manual/expression/cast_func","frontMatter":{"title":"CAST 函数","filePath":"content/zh/cypher_manual/expression/cast_func.md"},"title":"类型转换函数"},{"name":"agg_func","route":"/zh/cypher_manual/expression/agg_func","frontMatter":{"title":"聚合函数","filePath":"content/zh/cypher_manual/expression/agg_func.md"},"title":"聚合函数"},{"name":"graph_func","route":"/zh/cypher_manual/expression/graph_func","frontMatter":{"title":"图模式函数","filePath":"content/zh/cypher_manual/expression/graph_func.md"},"title":"图函数"},{"name":"temporal_func","route":"/zh/cypher_manual/expression/temporal_func","frontMatter":{"title":"时间函数","filePath":"content/zh/cypher_manual/expression/temporal_func.md"},"title":"时间函数"}],"title":"表达式"},{"name":"query_clauses","route":"/zh/cypher_manual/query_clauses","children":[{"data":{"match_clause":{"title":"MATCH 子句"},"where_clause":{"title":"WHERE 子句"},"return_clause":{"title":"RETURN 子句"},"with_clause":{"title":"WITH 子句"},"order_clause":{"title":"ORDER BY 子句"},"limit_clause":{"title":"LIMIT 子句"},"union_clause":{"title":"UNION 子句"}}},{"name":"index","route":"/zh/cypher_manual/query_clauses","frontMatter":{"title":"查询子句","filePath":"content/zh/cypher_manual/query_clauses/index.md"},"title":"查询子句"},{"name":"match_clause","route":"/zh/cypher_manual/query_clauses/match_clause","frontMatter":{"title":"MATCH 子句","filePath":"content/zh/cypher_manual/query_clauses/match_clause.md"},"title":"MATCH 子句"},{"name":"where_clause","route":"/zh/cypher_manual/query_clauses/where_clause","frontMatter":{"title":"WHERE 子句","filePath":"content/zh/cypher_manual/query_clauses/where_clause.md"},"title":"WHERE 子句"},{"name":"return_clause","route":"/zh/cypher_manual/query_clauses/return_clause","frontMatter":{"title":"RETURN 子句","filePath":"content/zh/cypher_manual/query_clauses/return_clause.md"},"title":"RETURN 子句"},{"name":"with_clause","route":"/zh/cypher_manual/query_clauses/with_clause","frontMatter":{"title":"WITH 子句","filePath":"content/zh/cypher_manual/query_clauses/with_clause.md"},"title":"WITH 子句"},{"name":"order_clause","route":"/zh/cypher_manual/query_clauses/order_clause","frontMatter":{"title":"ORDER 子句","filePath":"content/zh/cypher_manual/query_clauses/order_clause.md"},"title":"ORDER BY 子句"},{"name":"limit_clause","route":"/zh/cypher_manual/query_clauses/limit_clause","frontMatter":{"title":"LIMIT 子句","filePath":"content/zh/cypher_manual/query_clauses/limit_clause.md"},"title":"LIMIT 子句"},{"name":"union_clause","route":"/zh/cypher_manual/query_clauses/union_clause","frontMatter":{"title":"UNION 子句","filePath":"content/zh/cypher_manual/query_clauses/union_clause.md"},"title":"UNION 子句"}],"title":"查询子句"},{"name":"extensions","route":"/zh/cypher_manual/extensions","children":[{"data":{"overview":{"title":"概述"},"load_json":{"title":"加载 JSON"}}},{"name":"overview","route":"/zh/cypher_manual/extensions/overview","frontMatter":{"title":"扩展","filePath":"content/zh/cypher_manual/extensions/overview.md"},"title":"概述"},{"name":"load_json","route":"/zh/cypher_manual/extensions/load_json","frontMatter":{"title":"JSON 扩展","filePath":"content/zh/cypher_manual/extensions/load_json.md"},"title":"加载 JSON"}],"title":"Extensions"},{"name":"load_from","route":"/zh/cypher_manual/load_from","frontMatter":{"title":"LOAD FROM","filePath":"content/zh/cypher_manual/load_from.md"},"title":"LOAD FROM"}],"title":"Cypher 手册"},{"name":"extensions","route":"/zh/extensions","children":[{"data":{"index":{"title":"概览"},"load_json":{"title":"JSON 扩展"}}},{"name":"index","route":"/zh/extensions","frontMatter":{"title":"概述","filePath":"content/zh/extensions/index.md"},"title":"概览"},{"name":"load_json","route":"/zh/extensions/load_json","frontMatter":{"title":"JSON 扩展","filePath":"content/zh/extensions/load_json.md"},"title":"JSON 扩展"},{"name":"load_parquet","route":"/zh/extensions/load_parquet","frontMatter":{"title":"Parquet 扩展","filePath":"content/zh/extensions/load_parquet.md"},"title":"Parquet 扩展"}],"title":"扩展"},{"name":"transaction","route":"/zh/transaction","children":[{"data":{"transaction":{"title":"事务管理"}}},{"name":"transaction","route":"/zh/transaction/transaction","frontMatter":{"title":"事务管理","filePath":"content/zh/transaction/transaction.md"},"title":"事务管理"}],"title":"事务"},{"name":"user_clients","route":"/zh/user_clients","children":[{"data":{"cli":{"title":"命令行工具"}}},{"name":"cli","route":"/zh/user_clients/cli","frontMatter":{"title":"命令行界面（CLI）","filePath":"content/zh/user_clients/cli.md"},"title":"命令行工具"}],"title":"客户端工具"},{"name":"reference","route":"/zh/reference","children":[{"data":{"cpp_api":{"title":"C++ API"},"python_api":{"title":"Python API"},"java_api":{"title":"Java API"}}},{"name":"cpp_api","route":"/zh/reference/cpp_api","children":[{"data":{"index":{"title":"C++ API 概述"},"neug_db":{"title":"NeugDB 数据库"},"connection":{"title":"嵌入式连接"},"query_result":{"title":"查询结果"},"service":{"title":"NeugDB 服务"}}},{"name":"index","route":"/zh/reference/cpp_api","frontMatter":{"title":"C++ API 参考","filePath":"content/zh/reference/cpp_api/index.md"},"title":"C++ API 概述"},{"name":"neug_db","route":"/zh/reference/cpp_api/neug_db","frontMatter":{"title":"NeugDB","filePath":"content/zh/reference/cpp_api/neug_db.md"},"title":"NeugDB 数据库"},{"name":"connection","route":"/zh/reference/cpp_api/connection","frontMatter":{"title":"连接","filePath":"content/zh/reference/cpp_api/connection.md"},"title":"嵌入式连接"},{"name":"query_result","route":"/zh/reference/cpp_api/query_result","frontMatter":{"title":"QueryResult","filePath":"content/zh/reference/cpp_api/query_result.md"},"title":"查询结果"},{"name":"service","route":"/zh/reference/cpp_api/service","frontMatter":{"title":"NeugDBService","filePath":"content/zh/reference/cpp_api/service.md"},"title":"NeugDB 服务"}],"title":"C++ API"},{"name":"python_api","route":"/zh/reference/python_api","children":[{"data":{"index":{"title":"Python API 概述"},"database":{"title":"数据库"},"connection":{"title":"嵌入式连接"},"session":{"title":"会话"},"query_result":{"title":"查询结果"}}},{"name":"index","route":"/zh/reference/python_api","frontMatter":{"title":"Python API 参考","filePath":"content/zh/reference/python_api/index.md"},"title":"Python API 概述"},{"name":"database","route":"/zh/reference/python_api/database","frontMatter":{"title":"模块 neug.database","filePath":"content/zh/reference/python_api/database.md"},"title":"数据库"},{"name":"connection","route":"/zh/reference/python_api/connection","frontMatter":{"title":"模块 neug.connection","filePath":"content/zh/reference/python_api/connection.md"},"title":"嵌入式连接"},{"name":"session","route":"/zh/reference/python_api/session","frontMatter":{"title":"模块 neug.session","filePath":"content/zh/reference/python_api/session.md"},"title":"会话"},{"name":"query_result","route":"/zh/reference/python_api/query_result","frontMatter":{"title":"模块 neug.query_result","filePath":"content/zh/reference/python_api/query_result.md"},"title":"查询结果"}],"title":"Python API"},{"name":"java_api","route":"/zh/reference/java_api","children":[{"data":{"index":{"title":"Java API 概述"},"driver":{"title":"驱动"},"config":{"title":"配置"},"session":{"title":"会话"},"result_set":{"title":"查询结果"},"result_set_metadata":{"title":"结果集元数据"}}},{"name":"index","route":"/zh/reference/java_api","frontMatter":{"title":"Java API 参考","filePath":"content/zh/reference/java_api/index.md"},"title":"Java API 概述"},{"name":"driver","route":"/zh/reference/java_api/driver","frontMatter":{"title":"Driver","filePath":"content/zh/reference/java_api/driver.md"},"title":"驱动"},{"name":"config","route":"/zh/reference/java_api/config","frontMatter":{"title":"Config","filePath":"content/zh/reference/java_api/config.md"},"title":"配置"},{"name":"session","route":"/zh/reference/java_api/session","frontMatter":{"title":"Session","filePath":"content/zh/reference/java_api/session.md"},"title":"会话"},{"name":"result_set","route":"/zh/reference/java_api/result_set","frontMatter":{"title":"ResultSet","filePath":"content/zh/reference/java_api/result_set.md"},"title":"查询结果"},{"name":"result_set_metadata","route":"/zh/reference/java_api/result_set_metadata","frontMatter":{"title":"ResultSetMetaData","filePath":"content/zh/reference/java_api/result_set_metadata.md"},"title":"结果集元数据"}],"title":"Java API"}],"title":"API 参考"},{"name":"development","route":"/zh/development","children":[{"data":{"dev_guide":{"title":"开发指南"},"code_style_guide":{"title":"代码风格指南"},"ai_coding":{"title":"AI 编程"},"error_code":{"title":"错误代码"}}},{"name":"dev_guide","route":"/zh/development/dev_guide","frontMatter":{"title":"开发者指南","filePath":"content/zh/development/dev_guide.md"},"title":"开发指南"},{"name":"code_style_guide","route":"/zh/development/code_style_guide","frontMatter":{"title":"代码风格指南","filePath":"content/zh/development/code_style_guide.md"},"title":"代码风格指南"},{"name":"ai_coding","route":"/zh/development/ai_coding","frontMatter":{"title":"AI 辅助开发","filePath":"content/zh/development/ai_coding.md"},"title":"AI 编程"},{"name":"error_code","route":"/zh/development/error_code","frontMatter":{"title":"NeuG 错误码","filePath":"content/zh/development/error_code.md"},"title":"错误代码"}],"title":"开发指南"}],"navbar":["$","header",null,{"className":"nextra-navbar x:sticky x:top-0 x:z-30 x:w-full x:bg-transparent x:print:hidden x:max-md:[.nextra-banner:not([class$=hidden])~&]:top-(--nextra-banner-height)","children":[["$","div",null,{"className":"nextra-navbar-blur x:absolute x:-z-1 x:size-full nextra-border x:border-b x:backdrop-blur-md x:bg-nextra-bg/70"}],["$","nav",null,{"style":{"height":"var(--nextra-navbar-height)"},"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width) x:items-center x:gap-4 x:pl-[max(env(safe-area-inset-left),1.5rem)] x:pr-[max(env(safe-area-inset-right),1.5rem)] x:justify-end","children":[["$","$L10",null,{"href":"/","className":"x:flex x:items-center x:me-auto x:transition-opacity x:focus-visible:nextra-focus x:hover:opacity-75","aria-label":"Home page","children":["$","span",null,{"className":"ms-2 select-none font-extrabold flex items-center","title":"NeuG: Embedded Graph Database","children":[["$","img",null,{"src":"https://img.alicdn.com/imgextra/i3/O1CN01DaSVLB1lD7ZIbDOi2_!!6000000004784-2-tps-256-257.png","alt":"GraphScope Neug","width":32,"height":32,"className":"inline-block align-middle mr-2 ","style":{"verticalAlign":"middle"}}],["$","span",null,{"className":"text-lg font-bold align-middle text-gray-900 dark:text-white","children":"NeuG"}]]}]}],["$","$L11",null,{"className":"","children":[["$","a",null,{"href":"https://github.com/alibaba/neug","target":"_blank","rel":"noreferrer","children":[["$","svg",null,{"fill":"currentColor","viewBox":"3 3 18 18","height":"24","aria-label":"Project repository","children":["$","path",null,{"d":"$12"}]}],false],"className":"x:focus-visible:nextra-focus"}],"$undefined",[["$","$L13",null,{}],["$","$L14",null,{"currentLang":"zh"}]]]}]]}]]}],"footer":null,"children":[["$","$L15",null,{}],["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children","$4","children"],"error":"$16","errorStyles":[],"errorScripts":[],"template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":["$","div",null,{"className":"flex min-h-[50vh] flex-col items-center justify-center","children":[["$","h2",null,{"className":"text-2xl font-bold","children":"Page Not Found"}],["$","p",null,{"className":"text-gray-600 mt-2","children":"The page you are looking for does not exist."}],["$","$L10",null,{"href":"/en/overview/introduction/","className":"mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600","children":"Go to Home"}]]}],"notFoundStyles":[]}]]}]]}]}]
-1a:T1907,# NeugDB
+17:I[8960,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"TOCProvider"]
+18:I[7191,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"Sidebar"]
+19:I[2661,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ClientWrapper"]
+1b:I[6099,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"HeadingAnchor"]
+1c:I[8451,["501","static/chunks/c16f53c3-e0b1a3ec107d8984.js","972","static/chunks/972-deabd98c514f1eda.js","549","static/chunks/549-6ec1e10d969813fd.js","787","static/chunks/787-1c7ffb69c49bbba0.js","141","static/chunks/141-4801f5a1522ecf9a.js","218","static/chunks/218-95e6ce415cad8f85.js","84","static/chunks/app/%5Blang%5D/layout-b47527ee66c9db3b.js"],"ToggleWordWrapButton"]
+12:T481,M12 3C7.0275 3 3 7.12937 3 12.2276C3 16.3109 5.57625 19.7597 9.15374 20.9824C9.60374 21.0631 9.77249 20.7863 9.77249 20.5441C9.77249 20.3249 9.76125 19.5982 9.76125 18.8254C7.5 19.2522 6.915 18.2602 6.735 17.7412C6.63375 17.4759 6.19499 16.6569 5.8125 16.4378C5.4975 16.2647 5.0475 15.838 5.80124 15.8264C6.51 15.8149 7.01625 16.4954 7.18499 16.7723C7.99499 18.1679 9.28875 17.7758 9.80625 17.5335C9.885 16.9337 10.1212 16.53 10.38 16.2993C8.3775 16.0687 6.285 15.2728 6.285 11.7432C6.285 10.7397 6.63375 9.9092 7.20749 9.26326C7.1175 9.03257 6.8025 8.08674 7.2975 6.81794C7.2975 6.81794 8.05125 6.57571 9.77249 7.76377C10.4925 7.55615 11.2575 7.45234 12.0225 7.45234C12.7875 7.45234 13.5525 7.55615 14.2725 7.76377C15.9937 6.56418 16.7475 6.81794 16.7475 6.81794C17.2424 8.08674 16.9275 9.03257 16.8375 9.26326C17.4113 9.9092 17.76 10.7281 17.76 11.7432C17.76 15.2843 15.6563 16.0687 13.6537 16.2993C13.98 16.5877 14.2613 17.1414 14.2613 18.0065C14.2613 19.2407 14.25 20.2326 14.25 20.5441C14.25 20.7863 14.4188 21.0746 14.8688 20.9824C16.6554 20.364 18.2079 19.1866 19.3078 17.6162C20.4077 16.0457 20.9995 14.1611 21 12.2276C21 7.12937 16.9725 3 12 3Z8:["$","$La",null,{"value":{"children":"$undefined","darkMode":true,"docsRepositoryBase":"https://github.com/alibaba/neug/blob/main/doc","editLink":"Edit this page","feedback":{"content":"Question? Give us feedback","labels":"feedback"},"i18n":[{"locale":"en","name":"English"},{"locale":"zh","name":"中文"}],"lastUpdated":["$","$Lb",null,{}],"navigation":{"next":true,"prev":true},"search":["$","$Lc",null,{}],"sidebar":{"defaultMenuCollapseLevel":1,"defaultOpen":true,"toggleButton":true,"autoCollapse":true},"themeSwitch":{"dark":"Dark","light":"Light","system":"System"},"toc":{"backToTop":"Scroll to top","float":true,"title":"On This Page"}},"children":["$","$Ld",null,{"attribute":"class","defaultTheme":"light","disableTransitionOnChange":true,"storageKey":"theme","children":[["$","$Le",null,{}],"$undefined",["$","$Lf",null,{"pageMap":[{"data":{"overview":{"title":"概述"},"installation":{"title":"安装"},"getting_started":{"title":"快速入门"},"tutorials":{"title":"教程"},"data_io":{"title":"数据导入导出"},"cypher_manual":{"title":"Cypher 手册"},"extensions":{"title":"扩展"},"transaction":{"title":"事务"},"user_clients":{"title":"客户端工具"},"reference":{"title":"API 参考"},"development":{"title":"开发指南"}}},{"name":"overview","route":"/zh/overview","children":[{"data":{"introduction":{"title":"简介"}}},{"name":"introduction","route":"/zh/overview/introduction","frontMatter":{"title":"简介","filePath":"content/zh/overview/introduction.md"},"title":"简介"}],"title":"概述"},{"name":"installation","route":"/zh/installation","children":[{"data":{"installation":{"title":"安装指南"}}},{"name":"installation","route":"/zh/installation/installation","frontMatter":{"title":"安装","filePath":"content/zh/installation/installation.md"},"title":"安装指南"}],"title":"安装"},{"name":"getting_started","route":"/zh/getting_started","children":[{"data":{"getting_started":{"title":"快速入门"},"neug_ui":{"title":"NeuG UI"}}},{"name":"getting_started","route":"/zh/getting_started/getting_started","frontMatter":{"title":"快速开始","filePath":"content/zh/getting_started/getting_started.md"},"title":"快速入门"},{"name":"neug_ui","route":"/zh/getting_started/neug_ui","frontMatter":{"title":"NeuG Web UI","filePath":"content/zh/getting_started/neug_ui.md"},"title":"NeuG UI"}],"title":"快速入门"},{"name":"tutorials","route":"/zh/tutorials","children":[{"data":{"tinysnb_tutorial":{"title":"探索社交网络"},"codegraph-openclaw-example":{"title":"基于 OpenClaw 的 CodeGraph"},"benchmark-neug-dual-mode":{"title":"NeuG 基准测试：双模式图数据库"}}},{"name":"tinysnb_tutorial","route":"/zh/tutorials/tinysnb_tutorial","frontMatter":{"title":"使用 NeuG 探索社交网络","filePath":"content/zh/tutorials/tinysnb_tutorial.md"},"title":"探索社交网络"},{"name":"codegraph-openclaw-example","route":"/zh/tutorials/codegraph-openclaw-example","frontMatter":{"title":"CodeGraph：使用知识图谱进行代码分析","filePath":"content/zh/tutorials/codegraph-openclaw-example.md"},"title":"基于 OpenClaw 的 CodeGraph"},{"name":"benchmark-neug-dual-mode","route":"/zh/tutorials/benchmark-neug-dual-mode","frontMatter":{"title":"NeuG 性能评测：双模式图数据库","filePath":"content/zh/tutorials/benchmark-neug-dual-mode.md"},"title":"NeuG 基准测试：双模式图数据库"},{"name":"data-pipeline","route":"/zh/tutorials/data-pipeline","frontMatter":{"title":"数据管道教程：云存储 → 图查询 → Parquet 导出","filePath":"content/zh/tutorials/data-pipeline.md"},"title":"数据管道教程：云存储 → 图查询 → Parquet 导出"}],"title":"教程"},{"name":"data_io","route":"/zh/data_io","children":[{"data":{"index":{"title":"概述"},"load_data":{"title":"加载数据"},"import_data":{"title":"导入数据"},"export_data":{"title":"导出数据"}}},{"name":"index","route":"/zh/data_io","frontMatter":{"title":"概述","filePath":"content/zh/data_io/index.md"},"title":"概述"},{"name":"load_data","route":"/zh/data_io/load_data","frontMatter":{"title":"加载数据","filePath":"content/zh/data_io/load_data.md"},"title":"加载数据"},{"name":"import_data","route":"/zh/data_io/import_data","frontMatter":{"title":"从外部复制数据","filePath":"content/zh/data_io/import_data.md"},"title":"导入数据"},{"name":"export_data","route":"/zh/data_io/export_data","frontMatter":{"title":"导出数据","filePath":"content/zh/data_io/export_data.md"},"title":"导出数据"}],"title":"数据导入导出"},{"name":"cypher_manual","route":"/zh/cypher_manual","children":[{"data":{"data_types":{"title":"数据类型"},"ddl_clause":{"title":"DDL 子句"},"dml_clause":{"title":"DML 子句"},"expression":{"title":"表达式"},"query_clauses":{"title":"查询子句"}}},{"name":"index","route":"/zh/cypher_manual","frontMatter":{"title":"概述","filePath":"content/zh/cypher_manual/index.md"},"title":"概述"},{"name":"data_types","route":"/zh/cypher_manual/data_types","frontMatter":{"title":"数据类型","filePath":"content/zh/cypher_manual/data_types.md"},"title":"数据类型"},{"name":"ddl_clause","route":"/zh/cypher_manual/ddl_clause","frontMatter":{"title":"DDL 子句","filePath":"content/zh/cypher_manual/ddl_clause.md"},"title":"DDL 子句"},{"name":"dml_clause","route":"/zh/cypher_manual/dml_clause","frontMatter":{"title":"DML 语句","filePath":"content/zh/cypher_manual/dml_clause.md"},"title":"DML 子句"},{"name":"expression","route":"/zh/cypher_manual/expression","children":[{"data":{"arithmetic_op":{"title":"算术运算符"},"comparison_op":{"title":"比较运算符"},"logical_op":{"title":"逻辑运算符"},"null_op":{"title":"空值运算符"},"list_op":{"title":"列表运算符"},"cast_func":{"title":"类型转换函数"},"agg_func":{"title":"聚合函数"},"graph_func":{"title":"图函数"},"temporal_func":{"title":"时间函数"}}},{"name":"index","route":"/zh/cypher_manual/expression","frontMatter":{"title":"表达式","filePath":"content/zh/cypher_manual/expression/index.md"},"title":"表达式"},{"name":"arithmetic_op","route":"/zh/cypher_manual/expression/arithmetic_op","frontMatter":{"title":"算术运算符","filePath":"content/zh/cypher_manual/expression/arithmetic_op.md"},"title":"算术运算符"},{"name":"comparison_op","route":"/zh/cypher_manual/expression/comparison_op","frontMatter":{"title":"比较运算符","filePath":"content/zh/cypher_manual/expression/comparison_op.md"},"title":"比较运算符"},{"name":"logical_op","route":"/zh/cypher_manual/expression/logical_op","frontMatter":{"title":"逻辑运算符","filePath":"content/zh/cypher_manual/expression/logical_op.md"},"title":"逻辑运算符"},{"name":"null_op","route":"/zh/cypher_manual/expression/null_op","frontMatter":{"title":"空值运算符","filePath":"content/zh/cypher_manual/expression/null_op.md"},"title":"空值运算符"},{"name":"list_op","route":"/zh/cypher_manual/expression/list_op","frontMatter":{"title":"列表运算符","filePath":"content/zh/cypher_manual/expression/list_op.md"},"title":"列表运算符"},{"name":"cast_func","route":"/zh/cypher_manual/expression/cast_func","frontMatter":{"title":"CAST 函数","filePath":"content/zh/cypher_manual/expression/cast_func.md"},"title":"类型转换函数"},{"name":"agg_func","route":"/zh/cypher_manual/expression/agg_func","frontMatter":{"title":"聚合函数","filePath":"content/zh/cypher_manual/expression/agg_func.md"},"title":"聚合函数"},{"name":"graph_func","route":"/zh/cypher_manual/expression/graph_func","frontMatter":{"title":"图模式函数","filePath":"content/zh/cypher_manual/expression/graph_func.md"},"title":"图函数"},{"name":"temporal_func","route":"/zh/cypher_manual/expression/temporal_func","frontMatter":{"title":"时间函数","filePath":"content/zh/cypher_manual/expression/temporal_func.md"},"title":"时间函数"}],"title":"表达式"},{"name":"query_clauses","route":"/zh/cypher_manual/query_clauses","children":[{"data":{"match_clause":{"title":"MATCH 子句"},"where_clause":{"title":"WHERE 子句"},"return_clause":{"title":"RETURN 子句"},"with_clause":{"title":"WITH 子句"},"order_clause":{"title":"ORDER BY 子句"},"limit_clause":{"title":"LIMIT 子句"},"union_clause":{"title":"UNION 子句"}}},{"name":"index","route":"/zh/cypher_manual/query_clauses","frontMatter":{"title":"查询子句","filePath":"content/zh/cypher_manual/query_clauses/index.md"},"title":"查询子句"},{"name":"match_clause","route":"/zh/cypher_manual/query_clauses/match_clause","frontMatter":{"title":"Match 子句","filePath":"content/zh/cypher_manual/query_clauses/match_clause.md"},"title":"MATCH 子句"},{"name":"where_clause","route":"/zh/cypher_manual/query_clauses/where_clause","frontMatter":{"title":"WHERE 子句","filePath":"content/zh/cypher_manual/query_clauses/where_clause.md"},"title":"WHERE 子句"},{"name":"return_clause","route":"/zh/cypher_manual/query_clauses/return_clause","frontMatter":{"title":"RETURN 子句","filePath":"content/zh/cypher_manual/query_clauses/return_clause.md"},"title":"RETURN 子句"},{"name":"with_clause","route":"/zh/cypher_manual/query_clauses/with_clause","frontMatter":{"title":"WITH 子句","filePath":"content/zh/cypher_manual/query_clauses/with_clause.md"},"title":"WITH 子句"},{"name":"order_clause","route":"/zh/cypher_manual/query_clauses/order_clause","frontMatter":{"title":"ORDER 子句","filePath":"content/zh/cypher_manual/query_clauses/order_clause.md"},"title":"ORDER BY 子句"},{"name":"limit_clause","route":"/zh/cypher_manual/query_clauses/limit_clause","frontMatter":{"title":"LIMIT 子句","filePath":"content/zh/cypher_manual/query_clauses/limit_clause.md"},"title":"LIMIT 子句"},{"name":"union_clause","route":"/zh/cypher_manual/query_clauses/union_clause","frontMatter":{"title":"UNION 子句","filePath":"content/zh/cypher_manual/query_clauses/union_clause.md"},"title":"UNION 子句"},{"name":"merge_clause","route":"/zh/cypher_manual/query_clauses/merge_clause","frontMatter":{"title":"合并子句","filePath":"content/zh/cypher_manual/query_clauses/merge_clause.md"},"title":"合并子句"}],"title":"查询子句"}],"title":"Cypher 手册"},{"name":"extensions","route":"/zh/extensions","children":[{"data":{"index":{"title":"概览"},"load_json":{"title":"JSON 扩展"}}},{"name":"index","route":"/zh/extensions","frontMatter":{"title":"概述","filePath":"content/zh/extensions/index.md"},"title":"概览"},{"name":"load_json","route":"/zh/extensions/load_json","frontMatter":{"title":"JSON 扩展","filePath":"content/zh/extensions/load_json.md"},"title":"JSON 扩展"},{"name":"load_httpfs","route":"/zh/extensions/load_httpfs","frontMatter":{"title":"HTTPFS 扩展","filePath":"content/zh/extensions/load_httpfs.md"},"title":"HTTPFS 扩展"},{"name":"load_parquet","route":"/zh/extensions/load_parquet","frontMatter":{"title":"Parquet 扩展","filePath":"content/zh/extensions/load_parquet.md"},"title":"Parquet 扩展"}],"title":"扩展"},{"name":"transaction","route":"/zh/transaction","children":[{"data":{"transaction":{"title":"事务管理"}}},{"name":"transaction","route":"/zh/transaction/transaction","frontMatter":{"title":"事务管理","filePath":"content/zh/transaction/transaction.md"},"title":"事务管理"}],"title":"事务"},{"name":"user_clients","route":"/zh/user_clients","children":[{"data":{"cli":{"title":"命令行工具"}}},{"name":"cli","route":"/zh/user_clients/cli","frontMatter":{"title":"命令行界面（CLI）","filePath":"content/zh/user_clients/cli.md"},"title":"命令行工具"}],"title":"客户端工具"},{"name":"reference","route":"/zh/reference","children":[{"data":{"cpp_api":{"title":"C++ API"},"python_api":{"title":"Python API"},"java_api":{"title":"Java API"}}},{"name":"cpp_api","route":"/zh/reference/cpp_api","children":[{"data":{"index":{"title":"C++ API 概述"},"neug_db":{"title":"NeugDB 数据库"},"connection":{"title":"嵌入式连接"},"query_result":{"title":"查询结果"},"service":{"title":"NeugDB 服务"}}},{"name":"index","route":"/zh/reference/cpp_api","frontMatter":{"title":"C++ API 参考","filePath":"content/zh/reference/cpp_api/index.md"},"title":"C++ API 概述"},{"name":"neug_db","route":"/zh/reference/cpp_api/neug_db","frontMatter":{"title":"NeugDB","filePath":"content/zh/reference/cpp_api/neug_db.md"},"title":"NeugDB 数据库"},{"name":"connection","route":"/zh/reference/cpp_api/connection","frontMatter":{"title":"连接","filePath":"content/zh/reference/cpp_api/connection.md"},"title":"嵌入式连接"},{"name":"query_result","route":"/zh/reference/cpp_api/query_result","frontMatter":{"title":"QueryResult","filePath":"content/zh/reference/cpp_api/query_result.md"},"title":"查询结果"},{"name":"service","route":"/zh/reference/cpp_api/service","frontMatter":{"title":"NeugDBService","filePath":"content/zh/reference/cpp_api/service.md"},"title":"NeugDB 服务"}],"title":"C++ API"},{"name":"python_api","route":"/zh/reference/python_api","children":[{"data":{"index":{"title":"Python API 概述"},"database":{"title":"数据库"},"connection":{"title":"嵌入式连接"},"session":{"title":"会话"},"query_result":{"title":"查询结果"}}},{"name":"index","route":"/zh/reference/python_api","frontMatter":{"title":"Python API 参考","filePath":"content/zh/reference/python_api/index.md"},"title":"Python API 概述"},{"name":"database","route":"/zh/reference/python_api/database","frontMatter":{"title":"模块 neug.database","filePath":"content/zh/reference/python_api/database.md"},"title":"数据库"},{"name":"connection","route":"/zh/reference/python_api/connection","frontMatter":{"title":"模块 neug.connection","filePath":"content/zh/reference/python_api/connection.md"},"title":"嵌入式连接"},{"name":"session","route":"/zh/reference/python_api/session","frontMatter":{"title":"模块 neug.session","filePath":"content/zh/reference/python_api/session.md"},"title":"会话"},{"name":"query_result","route":"/zh/reference/python_api/query_result","frontMatter":{"title":"模块 neug.query_result","filePath":"content/zh/reference/python_api/query_result.md"},"title":"查询结果"}],"title":"Python API"},{"name":"java_api","route":"/zh/reference/java_api","children":[{"data":{"index":{"title":"Java API 概述"},"driver":{"title":"驱动"},"config":{"title":"配置"},"session":{"title":"会话"},"result_set":{"title":"查询结果"},"result_set_metadata":{"title":"结果集元数据"}}},{"name":"index","route":"/zh/reference/java_api","frontMatter":{"title":"Java API 参考","filePath":"content/zh/reference/java_api/index.md"},"title":"Java API 概述"},{"name":"driver","route":"/zh/reference/java_api/driver","frontMatter":{"title":"Driver","filePath":"content/zh/reference/java_api/driver.md"},"title":"驱动"},{"name":"config","route":"/zh/reference/java_api/config","frontMatter":{"title":"Config","filePath":"content/zh/reference/java_api/config.md"},"title":"配置"},{"name":"session","route":"/zh/reference/java_api/session","frontMatter":{"title":"Session","filePath":"content/zh/reference/java_api/session.md"},"title":"会话"},{"name":"result_set","route":"/zh/reference/java_api/result_set","frontMatter":{"title":"ResultSet","filePath":"content/zh/reference/java_api/result_set.md"},"title":"查询结果"},{"name":"result_set_metadata","route":"/zh/reference/java_api/result_set_metadata","frontMatter":{"title":"ResultSetMetaData","filePath":"content/zh/reference/java_api/result_set_metadata.md"},"title":"结果集元数据"}],"title":"Java API"}],"title":"API 参考"},{"name":"development","route":"/zh/development","children":[{"data":{"dev_guide":{"title":"开发指南"},"code_style_guide":{"title":"代码风格指南"},"ai_coding":{"title":"AI 编程"},"error_code":{"title":"错误代码"}}},{"name":"dev_guide","route":"/zh/development/dev_guide","frontMatter":{"title":"开发者指南","filePath":"content/zh/development/dev_guide.md"},"title":"开发指南"},{"name":"code_style_guide","route":"/zh/development/code_style_guide","frontMatter":{"title":"代码风格指南","filePath":"content/zh/development/code_style_guide.md"},"title":"代码风格指南"},{"name":"ai_coding","route":"/zh/development/ai_coding","frontMatter":{"title":"AI 辅助开发","filePath":"content/zh/development/ai_coding.md"},"title":"AI 编程"},{"name":"error_code","route":"/zh/development/error_code","frontMatter":{"title":"NeuG 错误码","filePath":"content/zh/development/error_code.md"},"title":"错误代码"}],"title":"开发指南"}],"navbar":["$","header",null,{"className":"nextra-navbar x:sticky x:top-0 x:z-30 x:w-full x:bg-transparent x:print:hidden x:max-md:[.nextra-banner:not([class$=hidden])~&]:top-(--nextra-banner-height)","children":[["$","div",null,{"className":"nextra-navbar-blur x:absolute x:-z-1 x:size-full nextra-border x:border-b x:backdrop-blur-md x:bg-nextra-bg/70"}],["$","nav",null,{"style":{"height":"var(--nextra-navbar-height)"},"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width) x:items-center x:gap-4 x:pl-[max(env(safe-area-inset-left),1.5rem)] x:pr-[max(env(safe-area-inset-right),1.5rem)] x:justify-end","children":[["$","$L10",null,{"href":"/","className":"x:flex x:items-center x:me-auto x:transition-opacity x:focus-visible:nextra-focus x:hover:opacity-75","aria-label":"Home page","children":["$","span",null,{"className":"ms-2 select-none font-extrabold flex items-center","title":"NeuG: Embedded Graph Database","children":[["$","img",null,{"src":"https://img.alicdn.com/imgextra/i3/O1CN01DaSVLB1lD7ZIbDOi2_!!6000000004784-2-tps-256-257.png","alt":"GraphScope Neug","width":32,"height":32,"className":"inline-block align-middle mr-2 ","style":{"verticalAlign":"middle"}}],["$","span",null,{"className":"text-lg font-bold align-middle text-gray-900 dark:text-white","children":"NeuG"}]]}]}],["$","$L11",null,{"className":"","children":[["$","a",null,{"href":"https://github.com/alibaba/neug","target":"_blank","rel":"noreferrer","children":[["$","svg",null,{"fill":"currentColor","viewBox":"3 3 18 18","height":"24","aria-label":"Project repository","children":["$","path",null,{"d":"$12"}]}],false],"className":"x:focus-visible:nextra-focus"}],"$undefined",[["$","$L13",null,{}],["$","$L14",null,{"currentLang":"zh"}]]]}]]}]]}],"footer":null,"children":[["$","$L15",null,{}],["$","$L3",null,{"parallelRouterKey":"children","segmentPath":["children","$4","children"],"error":"$16","errorStyles":[],"errorScripts":[],"template":["$","$L7",null,{}],"templateStyles":"$undefined","templateScripts":"$undefined","notFound":["$","div",null,{"className":"flex min-h-[50vh] flex-col items-center justify-center","children":[["$","h2",null,{"className":"text-2xl font-bold","children":"Page Not Found"}],["$","p",null,{"className":"text-gray-600 mt-2","children":"The page you are looking for does not exist."}],["$","$L10",null,{"href":"/en/overview/introduction/","className":"mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600","children":"Go to Home"}]]}],"notFoundStyles":[]}]]}]]}]}]
+1a:T2839,# 从外部复制数据
 
-**Full name:** `neug::NeugDB`
+`COPY FROM` 将外部数据持久化到 NeuG 的图存储中。它建立在 [`LOAD FROM`](load_data) 的基础上 —— 在内部，`COPY FROM` 使用 `LOAD FROM` 来读取和解析外部文件，然后将结果写入节点或关系表。
 
-Core database engine for NeuG graph database system.
+## 模式要求
 
-`NeugDB` serves as the **primary entry point** for all NeuG graph database operations. It provides a complete lifecycle management API including database initialization, query execution, and graceful shutdown.
+你可以创建一个**预定义模式** —— 即在导入数据之前定义节点/关系表 —— 其中外文件中的列必须与表属性匹配。
 
-**Usage Example:** 
-```cpp
-// Create and open database
-neug::NeugDB db;
-db.Open("/path/to/data", 4);  // 4 threads
-// Create connection and execute query
-auto conn = db.Connect();
-auto result = conn->Query("MATCH (n:Person) RETURN n LIMIT 10");
-// Process results
-for (auto& record : result.value()) {
-  std::cout << record.ToString() << std::endl;
-}
-// Close database (persists data)
-db.Close();
+自 v0.1.2 版本起，NeuG 支持灵活模式的持久化导入 —— 允许 `COPY FROM` 利用 `LOAD FROM` 的类型推断能力，而无需预定义模式。这将使快速接入新数据集变得更加容易。更多用法请参见[无预定义模式导入](#import-without-a-predefined-schema)。
+
+---
+
+## 快速开始
+
+以下是从 CSV 导入社交网络数据集的完整示例。
+
+### 步骤 1：准备数据文件
+
+**users.csv：**
+```csv
+id,name,age,email
+1,Alice Johnson,30,alice@example.com
+2,Bob Smith,25,bob@example.com
+3,Carol Davis,28,carol@example.com
 ```
 
-**Key Components:**
-- `PropertyGraph`: Underlying graph data storage engine
-- `QueryProcessor`: Cypher query compilation and execution
-- `ConnectionManager`: Client connection pool management
-- `IGraphPlanner`: Query optimization (GOPT or Greedy planner)
-
-**Database Modes:**
-- `DBMode::READ_ONLY`: Read-only access for analytics workloads
-- `DBMode::READ_WRITE`: Full transactional read/write access
-
-**Thread Safety:** This class is thread-safe. Multiple connections can execute queries concurrently. The `ConnectionManager` handles thread synchronization internally.
-
-**Resource Management:**
-- File locking prevents concurrent database access from multiple processes
-- Automatic WAL (Write-Ahead Log) for crash recovery
-- Configurable checkpoint and compaction on close
-
-### Public Methods
-
-#### `Open(...)`
-
-```cpp
-Open(
-    const std::string &data_dir,
-    int32_t max_num_threads=0,
-    const DBMode mode=DBMode::READ_WRITE,
-    const std::string &planner_kind="gopt",
-    bool enable_auto_compaction=false,
-    bool compact_csr=true,
-    bool compact_on_close=true,
-    bool checkpoint_on_close=true
-)
+**friendships.csv：**
+```csv
+from_user_id,to_user_id,since_year
+1,2,2020
+2,3,2019
+1,3,2021
 ```
 
-Open the database from persistent storage.
+### 步骤 2：创建 Schema
+```cypher
+CREATE NODE TABLE User(
+    id INT64 PRIMARY KEY,
+    name STRING,
+    age INT64,
+    email STRING
+);
 
-Initializes and opens the NeuG database from the specified data directory. This method loads the graph schema, vertex/edge data, and initializes the query processor and planner.
-
-**Data Directory Structure:** The data_dir should contain:
-- `graph.yaml`: `Schema` definition file
-- `snapshot/`: Vertex and edge data files
-- `wal/`: Write-ahead log files (optional, for recovery)
-
-**Usage Example:** 
-```cpp
-neug::NeugDB db;
-// Simple open with defaults
-db.Open("/path/to/graph");
-// Open with custom settings (8 threads, read-write mode, GOPT planner)
-db.Open("/path/to/graph", 8, neug::DBMode::READ_WRITE, "gopt");
+CREATE REL TABLE FRIENDS(
+    FROM User TO User,
+    since_year INT64
+);
 ```
 
-- **Parameters:**
-  - `data_dir`: Path to the graph data directory
-  - `max_num_threads`: Maximum threads for concurrent operations. If 0, uses hardware concurrency (number of CPU cores)
-  - `mode`: Database access mode (READ_ONLY or READ_WRITE)
-  - `planner_kind`: Query planner type: "gopt" (Graph Optimizer) or "greedy"
-  - `enable_auto_compaction`: Enable background auto-compaction thread
-  - `compact_csr`: Compact CSR structures during auto-compaction
-  - `compact_on_close`: Perform compaction when closing database
-  - `checkpoint_on_close`: Create checkpoint (persist data) when closing
+### 步骤 3：导入数据
+```cypher
+-- 首先导入节点（顺序很重要——节点必须在关系之前存在）
+COPY User FROM "users.csv" (header=true, delimiter=",");
 
-- **Notes:**
-  - This overload is primarily designed for Python bindings.
-  - For C++ usage, prefer the config-based Open(NeugDBConfig&) overload.
-
-- **Returns:** `true` if database opened successfully, `false` otherwise
-
-- **Since:** v0.1.0
-
-#### `Open(const NeugDBConfig &config)`
-
-Open the database with a configuration object.
-
-Opens the database using a NeugDBConfig structure that provides comprehensive configuration options.
-
-**Usage Example:** 
-```cpp
-neug::NeugDBConfig config;
-config.data_dir = "/path/to/graph";
-config.thread_num = 8;
-config.mode = neug::DBMode::READ_WRITE;
-config.memory_level = 1;  // Use memory-mapped virtual memory
-config.enable_auto_compaction = true;
-neug::NeugDB db;
-db.Open(config);
+-- 然后导入关系
+COPY FRIENDS FROM "friendships.csv" (
+    from="User",
+    to="User",
+    header=true,
+    delimiter=","
+);
 ```
 
-- **Parameters:**
-  - `config`: Configuration object with all database settings
+### 步骤 4：验证
+```cypher
+MATCH (u:User) RETURN count(u) AS user_count;
 
-- **Returns:** `true` if database opened successfully, `false` otherwise
-
-- **Since:** v0.1.0
-
-#### `Close()`
-
-Close the database and release all resources.
-
-Performs a graceful shutdown of the database. Depending on configuration:
-- Creates checkpoint if checkpoint_on_close is enabled
-- Performs compaction if compact_on_close is enabled
-- Closes all open connections
-- Releases file locks
-
-**Important:** Always call `Close()` before destroying the `NeugDB` instance to ensure data integrity and proper resource cleanup.
-
-**Usage Example:** 
-```cpp
-neug::NeugDB db;
-db.Open("/path/to/data");
-// ... perform operations ...
-db.Close();  // Persist data and cleanup
+MATCH (u1:User)-[f:FRIENDS]->(u2:User)
+RETURN u1.name, u2.name, f.since_year
+LIMIT 5;
 ```
 
-- **Notes:**
-  - This method is idempotent - calling it multiple times is safe.
-  - After closing, the database cannot be reopened. Create a new `NeugDB` instance to open the database again.
+## 导入到节点表
 
-- **Since:** v0.1.0
+创建一个节点表并导入数据：
 
-#### `IsClosed() const`
-
-Check if the database is closed.
-
-- **Returns:** `true` if the database is closed.
-
-#### `Connect()`
-
-Create a new connection to the database for query execution.
-
-Creates and returns a `Connection` object that can be used to execute Cypher queries against the database. The connection shares the query planner and processor with other connections from the same database.
-
-**Usage Example:** 
-```cpp
-auto conn = db.Connect();
-auto result = conn->Query("MATCH (n) RETURN count(n)");
-if (result.has_value()) {
-    std::cout << "Query succeeded" << std::endl;
-}
-conn->Close();  // Optional: auto-closed on destruction
+```cypher
+CREATE NODE TABLE person(id INT64, name STRING, age INT64, PRIMARY KEY(id));
 ```
 
-- **Notes:**
-  - In READ_ONLY mode, multiple connections can be created.
-  - In READ_WRITE mode, only one write connection is allowed.
-  - Connections share the planner instance for efficiency.
+```cypher
+COPY person FROM "person.csv" (header=true);
+```
 
-- **Throws:**
-  - `std::runtime_error`: if database is not open or closed
+如果数据分布在多个文件中，可以使用通配符：
 
-- **Returns:** `std::shared_ptr`<Connection> A shared pointer to the new `Connection`
+```cypher
+COPY person FROM "person*.csv" (header=true);
+```
 
-- **Since:** v0.1.0
+> **注意：** CSV 文件中的列数和列顺序必须与节点表中定义的属性完全匹配。
 
-#### `RemoveConnection(std::shared_ptr< Connection > conn)`
+## 导入到关系表
 
-Remove a connection from the database.
+创建一个关系表并导入数据：
 
-- **Parameters:**
-  - `conn`: The connection to be removed.
+```cypher
+CREATE REL TABLE knows(FROM person TO person, weight DOUBLE);
+```
 
-- **Notes:**
-  - This method is used to remove a connection when it is closed, to remove the handle from the database.
-  - This method is not thread-safe, so it should be called only when the connection is closed. And should be only called internally.
+```cypher
+COPY knows FROM "person_knows_person.csv" (from="person", to="person", header=true);
+```
 
-#### `CloseAllConnection()`
+> **注意：** NeuG 假设前两列是 `FROM` 和 `TO` 节点的主键。其余列对应于关系属性。必须指定 `from` 和 `to` 参数以标识端点节点表。
 
-Remove all connection from the database.
+## 无需预定义模式导入
 
-- **Notes:**
-  - This method is used to remove all connection when tp svc created, to remove the handle from the database.2:["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L17",null,{"value":[{"value":"架构","id":"架构","depth":2},{"value":"支持的格式","id":"支持的格式","depth":2},{"value":"下一步","id":"下一步","depth":2}],"children":[["$","$L18",null,{}],["$","$L19",null,{"metadata":{"title":"概述","filePath":"content/zh/data_io/index.md"},"bottomContent":"$undefined","sourceCode":"$1a","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"id":"$undefined","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["概述","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"NeuG 提供了一套工具，用于在图数据库中导入和导出数据。"}],"\n",["$","h2",null,{"id":"架构","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["架构",["$","$L1b",null,{"id":"架构"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"NeuG 中的数据摄取管道围绕分层设计构建："}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L1c",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"外部文件 (CSV, JSON, Parquet, ...)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        ▼"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   ┌───────────┐    模式推断，关系操作"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   │ LOAD FROM │    (投影，过滤，类型转换，聚合，...)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   └────┬──────┘"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        │  统一内部格式"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        ▼"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   ┌───────────┐    持久化到图存储"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   │ COPY FROM │    (需要预定义模式)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   └───────────┘"}]}]]}]]}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]}]," 是数据摄取的基础。它读取外部文件，自动推断模式，并生成临时结果集。你可以直接在加载的数据上应用关系操作——如列投影、类型转换、过滤和聚合。"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]}]," 建立在 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 之上。它获取 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 操作的结果并将其持久化到图存储中。由于 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]," 在内部使用 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}],"，",["$","strong",null,{"children":["任何 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 支持的文件格式也自动可用于 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]]}],"。"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY TO"}]}]," 的工作方向相反——它将查询结果导出为外部文件格式。"]}],"\n",["$","h2",null,{"id":"支持的格式","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["支持的格式",["$","$L1b",null,{"id":"支持的格式"}]]}],"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"格式","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"支持情况","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"可用性","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":"CSV","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"内置支持","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"JSON / JSONL","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["通过 ",["$","$L10",null,{"href":"../extensions/load_json","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"JSON 扩展"}]],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Parquet","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["通过 ",["$","$L10",null,{"href":"../extensions/load_parquet","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Parquet 扩展"}]],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"注意："}]," 随着新格式扩展的开发，",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 和 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]," 会自动获得支持。详情请参见 ",["$","$L10",null,{"href":"../extensions/index","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"扩展"}]," 页面。"]}],"\n"]}],"\n",["$","h2",null,{"id":"下一步","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["下一步",["$","$L1b",null,{"id":"下一步"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"load_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"LOAD FROM"}]}]," — 使用关系操作将外部文件读入临时表"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"import_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"COPY FROM"}]}]," — 将外部数据持久化到图存储中"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"export_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"COPY TO"}]}]," — 将查询结果导出到外部文件"]}],"\n"]}]]}]]}]]}]}]
+当启用 **`auto_detect`**（默认值）时，`COPY ... FROM` 到一个**新**标签会跳过该标签的手动 `CREATE NODE TABLE` / `CREATE REL TABLE`。编译器构建一个计划，对推断出的类型应用 DDL，然后运行与普通 `COPY` 相同的批量插入路径。
+
+| 选项          | 类型 | 默认值  | 描述                                                                                                                                               |
+| ------------- | ---- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `auto_detect` | bool | `true`  | 如果目标表不存在，则从扫描/嗅探结果中推断模式并创建它，然后再插入。如果为 `false`，则缺少表会被视为错误。 |
+
+你可以在需要时显式设置它：
+
+```cypher
+COPY User FROM "users.csv" (header=true, auto_detect=true);
+COPY User FROM "users.csv" (header=true, auto_detect=false);  -- 要求表必须存在
+```
+
+### 节点（新标签）
+
+```cypher
+// 文件包含表头：id,name,age 
+// id 成为 PRIMARY KEY
+COPY person FROM "person.csv" (header=true);
+```
+
+- 源文件的**第一列**用作**主键**属性，如果文件列顺序对于推断来说是错误的，请使用 `LOAD FROM` 子查询重新排序（第一个返回的列 = 主键），参见 [使用 load from 进行列映射](#column-remapping-with-load-from)。
+- **其他列**成为节点属性；类型从文件或子查询输出的类型推断中获取。
+- **COPY 目标**（`COPY <Label> FROM ...`）是新的**顶点标签**名称。
+
+### 关系（新边类型）
+
+```cypher
+// 文件包含表头：src,dst,weight
+// src 成为源列
+// dst 成为目的列
+// 其他列作为边属性
+COPY knows FROM "person_knows_person.csv" (
+    from="person",
+    to="person",
+    header=true,
+    delimiter=","
+);
+```
+
+- 输入文件中的**前两列**必须是**源**和**目的**顶点的主键。如果不是，请在加载前使用[使用加载进行列重映射](#column-remapping-with-load-from)。
+- **其余列**将作为关系属性加载。
+- 对于**新的**关系标签，你必须提供**`from`** 和 **`to`** 来指定端点节点表。两个表都必须已存在（先创建或 `COPY` 它们）。`COPY <Label> FROM ...` 中的 `COPY` 目标名称将成为这两种节点类型之间的新边标签。
+
+除了 CSV 外，一旦相应的读取器可用（需要时使用扩展），具有自动类型推断的相同模式灵活导入也适用于 **JSON**、**JSONL** 和 **Parquet**。更多用法请参见 [JSON/JSONL](#jsonjsonl) 和 [Parquet](#parquet)。
+
+## 格式选项
+
+### CSV
+
+以下选项控制在 `COPY FROM` 期间如何解析 CSV 文件。这些选项与 [`LOAD FROM`](load_data#csv) 支持的选项相同：
+
+| 选项       | 类型 | 默认值 | 描述 |
+| ---------- | ---- | ------ | ---- |
+| `delim`    | 字符 | `\|`   | 字段分隔符 |
+| `header`   | 布尔 | `true` | 第一行是否包含列名 |
+| `quote`    | 字符 | `"`    | 引号字符 |
+| `escape`   | 字符 | `\`    | 转义字符 |
+| `quoting`  | 布尔 | `true` | 是否启用引号处理 |
+| `escaping` | 布尔 | `true` | 是否启用转义字符处理 |
+
+### JSON/JSONL
+
+从 NeuG v0.1.2 开始，JSON/JSONL 是内置功能。你可以使用 `COPY FROM` 直接将 JSON 或 JSONL 文件导入到图中——无需先创建表。NeuG 会根据文件内容自动推断模式。
+
+```cypher
+// JSON 数组文件——模式自动检测，
+// 第一列成为主键
+COPY person FROM "person.json";
+
+// JSONL 文件——相同的自动检测
+COPY person FROM "person.jsonl";
+```
+
+> **版本说明：** 从 v0.1.2 版本开始，我们将 JSON 支持作为内置功能，因此在使用前无需安装 JSON 扩展。对于 NeuG 版本 < 0.1.2，JSON 支持通过 [JSON 扩展](../extensions/load_json) 提供，使用前需要执行 `INSTALL json; LOAD json;`。
+
+### Parquet
+
+Parquet 支持通过 [Parquet 扩展](../extensions/load_parquet) 提供。安装并加载扩展后，`COPY FROM` 可以直接导入 Parquet 文件——无需先创建表。NeuG 从 Parquet 文件元数据中推断模式。
+
+```cypher
+INSTALL parquet;
+LOAD parquet;
+```
+
+```cypher
+// 从 Parquet 元数据自动检测模式
+// 第一列成为主键
+COPY person FROM "person.parquet";
+```
+
+## 使用 LOAD FROM 进行列映射
+
+由于 `COPY FROM` 基于 `LOAD FROM` 构建，你可以使用 `LOAD FROM` 子查询来**在持久化之前预处理数据**——包括列重新排序、重命名、类型转换和过滤。
+
+### 重新排序列
+
+当文件列的顺序与表模式不同时：
+
+**person_remap.csv:**
+```
+age,name,id
+39,marko,1
+27,vadas,2
+32,josh,3
+35,peter,4
+```
+
+```cypher
+COPY person FROM (
+    LOAD FROM "person_remap.csv"
+    RETURN id, name, age
+);
+```
+
+### 重新映射关系端点
+
+**knows_remap.csv：**
+```
+dst_name,src_name,weight
+josh,marko,1.0
+vadas,marko,0.5
+peter,josh,0.8
+```
+
+```cypher
+COPY knows FROM (
+    LOAD FROM "knows_remap.csv"
+    RETURN src_name AS src, dst_name AS dst, weight
+);
+```
+
+### 导入期间过滤
+
+你可以在持久化之前过滤行，避免需要清理源文件：
+
+```cypher
+COPY person FROM (
+    LOAD FROM "person.csv" (delim=',')
+    WHERE age >= 18
+    RETURN *
+);
+```
+
+关于 `LOAD FROM` 子查询中可用的完整关系操作集，请参见 [LOAD FROM](load_data) 参考文档。
+
+---
+
+## 性能选项
+
+| 选项         | 类型  | 默认值         | 描述 |
+| ------------ | ----- | -------------- | ---- |
+| `batch_read` | bool  | `false`        | 分批增量读取数据。 |
+| `batch_size` | int64 | `1048576` (1MB) | 启用 `batch_read` 时的批次大小（字节）。 |
+| `parallel`   | bool  | `false`        | 启用多线程并行读取（最大核心数）。 |
+
+```cypher
+COPY User FROM "large_users.csv" (header=true, parallel=true);
+```
+
+### 导入顺序
+
+始终**先导入节点，再导入关系**，因为关系端点必须引用已存在的节点：
+
+```cypher
+COPY User FROM "users.csv" (header=true);
+COPY Company FROM "companies.csv" (header=true);
+-- 只有在所有节点加载完成后：
+COPY WORKS_FOR FROM "works_for.csv" (header=true);
+```
+
+### 大数据集
+
+对于大于 1GB 的文件，考虑将其拆分：
+
+```bash
+
+# 将大 CSV 拆分为较小的块
+split -l 100000 large_users.csv users_chunk_
+```
+
+# 然后从每个分块文件中复制用户。
+
+# 注意：仅对第一个分块使用 `header=true`
+```
+
+---
+
+## 故障排除
+
+### "表不存在" 错误
+
+- **如果 `auto_detect` 为 `true`（默认值）** 对于一个 **新** 标签，NeuG 应该推断模式并创建表；如果你仍然看到此错误，请检查数据源是否正确绑定（例如文件路径、`header`、分隔符），以便发现列。对于边，**`from` 和 `to`** 必须命名 **现有** 节点类型 — 先创建或 `COPY` 这些节点。
+- **如果 `auto_detect` 为 `false`**，目标表必须已存在：
+
+```cypher
+-- 使用 auto_detect=false 时，表必须存在
+COPY User FROM "users.csv" (header=true, auto_detect=false);
+
+-- 或者先创建 DDL：
+CREATE NODE TABLE User(id INT64 PRIMARY KEY, name STRING);
+COPY User FROM "users.csv" (header=true, auto_detect=false);
+```
+
+### "列数不匹配" 错误
+
+CSV 文件的列数必须与表结构相同：
+
+```csv
+-- 错误：缺少 'age' 列
+id,name,email
+1,Alice,alice@example.com
+
+-- 正确：所有列都存在
+id,name,age,email
+1,Alice,30,alice@example.com
+```
+
+### "主键冲突" 错误
+
+检查源文件中是否有重复的 ID：
+
+```bash
+cut -d',' -f1 users.csv | sort | uniq -d
+```2:["$","div",null,{"className":"x:mx-auto x:flex x:max-w-(--nextra-content-width)","children":["$","$L17",null,{"value":[{"value":"架构","id":"架构","depth":2},{"value":"支持的格式","id":"支持的格式","depth":2},{"value":"下一步","id":"下一步","depth":2}],"children":[["$","$L18",null,{}],["$","$L19",null,{"metadata":{"title":"概述","filePath":"content/zh/data_io/index.md"},"bottomContent":"$undefined","sourceCode":"$1a","children":[["$","div",null,{"id":"nextra-skip-nav"}],["$","main",null,{"data-pagefind-body":true,"children":[["$","h1",null,{"id":"$undefined","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-bold x:mt-2 x:text-4xl","children":["概述","$undefined"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"NeuG 提供了一套工具，用于在图数据库中导入和导出数据。"}],"\n",["$","h2",null,{"id":"架构","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["架构",["$","$L1b",null,{"id":"架构"}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":"NeuG 中的数据摄取管道围绕分层设计构建："}],"\n",["$","div",null,{"data-pagefind-ignore":"all","className":"nextra-code x:relative x:not-first:mt-[1.25em]","children":["$undefined",["$","pre",null,{"className":"x:group x:focus-visible:nextra-focus x:overflow-x-auto x:subpixel-antialiased x:text-[.9em] x:bg-white x:dark:bg-black x:py-4 x:ring-1 x:ring-inset x:ring-gray-300 x:dark:ring-neutral-700 x:contrast-more:ring-gray-900 x:contrast-more:dark:ring-gray-50 x:contrast-more:contrast-150 x:rounded-md not-prose","tabIndex":"0","children":[["$","div",null,{"className":"x:group-hover:opacity-100 x:group-focus:opacity-100 x:opacity-0 x:transition x:focus-within:opacity-100 x:flex x:gap-1 x:absolute x:right-4 x:top-2","children":[["$","$L1c",null,{"children":["$","svg",null,{"viewBox":"0 0 24 24","fill":"currentColor","height":"1em","children":["$","path",null,{"d":"M4 19h6v-2H4v2zM20 5H4v2h16V5zm-3 6H4v2h13.25c1.1 0 2 .9 2 2s-.9 2-2 2H15v-2l-3 3l3 3v-2h2c2.21 0 4-1.79 4-4s-1.79-4-4-4z"}]}]}],false]}],["$","code",null,{"className":"nextra-code","dir":"ltr","children":[["$","span",null,{"children":["$","span",null,{"children":"外部文件 (CSV, JSON, Parquet, ...)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        │"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        ▼"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   ┌───────────┐    模式推断，关系操作"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   │ LOAD FROM │    (投影，过滤，类型转换，聚合，...)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   └────┬──────┘"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        │  统一的内部格式"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"        ▼"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   ┌───────────┐    持久化到图存储"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   │ COPY FROM │    (需要预定义模式)"}]}],"\n",["$","span",null,{"children":["$","span",null,{"children":"   └───────────┘"}]}]]}]]}]]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]}]," 是数据摄取的基础。它读取外部文件，自动推断模式，并生成临时结果集。你可以直接在加载的数据上应用关系操作——如列投影、类型转换、过滤和聚合。"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]}]," 建立在 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 之上。它获取 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 操作的结果并将其持久化到图存储中。由于 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]," 在内部使用 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}],"，",["$","strong",null,{"children":["任何 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 支持的文件格式也自动可用于 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]]}],"。"]}],"\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY TO"}]}]," 的工作方向相反——它将查询结果导出为外部文件格式。"]}],"\n",["$","h2",null,{"id":"支持的格式","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["支持的格式",["$","$L1b",null,{"id":"支持的格式"}]]}],"\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",["$","table",null,{"className":"x:block x:overflow-x-auto nextra-scrollbar x:not-first:mt-[1.25em] x:p-0","children":[["$","thead",null,{"children":["$","tr",null,{"children":[["$","th",null,{"children":"格式","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"支持情况","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}],["$","th",null,{"children":"可用性","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:font-semibold x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]}],["$","tbody",null,{"children":[["$","tr",null,{"children":[["$","td",null,{"children":"CSV","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"内置","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"JSON / JSONL","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"内置（自 v0.1.2 起）","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}],["$","tr",null,{"children":[["$","td",null,{"children":"Parquet","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":"✅","className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}],["$","td",null,{"children":["通过 ",["$","$L10",null,{"href":"../extensions/load_parquet","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"Parquet 扩展"}]],"className":"x:m-0 x:border x:border-gray-300 x:px-4 x:py-2 x:dark:border-gray-600"}]],"className":"x:m-0 x:border-t x:border-gray-300 x:p-0 x:dark:border-gray-600 x:even:bg-gray-100 x:even:dark:bg-gray-600/20"}]]}]]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"版本说明："}]," 在 NeuG < 0.1.2 中，JSON/JSONL 支持通过 ",["$","$L10",null,{"href":"../extensions/load_json","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"JSON 扩展"}]," 提供，使用前需要执行 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"INSTALL json; LOAD json;"}],"。从 NeuG >= 0.1.2 开始，JSON/JSONL 是内置功能——无需安装或加载扩展。"]}],"\n"]}],"\n",["$","blockquote",null,{"className":"x:not-first:mt-[1.25em] x:border-gray-300 x:italic x:text-gray-700 x:dark:border-gray-700 x:dark:text-gray-400 x:border-s-2 x:ps-[1.5em]","children":["\n",["$","p",null,{"className":"x:not-first:mt-[1.25em] x:leading-7","children":[["$","strong",null,{"children":"注意："}]," 随着新格式扩展的开发，",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"LOAD FROM"}]," 和 ",["$","code",null,{"className":"nextra-code","dir":"ltr","children":"COPY FROM"}]," 都会自动获得支持。详情请参见 ",["$","$L10",null,{"href":"../extensions/index","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"扩展"}]," 页面。"]}],"\n"]}],"\n",["$","h2",null,{"id":"下一步","className":"x:tracking-tight x:text-slate-900 x:dark:text-slate-100 x:font-semibold x:target:animate-[fade-in_1.5s] x:mt-10 x:border-b x:pb-1 x:text-3xl nextra-border","children":["下一步",["$","$L1b",null,{"id":"下一步"}]]}],"\n",["$","ul",null,{"className":"x:[:is(ol,ul)_&]:my-[.75em] x:not-first:mt-[1.25em] x:list-disc x:ms-[1.5em]","children":["\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"load_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"LOAD FROM"}]}]," — 将外部文件读入临时表并进行关系操作"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"import_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"COPY FROM"}]}]," — 将外部数据持久化到图存储中"]}],"\n",["$","li",null,{"className":"x:my-[.5em]","children":[["$","strong",null,{"children":["$","$L10",null,{"href":"export_data","prefetch":"$undefined","className":"x:focus-visible:nextra-focus x:text-primary-600 x:underline x:hover:no-underline x:decoration-from-font x:[text-underline-position:from-font]","children":"COPY TO"}]}]," — 将查询结果导出到外部文件"]}],"\n"]}]]}]]}]]}]}]
 9:[["$","meta","0",{"name":"viewport","content":"width=device-width, initial-scale=1"}],["$","meta","1",{"charSet":"utf-8"}],["$","title","2",{"children":"概述 | "}],["$","meta","3",{"name":"description","content":"x"}],["$","meta","4",{"name":"msapplication-TileColor","content":"#fff"}]]
 1:null
