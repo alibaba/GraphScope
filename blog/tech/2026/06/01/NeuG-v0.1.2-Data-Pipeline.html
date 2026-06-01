@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">NeuG v0.1.2: Your Graph Database Is No Longer a Data Island</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-06-01">01 Jun 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-06-01">01 Jun 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">NeuG v0.1.2: Your Graph Database Is No Longer a Data Island</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-06-01-neug-v0.1.2-banner.png" alt="neug-v0.1.2-banner" /></p>
+
+<p>NeuG v0.1.2 is out. The theme of this release: <strong>making the graph database a native part of the data lake ecosystem.</strong> Data lives in OSS — NeuG reads it there. Files have schemas — NeuG infers them. Query results need to go downstream — write them back as Parquet.</p>
+
+<p>Here’s why we built this, and what exactly shipped.</p>
+
+<hr />
+
+<h2 id="the-biggest-problem-with-graph-databases-isnt-performance">The Biggest Problem with Graph Databases Isn’t Performance</h2>
+
+<p>If you’ve ever tried to introduce a graph database into your team — Neo4j, TigerGraph, JanusGraph, or anything else — you’ve had this conversation:</p>
+
+<blockquote>
+  <p>“Our data is on OSS. How do I get it in?”
+“Download it locally, write a schema definition, then run COPY FROM.”
+“How do I feed query results to Spark?”
+“Write a script to export CSV. Nested fields? Flatten them manually.”
+“Can query results go back to OSS directly? Downstream pipelines pull from there.”
+“No. Export locally first, then upload with ossutil.”</p>
+</blockquote>
+
+<p>Each round trip raises the real barrier to adoption. Not because the query language is hard to learn. Not because performance is lacking. Because <strong>graph databases don’t fit into your existing data infrastructure</strong>.</p>
+
+<p>Data from the lake needs a “format adaptation” to enter the graph. Query results need a “format conversion” to return to the lake. Every adaptation is engineering cost. Every conversion can lose information.</p>
+
+<p>This isn’t a bug in any single product — it’s the default paradigm of graph databases as a category: <strong>they treat themselves as the destination for data, not as a compute node in the data flow.</strong></p>
+
+<hr />
+
+<h2 id="the-design-shift-in-v012">The Design Shift in v0.1.2</h2>
+
+<p>NeuG v0.1.2 shipped three features. Individually, each looks like a routine enhancement. Together, they form a clear design statement:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th>What it does</th>
+      <th>What it means</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><a href="https://github.com/alibaba/neug/pull/179">Cloud Object Storage Extension #179</a></td>
+      <td>Direct read from S3 / OSS / HTTPS</td>
+      <td>NeuG goes to where the data lives, instead of demanding data be moved</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/alibaba/neug/pull/134">COPY FROM Without DDL #134</a></td>
+      <td>Auto-infer schema from data files</td>
+      <td>Data defines structure, not humans pre-defining structure</td>
+    </tr>
+    <tr>
+      <td><a href="https://github.com/alibaba/neug/pull/241">Parquet Export #241</a></td>
+      <td>Query results output as Parquet, with write-back to OSS/S3</td>
+      <td>Graph computation results flow back to the data lake with zero friction</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The combined effect: <strong>NeuG adapts to your data infrastructure — not the other way around.</strong></p>
+
+<p>The graph database shifts from “destination for data” to “a plug-and-play graph compute layer in the data flow” — read from OSS, run graph analytics, write results back to OSS, with no local disk involvement.</p>
+
+<hr />
+
+<h2 id="feature-1-direct-cloud-storage-read">Feature 1: Direct Cloud Storage Read</h2>
+
+<h3 id="why-no-download-matters-more-than-fast-download">Why “No Download” Matters More Than “Fast Download”</h3>
+
+<p>Reading remote files directly isn’t just about “saving one download step.” In production, it changes the operational model:</p>
+
+<ul>
+  <li><strong>No local disk usage</strong>: Data stays in OSS / S3. NeuG fetches on demand. No need to provision separate storage for the graph database.</li>
+  <li><strong>No sync maintenance</strong>: When the source updates, your next <code class="language-plaintext highlighter-rouge">LOAD FROM</code> reads the new version automatically. No ETL pipeline to keep things in sync.</li>
+  <li><strong>Cleaner permission isolation</strong>: Access control stays in the object storage layer. No need to replicate ACLs inside the graph database.</li>
+</ul>
+
+<h3 id="usage">Usage</h3>
+
+<p>v0.1.2 adds the <code class="language-plaintext highlighter-rouge">httpfs</code> extension:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span> <span class="n">First</span><span class="o">-</span><span class="n">time</span> <span class="py">setup:</span> <span class="n">download</span> <span class="ow">and</span> <span class="k">load</span> <span class="n">extensions</span><span class="w"> </span><span class="ss">(</span><span class="n">one</span><span class="o">-</span><span class="n">time</span><span class="ss">)</span>
+<span class="n">install</span> <span class="n">httpfs</span><span class="ss">;</span>
+<span class="n">install</span> <span class="n">parquet</span><span class="ss">;</span>
+<span class="k">load</span> <span class="n">httpfs</span><span class="ss">;</span>
+<span class="k">load</span> <span class="n">parquet</span><span class="ss">;</span>
+
+<span class="o">--</span> <span class="n">HTTPS</span> <span class="n">direct</span> <span class="n">read</span><span class="w"> </span><span class="ss">(</span><span class="n">simplest</span><span class="ss">,</span> <span class="n">zero</span> <span class="n">config</span> <span class="n">for</span> <span class="n">public</span> <span class="n">data</span><span class="ss">)</span>
+<span class="k">LOAD</span> <span class="k">FROM</span> <span class="s2">"https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet"</span>
+<span class="k">RETURN</span> <span class="o">*</span> <span class="k">LIMIT</span> <span class="mi">5</span><span class="ss">;</span>
+
+<span class="o">--</span> <span class="n">OSS</span> <span class="n">scheme</span><span class="w"> </span><span class="ss">(</span><span class="n">requires</span> <span class="n">credentials</span> <span class="ow">and</span> <span class="n">endpoint</span><span class="ss">)</span>
+<span class="k">LOAD</span> <span class="k">FROM</span> <span class="s2">"oss://graphscope/neug/vPerson.parquet"</span> <span class="ss">(</span>
+    <span class="n">CREDENTIALS_KIND</span><span class="o">=</span><span class="s1">'Anonymous'</span><span class="ss">,</span>
+    <span class="n">ENDPOINT_OVERRIDE</span><span class="o">=</span><span class="s1">'oss-cn-beijing.aliyuncs.com'</span>
+<span class="ss">)</span>
+<span class="k">RETURN</span> <span class="o">*</span><span class="ss">;</span>
+</code></pre></div></div>
+
+<p>Same data, three protocols (HTTPS / OSS / S3) — only the URL prefix differs. For typical OSS deployments, configure the endpoint and AK/SK and you’re set.</p>
+
+<hr />
+
+<h2 id="feature-2-schema-on-read">Feature 2: Schema-on-Read</h2>
+
+<h3 id="graph-databases-finally-catch-up-to-the-data-lakes-core-principle">Graph Databases Finally Catch Up to the Data Lake’s Core Principle</h3>
+
+<p>The data lake philosophy is <strong>schema-on-read</strong>: don’t enforce structure when storing data; infer it when reading. Spark reads Parquet without requiring you to define a table first. DuckDB reads CSV without requiring column type definitions. This is the baseline experience for modern data tools.</p>
+
+<p>Graph databases haven’t always worked this way. Before v0.1.2, importing data into NeuG looked like:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span> <span class="n">First</span><span class="ss">,</span> <span class="n">examine</span> <span class="n">the</span> <span class="n">file</span><span class="err">'</span><span class="n">s</span> <span class="n">columns</span> <span class="ow">and</span> <span class="n">types...</span>
+<span class="o">--</span> <span class="k">Then</span> <span class="n">hand</span><span class="o">-</span><span class="n">write</span> <span class="py">DDL:</span>
+<span class="k">CREATE</span> <span class="n">NODE</span> <span class="n">TABLE</span> <span class="n">person</span><span class="w"> </span><span class="ss">(</span>
+    <span class="n">ID</span> <span class="n">INT64</span><span class="ss">,</span>
+    <span class="n">fName</span> <span class="n">STRING</span><span class="ss">,</span>
+    <span class="n">gender</span> <span class="n">INT64</span><span class="ss">,</span>
+    <span class="n">isStudent</span> <span class="n">BOOLEAN</span><span class="ss">,</span>
+    <span class="n">isWorker</span> <span class="n">BOOLEAN</span><span class="ss">,</span>
+    <span class="n">age</span> <span class="n">INT64</span><span class="ss">,</span>
+    <span class="n">eyeSight</span> <span class="n">DOUBLE</span><span class="ss">,</span>
+    <span class="o">--</span> <span class="n">...</span> <span class="mi">9</span> <span class="n">more</span> <span class="n">columns</span> <span class="n">to</span> <span class="n">list</span> <span class="n">one</span> <span class="k">by</span> <span class="n">one</span> <span class="n">...</span>
+    <span class="n">PRIMARY</span> <span class="n">KEY</span><span class="w"> </span><span class="ss">(</span><span class="n">ID</span><span class="ss">)</span>
+<span class="ss">);</span>
+
+<span class="o">--</span> <span class="n">Only</span> <span class="k">then</span> <span class="n">can</span> <span class="n">you</span> <span class="n">import</span>
+<span class="n">COPY</span> <span class="n">person</span> <span class="k">FROM</span> <span class="s2">"vPerson.parquet"</span><span class="ss">;</span>
+</code></pre></div></div>
+
+<p>A 16-column table requires 16 lines of DDL. Get a type wrong (INT64 vs INT32, DATE vs STRING) and the import fails or silently loses precision.</p>
+
+<p><strong>After v0.1.2:</strong></p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">COPY</span> <span class="n">person</span> <span class="k">FROM</span><span class="w"> </span><span class="ss">(</span>
+    <span class="k">LOAD</span> <span class="k">FROM</span> <span class="s2">"https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet"</span>
+    <span class="k">RETURN</span> <span class="o">*</span>
+<span class="ss">);</span>
+</code></pre></div></div>
+
+<p>One statement. NeuG automatically infers column names and types from the Parquet schema. The first column becomes the primary key. Table creation and import happen in a single step.</p>
+
+<p>Edges work the same way — just specify which node tables are connected:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">COPY</span> <span class="n">meets</span> <span class="k">FROM</span><span class="w"> </span><span class="ss">(</span>
+    <span class="k">LOAD</span> <span class="k">FROM</span> <span class="s2">"https://graphscope.oss-cn-beijing.aliyuncs.com/neug/eMeets.parquet"</span>
+    <span class="k">RETURN</span> <span class="o">*</span>
+<span class="ss">)</span> <span class="ss">(</span><span class="k">from</span><span class="o">=</span><span class="s2">"person"</span><span class="ss">,</span> <span class="n">to</span><span class="o">=</span><span class="s2">"person"</span><span class="ss">);</span>
+</code></pre></div></div>
+
+<p>Tested: all 16 columns of vPerson.parquet correctly inferred (INT64 / STRING / BOOL / DOUBLE), 8 vertices imported successfully.</p>
+
+<hr />
+
+<h2 id="feature-3-parquet-export-direct-write-back-to-cloud">Feature 3: Parquet Export, Direct Write-Back to Cloud</h2>
+
+<h3 id="bidirectional-data-comes-in-and-it-goes-back-out">Bidirectional: Data Comes In, and It Goes Back Out</h3>
+
+<p>Another long-standing complaint about graph databases: “data goes in but can’t come out.” To feed query results to downstream Spark / pandas / DuckDB, the traditional approach is exporting CSV with manual type mapping. Nested structures (edges, paths) make it worse — you decide how to serialize.</p>
+
+<p>v0.1.2 solves not just “how to export” but “where to export” — COPY TO supports remote paths just like LOAD FROM. Query results can be written back directly to OSS / S3, making the entire pipeline a true cloud-native closed loop.</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span> <span class="n">Export</span> <span class="n">graph</span> <span class="n">query</span> <span class="py">results:</span> <span class="n">only</span> <span class="n">socially</span> <span class="n">active</span> <span class="n">young</span> <span class="n">people</span>
+<span class="n">COPY</span><span class="w"> </span><span class="ss">(</span>
+    <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">p:</span><span class="n">person</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="py">m:</span><span class="n">meets</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">friend:</span><span class="n">person</span><span class="ss">)</span>
+    <span class="k">WHERE</span> <span class="n">p.age</span> <span class="o">&lt;</span> <span class="mi">35</span>
+    <span class="k">RETURN</span> <span class="n">p.fName</span> <span class="k">AS</span> <span class="n">name</span><span class="ss">,</span> <span class="n">p.age</span> <span class="k">AS</span> <span class="n">age</span><span class="ss">,</span> <span class="n">friend.fName</span> <span class="k">AS</span> <span class="n">met_person</span><span class="ss">,</span> <span class="n">m.location</span>
+<span class="ss">)</span> <span class="n">TO</span> <span class="s1">'active_young_people.parquet'</span><span class="ss">;</span>
+
+<span class="o">--</span> <span class="n">Same</span> <span class="n">query</span><span class="ss">,</span> <span class="n">results</span> <span class="n">written</span> <span class="n">directly</span> <span class="n">to</span> <span class="n">OSS</span><span class="w"> </span><span class="ss">(</span><span class="n">zero</span> <span class="n">local</span> <span class="n">disk</span><span class="ss">)</span>
+<span class="n">COPY</span><span class="w"> </span><span class="ss">(</span>
+    <span class="k">MATCH</span><span class="w"> </span><span class="ss">(</span><span class="py">p:</span><span class="n">person</span><span class="ss">)</span><span class="o">-</span><span class="ss">[</span><span class="py">m:</span><span class="n">meets</span><span class="ss">]</span><span class="o">-&gt;</span><span class="ss">(</span><span class="py">friend:</span><span class="n">person</span><span class="ss">)</span>
+    <span class="k">WHERE</span> <span class="n">p.age</span> <span class="o">&lt;</span> <span class="mi">35</span>
+    <span class="k">RETURN</span> <span class="n">p.fName</span> <span class="k">AS</span> <span class="n">name</span><span class="ss">,</span> <span class="n">p.age</span> <span class="k">AS</span> <span class="n">age</span><span class="ss">,</span> <span class="n">friend.fName</span> <span class="k">AS</span> <span class="n">met_person</span><span class="ss">,</span> <span class="n">m.location</span>
+<span class="ss">)</span> <span class="n">TO</span> <span class="s2">"oss://my-bucket/output/active_young_people.parquet"</span> <span class="ss">(</span>
+    <span class="n">CREDENTIALS_KIND</span><span class="o">=</span><span class="s1">'Explicit'</span><span class="ss">,</span>
+    <span class="n">OSS_ACCESS_KEY_ID</span><span class="o">=</span><span class="s1">'&lt;your-ak&gt;'</span><span class="ss">,</span>
+    <span class="n">OSS_ACCESS_KEY_SECRET</span><span class="o">=</span><span class="s1">'&lt;your-sk&gt;'</span><span class="ss">,</span>
+    <span class="n">ENDPOINT_OVERRIDE</span><span class="o">=</span><span class="s1">'oss-cn-hangzhou.aliyuncs.com'</span>
+<span class="ss">);</span>
+</code></pre></div></div>
+
+<p>What’s being exported is <strong>the result of graph computation</strong> — data that has been filtered, joined, and projected. This is the value of graph databases as a compute layer: you analyze using graph patterns (who knows whom, under what conditions), then send conclusions directly back to the data lake for downstream consumption.</p>
+
+<p>The entire pipeline truly runs <strong>without touching local disk</strong>: read from OSS → graph compute → write results back to OSS. For lightweight compute tasks running in containers, this is critical — no need to mount local volumes.</p>
+
+<hr />
+
+<h2 id="full-demo-cloud-to-data-lake-end-to-end">Full Demo: Cloud to Data Lake, End to End</h2>
+
+<p>The following demonstrates the complete flow using NeuG v0.1.2’s Python binding. The dataset is public test data from NeuG’s CI — anyone can reproduce this.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">neug</span> <span class="kn">import</span> <span class="n">Database</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+
+<span class="c1"># 1. Create database
+</span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="n">db_path</span><span class="o">=</span><span class="n">tempfile</span><span class="p">.</span><span class="n">mkdtemp</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s">"w"</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="c1"># 2. Install and load extensions
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"install httpfs"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"install parquet"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"load httpfs"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"load parquet"</span><span class="p">)</span>
+
+<span class="c1"># 3. Remote preview
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    LOAD FROM "https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet"
+    RETURN ID, fName, age, isStudent
+    LIMIT 3
+'''</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>  <span class="c1"># [0, 'Alice', 35, True], [2, 'Bob', 30, True], [3, 'Carol', 45, False]
+</span>
+<span class="c1"># 4. One-line table creation + node import (no CREATE NODE TABLE needed)
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    COPY person FROM (
+        LOAD FROM "https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet"
+        RETURN *
+    )
+'''</span><span class="p">)</span>
+
+<span class="c1"># 5. One-line table creation + edge import (no CREATE REL TABLE needed)
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    COPY meets FROM (
+        LOAD FROM "https://graphscope.oss-cn-beijing.aliyuncs.com/neug/eMeets.parquet"
+        RETURN *
+    ) (from="person", to="person")
+'''</span><span class="p">)</span>
+
+<span class="c1"># 6. Graph query
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    MATCH (a:person)-[m:meets]-&gt;(b:person)
+    WHERE a.age &gt; 30
+    RETURN a.fName, b.fName, m.location
+'''</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+<span class="c1"># 7. Export graph query results to Parquet
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">'''
+    COPY (
+        MATCH (a:person)-[m:meets]-&gt;(b:person)
+        WHERE a.age &lt; 35
+        RETURN a.fName AS name, a.age AS age, b.fName AS met_person, m.location
+    ) TO '/tmp/young_social.parquet'
+'''</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p><strong>Read from OSS → auto-create tables → graph query → Parquet export to OSS. Zero DDL written, zero manual data movement.</strong> In production, swap the export path to <code class="language-plaintext highlighter-rouge">oss://</code> or <code class="language-plaintext highlighter-rouge">s3://</code> for a fully cloud-native closed loop.</p>
+
+<hr />
+
+<h2 id="also-worth-noting">Also Worth Noting</h2>
+
+<p>A few more features in v0.1.2:</p>
+
+<ul>
+  <li><strong>MERGE clause</strong> (<a href="https://github.com/alibaba/neug/pull/312">#312</a>): <code class="language-plaintext highlighter-rouge">MERGE (p:person {ID: 1}) ON CREATE SET p.name = 'Alice'</code> — match if exists, create if not. Idempotent graph writes.</li>
+  <li><strong>neug-cli autocomplete + syntax highlighting</strong> (<a href="https://github.com/alibaba/neug/pull/373">#373</a>): Major improvement to CLI interactive experience.</li>
+  <li><strong>QueryResult → pyarrow Table</strong> (<a href="https://github.com/alibaba/neug/pull/270">#270</a>): <code class="language-plaintext highlighter-rouge">result.to_arrow()</code> converts graph query results to a pyarrow Table in one call — hand off directly to pandas / polars / DuckDB for further analysis, zero intermediate format conversion.</li>
+</ul>
+
+<p>Full release notes: <a href="https://github.com/alibaba/neug/pull/404">PR #404</a>.</p>
+
+<hr />
+
+<h2 id="try-it">Try It</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip <span class="nb">install </span><span class="nv">neug</span><span class="o">==</span>0.1.2
+</code></pre></div></div>
+
+<p>Copy-paste the demo code above and run it. For a detailed step-by-step tutorial (including common pitfalls and OSS/S3 credential configuration), see: <a href="https://graphscope.io/neug/en/tutorials/data-pipeline/">Data Pipeline Tutorial</a>.</p>
+
+<p>GitHub: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a>.</p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=NeuG v0.1.2: Your Graph Database Is No Longer a Data Island&amp;url=https://graphscope.io/tech/2026/06/01/NeuG-v0.1.2-Data-Pipeline.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/06/01/NeuG-v0.1.2-Data-Pipeline.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/06/01/NeuG-v0.1.2-Data-Pipeline.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>

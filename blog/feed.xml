@@ -5,9 +5,296 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 01 Jun 2026 02:24:58 +0000</pubDate>
-    <lastBuildDate>Mon, 01 Jun 2026 02:24:58 +0000</lastBuildDate>
+    <pubDate>Mon, 01 Jun 2026 04:01:07 +0000</pubDate>
+    <lastBuildDate>Mon, 01 Jun 2026 04:01:07 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>NeuG v0.1.2: Your Graph Database Is No Longer a Data Island</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-01-neug-v0.1.2-banner.png&quot; alt=&quot;neug-v0.1.2-banner&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;NeuG v0.1.2 is out. The theme of this release: &lt;strong&gt;making the graph database a native part of the data lake ecosystem.&lt;/strong&gt; Data lives in OSS — NeuG reads it there. Files have schemas — NeuG infers them. Query results need to go downstream — write them back as Parquet.&lt;/p&gt;
+
+&lt;p&gt;Here’s why we built this, and what exactly shipped.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-biggest-problem-with-graph-databases-isnt-performance&quot;&gt;The Biggest Problem with Graph Databases Isn’t Performance&lt;/h2&gt;
+
+&lt;p&gt;If you’ve ever tried to introduce a graph database into your team — Neo4j, TigerGraph, JanusGraph, or anything else — you’ve had this conversation:&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;“Our data is on OSS. How do I get it in?”
+“Download it locally, write a schema definition, then run COPY FROM.”
+“How do I feed query results to Spark?”
+“Write a script to export CSV. Nested fields? Flatten them manually.”
+“Can query results go back to OSS directly? Downstream pipelines pull from there.”
+“No. Export locally first, then upload with ossutil.”&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;Each round trip raises the real barrier to adoption. Not because the query language is hard to learn. Not because performance is lacking. Because &lt;strong&gt;graph databases don’t fit into your existing data infrastructure&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;p&gt;Data from the lake needs a “format adaptation” to enter the graph. Query results need a “format conversion” to return to the lake. Every adaptation is engineering cost. Every conversion can lose information.&lt;/p&gt;
+
+&lt;p&gt;This isn’t a bug in any single product — it’s the default paradigm of graph databases as a category: &lt;strong&gt;they treat themselves as the destination for data, not as a compute node in the data flow.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;the-design-shift-in-v012&quot;&gt;The Design Shift in v0.1.2&lt;/h2&gt;
+
+&lt;p&gt;NeuG v0.1.2 shipped three features. Individually, each looks like a routine enhancement. Together, they form a clear design statement:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Feature&lt;/th&gt;
+      &lt;th&gt;What it does&lt;/th&gt;
+      &lt;th&gt;What it means&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://github.com/alibaba/neug/pull/179&quot;&gt;Cloud Object Storage Extension #179&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Direct read from S3 / OSS / HTTPS&lt;/td&gt;
+      &lt;td&gt;NeuG goes to where the data lives, instead of demanding data be moved&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://github.com/alibaba/neug/pull/134&quot;&gt;COPY FROM Without DDL #134&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Auto-infer schema from data files&lt;/td&gt;
+      &lt;td&gt;Data defines structure, not humans pre-defining structure&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;&lt;a href=&quot;https://github.com/alibaba/neug/pull/241&quot;&gt;Parquet Export #241&lt;/a&gt;&lt;/td&gt;
+      &lt;td&gt;Query results output as Parquet, with write-back to OSS/S3&lt;/td&gt;
+      &lt;td&gt;Graph computation results flow back to the data lake with zero friction&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;The combined effect: &lt;strong&gt;NeuG adapts to your data infrastructure — not the other way around.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;The graph database shifts from “destination for data” to “a plug-and-play graph compute layer in the data flow” — read from OSS, run graph analytics, write results back to OSS, with no local disk involvement.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;feature-1-direct-cloud-storage-read&quot;&gt;Feature 1: Direct Cloud Storage Read&lt;/h2&gt;
+
+&lt;h3 id=&quot;why-no-download-matters-more-than-fast-download&quot;&gt;Why “No Download” Matters More Than “Fast Download”&lt;/h3&gt;
+
+&lt;p&gt;Reading remote files directly isn’t just about “saving one download step.” In production, it changes the operational model:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;No local disk usage&lt;/strong&gt;: Data stays in OSS / S3. NeuG fetches on demand. No need to provision separate storage for the graph database.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;No sync maintenance&lt;/strong&gt;: When the source updates, your next &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;LOAD FROM&lt;/code&gt; reads the new version automatically. No ETL pipeline to keep things in sync.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Cleaner permission isolation&lt;/strong&gt;: Access control stays in the object storage layer. No need to replicate ACLs inside the graph database.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&quot;usage&quot;&gt;Usage&lt;/h3&gt;
+
+&lt;p&gt;v0.1.2 adds the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;httpfs&lt;/code&gt; extension:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;First&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;setup:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;download&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;extensions&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;one&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;time&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpfs&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;install&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parquet&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;httpfs&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;load&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;parquet&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;HTTPS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;direct&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;read&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;simplest&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;zero&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;config&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;LOAD&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;LIMIT&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;5&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OSS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;scheme&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;requires&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;credentials&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;LOAD&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;oss://graphscope/neug/vPerson.parquet&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;CREDENTIALS_KIND&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;Anonymous&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ENDPOINT_OVERRIDE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;oss-cn-beijing.aliyuncs.com&apos;&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Same data, three protocols (HTTPS / OSS / S3) — only the URL prefix differs. For typical OSS deployments, configure the endpoint and AK/SK and you’re set.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;feature-2-schema-on-read&quot;&gt;Feature 2: Schema-on-Read&lt;/h2&gt;
+
+&lt;h3 id=&quot;graph-databases-finally-catch-up-to-the-data-lakes-core-principle&quot;&gt;Graph Databases Finally Catch Up to the Data Lake’s Core Principle&lt;/h3&gt;
+
+&lt;p&gt;The data lake philosophy is &lt;strong&gt;schema-on-read&lt;/strong&gt;: don’t enforce structure when storing data; infer it when reading. Spark reads Parquet without requiring you to define a table first. DuckDB reads CSV without requiring column type definitions. This is the baseline experience for modern data tools.&lt;/p&gt;
+
+&lt;p&gt;Graph databases haven’t always worked this way. Before v0.1.2, importing data into NeuG looked like:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;First&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;examine&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;file&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;&apos;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;s&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;types...&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;Then&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hand&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;write&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;DDL:&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CREATE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;NODE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TABLE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INT64&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;fName&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;STRING&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;gender&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INT64&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;isStudent&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BOOLEAN&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;isWorker&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;BOOLEAN&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;age&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;INT64&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;eyeSight&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;DOUBLE&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;9&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;more&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;columns&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;list&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;one&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;by&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;one&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;...&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;PRIMARY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;KEY&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;ID&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Only&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;then&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;can&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;you&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;import&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;person&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;vPerson.parquet&quot;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;A 16-column table requires 16 lines of DDL. Get a type wrong (INT64 vs INT32, DATE vs STRING) and the import fails or silently loses precision.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;After v0.1.2:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;person&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;LOAD&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet&quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;One statement. NeuG automatically infers column names and types from the Parquet schema. The first column becomes the primary key. Table creation and import happen in a single step.&lt;/p&gt;
+
+&lt;p&gt;Edges work the same way — just specify which node tables are connected:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;meets&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;LOAD&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/eMeets.parquet&quot;&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;person&quot;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;person&quot;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Tested: all 16 columns of vPerson.parquet correctly inferred (INT64 / STRING / BOOL / DOUBLE), 8 vertices imported successfully.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;feature-3-parquet-export-direct-write-back-to-cloud&quot;&gt;Feature 3: Parquet Export, Direct Write-Back to Cloud&lt;/h2&gt;
+
+&lt;h3 id=&quot;bidirectional-data-comes-in-and-it-goes-back-out&quot;&gt;Bidirectional: Data Comes In, and It Goes Back Out&lt;/h3&gt;
+
+&lt;p&gt;Another long-standing complaint about graph databases: “data goes in but can’t come out.” To feed query results to downstream Spark / pandas / DuckDB, the traditional approach is exporting CSV with manual type mapping. Nested structures (edges, paths) make it worse — you decide how to serialize.&lt;/p&gt;
+
+&lt;p&gt;v0.1.2 solves not just “how to export” but “where to export” — COPY TO supports remote paths just like LOAD FROM. Query results can be written back directly to OSS / S3, making the entire pipeline a true cloud-native closed loop.&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Export&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;graph&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;results:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;only&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;socially&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;active&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;young&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;people&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;p:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;m:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;meets&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;friend:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.age&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;35&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.fName&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.age&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;age&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;friend.fName&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;met_person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m.location&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;active_young_people.parquet&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Same&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;query&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;results&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;written&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;directly&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OSS&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;zero&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;local&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;disk&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;p:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;m:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;meets&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;friend:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.age&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;35&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.fName&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;p.age&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;age&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;friend.fName&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;met_person&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;m.location&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TO&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;oss://my-bucket/output/active_young_people.parquet&quot;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;CREDENTIALS_KIND&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;Explicit&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;OSS_ACCESS_KEY_ID&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;&amp;lt;your-ak&amp;gt;&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;OSS_ACCESS_KEY_SECRET&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;&amp;lt;your-sk&amp;gt;&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;n&quot;&gt;ENDPOINT_OVERRIDE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;oss-cn-hangzhou.aliyuncs.com&apos;&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;What’s being exported is &lt;strong&gt;the result of graph computation&lt;/strong&gt; — data that has been filtered, joined, and projected. This is the value of graph databases as a compute layer: you analyze using graph patterns (who knows whom, under what conditions), then send conclusions directly back to the data lake for downstream consumption.&lt;/p&gt;
+
+&lt;p&gt;The entire pipeline truly runs &lt;strong&gt;without touching local disk&lt;/strong&gt;: read from OSS → graph compute → write results back to OSS. For lightweight compute tasks running in containers, this is critical — no need to mount local volumes.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;full-demo-cloud-to-data-lake-end-to-end&quot;&gt;Full Demo: Cloud to Data Lake, End to End&lt;/h2&gt;
+
+&lt;p&gt;The following demonstrates the complete flow using NeuG v0.1.2’s Python binding. The dataset is public test data from NeuG’s CI — anyone can reproduce this.&lt;/p&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tempfile&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 1. Create database
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db_path&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mkdtemp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;w&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 2. Install and load extensions
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;install httpfs&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;install parquet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;load httpfs&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;load parquet&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 3. Remote preview
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    LOAD FROM &quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet&quot;
+    RETURN ID, fName, age, isStudent
+    LIMIT 3
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;  &lt;span class=&quot;c1&quot;&gt;# [0, &apos;Alice&apos;, 35, True], [2, &apos;Bob&apos;, 30, True], [3, &apos;Carol&apos;, 45, False]
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 4. One-line table creation + node import (no CREATE NODE TABLE needed)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    COPY person FROM (
+        LOAD FROM &quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/vPerson.parquet&quot;
+        RETURN *
+    )
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 5. One-line table creation + edge import (no CREATE REL TABLE needed)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    COPY meets FROM (
+        LOAD FROM &quot;https://graphscope.oss-cn-beijing.aliyuncs.com/neug/eMeets.parquet&quot;
+        RETURN *
+    ) (from=&quot;person&quot;, to=&quot;person&quot;)
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 6. Graph query
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    MATCH (a:person)-[m:meets]-&amp;gt;(b:person)
+    WHERE a.age &amp;gt; 30
+    RETURN a.fName, b.fName, m.location
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;row&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;row&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 7. Export graph query results to Parquet
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
+    COPY (
+        MATCH (a:person)-[m:meets]-&amp;gt;(b:person)
+        WHERE a.age &amp;lt; 35
+        RETURN a.fName AS name, a.age AS age, b.fName AS met_person, m.location
+    ) TO &apos;/tmp/young_social.parquet&apos;
+&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;strong&gt;Read from OSS → auto-create tables → graph query → Parquet export to OSS. Zero DDL written, zero manual data movement.&lt;/strong&gt; In production, swap the export path to &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;oss://&lt;/code&gt; or &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;s3://&lt;/code&gt; for a fully cloud-native closed loop.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;also-worth-noting&quot;&gt;Also Worth Noting&lt;/h2&gt;
+
+&lt;p&gt;A few more features in v0.1.2:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;MERGE clause&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/312&quot;&gt;#312&lt;/a&gt;): &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MERGE (p:person {ID: 1}) ON CREATE SET p.name = &apos;Alice&apos;&lt;/code&gt; — match if exists, create if not. Idempotent graph writes.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;neug-cli autocomplete + syntax highlighting&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/373&quot;&gt;#373&lt;/a&gt;): Major improvement to CLI interactive experience.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;QueryResult → pyarrow Table&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/270&quot;&gt;#270&lt;/a&gt;): &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;result.to_arrow()&lt;/code&gt; converts graph query results to a pyarrow Table in one call — hand off directly to pandas / polars / DuckDB for further analysis, zero intermediate format conversion.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Full release notes: &lt;a href=&quot;https://github.com/alibaba/neug/pull/404&quot;&gt;PR #404&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;try-it&quot;&gt;Try It&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;0.1.2
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Copy-paste the demo code above and run it. For a detailed step-by-step tutorial (including common pitfalls and OSS/S3 credential configuration), see: &lt;a href=&quot;https://graphscope.io/neug/en/tutorials/data-pipeline/&quot;&gt;Data Pipeline Tutorial&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;GitHub: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;.&lt;/p&gt;
+</description>
+        <pubDate>Mon, 01 Jun 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/06/01/NeuG-v0.1.2-Data-Pipeline.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/06/01/NeuG-v0.1.2-Data-Pipeline.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>Feeding Code Repositories into LLM Wiki: 6x Token Savings in One Knowledge Build</title>
@@ -2791,269 +3078,6 @@ The error message in the terminal.
         <pubDate>Thu, 12 Feb 2026 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>Opensourcing NeuG</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-11-neug-title.jpg&quot; alt=&quot;neug-title&quot; /&gt;
-We are pleased to announce the open source release of &lt;strong&gt;NeuG&lt;/strong&gt; (pronounced “new-gee”), a lightweight, high-performance embedded graph database designed for local analytics and real-time transaction processing.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;GitHub&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;br /&gt;
-&lt;strong&gt;Documentation&lt;/strong&gt;: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;why-neug&quot;&gt;Why NeuG&lt;/h2&gt;
-
-&lt;p&gt;The &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team has spent the past few years building large-scale graph computing engines. Along the way, we received consistent feedback from our community: many users don’t need distributed clusters. What they want is a graph database they can &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install&lt;/code&gt;, explore data in Jupyter notebooks, run graph queries in Python scripts, and quickly spin up as a service when needed for production.&lt;/p&gt;
-
-&lt;p&gt;This reminded us of what DuckDB did for relational data processing—an embeddable analytics database that doesn’t require deploying servers or configuring connection pools. Just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;import duckdb&lt;/code&gt; and start working. We wanted to bring that same experience to graph data.&lt;/p&gt;
-
-&lt;p&gt;NeuG is the result of that effort. It reuses the storage and query engine from GraphScope Flex (which achieved strong results on the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/&quot;&gt;LDBC SNB Interactive benchmark&lt;/a&gt;), but with a redesigned interface layer that allows it to be embedded directly as a Python library. We also kept the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db.serve()&lt;/code&gt; interface for switching to service mode when concurrent access is needed.&lt;/p&gt;
-
-&lt;p&gt;NeuG is suited for scenarios where you need to process graph data locally and quickly: data science exploration, ML feature engineering, AI application prototyping, and lightweight applications where deployment simplicity matters.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;key-features&quot;&gt;Key Features&lt;/h2&gt;
-
-&lt;h3 id=&quot;lightweight--embeddable&quot;&gt;Lightweight &amp;amp; Embeddable&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Lightweight&lt;/strong&gt;, all dependencies managed via third_party submodules&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Embeddable&lt;/strong&gt; design, currently supporting Python applications with more languages and platforms coming soon&lt;/li&gt;
-  &lt;li&gt;Get started with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;/path/to/data&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
-    MATCH (a:Person)-[:KNOWS]-&amp;gt;(b:Person)
-    RETURN a.name, b.name
-&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;dual-mode-architecture-htap&quot;&gt;Dual-Mode Architecture (HTAP)&lt;/h3&gt;
-
-&lt;p&gt;NeuG provides two operational modes through a single lightweight core:&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Mode&lt;/th&gt;
-      &lt;th&gt;Use Case&lt;/th&gt;
-      &lt;th&gt;Characteristics&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Embedded Mode&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Offline analytics, ML/AI pipelines&lt;/td&gt;
-      &lt;td&gt;Import as a Python library, ideal for Jupyter notebooks, batch ETL, graph algorithm development&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Service Mode&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Online transactions, concurrent access&lt;/td&gt;
-      &lt;td&gt;Call &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;db.serve()&lt;/code&gt; to start a network service with multi-session ACID transactions&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;This design allows NeuG to adapt flexibly from prototyping to production deployment without changing your technology stack.&lt;/p&gt;
-
-&lt;h3 id=&quot;cypher-native&quot;&gt;Cypher-Native&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Industry-standard Cypher query language&lt;/li&gt;
-  &lt;li&gt;Built on &lt;a href=&quot;https://graphscope.io/blog/tech/2024/02/22/GOpt-A-Unified-Graph-Query-Optimization-Framework-in-GraphScope&quot;&gt;GOpt&lt;/a&gt;’s unified intermediate representation, designed for future &lt;a href=&quot;https://www.gqlstandards.org/&quot;&gt;ISO/GQL&lt;/a&gt; compatibility&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;extensible-by-design&quot;&gt;Extensible by Design&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Extension system inspired by PostgreSQL/DuckDB&lt;/li&gt;
-  &lt;li&gt;Keep the core lean; add graph algorithms, vector search, and custom procedures through an extensible framework&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3 id=&quot;acid-transactions&quot;&gt;ACID Transactions&lt;/h3&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Embedded mode: Single-connection serial access with data consistency guarantees&lt;/li&gt;
-  &lt;li&gt;Service mode: Multi-session concurrent transactions with read-write isolation&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;performance&quot;&gt;Performance&lt;/h2&gt;
-
-&lt;p&gt;NeuG is built on the GraphScope Flex engine, which achieved industry-leading results on the &lt;strong&gt;LDBC SNB Interactive benchmark&lt;/strong&gt; using Cypher queries:&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Metric&lt;/th&gt;
-      &lt;th&gt;Result&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Throughput&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;80,000+ QPS&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Scale Factor&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;SF300 (~1 billion edges)&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Audit Status&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Officially audited by LDBC&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;p&gt;These results validate NeuG’s capability for high-concurrency transactional workloads. The full audit report is available on the &lt;a href=&quot;https://ldbcouncil.org/benchmarks/snb/interactive/2025-04-21-graphscope-flex-sf300/&quot;&gt;LDBC website&lt;/a&gt;.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;use-cases&quot;&gt;Use Cases&lt;/h2&gt;
-
-&lt;p&gt;NeuG v0.1 is particularly suited for:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;AI/LLM Application Development&lt;/strong&gt;: Knowledge graph storage and querying for RAG systems and AI Agents&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Data Science &amp;amp; Research&lt;/strong&gt;: Graph exploration in Jupyter Notebooks—social network analysis, relationship mining, pattern discovery&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;ML Feature Engineering&lt;/strong&gt;: Computing graph-structural features (node centrality, community structure, path patterns) as machine learning inputs&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Prototype to Production&lt;/strong&gt;: Use embedded mode for rapid iteration during development, switch to service mode for deployment—no technology stack changes required&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Edge Computing &amp;amp; Local-First Applications&lt;/strong&gt;: Run graph queries in resource-constrained environments without network connectivity&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;quick-start&quot;&gt;Quick Start&lt;/h2&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Installation&lt;/span&gt;
-pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;neug
-
-&lt;span class=&quot;c&quot;&gt;# Verify installation&lt;/span&gt;
-python &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;import neug; print(&apos;NeuG is ready!&apos;)&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# Create database and load sample data
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;./my_graph&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;load_builtin_dataset&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;tinysnb&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# Execute queries
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
-    MATCH (a:person)-[:knows]-&amp;gt;(b:person)-[:knows]-&amp;gt;(c:person),
-          (a)-[:knows]-&amp;gt;(c)
-    RETURN a.fName, b.fName, c.fName
-&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;record&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;record&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; are mutual friends&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;c1&quot;&gt;# Switch to service mode
-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;serve&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;port&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;coming-soon-v02&quot;&gt;Coming Soon (v0.2)&lt;/h2&gt;
-
-&lt;p&gt;v0.2 focuses on enhanced AI scenario support and data ecosystem integration:&lt;/p&gt;
-
-&lt;table&gt;
-  &lt;thead&gt;
-    &lt;tr&gt;
-      &lt;th&gt;Feature&lt;/th&gt;
-      &lt;th&gt;Description&lt;/th&gt;
-      &lt;th&gt;Use Case&lt;/th&gt;
-    &lt;/tr&gt;
-  &lt;/thead&gt;
-  &lt;tbody&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Node.js Binding&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;TypeScript/JavaScript language binding&lt;/td&gt;
-      &lt;td&gt;AI Agent development, web backend integration&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Graph Algorithm Extensions&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Leiden community detection and more&lt;/td&gt;
-      &lt;td&gt;Knowledge graph clustering, entity grouping in GraphRAG&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Vector DB Extension&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Graph + vector hybrid retrieval&lt;/td&gt;
-      &lt;td&gt;GraphRAG, semantic search + relationship reasoning&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Data Lake Integration&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;S3/OSS + Parquet format&lt;/td&gt;
-      &lt;td&gt;Large-scale offline analytics, data platform integration&lt;/td&gt;
-    &lt;/tr&gt;
-    &lt;tr&gt;
-      &lt;td&gt;&lt;strong&gt;Foreign Tables&lt;/strong&gt;&lt;/td&gt;
-      &lt;td&gt;Direct querying of external data sources&lt;/td&gt;
-      &lt;td&gt;Interoperability with PostgreSQL, DuckDB, and relational ecosystems&lt;/td&gt;
-    &lt;/tr&gt;
-  &lt;/tbody&gt;
-&lt;/table&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;technology-stack&quot;&gt;Technology Stack&lt;/h2&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Query Language&lt;/strong&gt;: Cypher (ISO/GQL compatibility planned)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Query Optimization&lt;/strong&gt;: GOpt unified optimization framework&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Storage Engine&lt;/strong&gt;: GraphScope Flex&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Language Bindings&lt;/strong&gt;: Python (C++ API available, Node.js in development)&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Platform Support&lt;/strong&gt;: Linux, macOS (x86_64, ARM64)&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;license&quot;&gt;License&lt;/h2&gt;
-
-&lt;p&gt;NeuG is released under the Apache License 2.0.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;contributing&quot;&gt;Contributing&lt;/h2&gt;
-
-&lt;p&gt;We welcome community participation and contributions:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;&lt;strong&gt;Star &amp;amp; Watch&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;acknowledgments&quot;&gt;Acknowledgments&lt;/h2&gt;
-
-&lt;p&gt;NeuG is developed by the &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team at Alibaba, incorporating years of expertise in large-scale graph computing. We thank all developers who have contributed to this project.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;&lt;strong&gt;Making graph data simple.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;GitHub: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;br /&gt;
-Documentation: &lt;a href=&quot;https://graphscope.io/neug/en/overview/introduction/&quot;&gt;https://graphscope.io/neug/en/overview/introduction/&lt;/a&gt;&lt;/p&gt;
-</description>
-        <pubDate>Wed, 11 Feb 2026 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/11/Opensourcing-NeuG.html</guid>
         
         
         <category>Tech</category>
