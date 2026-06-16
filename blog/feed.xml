@@ -5,9 +5,147 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Mon, 08 Jun 2026 08:48:50 +0000</pubDate>
-    <lastBuildDate>Mon, 08 Jun 2026 08:48:50 +0000</lastBuildDate>
+    <pubDate>Tue, 16 Jun 2026 11:12:25 +0000</pubDate>
+    <lastBuildDate>Tue, 16 Jun 2026 11:12:25 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>How does AI affect U.S. Employment? Replicating Harvard Business School Research with NeuGBI</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/banner_en.png&quot; alt=&quot;banner&quot; /&gt;&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;&lt;strong&gt;TL;DR&lt;/strong&gt;&lt;/p&gt;
+
+  &lt;p&gt;We used &lt;a href=&quot;https://github.com/shunyangli/neugbi-demo&quot;&gt;NeuGBI&lt;/a&gt; to replicate the Harvard Business School paper &lt;em&gt;Generative AI as Seniority-Biased Technological Change&lt;/em&gt;: same Revelio Lab U.S. employment dataset (300 million records), same research question — AI’s impact on jobs. The entire analysis was conducted autonomously by NeuGBI using its built-in analytical Skills, with no human intervention. The result matched the paper’s conclusion: junior position records declined by 29.4%, while senior positions only declined by 5.8%. On some dimensions, NeuGBI went finer than the original paper — for example, within software development roles, it’s specifically junior-level (L2) positions that nearly halved, while entry-level (L1) and senior (L3+) positions showed minimal decline.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;A recent Harvard Business School &lt;a href=&quot;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555&quot;&gt;paper&lt;/a&gt;, &lt;em&gt;Generative AI as Seniority-Biased Technological Change&lt;/em&gt;, specifically studied this question: AI’s impact on employment is not evenly distributed — junior positions are hit more significantly, while senior positions have remained relatively stable in employment volume.&lt;/p&gt;
+
+&lt;p&gt;The paper uses Revelio Lab employment data (hereafter “Revelio data”). Revelio classifies positions into seniority levels L1–L7 (per the Harvard paper’s definitions): Entry, Junior, Specialist, Manager, Director, Executive, and C-Suite. The paper defines “junior positions” as Entry and Junior (L1–L2), and “senior positions” as L3 and above.&lt;/p&gt;
+
+&lt;p&gt;This kind of open-ended question is genuinely interesting — but does answering it really require an elite research team like Harvard’s? With the advancement of large language models, a natural thought arises: let LLMs handle this kind of open-ended exploration. They can understand natural language, generate code, and interpret results — seemingly well-suited for this type of layer-by-layer drill-down analysis.&lt;/p&gt;
+
+&lt;h2 id=&quot;where-current-llm-based-analytics-fall-short&quot;&gt;Where Current LLM-Based Analytics Fall Short&lt;/h2&gt;
+
+&lt;p&gt;But directly feeding Revelio data to an LLM clearly won’t work: 60GB, 300 million records — far exceeding any model’s context window. Even stepping back to keep the data in a database and use an LLM-driven text-to-SQL approach (similar to chatBI) runs into three unavoidable problems:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Data relationships are too complex. Employment data is inherently graph-structured — people, positions, companies, and skills form multi-hop relationships that are either awkward to model in SQL or prohibitively expensive to join.&lt;/li&gt;
+  &lt;li&gt;Interactive latency is unacceptable. Exploratory analysis depends heavily on instant feedback loops (“see result → refine question → query again”), but at 300 million rows, traditional databases either can’t handle it or are too slow to maintain flow. No matter how fast the LLM is, it can’t save a slow query.&lt;/li&gt;
+  &lt;li&gt;Analysis chains break. Each decomposition step depends on findings from the previous one, but text-to-SQL treats each query as an isolated task — context from earlier rounds is completely lost, preventing the LLM from truly “drilling down continuously.”&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;To address these pain points, we designed NeuGBI: the underlying &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; graph database natively supports multi-hop relationships; the query layer uses end-to-end unbiased sampling so complex queries return in seconds; and the analysis model is built on Hypergraph reconstruction, naturally suited for continuous analysis and intermediate result reuse. On top of this, we packaged exploratory analysis Skills for LLMs to invoke, enabling them to autonomously conduct open-ended exploration on massive, complex data — decomposing questions, driving the engine, reading results, and deciding where to dig next.&lt;/p&gt;
+
+&lt;p&gt;Enough talk — let’s validate directly. Next, we’ll run NeuGBI on the Revelio dataset through the complete replication workflow and see whether its conclusions match the Harvard paper.&lt;/p&gt;
+
+&lt;h2 id=&quot;neugbis-query-logic&quot;&gt;NeuGBI’s Query Logic&lt;/h2&gt;
+
+&lt;p&gt;Now that we know why NeuGBI is needed, let’s look at how it decomposes this task step by step. The given question is: “How hard has AI hit U.S. employment?”&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/neugbi_exploration_tree_english.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Faced with this question, NeuGBI doesn’t produce a simple conclusion. Instead, it first breaks it into queryable data problems — for example, whether overall U.S. employment changed before and after AI’s emergence; whether changes differ across occupations and regions; whether junior and senior positions changed differently. Here we examine two core analysis threads.&lt;/p&gt;
+
+&lt;p&gt;The first thread: examine AI’s impact on U.S. employment before and after its emergence. After observing the overall decline, continue examining different occupations and different states.&lt;/p&gt;
+
+&lt;p&gt;The second thread follows the Harvard paper’s main thesis: if junior positions declined significantly more than senior positions, continue drilling into different occupations and seniority levels to see exactly which category within junior positions is declining.&lt;/p&gt;
+
+&lt;p&gt;Exploratory analysis works exactly this way: see the previous round’s results, then decide what to query next.&lt;/p&gt;
+
+&lt;h3 id=&quot;1-us-employment-before-and-after-ai&quot;&gt;1. U.S. Employment Before and After AI&lt;/h3&gt;
+
+&lt;p&gt;First, NeuGBI queried U.S. employment conditions before and after AI’s emergence.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_1_overall_trend.png&quot; alt=&quot;Employment volume trend&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;From 2021 to 2025, total employment records dropped from 21 million to approximately 10 million. Since Revelio’s coverage fluctuates over time, absolute numbers cannot be directly equated with real employment figures, but this trend tells us one thing: the data clearly shows significant contraction.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Just looking at overall U.S. employment trends isn’t enough — we don’t yet know which occupations the decline is concentrated in. So the next step: NeuGBI continues down the occupation path.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;11-impact-on-different-industries&quot;&gt;1.1 Impact on Different Industries&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_post_onet.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Due to space constraints, here we show AI’s impact on computer-related occupations (e.g., software development, systems engineering, web development). Computer-related hiring headcount declined 31% from 2022 to 2024 (2025 data is incomplete), while job posting volume declined 64%.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;This data shows that U.S. computer-related hiring is declining overall, but we don’t yet know whether this decline is concentrated in just a few regions. So the next step: NeuGBI examines different states.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h4 id=&quot;12-state-level-breakdown&quot;&gt;1.2 State-Level Breakdown&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/q5_alabama_years.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;Here NeuGBI explored computer-related employment across different U.S. states. The chart shows the major states by hiring volume — most states’ computer-related hiring is declining. This indicates the decline isn’t isolated to one state but appears as a similar trend across multiple major states.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;At this point, NeuGBI has analyzed AI’s impact on U.S. employment from both occupation and regional perspectives. But the results are still insufficient, so next NeuGBI pursues another path: is AI’s impact different for junior vs. senior positions?&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;2-ais-impact-on-junior-vs-senior-positions&quot;&gt;2. AI’s Impact on Junior vs. Senior Positions&lt;/h3&gt;
+
+&lt;p&gt;In this step, NeuGBI analyzed AI’s impact on junior and senior positions.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_2_junior_share_v2.png&quot; alt=&quot;Junior share trend&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The results show that not every category declined equally. &lt;strong&gt;By record count, junior positions declined by 29.4%, while senior positions only declined by 5.8%.&lt;/strong&gt; In other words, looking at share of total employment, senior positions actually rose from 35% in 2022 to 43.6% in 2025. This isn’t because senior positions grew — it’s because junior positions fell so much more, making senior positions’ share appear higher.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;This result is consistent with the Harvard paper’s conclusion: junior positions contracted more significantly, while senior positions remained relatively stable.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;But this answer isn’t granular enough. Junior positions themselves include both entry-level and junior-level. The data here only shows “junior positions are declining” but cannot tell us exactly which category is declining.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;So here NeuGBI chose to continue drilling down, examining whether different seniority levels within specific occupations also show different patterns.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;h3 id=&quot;21-drilling-deeper-which-seniority-level-declined-more-in-software-development&quot;&gt;2.1 Drilling Deeper: Which Seniority Level Declined More in Software Development?&lt;/h3&gt;
+
+&lt;p&gt;Here NeuGBI continued querying to see AI’s impact on different occupations and seniority levels. We focus primarily on software development.&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_6_swdev_seniority.png&quot; alt=&quot;Software development seniority structure&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The result is clear: &lt;strong&gt;within software development positions, what truly declined significantly is L2, not the entire junior category.&lt;/strong&gt; Specifically:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;L1&lt;/strong&gt;: 1.2M → 1.1M, minor fluctuation&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;L2&lt;/strong&gt;: 2.8M → 1.45M, nearly halved&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;L3+&lt;/strong&gt;: 4.4M → 4.25M, essentially stable&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;In other words, at a coarse level it looks like junior positions are declining; but when broken apart, L1 shows no significant drop — it’s specifically L2 that’s dragging junior positions down.&lt;/p&gt;
+
+&lt;p&gt;This query is extremely complex. It requires aggregating data across different occupations, 7 seniority levels, and 5 years — a very demanding fine-grained query. Thanks to NeuGBI’s sampling methodology, we can quickly see the data trends and continue drilling down.&lt;/p&gt;
+
+&lt;p&gt;At this point, we’ve truly gotten to the bottom of this question: &lt;strong&gt;“junior positions are contracting” isn’t accurate enough. At least within software development, junior-level positions declined more significantly than entry-level.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
+
+&lt;p&gt;Looking back, the entire replication was conducted autonomously by NeuGBI: on 60GB / 300 million U.S. employment records, it produced the same primary conclusion as the Harvard paper — junior positions declined more significantly while senior positions remained relatively stable — and on software development roles specifically, it uncovered a finer conclusion not present in the paper: what truly declined dramatically is junior-level positions, while entry-level and other levels remained relatively stable.&lt;/p&gt;
+
+&lt;p&gt;NeuGBI’s value here is also straightforward: it lets us first validate a coarse conclusion, then continue drilling down. One path examines overall employment, computer-related occupations, and major states; another returns to junior vs. senior positions, then drills into specific occupations and seniority levels. For questions where you don’t know where the answer is hiding at the outset, this step-by-step querying capability matters more than any single query.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;references&quot;&gt;References&lt;/h2&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Harvard Business School Paper&lt;/strong&gt;: &lt;a href=&quot;https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555&quot;&gt;&lt;em&gt;Generative AI as Seniority-Biased Technological Change&lt;/em&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;NeuGBI Theory Paper&lt;/strong&gt;: &lt;a href=&quot;https://arxiv.org/abs/2603.10625&quot;&gt;&lt;em&gt;A Hypergraph-Based Framework for Exploratory Business Intelligence&lt;/em&gt;&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;NeuG Graph Database&lt;/strong&gt;: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;NeuGBI Demo&lt;/strong&gt;: &lt;a href=&quot;https://github.com/shunyangli/neugbi-demo&quot;&gt;https://github.com/shunyangli/neugbi-demo&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        <pubDate>Tue, 16 Jun 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/06/16/NEUGBI-BLOG.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/06/16/NEUGBI-BLOG.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>NeuG v0.1.2: Your Graph Database Is No Longer a Data Island</title>
@@ -2864,220 +3002,6 @@ Retrieved 6 evidence items in 76ms:
         <pubDate>Wed, 18 Mar 2026 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>AI-Powered Open Source Development Management: NeuG&apos;s Exploration and Practice</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-title.jpg&quot; alt=&quot;neug-ai-dev-title&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; is a lightweight, high-performance embedded graph database open-sourced by the &lt;a href=&quot;https://graphscope.io&quot;&gt;GraphScope&lt;/a&gt; team. It can be installed with a simple &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;pip install neug&lt;/code&gt; and is designed for local analytics and real-time transaction processing. In this article, we share how we leverage AI capabilities to manage NeuG’s development workflow. In the future, we will further explore how NeuG’s graph computing capabilities can empower AI in return.&lt;/p&gt;
-
-&lt;p&gt;We invite you to follow and star &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG repository&lt;/a&gt;!&lt;/p&gt;
-
-&lt;p&gt;For more technical details, please refer to the &lt;a href=&quot;https://graphscope.io/neug/&quot;&gt;NeuG official documentation&lt;/a&gt;.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;pain-points-in-open-source-development-lack-of-comprehensive-project-management&quot;&gt;Pain Points in Open Source Development: Lack of Comprehensive Project Management&lt;/h2&gt;
-
-&lt;p&gt;Managing open source software projects is one of the biggest pain points in the development process. If an engineer only focuses on writing code without an efficient management and tracking mechanism, the final product will struggle to be delivered on time. This is because open source projects inherently possess dynamic uncertainty — requirements can change at any moment.&lt;/p&gt;
-
-&lt;p&gt;In recent months, AI Coding capabilities have been rapidly improving. However, we have found that the imbalance between development and management has actually worsened: developers can leverage the latest and most powerful models to rapidly generate large volumes of code, but this seemingly functional yet poorly readable and architecturally weak code only adds to the project management burden. As code accumulates, it may well be that only the large language model itself can deconstruct such a complex repository.&lt;/p&gt;
-
-&lt;p&gt;In reality, we don’t lack coding capability. On the contrary, in open source projects, designing and breaking down solutions and tracking development progress are far more important. Taking our team’s &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; development as an example, the upfront PRD design and discussion can take up a third or even more of the entire development cycle. The recently popular “vibe-coding” is really only suitable for personal projects built from scratch — for serious development scenarios like databases, it is virtually inapplicable.&lt;/p&gt;
-
-&lt;p&gt;Based on these reflections, we tried introducing AI tools into NeuG development in the role of “manager” rather than “developer,” covering the entire lifecycle from requirements analysis and task decomposition to GitHub synchronization and tracking.&lt;/p&gt;
-
-&lt;h2 id=&quot;spec-driven-the-best-development-paradigm-for-neug&quot;&gt;Spec-Driven: The Best Development Paradigm for NeuG&lt;/h2&gt;
-
-&lt;p&gt;In our early exploration, we still followed a “vibe-coding”-style workflow, letting AI directly manage requirements. We iterated through multiple versions:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;
-    &lt;p&gt;Developers write PRD documents, and the Coding Agent parses the context to decompose tasks, syncing them to GitHub.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;The Coding Agent parses the Markdown structure of PRD documents before decomposing tasks.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;The Coding Agent converts PRD documents into a standardized intermediate format before parsing and decomposing tasks.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;Throughout this exploration, we continuously encountered common pain points such as detail loss from overly long contexts and inconsistent outputs. However, we gradually realized that a structured context might be the paradigm best suited for NeuG development. Many AI products also adopt similar structured contexts — for example, DingTalk’s meeting minutes allow pre-selecting templates, and some project documentation tools offer fully customized templates. After testing, we found that while enforcing output format alignment makes some content read a bit stiffly (for example, some development tasks simply don’t need corresponding unit tests), the completeness of such documents effectively reduces omissions — trimming is always easier than patching.&lt;/p&gt;
-
-&lt;p&gt;Meanwhile, a wealth of Spec-Driven tools have been open-sourced, and we were among the first to try them. We found that the paradigm of “write project specifications first, then generate project code” highly aligned with our needs. Taking GitHub’s official &lt;a href=&quot;https://github.com/github/spec-kit/tree/main&quot;&gt;speckit&lt;/a&gt; as an example, here’s a brief explanation of what Spec-Driven involves and what each step does:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Specify&lt;/strong&gt;. In this phase, users provide a requirements description. This phase doesn’t involve specific technology stacks but focuses on product-level analysis: Who will use it? What features does it provide? What problems does it solve? What are the inputs and outputs? What is the interaction flow?&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Plan&lt;/strong&gt;. In this phase, the AI tool generates a comprehensive development plan. This phase focuses on designing how to incorporate the requirement into the existing codebase, which modules are affected, and what constraints must be maintained. It therefore requires comprehensive code, architecture, and constraint information, with strict confirmation from development experts.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Tasks&lt;/strong&gt;. In this phase, the AI tool further decomposes the Plan into several executable tasks. Each task is a minimal, independently runnable code unit, making it convenient for the AI tool to test after code completion. Simply put, each task can be viewed as a standalone function.&lt;/p&gt;
-  &lt;/li&gt;
-  &lt;li&gt;
-    &lt;p&gt;&lt;strong&gt;Implement&lt;/strong&gt;. In this phase, the AI tool incrementally completes each task from the Tasks phase. Thanks to the well-prepared Specify, Plan, and Tasks, the AI tool can generate more accurate code that integrates better with the existing context.&lt;/p&gt;
-  &lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Additionally, these Spec-Driven tools interact with the Coding Agent through slash commands. This invocation style is completely transparent and flexible, and users can freely adjust the prompts in Markdown files to create their own specifications. As we encountered the problem of overly verbose generated content, we began migrating our daily development habits into prompts, which significantly improved results. Below, we use a simple example to illustrate how NeuG leverages the Spec-Driven development paradigm to improve efficiency.&lt;/p&gt;
-
-&lt;h2 id=&quot;use-case-adding-multi-threaded-transaction-tests-to-neug&quot;&gt;Use Case: Adding Multi-threaded Transaction Tests to NeuG&lt;/h2&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;strong&gt;Background&lt;/strong&gt;: Transaction functionality is one of the most important — and most error-prone — modules in a database. NeuG’s transaction engine implements lock-free read-insert parallelism and serializable isolation based on MVCC (see &lt;a href=&quot;https://graphscope.io/blog/tech/2026/02/11/NeuG-Transaction-Mechanism.html&quot;&gt;NeuG Transaction Mechanism Explained&lt;/a&gt; for details). To ensure this module executes correctly, we need to add various transaction tests. We attempted to use the Spec-Driven approach to let the large language model handle the entire process.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;h3 id=&quot;specify-phase-task-expansion-and-analysis&quot;&gt;Specify Phase: Task Expansion and Analysis&lt;/h3&gt;
-
-&lt;p&gt;In the Specify phase, users can provide a brief requirements description along with some draft documentation (no format or content requirements), and the model independently organizes, expands, and generates a complete PRD document.&lt;/p&gt;
-
-&lt;p&gt;In NeuG’s previous development workflow, PRD document design was a crucial step. However, writing a complete PRD document was extremely tedious and difficult to account for all edge cases and special scenarios. During the model’s document generation process, we enforced a document structure where a requirement is split into multiple modules, each module is further decomposed into multiple tasks, and each task must include corresponding tests and verification to ensure document completeness.&lt;/p&gt;
-
-&lt;p&gt;Even when a task genuinely doesn’t need testing or verification (for example, cycle detection can directly call a third-party library), we still ask the model to list relevant content whenever possible. If some redundant content truly needs to be removed, we can simply edit it ourselves or prompt the model to modify the document. From practical experience, “trimming excess” is always easier than “filling gaps.”&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-specify.png&quot; alt=&quot;Specify Phase Screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;plan-phase-persisting-implementation-details&quot;&gt;Plan Phase: Persisting Implementation Details&lt;/h3&gt;
-
-&lt;p&gt;The Plan phase is primarily responsible for further refining technical details and technology choices that weren’t covered in the Specify phase.&lt;/p&gt;
-
-&lt;p&gt;During NeuG’s product development, we found that many design decisions are difficult to reflect intuitively in code, and the related technical documentation often lacks maintenance, directly leading to collaboration and handoff difficulties. As a solution, we chose to persist extensive technical details during the Plan phase. This content effectively serves as supplementary context for the Coding Agent’s code generation and provides convenience when producing technical reports later.&lt;/p&gt;
-
-&lt;p&gt;As shown in the figure below, we needed to standardize transaction generation ratios and data formats, and determine transaction execution strategies for multi-threaded scenarios. Additionally, transaction testing relies on specific testing workflows, requiring detailed descriptions of dependency graph construction, dependency analysis, and cycle detection algorithms. This content significantly improves the accuracy and consistency of subsequent code generation.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-plan.png&quot; alt=&quot;Plan Phase Screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;tasks-phase-decomposing-tasks-syncing-to-github&quot;&gt;Tasks Phase: Decomposing Tasks, Syncing to GitHub&lt;/h3&gt;
-
-&lt;p&gt;In the Tasks phase, the Coding Agent generates several Modules and Tasks based on the previous documents and syncs them to GitHub Issues. Our hierarchical structure perfectly aligns with GitHub’s Sub-Issue feature, making it convenient to track the entire development progress of a requirement end-to-end.&lt;/p&gt;
-
-&lt;p&gt;In NeuG’s past development, these Issues were created and linked manually — not only time-consuming and labor-intensive, but when a new requirement was inserted, older requirements were often overlooked. Through the Task phase tracking, we can not only generate Issues with one click but also persistently track the completion status of all Issues, preventing development tasks from stalling midway.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-tasks.png&quot; alt=&quot;Tasks Phase Screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;Furthermore, we customized our approach to NeuG’s development habits by creating separate Markdown files for each Module, storing detailed information about each task’s assignee, labels, and implementation details. This isolation ensures that when a requirement spans multiple parts of the project and requires collaboration from multiple developers, conflicts are avoided.&lt;/p&gt;
-
-&lt;h4 id=&quot;github-sync-operations&quot;&gt;GitHub Sync Operations&lt;/h4&gt;
-
-&lt;p&gt;In the Tasks phase, we need to sync tasks to GitHub for tracking. Specifically, multiple Module Issues are created under the main Issue, and each Module Issue further contains multiple Task Issues. The overall structure is consistent with the documentation and can be displayed very intuitively on GitHub.&lt;/p&gt;
-
-&lt;p&gt;We also designed a set of synchronization rules tailored to our team’s development habits: initially, the entire Module Content is synced to the Issue body, but no specific Sub-Issues are created. Only when a specific task is about to be developed is the corresponding Issue created, and upon completion, the PR is merged and the Issue is closed. The reason for this design is that the overall plan continuously adjusts as development progresses — new requirements may be inserted or existing ones modified. Fixing the entire workflow at once would lead to high modification costs later.&lt;/p&gt;
-
-&lt;p&gt;The figure below shows a development snapshot of the transaction testing requirement described above (displayed content differs slightly). We planned two Modules, each requiring 3 Tasks to complete. Currently, Tasks 101, 102, 201, and 202 have been completed, while the remaining two Tasks involve complex multi-query scenarios that require further support before implementation.&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-02-12-neug-ai-dev-github-sync.png&quot; alt=&quot;GitHub Sync Screenshot&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;To accommodate this usage pattern, we designed two separate Commands: sync-module and sync-task. They accept a Module ID or Task ID and generate the corresponding Issue, automatically completing the Sub-Issue linking. When the content of these Modules or Tasks is modified, the same two commands can be reused to update without needing to recreate.&lt;/p&gt;
-
-&lt;h3 id=&quot;implement-phase-preserving-traditional-development&quot;&gt;Implement Phase: Preserving Traditional Development&lt;/h3&gt;
-
-&lt;p&gt;In this phase, we don’t mandate the use of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/speckit.implement&lt;/code&gt;. Instead, we allow the task to be handed off to the corresponding developer for implementation. It doesn’t matter which tool they use to generate code (or even “old-school manual coding”), because the comprehensive context and specifications already provide sufficient constraints to naturally produce high-quality code.&lt;/p&gt;
-
-&lt;p&gt;We also recognize the importance of testing, requiring that all Tasks must be supplemented with corresponding CI tests after implementation, ensuring they can execute correctly in an isolated test environment. This is also an area where current large language models excel, so we won’t elaborate further.&lt;/p&gt;
-
-&lt;h2 id=&quot;github-integration-a-more-automated-issuepr-experience&quot;&gt;GitHub Integration: A More Automated Issue/PR Experience&lt;/h2&gt;
-
-&lt;p&gt;Inspired by the Commands functionality, we further integrated more GitHub operations into the Coding Agent. Currently, we have implemented two core capabilities: Issue creation and PR creation. In these two Commands, we incorporated two very important paradigms:&lt;/p&gt;
-
-&lt;h3 id=&quot;context-collection&quot;&gt;Context Collection&lt;/h3&gt;
-
-&lt;p&gt;Context is critically important for Bug Issues. While Issue and PR creation already encourage users to fill in context thoroughly using templates, this step is extremely tedious. Our developers often need to copy terminal error messages, relevant code snippets, and error reproduction commands multiple times — and the useful information in these logs is minimal with poor readability.&lt;/p&gt;
-
-&lt;p&gt;We introduced the create-issue and create-pr commands. Users can directly select relevant content, and the model reads the corresponding terminal or file content, automatically parsing and generating organized content for submission. Developers only need to review the final generated result, which is extremely convenient.&lt;/p&gt;
-
-&lt;p&gt;Below is a simple example: by referencing error messages from the terminal and relevant source code, we prompt the model to submit an Issue and automatically configure the Parent Issue, Assignee, and Project information. In the era of large language models, this information doesn’t need to match exactly — a rough description is sufficient for the model to infer the best match.&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;`/create-issue` [bash:15-20][main.cpp:150:210] Check the error messages and executed code, create an issue of type bug, link to parent issue #xx, assign to &quot;@user-xxx&quot;, and add to project &quot;Project-xxx&quot;.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;creation-confirmation&quot;&gt;Creation Confirmation&lt;/h3&gt;
-
-&lt;p&gt;When Git performs dangerous operations like merge or rebase, it typically displays a confirmation file for the user to review. Inspired by this, we believe that creating Issues and PRs can similarly incorporate a confirmation flow to verify Issue configurations.&lt;/p&gt;
-
-&lt;p&gt;Specifically, before creating an Issue or PR, the Agent provides a file for user interaction to confirm the information to be submitted, with a structure roughly as follows:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Issue Type: Bug
-Issue Title: [BUG] &amp;lt;title&amp;gt;
-Assignee: &amp;lt;assignee&amp;gt;
-Labels: bug, &amp;lt;additional labels&amp;gt;
-Project: NeuG v0.1
-Parent Issue: #&amp;lt;parent-issue-id&amp;gt;
-
-**Describe the bug**
-A clear and concise description of what the bug is.
-
-**Execution Logs**
-The commands that can reproduce the issue.
-1. Command 1: ...
-2. Command 2: ...
-...
-
-**Expected behavior**
-A clear and concise description of what you expected to happen.
-
-**Error Message**
-The error message in the terminal.
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;In this temporary file, the configuration parameters for creating the Issue are listed in detail, along with the specific body content. Through this file, users can clearly confirm the Issue’s type, assignee, labels, project, parent issue, and other information. Only after user confirmation does the Agent create and execute the corresponding command. This semi-structured template also ensures greater consistency in subsequently generated commands, significantly reducing unexpected situations caused by users’ unfamiliarity with commands.&lt;/p&gt;
-
-&lt;h2 id=&quot;agent-skills-support&quot;&gt;Agent Skills Support&lt;/h2&gt;
-
-&lt;p&gt;Just as we were writing this blog post, another new paradigm — Agent Skills — was rolling out broadly. We won’t discuss the comparison between Commands and Skills here, but from a product design perspective, the advantage of Agent Skills lies in encouraging users to store large scripts, templates, and other information in separate folders, while keeping only concise but critical descriptions in the core file. Moreover, Agent Skills is fully compatible with Commands operations, invoked explicitly through slash commands. Therefore, we promptly migrated our commands to the Skills format, moving templates, scripts, and other content from prompts into independent files.&lt;/p&gt;
-
-&lt;div class=&quot;language-markdown highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;.cursor
-└── skills
-    ├── speckit.specify
-    │   ├── templates
-    │   │   └── spec-template.md
-    │   └── SKILL.md
-    │
-    ├── speckit.plan
-    │   ├── templates
-    │   │   └── plan-template.md
-    │   └── SKILL.md
-    │
-    ├── speckit.tasks
-    │   ├── templates
-    │   │   ├── tasks-metadata-template.md
-    │   │   └── tasks-module-template.md
-    │   └── SKILL.md
-    │
-    ├── sync-modules
-    │   └── SKILL.md
-    │
-    ├── sync-tasks
-    │   └── SKILL.md
-    │
-    ├── create-issue
-    │   ├── scripts
-    │   │   └── gh-update.sh
-    │   ├── templates
-    │   │   ├── bug-issue.md
-    │   │   └── feature-issue.md
-    │   └── SKILL.md
-    │
-    └── create-pr
-        ├── templates
-        │   └── pull-request.md
-        └── SKILL.md
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h2 id=&quot;conclusion&quot;&gt;Conclusion&lt;/h2&gt;
-
-&lt;p&gt;Throughout our experience with Spec tools, it became evident that using Coding Agents effectively involves a wealth of techniques — from the overall product application scenarios to the crafting of individual prompts, as well as various interaction paradigms and generation logic. These details are what truly unlock the model’s capabilities, and they explain why the same programming tools produce entirely different results in different people’s hands. In the future, we will continue exploring applications of large language model programming tools across various project development scenarios, letting AI truly unleash productivity.&lt;/p&gt;
-</description>
-        <pubDate>Thu, 12 Feb 2026 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/02/12/AI-Powered-Development-Management-NeuG.html</guid>
         
         
         <category>Tech</category>
