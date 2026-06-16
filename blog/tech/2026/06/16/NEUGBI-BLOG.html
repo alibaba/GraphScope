@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">How does AI affect U.S. Employment? Replicating Harvard Business School Research with NeuGBI</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-06-16">16 Jun 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-06-16">16 Jun 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">How does AI affect U.S. Employment? Replicating Harvard Business School Research with NeuGBI</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/banner_en.png" alt="banner" /></p>
+
+<blockquote>
+  <p><strong>TL;DR</strong></p>
+
+  <p>We used <a href="https://github.com/shunyangli/neugbi-demo">NeuGBI</a> to replicate the Harvard Business School paper <em>Generative AI as Seniority-Biased Technological Change</em>: same Revelio Lab U.S. employment dataset (300 million records), same research question — AI’s impact on jobs. The entire analysis was conducted autonomously by NeuGBI using its built-in analytical Skills, with no human intervention. The result matched the paper’s conclusion: junior position records declined by 29.4%, while senior positions only declined by 5.8%. On some dimensions, NeuGBI went finer than the original paper — for example, within software development roles, it’s specifically junior-level (L2) positions that nearly halved, while entry-level (L1) and senior (L3+) positions showed minimal decline.</p>
+</blockquote>
+
+<p>A recent Harvard Business School <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555">paper</a>, <em>Generative AI as Seniority-Biased Technological Change</em>, specifically studied this question: AI’s impact on employment is not evenly distributed — junior positions are hit more significantly, while senior positions have remained relatively stable in employment volume.</p>
+
+<p>The paper uses Revelio Lab employment data (hereafter “Revelio data”). Revelio classifies positions into seniority levels L1–L7 (per the Harvard paper’s definitions): Entry, Junior, Specialist, Manager, Director, Executive, and C-Suite. The paper defines “junior positions” as Entry and Junior (L1–L2), and “senior positions” as L3 and above.</p>
+
+<p>This kind of open-ended question is genuinely interesting — but does answering it really require an elite research team like Harvard’s? With the advancement of large language models, a natural thought arises: let LLMs handle this kind of open-ended exploration. They can understand natural language, generate code, and interpret results — seemingly well-suited for this type of layer-by-layer drill-down analysis.</p>
+
+<h2 id="where-current-llm-based-analytics-fall-short">Where Current LLM-Based Analytics Fall Short</h2>
+
+<p>But directly feeding Revelio data to an LLM clearly won’t work: 60GB, 300 million records — far exceeding any model’s context window. Even stepping back to keep the data in a database and use an LLM-driven text-to-SQL approach (similar to chatBI) runs into three unavoidable problems:</p>
+
+<ul>
+  <li>Data relationships are too complex. Employment data is inherently graph-structured — people, positions, companies, and skills form multi-hop relationships that are either awkward to model in SQL or prohibitively expensive to join.</li>
+  <li>Interactive latency is unacceptable. Exploratory analysis depends heavily on instant feedback loops (“see result → refine question → query again”), but at 300 million rows, traditional databases either can’t handle it or are too slow to maintain flow. No matter how fast the LLM is, it can’t save a slow query.</li>
+  <li>Analysis chains break. Each decomposition step depends on findings from the previous one, but text-to-SQL treats each query as an isolated task — context from earlier rounds is completely lost, preventing the LLM from truly “drilling down continuously.”</li>
+</ul>
+
+<p>To address these pain points, we designed NeuGBI: the underlying <a href="https://github.com/alibaba/neug">NeuG</a> graph database natively supports multi-hop relationships; the query layer uses end-to-end unbiased sampling so complex queries return in seconds; and the analysis model is built on Hypergraph reconstruction, naturally suited for continuous analysis and intermediate result reuse. On top of this, we packaged exploratory analysis Skills for LLMs to invoke, enabling them to autonomously conduct open-ended exploration on massive, complex data — decomposing questions, driving the engine, reading results, and deciding where to dig next.</p>
+
+<p>Enough talk — let’s validate directly. Next, we’ll run NeuGBI on the Revelio dataset through the complete replication workflow and see whether its conclusions match the Harvard paper.</p>
+
+<h2 id="neugbis-query-logic">NeuGBI’s Query Logic</h2>
+
+<p>Now that we know why NeuGBI is needed, let’s look at how it decomposes this task step by step. The given question is: “How hard has AI hit U.S. employment?”</p>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/neugbi_exploration_tree_english.png" alt="" /></p>
+
+<p>Faced with this question, NeuGBI doesn’t produce a simple conclusion. Instead, it first breaks it into queryable data problems — for example, whether overall U.S. employment changed before and after AI’s emergence; whether changes differ across occupations and regions; whether junior and senior positions changed differently. Here we examine two core analysis threads.</p>
+
+<p>The first thread: examine AI’s impact on U.S. employment before and after its emergence. After observing the overall decline, continue examining different occupations and different states.</p>
+
+<p>The second thread follows the Harvard paper’s main thesis: if junior positions declined significantly more than senior positions, continue drilling into different occupations and seniority levels to see exactly which category within junior positions is declining.</p>
+
+<p>Exploratory analysis works exactly this way: see the previous round’s results, then decide what to query next.</p>
+
+<h3 id="1-us-employment-before-and-after-ai">1. U.S. Employment Before and After AI</h3>
+
+<p>First, NeuGBI queried U.S. employment conditions before and after AI’s emergence.</p>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_1_overall_trend.png" alt="Employment volume trend" /></p>
+
+<p>From 2021 to 2025, total employment records dropped from 21 million to approximately 10 million. Since Revelio’s coverage fluctuates over time, absolute numbers cannot be directly equated with real employment figures, but this trend tells us one thing: the data clearly shows significant contraction.</p>
+
+<blockquote>
+  <p>Just looking at overall U.S. employment trends isn’t enough — we don’t yet know which occupations the decline is concentrated in. So the next step: NeuGBI continues down the occupation path.</p>
+</blockquote>
+
+<h4 id="11-impact-on-different-industries">1.1 Impact on Different Industries</h4>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_post_onet.png" alt="" /></p>
+
+<p>Due to space constraints, here we show AI’s impact on computer-related occupations (e.g., software development, systems engineering, web development). Computer-related hiring headcount declined 31% from 2022 to 2024 (2025 data is incomplete), while job posting volume declined 64%.</p>
+
+<blockquote>
+  <p>This data shows that U.S. computer-related hiring is declining overall, but we don’t yet know whether this decline is concentrated in just a few regions. So the next step: NeuGBI examines different states.</p>
+</blockquote>
+
+<h4 id="12-state-level-breakdown">1.2 State-Level Breakdown</h4>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/q5_alabama_years.png" alt="" /></p>
+
+<p>Here NeuGBI explored computer-related employment across different U.S. states. The chart shows the major states by hiring volume — most states’ computer-related hiring is declining. This indicates the decline isn’t isolated to one state but appears as a similar trend across multiple major states.</p>
+
+<blockquote>
+  <p>At this point, NeuGBI has analyzed AI’s impact on U.S. employment from both occupation and regional perspectives. But the results are still insufficient, so next NeuGBI pursues another path: is AI’s impact different for junior vs. senior positions?</p>
+</blockquote>
+
+<h3 id="2-ais-impact-on-junior-vs-senior-positions">2. AI’s Impact on Junior vs. Senior Positions</h3>
+
+<p>In this step, NeuGBI analyzed AI’s impact on junior and senior positions.</p>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_2_junior_share_v2.png" alt="Junior share trend" /></p>
+
+<p>The results show that not every category declined equally. <strong>By record count, junior positions declined by 29.4%, while senior positions only declined by 5.8%.</strong> In other words, looking at share of total employment, senior positions actually rose from 35% in 2022 to 43.6% in 2025. This isn’t because senior positions grew — it’s because junior positions fell so much more, making senior positions’ share appear higher.</p>
+
+<p><strong>This result is consistent with the Harvard paper’s conclusion: junior positions contracted more significantly, while senior positions remained relatively stable.</strong></p>
+
+<p>But this answer isn’t granular enough. Junior positions themselves include both entry-level and junior-level. The data here only shows “junior positions are declining” but cannot tell us exactly which category is declining.</p>
+
+<blockquote>
+  <p>So here NeuGBI chose to continue drilling down, examining whether different seniority levels within specific occupations also show different patterns.</p>
+</blockquote>
+
+<h3 id="21-drilling-deeper-which-seniority-level-declined-more-in-software-development">2.1 Drilling Deeper: Which Seniority Level Declined More in Software Development?</h3>
+
+<p>Here NeuGBI continued querying to see AI’s impact on different occupations and seniority levels. We focus primarily on software development.</p>
+
+<p><img src="/blog/assets/images/2026-06-16-NEUGBI_BLOG/q4_6_swdev_seniority.png" alt="Software development seniority structure" /></p>
+
+<p>The result is clear: <strong>within software development positions, what truly declined significantly is L2, not the entire junior category.</strong> Specifically:</p>
+
+<ul>
+  <li><strong>L1</strong>: 1.2M → 1.1M, minor fluctuation</li>
+  <li><strong>L2</strong>: 2.8M → 1.45M, nearly halved</li>
+  <li><strong>L3+</strong>: 4.4M → 4.25M, essentially stable</li>
+</ul>
+
+<p>In other words, at a coarse level it looks like junior positions are declining; but when broken apart, L1 shows no significant drop — it’s specifically L2 that’s dragging junior positions down.</p>
+
+<p>This query is extremely complex. It requires aggregating data across different occupations, 7 seniority levels, and 5 years — a very demanding fine-grained query. Thanks to NeuGBI’s sampling methodology, we can quickly see the data trends and continue drilling down.</p>
+
+<p>At this point, we’ve truly gotten to the bottom of this question: <strong>“junior positions are contracting” isn’t accurate enough. At least within software development, junior-level positions declined more significantly than entry-level.</strong></p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Looking back, the entire replication was conducted autonomously by NeuGBI: on 60GB / 300 million U.S. employment records, it produced the same primary conclusion as the Harvard paper — junior positions declined more significantly while senior positions remained relatively stable — and on software development roles specifically, it uncovered a finer conclusion not present in the paper: what truly declined dramatically is junior-level positions, while entry-level and other levels remained relatively stable.</p>
+
+<p>NeuGBI’s value here is also straightforward: it lets us first validate a coarse conclusion, then continue drilling down. One path examines overall employment, computer-related occupations, and major states; another returns to junior vs. senior positions, then drills into specific occupations and seniority levels. For questions where you don’t know where the answer is hiding at the outset, this step-by-step querying capability matters more than any single query.</p>
+
+<hr />
+
+<h2 id="references">References</h2>
+
+<ul>
+  <li><strong>Harvard Business School Paper</strong>: <a href="https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5425555"><em>Generative AI as Seniority-Biased Technological Change</em></a></li>
+  <li><strong>NeuGBI Theory Paper</strong>: <a href="https://arxiv.org/abs/2603.10625"><em>A Hypergraph-Based Framework for Exploratory Business Intelligence</em></a></li>
+  <li><strong>NeuG Graph Database</strong>: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a></li>
+  <li><strong>NeuGBI Demo</strong>: <a href="https://github.com/shunyangli/neugbi-demo">https://github.com/shunyangli/neugbi-demo</a></li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=How does AI affect U.S. Employment? Replicating Harvard Business School Research with NeuGBI&amp;url=https://graphscope.io/tech/2026/06/16/NEUGBI-BLOG.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/06/16/NEUGBI-BLOG.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/06/16/NEUGBI-BLOG.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
