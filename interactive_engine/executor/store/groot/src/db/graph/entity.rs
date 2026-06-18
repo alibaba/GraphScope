@@ -42,6 +42,13 @@ impl PropertyImpl {
             PropertyValue::FloatList(fl) => crate::api::prelude::Property::ListFloat(fl),
             PropertyValue::DoubleList(dl) => crate::api::prelude::Property::ListDouble(dl),
             PropertyValue::StringList(sl) => crate::api::prelude::Property::ListString(sl),
+            PropertyValue::UInt(ui) => crate::api::prelude::Property::UInt(ui),
+            PropertyValue::ULong(ul) => crate::api::prelude::Property::ULong(ul),
+            PropertyValue::Date32(i) => crate::api::prelude::Property::Date32(i),
+            PropertyValue::Time32(i) => crate::api::prelude::Property::Time32(i),
+            PropertyValue::Timestamp(l) => crate::api::prelude::Property::Timestamp(l),
+            PropertyValue::FixedChar(_fixed_char_value) => todo!(),
+            PropertyValue::VarChar(_var_char_value) => todo!(),
         };
         (self.property_id as PropId, p)
     }

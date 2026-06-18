@@ -32,7 +32,9 @@ pub enum Property {
     Char(u8),
     Short(i16),
     Int(i32),
+    UInt(u32),
     Long(i64),
+    ULong(u64),
     Float(f32),
     Double(f64),
     Bytes(Vec<u8>),
@@ -44,8 +46,12 @@ pub enum Property {
     ListDouble(Vec<f64>),
     ListString(Vec<String>),
     ListBytes(Vec<Vec<u8>>),
+    Date32(i32),
+    Time32(i32),
+    Timestamp(i64),
     Null,
     Unknown,
+    // TODO: VarChar, FixedChar
 }
 
 impl PartialOrd for Property {
@@ -55,7 +61,9 @@ impl PartialOrd for Property {
             (Property::Char(left), Property::Char(right)) => left.partial_cmp(right),
             (Property::Short(left), Property::Short(right)) => left.partial_cmp(right),
             (Property::Int(left), Property::Int(right)) => left.partial_cmp(right),
+            (Property::UInt(left), Property::UInt(right)) => left.partial_cmp(right),
             (Property::Long(left), Property::Long(right)) => left.partial_cmp(right),
+            (Property::ULong(left), Property::ULong(right)) => left.partial_cmp(right),
             (Property::Float(left), Property::Float(right)) => left.partial_cmp(right),
             (Property::Double(left), Property::Double(right)) => left.partial_cmp(right),
             // cmp between numbers, if types not match
@@ -63,23 +71,31 @@ impl PartialOrd for Property {
             // else cast to double
             (Property::Short(_), _)
             | (Property::Int(_), _)
+            | (Property::UInt(_), _)
             | (Property::Long(_), _)
+            | (Property::ULong(_), _)
             | (Property::Float(_), _)
             | (Property::Double(_), _)
             | (_, Property::Short(_))
             | (_, Property::Int(_))
+            | (_, Property::UInt(_))
             | (_, Property::Long(_))
+            | (_, Property::ULong(_))
             | (_, Property::Float(_))
             | (_, Property::Double(_)) => {
-                if self.is_float_type() || other.is_float_type() {
-                    let left = unwrap_ok_or!(self.get_double(), _, return None);
-                    let right = unwrap_ok_or!(other.get_double(), _, return None);
-                    left.partial_cmp(&right)
-                } else {
-                    let left = unwrap_ok_or!(self.get_long(), _, return None);
-                    let right = unwrap_ok_or!(other.get_long(), _, return None);
-                    left.partial_cmp(&right)
-                }
+                // TODO: fix this comparison between signed and unsigned integers
+                // if self.is_float_type() || other.is_float_type() {
+                //     let left = unwrap_ok_or!(self.get_double(), _, return None);
+                //     let right = unwrap_ok_or!(other.get_double(), _, return None);
+                //     left.partial_cmp(&right)
+                // } else {
+                //     let left = unwrap_ok_or!(self.get_long(), _, return None);
+                //     let right = unwrap_ok_or!(other.get_long(), _, return None);
+                //     left.partial_cmp(&right)
+                // }
+                let left = unwrap_ok_or!(self.get_double(), _, return None);
+                let right = unwrap_ok_or!(other.get_double(), _, return None);
+                left.partial_cmp(&right)
             }
             (Property::Bytes(left), Property::Bytes(right)) => left.partial_cmp(right),
             (Property::String(left), Property::String(right)) => left.partial_cmp(right),
@@ -88,7 +104,12 @@ impl PartialOrd for Property {
             (Property::ListLong(left), Property::ListLong(right)) => left.partial_cmp(right),
             (Property::ListFloat(left), Property::ListFloat(right)) => left.partial_cmp(right),
             (Property::ListDouble(left), Property::ListDouble(right)) => left.partial_cmp(right),
-            // cmp number lists, same as above
+            (Property::Date32(left), Property::Date32(right)) => left.partial_cmp(right),
+            (Property::Time32(left), Property::Time32(right)) => left.partial_cmp(right),
+            (Property::Timestamp(left), Property::Timestamp(right)) => left.partial_cmp(right),
+            // cmp number lists, if types not match
+            // if both are integer lists, cast to long list
+            // else cast to double list
             (Property::ListInt(_), _)
             | (Property::ListLong(_), _)
             | (Property::ListFloat(_), _)
@@ -109,7 +130,6 @@ impl PartialOrd for Property {
             }
             (Property::ListString(left), Property::ListString(right)) => left.partial_cmp(right),
             (Property::ListBytes(left), Property::ListBytes(right)) => left.partial_cmp(right),
-
             (Property::Null, Property::Null) => Some(std::cmp::Ordering::Equal),
             _ => None,
         }
@@ -130,19 +150,18 @@ impl Property {
         match p {
             Primitives::Byte(v) => Ok(Property::Char(*v as u8)),
             Primitives::Integer(v) => Ok(Property::Int(*v)),
+            Primitives::UInteger(v) => Ok(Property::UInt(*v)),
             Primitives::Long(v) => Ok(Property::Long(*v)),
+            Primitives::ULong(v) => Ok(Property::ULong(*v)),
             Primitives::ULLong(v) => {
-                if *v > i64::MAX as u128 {
+                if *v > u64::MAX as u128 {
                     Err(GraphError::invalid_condition(format!("primitive {} is too large", v)))
                 } else {
-                    Ok(Property::Long(*v as i64))
+                    Ok(Property::ULong(*v as u64))
                 }
             }
             Primitives::Float(v) => Ok(Property::Float(*v)),
             Primitives::Double(v) => Ok(Property::Double(*v)),
-            // todo: will support unsigned integer in groot soon
-            Primitives::UInteger(v) => Ok(Property::Int(*v as i32)),
-            Primitives::ULong(v) => Ok(Property::Long(*v as i64)),
         }
     }
 
@@ -311,8 +330,14 @@ impl Property {
             Property::Int(ref v) => {
                 data.write_i32::<BigEndian>(*v).unwrap();
             }
+            Property::UInt(ref v) => {
+                data.write_u32::<BigEndian>(*v).unwrap();
+            }
             Property::Long(ref v) => {
                 data.write_i64::<BigEndian>(*v).unwrap();
+            }
+            Property::ULong(ref v) => {
+                data.write_u64::<BigEndian>(*v).unwrap();
             }
             Property::Float(ref v) => {
                 data.write_f32::<BigEndian>(*v).unwrap();
@@ -389,6 +414,15 @@ impl Property {
                     data.write(x.as_slice()).unwrap();
                 }
             }
+            Property::Date32(ref v) => {
+                data.write_i32::<BigEndian>(*v).unwrap();
+            }
+            Property::Time32(ref v) => {
+                data.write_i32::<BigEndian>(*v).unwrap();
+            }
+            Property::Timestamp(ref v) => {
+                data.write_i64::<BigEndian>(*v).unwrap();
+            }
             Property::Null => {
                 panic!("property is null");
             }
@@ -418,8 +452,16 @@ impl Property {
                 ret.write_i32::<BigEndian>(*v).unwrap();
                 ret
             }
+            Property::UInt(ref v) => {
+                ret.write_u32::<BigEndian>(*v).unwrap();
+                ret
+            }
             Property::Long(ref v) => {
                 ret.write_i64::<BigEndian>(*v).unwrap();
+                ret
+            }
+            Property::ULong(ref v) => {
+                ret.write_u64::<BigEndian>(*v).unwrap();
                 ret
             }
             Property::Float(ref v) => {
@@ -491,6 +533,18 @@ impl Property {
                 for i in 0..v.len() {
                     ret.write(v[i].as_slice()).unwrap();
                 }
+                ret
+            }
+            Property::Date32(ref v) => {
+                ret.write_i32::<BigEndian>(*v).unwrap();
+                ret
+            }
+            Property::Time32(ref v) => {
+                ret.write_i32::<BigEndian>(*v).unwrap();
+                ret
+            }
+            Property::Timestamp(ref v) => {
+                ret.write_i64::<BigEndian>(*v).unwrap();
                 ret
             }
             Property::Null => {
@@ -580,6 +634,13 @@ impl Property {
     fn is_float_type(&self) -> bool {
         match self {
             &Property::Float(_) | &Property::Double(_) => true,
+            _ => false,
+        }
+    }
+
+    fn is_unsigned_type(&self) -> bool {
+        match self {
+            &Property::UInt(_) | &Property::ULong(_) => true,
             _ => false,
         }
     }
@@ -824,7 +885,9 @@ impl Property {
         match self {
             &Property::Short(s) => Ok(s as f64),
             &Property::Int(d) => Ok(d as f64),
+            &Property::UInt(d) => Ok(d as f64),
             &Property::Long(d) => Ok(d as f64),
+            &Property::ULong(d) => Ok(d as f64),
             &Property::Float(d) => Ok(d as f64),
             &Property::Double(d) => Ok(d),
             _ => Err(format!("get double value fail from property=>{:?}", self)),
