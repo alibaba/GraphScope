@@ -20,19 +20,17 @@ from typing import Dict
 from typing import Tuple
 from typing import Union
 
-import connexion
-
-from gs_interactive_admin import util
-from gs_interactive_admin.models.api_response_with_code import (  # noqa: E501
+from gs_interactive_admin.models.api_response_with_code import (
     APIResponseWithCode,
-)
-from gs_interactive_admin.models.upload_file_response import (  # noqa: E501
+)  # noqa: E501
+from gs_interactive_admin.models.upload_file_response import (
     UploadFileResponse,
-)
+)  # noqa: E501
+from gs_interactive_admin.file_utils import upload_file_impl
 
 
 def upload_file(filestorage=None):  # noqa: E501
-    """upload_file
+    """upload_file. In k8s deployment, we may need to upload to a oss bucket, then download to the pod.
 
      # noqa: E501
 
@@ -41,4 +39,4 @@ def upload_file(filestorage=None):  # noqa: E501
 
     :rtype: Union[UploadFileResponse, Tuple[UploadFileResponse, int], Tuple[UploadFileResponse, int, Dict[str, str]]
     """
-    return "do some magic!"
+    return upload_file_impl(filestorage)

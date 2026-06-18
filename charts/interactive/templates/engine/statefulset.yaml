@@ -1,0 +1,151 @@
+{{- $releaseNamespace := .Release.Namespace }}
+{{- $clusterDomain := .Values.clusterDomain }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "graphscope-interactive.engine.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: engine
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.engine.replicaCount }}
+  selector:
+    matchLabels: {{ include "graphscope-interactive.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: engine
+  serviceName: {{ include "graphscope-interactive.engine.fullname" . }}-headless
+  updateStrategy:
+    type: {{ .Values.engine.updateStrategy }}
+    {{- if (eq "Recreate" .Values.engine.updateStrategy) }}
+    rollingUpdate: null
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.engine.podAnnotations }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "graphscope-interactive.labels" . | nindent 8 }}
+        app.kubernetes.io/component: engine
+        {{- if .Values.commonLabels }}
+        {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-interactive.serviceAccountName" . }}
+      {{- if .Values.engine.affinity }}
+      affinity: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.engine.initContainers }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: engine
+          image: {{ include "graphscope-interactive.engine.image" . }}
+          imagePullPolicy: {{ .Values.engine.image.pullPolicy | quote }}
+          command:
+            - {{ include "graphscope-interactive.engine.command" . | quote }}
+          env:
+            - name: INTERACTIVE_WORKSPACE
+              value: {{ .Values.workspace | quote }}
+            - name: OSS_ACCESS_KEY_ID
+              value: {{ include "graphscope-interactive.ossAccessKeyId" .  }}
+            - name: OSS_ACCESS_KEY_SECRET
+              value: {{ include "graphscope-interactive.ossAccessKeySecret" . }}
+            - name: OSS_ENDPOINT
+              value: {{ include "graphscope-interactive.ossEndpoint" . }}
+            - name: OSS_BUCKET_NAME
+              value: {{ include "graphscope-interactive.ossBucketName" .  }}
+            - name: FLEX_INTERACTIVE_ENGINE_IP  
+              valueFrom:  
+                fieldRef:  
+                  fieldPath: status.podIP 
+          ports:
+            - name: admin-port
+              containerPort: {{ .Values.engine.service.adminPort }}
+            - name: query-port
+              containerPort: {{ .Values.engine.service.queryPort }}
+          {{- if .Values.engine.resources }}
+          resources: {{- toYaml .Values.engine.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: workspace
+              mountPath: {{ .Values.workspace }}
+            - name: config
+              mountPath: {{ include "graphscope-interactive.engine.configFileMountPath" . }}
+              subPath: interactive_config.yaml
+            - name: engine-entrypoint
+              mountPath: {{ include "graphscope-interactive.engine.entrypointMountPath" . }}
+              subPath: engine_entrypoint.sh
+          {{- if and .Values.engine.livenessProbe .Values.engine.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+             path: {{ .Values.engine.livenessProbe.path }}
+              port: {{ .Values.engine.service.adminPort }}
+            initialDelaySeconds: {{ .Values.engine.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.engine.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.engine.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.engine.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.engine.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if and .Values.engine.readinessProbe .Values.engine.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.engine.readinessProbe.path }}
+              port: {{ .Values.engine.service.queryPort }}
+            initialDelaySeconds: {{ .Values.engine.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.engine.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.engine.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.engine.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.engine.readinessProbe.failureThreshold }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
+        - name: engine-entrypoint
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
+  {{- if and .Values.engine.persistence.enabled .Values.engine.persistence.existingClaim }}
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: {{ tpl .Values.engine.persistence.existingClaim . }}
+  {{- else if not .Values.engine.persistence.enabled }}
+        - name: workspace
+          emptyDir: {}
+  {{- else if and .Values.engine.persistence.enabled (not .Values.engine.persistence.existingClaim) }}
+  volumeClaimTemplates:
+    - metadata:
+        name: workspace
+        {{- if .Values.persistence.annotations }}
+        annotations: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.annotations "context" $) | nindent 10 }}
+        {{- end }}
+        {{- if .Values.persistence.labels }}
+        labels: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.labels "context" $) | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- range .Values.persistence.accessModes }}
+          - {{ . | quote }}
+          {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.engine.persistence.size | quote }}
+        {{ include "graphscope-interactive.storageClass" . | nindent 8 }}
+        {{- if .Values.engine.persistence.selector }}
+        selector: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.engine.persistence.selector "context" $) | nindent 10 }}
+        {{- end -}}
+  {{- end }}

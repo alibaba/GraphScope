@@ -19,12 +19,16 @@
 import os
 
 from gremlin_python.driver.client import Client
+from gs_interactive.models.graph_service_registry_record import GraphServiceRegistryRecord
 from neo4j import GraphDatabase
 from neo4j import Session as Neo4jSession
+import logging
 
 from gs_interactive.client.session import DefaultSession
 from gs_interactive.client.session import Session
 
+
+logger = logging.getLogger("interactive")
 
 class Driver:
     """
@@ -157,6 +161,49 @@ class Driver:
             self._neo4j_driver = GraphDatabase.driver(self._cypher_endpoint, auth=None)
         return self._neo4j_driver.session(**config)
 
+    def getNeo4jEndpoints(self, graph_id: str) -> list[str]:
+        """
+        Get all available neo4j endpoints. Only works if the admin service is running in k8s mode
+        Returns:
+            list[str]: list of all available neo4j endpoints
+        """
+        service_status = self.getDefaultSession().get_service_status()
+        if service_status.is_ok():
+            service_status_val = service_status.get_value()
+            if service_status_val.deploy_mode == "k8s":
+                return self._get_neo4j_endpoints_from_service_registry(graph_id)
+            elif service_status_val.deploy_mode == "standalone":
+                raise ValueError(
+                    "getNeo4jEndpoints are not available in standalone deployment mode, call getNeo4jEndpoint() to get the endpoint"
+                )
+        else:
+            raise ValueError(
+                "Failed to get service status " + service_status.get_status_message()
+            )
+
+    def _get_neo4j_endpoints_from_service_registry(self, graph_id: str) -> list[str]:
+        """
+        Args:
+            graph_id (str): The graph id to get the endpoints for
+
+        Returns:
+            list[str]: List of all available neo4j endpoints
+        """
+        service_registry = self.getDefaultSession().get_service_registry_info(graph_id=graph_id, service_name="cypher")
+        if service_registry.is_ok():
+            service_registry_val : GraphServiceRegistryRecord = service_registry.get_value()
+            logger.info(f"registry val {service_registry_val}")
+            if service_registry_val.graph_id != graph_id:
+                raise RuntimeError(f"Internal error: graph_id mismatch {graph_id}, {service_registry_val.graph_id}")
+            if service_registry_val.service_registry is None:
+                raise RuntimeError(f"Internal error: service_registry is None")
+            #NOTE: Currently we return all cypher endpoints, didn't take care of the primary one
+            return ["bolt://" + instance.endpoint for instance in service_registry_val.service_registry.instances]
+        else:
+            raise ValueError(
+                f"Failed to get service registry {service_registry.get_status_message()}"
+            )
+
     def getNeo4jEndpoint(self) -> str:
         """
         Get the bolt endpoint from the service status endpoint.
@@ -164,8 +211,14 @@ class Driver:
         """
         service_status = self.getDefaultSession().get_service_status()
         if service_status.is_ok():
-            bolt_port = service_status.get_value().bolt_port
-            return "bolt://" + self._host + ":" + str(bolt_port)
+            service_status_val = service_status.get_value()
+            if service_status_val.deploy_mode == "standalone":
+                bolt_port = service_status.get_value().bolt_port
+                return "bolt://" + self._host + ":" + str(bolt_port)
+            elif service_status_val.deploy_mode == "k8s":
+                raise ValueError(
+                    "Neo4j endpoint is not available in k8s deployment mode, call getNeo4jEndpoints(graph_id) to get all endpoints for the specified graph"
+                )
         else:
             raise ValueError(
                 "Failed to get service status " + service_status.get_status_message()
