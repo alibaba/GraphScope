@@ -16,3 +16,9 @@
 [submodule "flex/third_party/aliyun-oss-cpp-sdk"]
 	path = flex/third_party/aliyun-oss-cpp-sdk
 	url = https://github.com/aliyun/aliyun-oss-cpp-sdk.git
+[submodule "flex/third_party/etcd-cpp-apiv3"]
+	path = flex/third_party/etcd-cpp-apiv3
+	url = https://github.com/etcd-cpp-apiv3/etcd-cpp-apiv3.git
+[submodule "flex/third_party/cpprestsdk"]
+	path = flex/third_party/cpprestsdk
+	url = https://github.com/microsoft/cpprestsdk.git
