@@ -604,6 +604,39 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
+        let mut expected_results = vec![(v1, 3), (v4, 2), (v6, 1)];
+        while let Some(Ok(record)) = pegasus_result.next() {
+            if let Some(v) = record.get(None).unwrap().as_vertex() {
+                if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {
+                    results.push((v.id() as DefaultId, degree_obj.as_u64().unwrap()));
+                }
+            }
+        }
+        results.sort();
+        expected_results.sort();
+
+        assert_eq!(results, expected_results)
+    }
+
+    // g.V().as(0).select(0).by(out().count().as(1))
+    #[test]
+    fn expand_optional_out_degree_test() {
+        let expand_opr_pb = pb::EdgeExpand {
+            v_tag: None,
+            direction: 0,
+            params: None,
+            expand_opt: 2,
+            alias: Some(1.into()),
+            is_optional: true,
+        };
+        let mut pegasus_result = expand_degree_opt_test(expand_opr_pb);
+        let mut results = vec![];
+        let v1: DefaultId = LDBCVertexParser::to_global_id(1, 0);
+        let v2: DefaultId = LDBCVertexParser::to_global_id(2, 0);
+        let v3: DefaultId = LDBCVertexParser::to_global_id(3, 1);
+        let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
+        let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
+        let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
         let mut expected_results = vec![(v1, 3), (v2, 0), (v3, 0), (v4, 2), (v5, 0), (v6, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_vertex() {
@@ -637,7 +670,9 @@ mod test {
         let v4: DefaultId = LDBCVertexParser::to_global_id(4, 0);
         let v5: DefaultId = LDBCVertexParser::to_global_id(5, 1);
         let v6: DefaultId = LDBCVertexParser::to_global_id(6, 0);
-        let mut expected_results = vec![(v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)];
+        // the zero-degree vertex should not be included in the result
+        // (v1, 0), (v2, 1), (v3, 3), (v4, 1), (v5, 1), (v6, 0)
+        let mut expected_results = vec![(v2, 1), (v3, 3), (v4, 1), (v5, 1)];
         while let Some(Ok(record)) = pegasus_result.next() {
             if let Some(v) = record.get(None).unwrap().as_vertex() {
                 if let Some(degree_obj) = record.get(Some(1)).unwrap().as_object() {

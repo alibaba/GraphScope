@@ -5,16 +5,16 @@ cd ${base_dir}/../executor/ir/target/release &&
 RUST_LOG=info CSR_PATH=/tmp/gstest/modern_graph_csr_bin PARTITION_ID=0 ./start_rpc_server_csr --config ${base_dir}/../executor/ir/integrated/config &
 sleep 5s
 # start compiler service
-cd ${base_dir} && make run graph.store=rust-mcsr &
+cd ${base_dir} && make run graph.store=rust-mcsr gremlin.script.language.name=antlr_gremlin_calcite graph.physical.opt=proto graph.planner.opt=CBO graph.statistics=./src/test/resources/statistics/modern_statistics.json &
 sleep 5s
 # run gremlin standard tests
-cd ${base_dir} && make gremlin_test
+cd ${base_dir} && make gremlin_calcite_test
 exit_code=$?
 # clean service
 ps -ef | grep "com.alibaba.graphscope.GraphServer" | grep -v grep | awk '{print $2}' | xargs kill -9 || true
 ps -ef | grep "start_rpc_server" | grep -v grep | awk '{print $2}' | xargs kill -9
 # report test result
 if [ $exit_code -ne 0 ]; then
-    echo "ir integration test on experimental store fail"
+    echo "ir integration test on csr store fail"
     exit 1
 fi
