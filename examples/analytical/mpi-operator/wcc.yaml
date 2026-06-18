@@ -14,14 +14,14 @@ spec:
       template:
         spec:
           containers:
-          - image: registry.cn-hongkong.aliyuncs.com/graphscope/analytical:latest
+          - image: graphscope/analytical:latest
             env:
             - name: APPLICATION
-              value: wcc
+              value: wcc_property
             - name: VFILE
-              value: /mnt/data/gstest/p2p-31.v
+              value: /mnt/data/gstest/p2p-31.v#label=v#delimiter=' '
             - name: EFILE
-              value: /mnt/data/gstest/p2p-31.e
+              value: /mnt/data/gstest/p2p-31.e#label=e#src_label=v#dst_label=v#delimiter=' '
             - name: OUTPUT
               value: /mnt/data/output
             - name: OMPI_MCA_btl_vader_single_copy_mechanism
@@ -47,9 +47,8 @@ spec:
               - -c
               - |
                   set +ex
-                  nohup vineyardd &
                   mpirun -x PATH -x LD_LIBRARY_PATH -x VINEYARD_IPC_SOCKET -n 2 \
-                  /opt/graphscope/bin/run_app --vfile ${VFILE} --efile ${EFILE} --application ${APPLICATION} --out_prefix ${OUTPUT}
+                  /opt/graphscope/bin/grape_engine -batch_mode -vineyard_socket ${VINEYARD_IPC_SOCKET} -vfile "${VFILE}" -efile "${EFILE}" -application ${APPLICATION} --out_prefix ${OUTPUT}
             resources:
               limits:
                 cpu: 1
@@ -59,15 +58,24 @@ spec:
       template:
         spec:
           containers:
-          - image: registry.cn-hongkong.aliyuncs.com/graphscope/analytical:latest
+          - image: graphscope/analytical:latest
             name: worker
             imagePullPolicy: IfNotPresent
             securityContext:
               runAsUser: 1001
-            command:
-            - /usr/sbin/sshd
+            env:
+            - name: VINEYARD_IPC_SOCKET
+              value: "/tmp/vineyard.sock"
+            # command:
+            # - /usr/sbin/sshd
             args:
-            - -De
+            # - -De
+              - /bin/bash
+              - -c
+              - |
+                  set +ex
+                  nohup vineyardd -socket ${VINEYARD_IPC_SOCKET} &
+                  /usr/sbin/sshd -De
             resources:
               limits:
                 cpu: 1
