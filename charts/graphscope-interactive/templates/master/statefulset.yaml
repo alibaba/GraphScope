@@ -1,0 +1,114 @@
+{{- $masterFullName := include "graphscope-interactive.master.fullname" . }}
+{{- $releaseNamespace := .Release.Namespace }}
+{{- $clusterDomain := .Values.clusterDomain }}
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "graphscope-interactive.master.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels: {{- include "graphscope-interactive.labels" . | nindent 4 }}
+    app.kubernetes.io/component: master
+    {{- if .Values.commonLabels }}
+    {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.master.replicaCount }}
+  selector:
+    matchLabels: {{ include "graphscope-interactive.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: master
+  serviceName: {{ include "graphscope-interactive.master.fullname" . }}-headless
+  updateStrategy:
+    type: {{ .Values.master.updateStrategy }}
+    {{- if (eq "Recreate" .Values.master.updateStrategy) }}
+    rollingUpdate: null
+    {{- end }}
+  template:
+    metadata:
+      annotations:
+        {{- if .Values.master.podAnnotations }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.master.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+      labels: {{- include "graphscope-interactive.labels" . | nindent 8 }}
+        app.kubernetes.io/component: master
+        {{- if .Values.commonLabels }}
+        {{- include "graphscope-interactive.tplvalues.render" ( dict "value" .Values.commonLabels "context" $ ) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets: {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "graphscope-interactive.serviceAccountName" . }}
+      {{- if .Values.master.affinity }}
+      affinity: {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.master.affinity "context" $) | nindent 8 }}
+      {{- end }}
+      initContainers:
+        {{- if .Values.master.initContainers }}
+        {{- include "graphscope-interactive.tplvalues.render" (dict "value" .Values.master.initContainers "context" $) | nindent 8 }}
+        {{- end }}
+      containers:
+        - name: master
+          image: {{ include "graphscope-interactive.master.image" . }}
+          imagePullPolicy: {{ .Values.master.image.pullPolicy | quote }}
+          command:
+            - {{ include "graphscope-interactive.master.command" . | quote }}
+          env:
+            - name: INTERACTIVE_WORKSPACE
+              value: {{ include "graphscope-interactive.master.workspace" . }}
+            - name: OSS_ACCESS_KEY_ID
+              value: {{ include "graphscope-interactive.ossAccessKeyId" . }}
+            - name: OSS_ACCESS_KEY_SECRET
+              value: {{ include "graphscope-interactive.ossAccessKeySecret" . }}
+            - name: OSS_ENDPOINT
+              value: {{ include "graphscope-interactive.ossEndpoint" .  }}
+            - name: OSS_BUCKET_NAME
+              value: {{ include "graphscope-interactive.ossBucketName" . }}
+            - name: INTERACTIVE_CODE_GEN_WORKDIR
+              value: {{ include "graphscope-interactive.master.codegenWorkDir" . }}
+          ports:
+            - name: admin-port
+              containerPort: {{ .Values.master.service.adminPort }}
+          {{- if .Values.master.resources }}
+          resources: {{- toYaml .Values.master.resources | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: {{ include "graphscope-interactive.master.configFileMountPath" . }}
+              subPath: interactive_config.yaml
+            - name: master-entrypoint
+              mountPath: {{ include "graphscope-interactive.master.entrypointMountPath" . }}
+              subPath: master_entrypoint.sh
+          {{- if and .Values.master.livenessProbe  .Values.master.livenessProbe.enabled }}
+          livenessProbe:
+            httpGet:
+             path: {{ .Values.master.livenessProbe.path }}
+              port: {{ .Values.master.service.adminPort }}
+            initialDelaySeconds: {{ .Values.master.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.master.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.master.livenessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.master.livenessProbe.successThreshold }}
+            failureThreshold: {{ .Values.master.livenessProbe.failureThreshold }}
+          {{- end }}
+          {{- if and .Values.master.readinessProbe  .Values.master.readinessProbe.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.master.readinessProbe.path }}
+              port: {{ .Values.master.service.adminPort }}
+            initialDelaySeconds: {{ .Values.master.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.master.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.master.readinessProbe.timeoutSeconds }}
+            successThreshold: {{ .Values.master.readinessProbe.successThreshold }}
+            failureThreshold: {{ .Values.master.readinessProbe.failureThreshold }}
+          {{- end }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
+        - name: master-entrypoint
+          configMap:
+            name: {{ include "graphscope-interactive.configmapName" . }}
+            defaultMode: 0755
