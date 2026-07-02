@@ -5,9 +5,352 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 02 Jul 2026 07:10:34 +0000</pubDate>
-    <lastBuildDate>Thu, 02 Jul 2026 07:10:34 +0000</lastBuildDate>
+    <pubDate>Thu, 02 Jul 2026 12:08:58 +0000</pubDate>
+    <lastBuildDate>Thu, 02 Jul 2026 12:08:58 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
+    
+      <item>
+        <title>NeuG v0.1.3: The Era of Graph Computing Inside the Graph Database</title>
+        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-07-02-release-v0.1.3-gds/banner_en.png&quot; alt=&quot;banner&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;NeuG v0.1.3 is out. The theme of this release: &lt;strong&gt;giving the graph database native graph computing capabilities.&lt;/strong&gt; The GDS extension brings 9 graph algorithms, COPY TEMP lets you load external data for temporary analysis without polluting your production database.&lt;/p&gt;
+
+&lt;p&gt;Here’s why we built this, and what exactly shipped.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;what-neug-has-always-been-missing-graph-computing&quot;&gt;What NeuG Has Always Been Missing: Graph Computing&lt;/h2&gt;
+
+&lt;p&gt;The core capability of graph databases is graph storage — representing entities and relationships as nodes and edges. With Cypher’s MATCH statement, you can do pattern-matching queries: find a node’s neighbors, match a path, filter subgraphs by conditions.&lt;/p&gt;
+
+&lt;p&gt;But there’s a class of problems that Cypher queries struggle to solve efficiently:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;How many communities are in this graph? Which nodes belong together?&lt;/li&gt;
+  &lt;li&gt;Which node is the most influential hub?&lt;/li&gt;
+  &lt;li&gt;What are the shortest paths from node A to all other nodes?&lt;/li&gt;
+  &lt;li&gt;What is the local clustering coefficient of each node?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;These are &lt;strong&gt;graph algorithm&lt;/strong&gt; problems, not graph query problems. The distinction: a graph query says “I know what pattern I’m looking for, find it”; a graph algorithm says “compute some structural property across the entire graph.”&lt;/p&gt;
+
+&lt;p&gt;Previously, since NeuG didn’t support graph algorithms, you had to export data and hand it off to NetworkX and other graph analysis libraries, compute results, then import them back. Data movement, format conversion, environment setup — the usual engineering overhead.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;The GDS extension in v0.1.3 brings graph algorithms directly into the graph database.&lt;/strong&gt; No data export, no second environment to maintain — just &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL&lt;/code&gt; and go.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;gds-9-algorithms-one-api&quot;&gt;GDS: 9 Algorithms, One API&lt;/h2&gt;
+
+&lt;h3 id=&quot;algorithm-overview&quot;&gt;Algorithm Overview&lt;/h3&gt;
+
+&lt;p&gt;The GDS extension covers the three most common categories of graph algorithms:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Category&lt;/th&gt;
+      &lt;th&gt;Algorithms&lt;/th&gt;
+      &lt;th&gt;What It Solves&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Traversal &amp;amp; Centrality&lt;/td&gt;
+      &lt;td&gt;WCC, BFS, SSSP, PageRank&lt;/td&gt;
+      &lt;td&gt;What’s reachable from A? Shortest path? How many connected components? Which node is most influential?&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Community Detection&lt;/td&gt;
+      &lt;td&gt;Louvain, Leiden, CDLP&lt;/td&gt;
+      &lt;td&gt;How many communities? Which nodes belong together?&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Structural Analysis&lt;/td&gt;
+      &lt;td&gt;LCC, K-Core&lt;/td&gt;
+      &lt;td&gt;How connected is the graph? Local structure density?&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;h3 id=&quot;unified-calling-convention&quot;&gt;Unified Calling Convention&lt;/h3&gt;
+
+&lt;p&gt;All algorithms follow the same pattern: project a subgraph, then call the algorithm.&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;1.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Project&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;a&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;subgraph&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;define&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;which&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;nodes&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;and&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;edges&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;participate&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CALL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;project_graph&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;
+    &lt;span class=&quot;s1&quot;&gt;&apos;social&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;person&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;],&lt;/span&gt;
+    &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;[person, knows, person]&apos;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;2.&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;Call&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;the&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;algorithm&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CALL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;page_rank&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;social&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nl&quot;&gt;max_iterations&lt;/span&gt;&lt;span class=&quot;dl&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;m&quot;&gt;20&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node.fName&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rank&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rank&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;DESC&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;3.&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Clean&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;up&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;CALL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;drop_projected_graph&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;social&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;project_graph&lt;/code&gt; defines the computation scope — which node labels and edge types participate. After projection, all algorithms use the unified &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;CALL algo_name(&apos;graph_name&apos;, {options})&lt;/code&gt; interface. Return values can be processed with standard Cypher clauses like &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ORDER BY&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;WHERE&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;RETURN&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;BFS and SSSP also support returning full paths:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;CALL&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;bfs&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;social&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;source:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;0&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;YIELD&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distance&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node.fName&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;distance&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;nodes&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;AS&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;path_nodes&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;The &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;path&lt;/code&gt; column is a standard Cypher PATH type, supporting &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;nodes(path)&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;relationships(path)&lt;/code&gt;, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;length(path)&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;performance-ldbc-graphalytics-benchmark&quot;&gt;Performance: LDBC Graphalytics Benchmark&lt;/h3&gt;
+
+&lt;p&gt;We evaluated GDS on the LDBC Graphalytics benchmark — the recognized standard for graph analysis. It covers 5 datasets ranging from 1 to 1.8 billion edges, including synthetic R-MAT graphs (graph500-26), weighted social graphs (datagen-9 series), and a real-world social graph (com-friendster, 1.8B edges). We compared against SuiteSparse:GraphBLAS, GeminiGraph, and ladybug (ladybug implements PR and WCC only, with a significant performance gap). All tests ran on a 32-core/64-thread machine with 495GB RAM, all systems compiled with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;-O3&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Partial results:&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Algorithm&lt;/th&gt;
+      &lt;th&gt;Dataset&lt;/th&gt;
+      &lt;th&gt;NeuG&lt;/th&gt;
+      &lt;th&gt;GraphBLAS&lt;/th&gt;
+      &lt;th&gt;GeminiGraph&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;CDLP&lt;/td&gt;
+      &lt;td&gt;datagen-9_2-zf&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;19s&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;316s&lt;/td&gt;
+      &lt;td&gt;—&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;LCC&lt;/td&gt;
+      &lt;td&gt;datagen-9_0&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;21.8s&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;65.1s&lt;/td&gt;
+      &lt;td&gt;—&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;SSSP&lt;/td&gt;
+      &lt;td&gt;datagen-9_0&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;1.14s&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;6.47s&lt;/td&gt;
+      &lt;td&gt;1.24s&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;BFS&lt;/td&gt;
+      &lt;td&gt;com-friendster&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;0.84s&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;1.58s&lt;/td&gt;
+      &lt;td&gt;0.99s&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;WCC&lt;/td&gt;
+      &lt;td&gt;com-friendster&lt;/td&gt;
+      &lt;td&gt;&lt;strong&gt;0.95s&lt;/strong&gt;&lt;/td&gt;
+      &lt;td&gt;1.14s&lt;/td&gt;
+      &lt;td&gt;8.47s&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;Per-algorithm analysis:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;CDLP&lt;/strong&gt; (Label Propagation): fastest on all datasets — 16x faster than GraphBLAS on datagen-9_2-zf (GeminiGraph does not implement this algorithm)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;LCC&lt;/strong&gt; (Local Clustering Coefficient): fastest on all datasets — 3x faster than GraphBLAS on datagen-9_0 (GeminiGraph does not implement this algorithm)&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;SSSP&lt;/strong&gt; (Single-Source Shortest Path): fastest on all three weighted datasets — 6x faster than GraphBLAS on datagen-9_0, slightly faster than GeminiGraph&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;BFS&lt;/strong&gt; (Breadth-First Search) / &lt;strong&gt;WCC&lt;/strong&gt; (Weakly Connected Components): lead or tie with the best on most datasets&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;PageRank&lt;/strong&gt;: close to GraphBLAS; GeminiGraph slightly faster on some datasets&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Full benchmark documentation: &lt;a href=&quot;https://github.com/alibaba/neug/blob/main/extension/gds/Performance.md&quot;&gt;GitHub&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;The complete algorithm list, parameters, and usage are in the &lt;a href=&quot;https://graphscope.io/neug/en/extensions/load_gds&quot;&gt;GDS extension docs&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;temporary-graphs-load-external-data-compute-dont-pollute&quot;&gt;Temporary Graphs: Load External Data, Compute, Don’t Pollute&lt;/h2&gt;
+
+&lt;p&gt;GDS solves the “how to compute” problem. But there’s another practical question: &lt;strong&gt;where does the data come from?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;Suppose you want to use GDS to analyze a batch of external data — relationship data exported from another system, a delta change file, or a temporarily assembled test dataset. You don’t want to create tables in your production database because this is a one-time analysis; but you need the data to exist as a graph in the database to run GDS.&lt;/p&gt;
+
+&lt;p&gt;v0.1.3’s COPY TEMP solves this:&lt;/p&gt;
+
+&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;Load&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temporary&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;node&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;CSV&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TEMP&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temp_user&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;users.csv&apos;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;header&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;primary_key&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;id&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;--&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;Load&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temporary&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;edge&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;table&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;specify&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;to&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;endpoint&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;tables&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;COPY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TEMP&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;temp_knows&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;FROM&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;edges.csv&apos;&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;header&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;from&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;temp_user&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;to&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&apos;temp_user&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;);&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Temporary tables have three key properties:&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;Lifecycle bound to Connection&lt;/strong&gt; — closing the connection automatically cleans up all temporary tables. No manual DROP TABLE needed.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Not written to checkpoint&lt;/strong&gt; — gone after restart, never pollutes persistent data.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Mixable with persistent data&lt;/strong&gt; — standard Cypher JOIN works across temporary and persistent tables.&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;Supports CSV / JSON / JSONL / Parquet formats. Combined with v0.1.2’s httpfs extension, you can also load directly from OSS / S3 / HTTPS remote paths. See the &lt;a href=&quot;https://graphscope.io/neug/en/data_io/import_data&quot;&gt;data import docs&lt;/a&gt; for COPY TEMP details.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;in-practice-discovering-new-concepts-from-code-changes&quot;&gt;In Practice: Discovering New Concepts from Code Changes&lt;/h2&gt;
+
+&lt;p&gt;Combining GDS and COPY TEMP solves a real-world problem: &lt;strong&gt;how do code changes impact the knowledge graph?&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;scenario&quot;&gt;Scenario&lt;/h3&gt;
+
+&lt;p&gt;Take the NeuG codebase as an example. We parse the NeuG codebase (up to v0.1.2) into a graph — functions as nodes, function call relationships as edges (the actual code graph schema would be more complex, also including imports and other relationships — simplified here for demonstration). The knowledge graph is overlaid on this same graph: each function is tagged with which concept it belongs to (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;execute_query()&lt;/code&gt; belongs to the “Query Execution” concept).&lt;/p&gt;
+
+&lt;p&gt;NeuG releases v0.1.3, and the code repository has new changes (new feature modules, documentation updates, etc.). We want to know: what impact will these code changes have on the knowledge graph? Do we need to add new concepts?&lt;/p&gt;
+
+&lt;p&gt;The approach: parse the new code from v0.1.3 into a delta graph (new function nodes + call edges), load it temporarily via COPY TEMP, then analyze its structure with GDS:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Which new code modules are the most influential?&lt;/li&gt;
+  &lt;li&gt;How many communities do the new code changes form? Does each community suggest a new concept?&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;This is a pre-analysis — you don’t want to pollute the production knowledge base before deciding whether to apply the changes. COPY TEMP is the perfect fit.&lt;/p&gt;
+
+&lt;h3 id=&quot;code-graph-and-delta-data&quot;&gt;Code Graph and Delta Data&lt;/h3&gt;
+
+&lt;p&gt;The production database already has the current code graph — function nodes and call edges parsed from the v0.1.2 codebase, plus concept nodes and function → concept assignment relationships.&lt;/p&gt;
+
+&lt;p&gt;The new code from v0.1.3 is parsed into delta CSV files: new function nodes (e.g., &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;project_graph&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;page_rank&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;leiden&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;bfs&lt;/code&gt;, etc.) and their call edges. We use COPY TEMP to temporarily load the delta, then use GDS to analyze its community structure — if new functions naturally cluster into communities, that suggests the knowledge graph may need new concepts.&lt;/p&gt;
+
+&lt;h3 id=&quot;analysis-flow&quot;&gt;Analysis Flow&lt;/h3&gt;
+
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;neug&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;
+&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;tempfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 1. Create database (with persistent code graph, simulating production)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Database&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;db_path&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;mkdtemp&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;w&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# [Persistent code graph already exists: function nodes + call edges + concept assignments]
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 2. Load GDS extension
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;install gds&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;load gds&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 3. New functions and call edges parsed from v0.1.3 code (CSV provided by code analysis tool)
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nodes_csv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gettempdir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;delta_funcs.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;edges_csv&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;path&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;join&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;tempfile&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;gettempdir&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(),&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;delta_calls.csv&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# ... write CSV files ...
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 4. COPY TEMP: load delta code as temporary graph (no pollution to persistent data)
+#    Note: in practice, delta call edges may also connect to persistent func nodes
+#    (new code calling existing functions, or vice versa); simplified to delta_func internal calls here
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;COPY TEMP delta_func FROM &apos;{}&apos; (header=true, primary_key=&apos;id&apos;)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;nodes_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;COPY TEMP delta_call FROM &apos;{}&apos; (header=true, from=&apos;delta_func&apos;, to=&apos;delta_func&apos;)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;format&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;edges_csv&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 5. Project the delta code graph
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    CALL project_graph(
+        &apos;delta_graph&apos;,
+        [&apos;delta_func&apos;],
+        {&apos;[delta_func, delta_call, delta_func]&apos;: &apos;&apos;}
+    )
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# 6. PageRank: which new code modules are most influential?
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    CALL page_rank(&apos;delta_graph&apos;, {max_iterations: 20})
+    RETURN node.name, rank
+    ORDER BY rank DESC
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# (example results)
+# project_graph        -&amp;gt; highest rank (called by page_rank, leiden, wcc, bfs; the delta&apos;s hub)
+# ...
+# NodeDatabase::Init   -&amp;gt; low (called only by InitAll)
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 7. Leiden: how many communities do the new code changes form?
+#    Here we run community detection on the delta graph; in practice, you can also run
+#    Leiden on the combined persistent + delta graph, comparing with original communities
+#    to discover newly emerged communities → suggesting new concepts
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&quot;&quot;
+    CALL leiden(&apos;delta_graph&apos;, {concurrency: 1})
+    RETURN node.name, community
+    ORDER BY community
+&quot;&quot;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# (example results, actual community partitions may vary by algorithm parameters)
+# Group A: project_graph, page_rank, leiden, wcc, bfs, parse_subgraph_entries
+# Group B: InitAll, NodeDatabase::Init
+# -&amp;gt; Two main groups: graph analytics functions (6 nodes) -&amp;gt; may correspond to new concept &quot;GDS Extension&quot;
+#    Node.js binding functions (2 nodes) -&amp;gt; may correspond to new concept &quot;Node.js Binding&quot;
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 8. Clean up
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;CALL drop_projected_graph(&apos;delta_graph&apos;)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# -&amp;gt; Temporary tables automatically cleaned up
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;# 9. Verify: reopen, persistent code graph intact
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn2&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;connect&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;result&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;conn2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;MATCH (n:func) RETURN count(n)&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+
+&lt;span class=&quot;n&quot;&gt;conn2&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;db&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h3 id=&quot;analysis-conclusions&quot;&gt;Analysis Conclusions&lt;/h3&gt;
+
+&lt;p&gt;PageRank reveals: &lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;project_graph&lt;/code&gt; is the most influential function among the new code&lt;/strong&gt; — it is called by &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;page_rank&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;leiden&lt;/code&gt;, and other algorithm functions, making it the core hub of the new code.&lt;/p&gt;
+
+&lt;p&gt;Leiden reveals: &lt;strong&gt;the new code forms multiple communities&lt;/strong&gt; — GDS functions (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;project_graph&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;page_rank&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;leiden&lt;/code&gt;, etc., 6 nodes) are tightly coupled, suggesting that v0.1.3’s code changes may require adding a new “GDS Extension” concept to the knowledge graph; the Node.js binding functions (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;InitAll&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;NodeDatabase::Init&lt;/code&gt;, 2 nodes) are relatively independent and can be treated as a separate concept.&lt;/p&gt;
+
+&lt;p&gt;This is the core idea of “discovering new concepts from the code graph”: code updates are temporarily loaded via COPY TEMP, GDS analyzes their community structure, and newly emerging communities suggest that the knowledge graph needs new concepts. Throughout the analysis, the production database data was never modified. COPY TEMP’s temporary tables are automatically cleaned up when the connection closes, and persistent data remains intact.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;We’ll publish a separate blog post covering the full code-graph-based concept discovery scenario in detail.&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;also-worth-noting&quot;&gt;Also Worth Noting&lt;/h2&gt;
+
+&lt;p&gt;A few more improvements in v0.1.3:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;Node.js Binding&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/424&quot;&gt;#424&lt;/a&gt;): Native C++ addon (N-API), providing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Database&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Connection&lt;/code&gt;, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;QueryResult&lt;/code&gt; high-level API. Supports embedded graph database + Cypher queries. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;npm install @graphscope-neug/neug&lt;/code&gt;.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;COW Snapshot Isolation&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/370&quot;&gt;#370&lt;/a&gt;): UpdateTransaction switched to Copy-on-Write snapshot isolation for safer read-write concurrency.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Unified Type System&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/525&quot;&gt;#525&lt;/a&gt;): Compiler LogicalType and engine DataType unified, reducing type conversion overhead.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Database Directory Management Refactor&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/148&quot;&gt;#148&lt;/a&gt;): Introduced Module, Checkpoint, and CheckpointManager for improved database directory management.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;macOS ARM64 CI&lt;/strong&gt; (&lt;a href=&quot;https://github.com/alibaba/neug/pull/576&quot;&gt;#576&lt;/a&gt;): New dedicated macOS ARM64 testing workflow for Apple Silicon quality.&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;Key Bug Fixes&lt;/strong&gt;: Non-standard column names causing parquet to load 0 rows (&lt;a href=&quot;https://github.com/alibaba/neug/pull/455&quot;&gt;#455&lt;/a&gt;), macOS ARM64 nightly build failures (&lt;a href=&quot;https://github.com/alibaba/neug/pull/515&quot;&gt;#515&lt;/a&gt;, &lt;a href=&quot;https://github.com/alibaba/neug/pull/517&quot;&gt;#517&lt;/a&gt;).&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Full release notes: &lt;a href=&quot;https://github.com/alibaba/neug/releases/tag/v0.1.3&quot;&gt;GitHub Release&lt;/a&gt;.&lt;/p&gt;
+
+&lt;hr /&gt;
+
+&lt;h2 id=&quot;try-it&quot;&gt;Try It&lt;/h2&gt;
+
+&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;neug&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;==&lt;/span&gt;0.1.3
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Copy-paste the demo code above and run it. For a complete reproducible script (including CSV generation and assertions), see &lt;a href=&quot;https://github.com/alibaba/neug/blob/main/blogs/release-v0.1.3-gds/reproduce.py&quot;&gt;reproduce.py&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;GDS extension docs: &lt;a href=&quot;https://graphscope.io/neug/en/extensions/load_gds&quot;&gt;load_gds&lt;/a&gt;&lt;/p&gt;
+
+&lt;p&gt;GitHub: &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;https://github.com/alibaba/neug&lt;/a&gt;&lt;/p&gt;
+</description>
+        <pubDate>Thu, 02 Jul 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/07/02/release-v0.1.3-gds.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/07/02/release-v0.1.3-gds.html</guid>
+        
+        
+        <category>Tech</category>
+        
+      </item>
     
       <item>
         <title>How does AI affect U.S. Employment? Replicating Harvard Business School Research with NeuGBI</title>
@@ -2726,282 +3069,6 @@ agents &amp;lt;-&amp;gt; auth-profiles      a→b=24    b→a=12
         <pubDate>Thu, 19 Mar 2026 00:00:00 +0000</pubDate>
         <link>https://graphscope.io/blog/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html</link>
         <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/19/OpenClaw-Technical-Debt-Analysis.html</guid>
-        
-        
-        <category>Tech</category>
-        
-      </item>
-    
-      <item>
-        <title>OpenClaw Users: Why Is Your Token Budget Disappearing Out of Nowhere?</title>
-        <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-token-cost-title.png&quot; alt=&quot;openclaw-token-cost-title&quot; /&gt;&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;&lt;em&gt;Turns out, heartbeat has been quietly eating your tokens all along.&lt;/em&gt;&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;background&quot;&gt;Background&lt;/h2&gt;
-
-&lt;p&gt;&lt;a href=&quot;https://github.com/openclaw/openclaw&quot;&gt;OpenClaw&lt;/a&gt; has become one of the hottest open-source AI gateway projects. With 18,000+ commits and a rapidly growing community, it connects messaging platforms — Telegram, Discord, Slack, MS Teams, Lark, Matrix, and more — to various LLM providers. For many teams building AI-powered chatbots and agents, OpenClaw has become the go-to solution.&lt;/p&gt;
-
-&lt;p&gt;But as adoption grows, so do user complaints — and one issue stands out: &lt;strong&gt;token consumption is way higher than expected&lt;/strong&gt;. Users report mysterious token budget drains, conversation histories that grow without bound, and system prompts bloating to 29K characters. Some hit the 200K token limit repeatedly, even with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; configured. These aren’t edge cases — they’re common pain points affecting real users and real budgets.&lt;/p&gt;
-
-&lt;p&gt;What’s going on? Is it a misconfiguration? A model issue? Or something deeper in the codebase itself?&lt;/p&gt;
-
-&lt;p&gt;To find out, we analyzed the entire OpenClaw codebase using &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; (graph database) + &lt;a href=&quot;https://github.com/alibaba/zvec&quot;&gt;zvec&lt;/a&gt; (vector index), producing a code knowledge graph with &lt;strong&gt;21,057 functions and 35,761 call edges&lt;/strong&gt;. What we discovered was surprising: one of the biggest token consumers is hiding in plain sight — the &lt;strong&gt;heartbeat mechanism&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;p&gt;In this article, we start from the end-user perspective and trace how a supposedly “lightweight” timer became a token-eating machine. Follow-up articles will cover the extension developer and core maintainer perspectives.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;the-problem-session-history-that-never-stops-growing&quot;&gt;The Problem: Session History That Never Stops Growing&lt;/h2&gt;
-
-&lt;p&gt;If you are using OpenClaw and experiencing any of the following:&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;Conversation history that grows indefinitely without being truncated&lt;/li&gt;
-  &lt;li&gt;A system prompt that bloats unexpectedly (one user reported 29K characters)&lt;/li&gt;
-  &lt;li&gt;Repeatedly hitting the model’s 200K token limit&lt;/li&gt;
-  &lt;li&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; configured in HEARTBEAT.md, but with no noticeable effect&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;This is likely not a misconfiguration or a model issue. One easily overlooked cause is OpenClaw’s &lt;strong&gt;heartbeat mechanism&lt;/strong&gt;.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;what-is-heartbeat-secretly-doing&quot;&gt;What Is Heartbeat Secretly Doing?&lt;/h2&gt;
-
-&lt;p&gt;OpenClaw’s heartbeat is a periodic timer. By design, it is supposed to be a lightweight tick that keeps the agent alive. We traced its call chain using &lt;a href=&quot;https://github.com/codescope/codescope&quot;&gt;CodeScope&lt;/a&gt;, and the results were surprising.&lt;/p&gt;
-
-&lt;h3 id=&quot;step-1-locate-all-heartbeat-related-code&quot;&gt;Step 1: Locate All Heartbeat-Related Code&lt;/h3&gt;
-
-&lt;p&gt;CodeScope provides two retrieval methods: text search (string matching) and semantic search (vector similarity). For a well-named codebase like OpenClaw, keyword search is usually sufficient to locate the core code. We query all functions containing &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat&lt;/code&gt;:&lt;/p&gt;
-
-&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;heartbeat&apos;&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Heartbeat&apos;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.file_path&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;f.file_path&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;The query returns &lt;strong&gt;68 functions&lt;/strong&gt; spread across 10 modules — infra, auto-reply, gateway, config, cron, and others. We visualized the results using &lt;a href=&quot;https://graphscope.io/neug/en/getting_started/neug_ui/&quot;&gt;neug-ui&lt;/a&gt;:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-1.png&quot; alt=&quot;heartbeat functions distribution&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;The infra module has the heaviest heartbeat presence, and most of it is concentrated in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat-runner.ts&lt;/code&gt;.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;This is where conventional approaches stop.&lt;/strong&gt; Once you have the 68 functions and the core file, the usual next step is to feed the code to an LLM and ask it to explain. That process consumes tokens itself, and what you get back is a text description — not a queryable structure. You cannot directly ask: “Who calls whom?”, “How deep does the call chain go?”, “Which function is the structural center?”&lt;/p&gt;
-
-&lt;p&gt;Graph analysis takes a different approach: &lt;strong&gt;instead of reading code content, we model the function-to-function call relationships as a graph&lt;/strong&gt;, turning structural questions into graph queries.&lt;/p&gt;
-
-&lt;h3 id=&quot;step-2-find-the-core-entry-point-via-the-call-graph&quot;&gt;Step 2: Find the Core Entry Point via the Call Graph&lt;/h3&gt;
-
-&lt;p&gt;We build a connectivity graph from the call relationships among the 68 functions and group them by connected component. The largest component contains &lt;strong&gt;45 functions&lt;/strong&gt;, indicating they form a tightly coupled core module. The remaining 19 components average just 1.2 functions each — mostly standalone interface or configuration functions.&lt;/p&gt;
-
-&lt;p&gt;We then ran centrality analysis on the largest component: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; connects &lt;strong&gt;27 functions within 3 hops&lt;/strong&gt;. The second-ranked function connects only 6. The gap is decisive: &lt;strong&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; is the core entry point of the entire heartbeat mechanism&lt;/strong&gt;. Results below:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-2.png&quot; alt=&quot;runHeartbeatOnce centrality&quot; /&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;step-3-expand-the-call-chain--what-does-it-actually-touch&quot;&gt;Step 3: Expand the Call Chain — What Does It Actually Touch?&lt;/h3&gt;
-
-&lt;p&gt;We expand the multi-hop outgoing edges of &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; to find all context-loading functions it directly or indirectly calls:&lt;/p&gt;
-
-&lt;div class=&quot;language-cypher highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// Find context-loading functions in the runHeartbeatOnce call chain&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;MATCH&lt;/span&gt;&lt;span class=&quot;w&quot;&gt; &lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;f:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt; &lt;span class=&quot;ss&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;name:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;runHeartbeatOnce&apos;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;})&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;:CALLS&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;..&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;3&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;py&quot;&gt;t:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Function&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;)&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;WHERE&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Context&apos;&lt;/span&gt;
-   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Workspace&apos;&lt;/span&gt;
-   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Session&apos;&lt;/span&gt;
-   &lt;span class=&quot;ow&quot;&gt;OR&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;CONTAINS&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&apos;Prompt&apos;&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;RETURN&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.name&lt;/span&gt;&lt;span class=&quot;ss&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.file_path&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;ORDER&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;BY&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;t.file_path&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Results:&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-03-18-openclaw-heartbeat-3.png&quot; alt=&quot;context-loading functions&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;Every heartbeat tick triggers all of these functions&lt;/strong&gt; — loading the workspace directory, building a full session context, generating a complete prompt. &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; has &lt;strong&gt;15 direct callees&lt;/strong&gt;, each involved in parsing heartbeat configuration and assembling context. This is the structural root cause of heartbeat being far heavier than its design intended.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;why-doesnt-lightcontext-true-help&quot;&gt;Why Doesn’t &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; Help?&lt;/h2&gt;
-
-&lt;p&gt;You may have set &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; in HEARTBEAT.md, expecting heartbeat to load only a lightweight context.&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext&lt;/code&gt; is a configuration flag, but it cannot change the structure of the call chain. As long as the dependency tree of heartbeat remains intact, every tick must load the workspace, build the session context, and traverse multiple modules. This is a path determined by the code structure — it cannot be bypassed by a flag.&lt;/p&gt;
-
-&lt;p&gt;We also analyzed the modification frequency of the most recent 200 commits: 4 out of 21 functions in the &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;context-pruning&lt;/code&gt; module (responsible for context trimming) have been repeatedly modified recently. This indicates the OpenClaw team is aware of the context bloat problem and is actively working on a fix — but a stable solution is not yet available.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;codegraph-reproduce-this-analysis-yourself&quot;&gt;CodeGraph: Reproduce This Analysis Yourself&lt;/h2&gt;
-
-&lt;p&gt;We have packaged the entire analysis workflow into a &lt;a href=&quot;https://github.com/alibaba/neug/tree/main/skills/codegraph&quot;&gt;CodeGraph Skill&lt;/a&gt;, published inside NeuG. You can use it to reproduce every query in this article.&lt;/p&gt;
-
-&lt;h3 id=&quot;prerequisites&quot;&gt;Prerequisites&lt;/h3&gt;
-
-&lt;p&gt;&lt;strong&gt;CodeScope requires Python 3.10+ and PyTorch 2.4+.&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;pip &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;codegraph-ai
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;&lt;strong&gt;Environment variables:&lt;/strong&gt;&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Use HuggingFace offline mode if you have already downloaded the models&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;HF_HUB_OFFLINE&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;1&quot;&lt;/span&gt;
-&lt;span class=&quot;c&quot;&gt;# Set the database directory&lt;/span&gt;
-&lt;span class=&quot;nb&quot;&gt;export &lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;CODESCOPE_DB_DIR&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;/path/to/your/project/.codegraph&quot;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;building-the-index&quot;&gt;Building the Index&lt;/h3&gt;
-
-&lt;p&gt;Index the OpenClaw repository:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c&quot;&gt;# Build the index (first run)&lt;/span&gt;
-codegraph init &lt;span class=&quot;nt&quot;&gt;--repo&lt;/span&gt; /path/to/openclaw &lt;span class=&quot;nt&quot;&gt;--lang&lt;/span&gt; auto &lt;span class=&quot;nt&quot;&gt;--commits&lt;/span&gt; 100
-&lt;span class=&quot;c&quot;&gt;# Check index status&lt;/span&gt;
-codegraph status &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Sample output:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;============================================================
-CodeScope Index Summary
-============================================================
-  Files:      7083  (+ 5774 external)
-  Functions:  24173  (+ 0 historical)
-  Call edges: 41269
-  Vectors:    24173
-  Imports:    28877
-  Classes:    255
-  Modules:    380
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Once indexed, you can query the graph via CLI or Python SDK.&lt;/p&gt;
-
-&lt;h3 id=&quot;cli&quot;&gt;CLI&lt;/h3&gt;
-
-&lt;p&gt;Check the database status:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph status &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Sample output:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;============================================================
-CodeScope Index Status: /path/to/.codegraph
-============================================================
-
-Graph:
-  File        :     12,857
-  Function    :     24,173
-  Class       :        255
-  Module      :        380
-  Commit      :        100
-
-Edges:
-  CALLS       :     41,269
-  TOUCHES     :        605
-  MODIFIES    :          0
-
-Backfill: 0/100 commits have MODIFIES edges
-  100 commits still need backfill
-
-Vectors: 24,173 function embeddings
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Natural language query:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph query &lt;span class=&quot;s2&quot;&gt;&quot;Who calls runHeartbeatOnce?&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Output:&lt;/p&gt;
-
-&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Question type: structural
-Retrieved 6 evidence items in 76ms:
-
-[1] (caller) executeJobCore (src/cron/service/timer.ts) — hop=1, relevance=0.000
-[2] (caller) createGatewayReloadHandlers (src/gateway/server-reload-handlers.ts) — hop=2, relevance=0.000
-[3] (caller) startGatewayServer (src/gateway/server.impl.ts) — hop=2, relevance=0.000
-[4] (caller) executeJob (src/cron/service/timer.ts) — hop=2, relevance=0.000
-[5] (caller) executeJobCoreWithTimeout (src/cron/service/timer.ts) — hop=2, relevance=0.000
-[6] (caller) buildGatewayCronService (src/gateway/server-cron.ts) — hop=1, relevance=0.000
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;Generate a full architecture report with multi-dimensional analysis:&lt;/p&gt;
-
-&lt;div class=&quot;language-bash highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;codegraph analyze &lt;span class=&quot;nt&quot;&gt;--db&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$CODESCOPE_DB_DIR&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;--output&lt;/span&gt; architecture-report.md
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;h3 id=&quot;python-sdk&quot;&gt;Python SDK&lt;/h3&gt;
-
-&lt;p&gt;For more complex queries — such as the multi-hop call chain traversal used in this analysis — call the CodeGraph Python API directly, using &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; as an example:&lt;/p&gt;
-
-&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;os&lt;/span&gt;
-&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;HF_HUB_OFFLINE&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&apos;1&apos;&lt;/span&gt;
-&lt;span class=&quot;kn&quot;&gt;from&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;codegraph.core&lt;/span&gt; &lt;span class=&quot;kn&quot;&gt;import&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CodeScope&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;CodeScope&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;os&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;environ&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;CODESCOPE_DB_DIR&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;])&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;rows&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;list&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;conn&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;execute&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&apos;&apos;&apos;
-    MATCH (f:Function {name: &apos;runHeartbeatOnce&apos;})-[:CALLS*1..3]-&amp;gt;(t:Function)
-    WHERE t.name CONTAINS &apos;Context&apos;
-       OR t.name CONTAINS &apos;Workspace&apos;
-       OR t.name CONTAINS &apos;Session&apos;
-       OR t.name CONTAINS &apos;Prompt&apos;
-    RETURN t.name, t.file_path
-    ORDER BY t.file_path
-&apos;&apos;&apos;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;))&lt;/span&gt;
-&lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;r&lt;/span&gt; &lt;span class=&quot;ow&quot;&gt;in&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;rows&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;
-    &lt;span class=&quot;k&quot;&gt;print&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;sa&quot;&gt;f&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt; @ &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;r&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
-
-&lt;span class=&quot;n&quot;&gt;cs&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;close&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-
-&lt;p&gt;We will continue to publish more analysis angles on OpenClaw. If you want to explore further or try your own queries, give CodeGraph a try.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;what-you-can-do-now-four-practical-mitigations&quot;&gt;What You Can Do Now: Four Practical Mitigations&lt;/h2&gt;
-
-&lt;p&gt;&lt;strong&gt;1. Treat heartbeat as a heavyweight operation&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Do not assume heartbeat is lightweight. When estimating token budgets, count every heartbeat tick as a real consumption event. Do not rely on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; to save tokens.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;2. Reduce heartbeat trigger frequency&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;If your use case does not strictly depend on real-time heartbeat behavior, lowering the trigger frequency is the most direct and effective way to reduce token consumption. Fewer ticks = fewer full context loads.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;3. Manually cap session history length&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Do not rely on OpenClaw to auto-truncate conversation history. Explicitly set a maximum history count in your configuration to prevent unbounded accumulation.&lt;/p&gt;
-
-&lt;p&gt;&lt;strong&gt;4. Monitor for periodic token spikes&lt;/strong&gt;&lt;/p&gt;
-
-&lt;p&gt;Enable token usage monitoring on the LLM provider side. If you observe periodic, clock-like token spikes (rather than growth correlated with conversation length), heartbeat is likely triggering full context loads on schedule.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;h2 id=&quot;summary&quot;&gt;Summary&lt;/h2&gt;
-
-&lt;p&gt;We dissected heartbeat across three analytical layers:&lt;/p&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;strong&gt;Function distribution&lt;/strong&gt;: 68 heartbeat-related functions spread across 10+ modules, with the heaviest concentration in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;heartbeat-runner.ts&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Call graph centrality&lt;/strong&gt;: &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;runHeartbeatOnce&lt;/code&gt; is the core entry point — 15 direct callees, 27 functions reachable within 3 hops&lt;/li&gt;
-  &lt;li&gt;&lt;strong&gt;Call chain expansion&lt;/strong&gt;: every tick loads the workspace directory and builds full session context, with a load comparable to processing a complete user message&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;p&gt;Together, these findings explain one observation: &lt;strong&gt;heartbeat is designed as a lightweight timer, but its actual execution path is structurally equivalent to a full message-processing pipeline.&lt;/strong&gt; &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;lightContext: true&lt;/code&gt; cannot override this. Until an official fix is available, reducing heartbeat trigger frequency and manually capping session history length are the most effective mitigations.&lt;/p&gt;
-
-&lt;hr /&gt;
-
-&lt;p&gt;&lt;em&gt;This analysis is based on a scan of the OpenClaw codebase using &lt;a href=&quot;https://github.com/alibaba/neug&quot;&gt;NeuG&lt;/a&gt; graph database and &lt;a href=&quot;https://github.com/alibaba/zvec&quot;&gt;zvec&lt;/a&gt; vector index.&lt;/em&gt;&lt;/p&gt;
-</description>
-        <pubDate>Wed, 18 Mar 2026 00:00:00 +0000</pubDate>
-        <link>https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</link>
-        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/03/18/OpenClaw-User-Token-Cost-Analysis.html</guid>
         
         
         <category>Tech</category>
