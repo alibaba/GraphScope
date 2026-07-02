@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">NeuG v0.1.3: The Era of Graph Computing Inside the Graph Database</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-07-02">02 Jul 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-07-02">02 Jul 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">NeuG v0.1.3: The Era of Graph Computing Inside the Graph Database</h1> -->
+
+        <section class="post-content">
+            <p><img src="/blog/assets/images/2026-07-02-release-v0.1.3-gds/banner_en.png" alt="banner" /></p>
+
+<p>NeuG v0.1.3 is out. The theme of this release: <strong>giving the graph database native graph computing capabilities.</strong> The GDS extension brings 9 graph algorithms, COPY TEMP lets you load external data for temporary analysis without polluting your production database.</p>
+
+<p>Here’s why we built this, and what exactly shipped.</p>
+
+<hr />
+
+<h2 id="what-neug-has-always-been-missing-graph-computing">What NeuG Has Always Been Missing: Graph Computing</h2>
+
+<p>The core capability of graph databases is graph storage — representing entities and relationships as nodes and edges. With Cypher’s MATCH statement, you can do pattern-matching queries: find a node’s neighbors, match a path, filter subgraphs by conditions.</p>
+
+<p>But there’s a class of problems that Cypher queries struggle to solve efficiently:</p>
+
+<ul>
+  <li>How many communities are in this graph? Which nodes belong together?</li>
+  <li>Which node is the most influential hub?</li>
+  <li>What are the shortest paths from node A to all other nodes?</li>
+  <li>What is the local clustering coefficient of each node?</li>
+</ul>
+
+<p>These are <strong>graph algorithm</strong> problems, not graph query problems. The distinction: a graph query says “I know what pattern I’m looking for, find it”; a graph algorithm says “compute some structural property across the entire graph.”</p>
+
+<p>Previously, since NeuG didn’t support graph algorithms, you had to export data and hand it off to NetworkX and other graph analysis libraries, compute results, then import them back. Data movement, format conversion, environment setup — the usual engineering overhead.</p>
+
+<p><strong>The GDS extension in v0.1.3 brings graph algorithms directly into the graph database.</strong> No data export, no second environment to maintain — just <code class="language-plaintext highlighter-rouge">CALL</code> and go.</p>
+
+<hr />
+
+<h2 id="gds-9-algorithms-one-api">GDS: 9 Algorithms, One API</h2>
+
+<h3 id="algorithm-overview">Algorithm Overview</h3>
+
+<p>The GDS extension covers the three most common categories of graph algorithms:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Category</th>
+      <th>Algorithms</th>
+      <th>What It Solves</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Traversal &amp; Centrality</td>
+      <td>WCC, BFS, SSSP, PageRank</td>
+      <td>What’s reachable from A? Shortest path? How many connected components? Which node is most influential?</td>
+    </tr>
+    <tr>
+      <td>Community Detection</td>
+      <td>Louvain, Leiden, CDLP</td>
+      <td>How many communities? Which nodes belong together?</td>
+    </tr>
+    <tr>
+      <td>Structural Analysis</td>
+      <td>LCC, K-Core</td>
+      <td>How connected is the graph? Local structure density?</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3 id="unified-calling-convention">Unified Calling Convention</h3>
+
+<p>All algorithms follow the same pattern: project a subgraph, then call the algorithm.</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span> <span class="mf">1.</span> <span class="n">Project</span> <span class="n">a</span> <span class="n">subgraph</span><span class="w"> </span><span class="ss">(</span><span class="n">define</span> <span class="n">which</span> <span class="n">nodes</span> <span class="ow">and</span> <span class="n">edges</span> <span class="n">participate</span><span class="ss">)</span>
+<span class="k">CALL</span> <span class="n">project_graph</span><span class="ss">(</span>
+    <span class="s1">'social'</span><span class="ss">,</span>
+    <span class="ss">[</span><span class="s1">'person'</span><span class="ss">],</span>
+    <span class="ss">{</span><span class="s1">'[person, knows, person]'</span><span class="err">:</span> <span class="s1">''</span><span class="ss">}</span>
+<span class="ss">);</span>
+
+<span class="o">--</span> <span class="mf">2.</span> <span class="k">Call</span> <span class="n">the</span> <span class="n">algorithm</span>
+<span class="k">CALL</span> <span class="n">page_rank</span><span class="ss">(</span><span class="s1">'social'</span><span class="ss">,</span> <span class="ss">{</span><span class="nl">max_iterations</span><span class="dl">:</span><span class="w"> </span><span class="m">20</span><span class="ss">})</span>
+<span class="k">RETURN</span> <span class="n">node.fName</span><span class="ss">,</span> <span class="n">rank</span>
+<span class="k">ORDER</span> <span class="k">BY</span> <span class="n">rank</span> <span class="k">DESC</span><span class="ss">;</span>
+
+<span class="o">--</span> <span class="mf">3.</span> <span class="n">Clean</span> <span class="n">up</span>
+<span class="k">CALL</span> <span class="n">drop_projected_graph</span><span class="ss">(</span><span class="s1">'social'</span><span class="ss">);</span>
+</code></pre></div></div>
+
+<p><code class="language-plaintext highlighter-rouge">project_graph</code> defines the computation scope — which node labels and edge types participate. After projection, all algorithms use the unified <code class="language-plaintext highlighter-rouge">CALL algo_name('graph_name', {options})</code> interface. Return values can be processed with standard Cypher clauses like <code class="language-plaintext highlighter-rouge">ORDER BY</code>, <code class="language-plaintext highlighter-rouge">WHERE</code>, and <code class="language-plaintext highlighter-rouge">RETURN</code>.</p>
+
+<p>BFS and SSSP also support returning full paths:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">CALL</span> <span class="n">bfs</span><span class="ss">(</span><span class="s1">'social'</span><span class="ss">,</span> <span class="ss">{</span><span class="py">source:</span> <span class="s1">'0'</span><span class="ss">})</span>
+<span class="k">YIELD</span> <span class="n">node</span><span class="ss">,</span> <span class="n">distance</span><span class="ss">,</span> <span class="n">path</span>
+<span class="k">RETURN</span> <span class="n">node.fName</span><span class="ss">,</span> <span class="n">distance</span><span class="ss">,</span> <span class="nf">nodes</span><span class="ss">(</span><span class="n">path</span><span class="ss">)</span> <span class="k">AS</span> <span class="n">path_nodes</span><span class="ss">;</span>
+</code></pre></div></div>
+
+<p>The <code class="language-plaintext highlighter-rouge">path</code> column is a standard Cypher PATH type, supporting <code class="language-plaintext highlighter-rouge">nodes(path)</code>, <code class="language-plaintext highlighter-rouge">relationships(path)</code>, and <code class="language-plaintext highlighter-rouge">length(path)</code>.</p>
+
+<h3 id="performance-ldbc-graphalytics-benchmark">Performance: LDBC Graphalytics Benchmark</h3>
+
+<p>We evaluated GDS on the LDBC Graphalytics benchmark — the recognized standard for graph analysis. It covers 5 datasets ranging from 1 to 1.8 billion edges, including synthetic R-MAT graphs (graph500-26), weighted social graphs (datagen-9 series), and a real-world social graph (com-friendster, 1.8B edges). We compared against SuiteSparse:GraphBLAS, GeminiGraph, and ladybug (ladybug implements PR and WCC only, with a significant performance gap). All tests ran on a 32-core/64-thread machine with 495GB RAM, all systems compiled with <code class="language-plaintext highlighter-rouge">-O3</code>.</p>
+
+<p>Partial results:</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Algorithm</th>
+      <th>Dataset</th>
+      <th>NeuG</th>
+      <th>GraphBLAS</th>
+      <th>GeminiGraph</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>CDLP</td>
+      <td>datagen-9_2-zf</td>
+      <td><strong>19s</strong></td>
+      <td>316s</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>LCC</td>
+      <td>datagen-9_0</td>
+      <td><strong>21.8s</strong></td>
+      <td>65.1s</td>
+      <td>—</td>
+    </tr>
+    <tr>
+      <td>SSSP</td>
+      <td>datagen-9_0</td>
+      <td><strong>1.14s</strong></td>
+      <td>6.47s</td>
+      <td>1.24s</td>
+    </tr>
+    <tr>
+      <td>BFS</td>
+      <td>com-friendster</td>
+      <td><strong>0.84s</strong></td>
+      <td>1.58s</td>
+      <td>0.99s</td>
+    </tr>
+    <tr>
+      <td>WCC</td>
+      <td>com-friendster</td>
+      <td><strong>0.95s</strong></td>
+      <td>1.14s</td>
+      <td>8.47s</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>Per-algorithm analysis:</p>
+
+<ul>
+  <li><strong>CDLP</strong> (Label Propagation): fastest on all datasets — 16x faster than GraphBLAS on datagen-9_2-zf (GeminiGraph does not implement this algorithm)</li>
+  <li><strong>LCC</strong> (Local Clustering Coefficient): fastest on all datasets — 3x faster than GraphBLAS on datagen-9_0 (GeminiGraph does not implement this algorithm)</li>
+  <li><strong>SSSP</strong> (Single-Source Shortest Path): fastest on all three weighted datasets — 6x faster than GraphBLAS on datagen-9_0, slightly faster than GeminiGraph</li>
+  <li><strong>BFS</strong> (Breadth-First Search) / <strong>WCC</strong> (Weakly Connected Components): lead or tie with the best on most datasets</li>
+  <li><strong>PageRank</strong>: close to GraphBLAS; GeminiGraph slightly faster on some datasets</li>
+</ul>
+
+<p>Full benchmark documentation: <a href="https://github.com/alibaba/neug/blob/main/extension/gds/Performance.md">GitHub</a>.</p>
+
+<p>The complete algorithm list, parameters, and usage are in the <a href="https://graphscope.io/neug/en/extensions/load_gds">GDS extension docs</a>.</p>
+
+<hr />
+
+<h2 id="temporary-graphs-load-external-data-compute-dont-pollute">Temporary Graphs: Load External Data, Compute, Don’t Pollute</h2>
+
+<p>GDS solves the “how to compute” problem. But there’s another practical question: <strong>where does the data come from?</strong></p>
+
+<p>Suppose you want to use GDS to analyze a batch of external data — relationship data exported from another system, a delta change file, or a temporarily assembled test dataset. You don’t want to create tables in your production database because this is a one-time analysis; but you need the data to exist as a graph in the database to run GDS.</p>
+
+<p>v0.1.3’s COPY TEMP solves this:</p>
+
+<div class="language-cypher highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">--</span> <span class="k">Load</span> <span class="n">temporary</span> <span class="n">node</span> <span class="n">table</span><span class="w"> </span><span class="ss">(</span><span class="k">from</span> <span class="k">CSV</span><span class="ss">)</span>
+<span class="n">COPY</span> <span class="n">TEMP</span> <span class="n">temp_user</span> <span class="k">FROM</span> <span class="s1">'users.csv'</span> <span class="ss">(</span><span class="n">header</span><span class="o">=</span><span class="k">true</span><span class="ss">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="s1">'id'</span><span class="ss">);</span>
+
+<span class="o">--</span> <span class="k">Load</span> <span class="n">temporary</span> <span class="n">edge</span> <span class="n">table</span><span class="w"> </span><span class="ss">(</span><span class="n">specify</span> <span class="k">from</span><span class="err">/</span><span class="n">to</span> <span class="n">endpoint</span> <span class="n">tables</span><span class="ss">)</span>
+<span class="n">COPY</span> <span class="n">TEMP</span> <span class="n">temp_knows</span> <span class="k">FROM</span> <span class="s1">'edges.csv'</span> <span class="ss">(</span><span class="n">header</span><span class="o">=</span><span class="k">true</span><span class="ss">,</span> <span class="k">from</span><span class="o">=</span><span class="s1">'temp_user'</span><span class="ss">,</span> <span class="n">to</span><span class="o">=</span><span class="s1">'temp_user'</span><span class="ss">);</span>
+</code></pre></div></div>
+
+<p>Temporary tables have three key properties:</p>
+
+<ol>
+  <li><strong>Lifecycle bound to Connection</strong> — closing the connection automatically cleans up all temporary tables. No manual DROP TABLE needed.</li>
+  <li><strong>Not written to checkpoint</strong> — gone after restart, never pollutes persistent data.</li>
+  <li><strong>Mixable with persistent data</strong> — standard Cypher JOIN works across temporary and persistent tables.</li>
+</ol>
+
+<p>Supports CSV / JSON / JSONL / Parquet formats. Combined with v0.1.2’s httpfs extension, you can also load directly from OSS / S3 / HTTPS remote paths. See the <a href="https://graphscope.io/neug/en/data_io/import_data">data import docs</a> for COPY TEMP details.</p>
+
+<hr />
+
+<h2 id="in-practice-discovering-new-concepts-from-code-changes">In Practice: Discovering New Concepts from Code Changes</h2>
+
+<p>Combining GDS and COPY TEMP solves a real-world problem: <strong>how do code changes impact the knowledge graph?</strong></p>
+
+<h3 id="scenario">Scenario</h3>
+
+<p>Take the NeuG codebase as an example. We parse the NeuG codebase (up to v0.1.2) into a graph — functions as nodes, function call relationships as edges (the actual code graph schema would be more complex, also including imports and other relationships — simplified here for demonstration). The knowledge graph is overlaid on this same graph: each function is tagged with which concept it belongs to (e.g., <code class="language-plaintext highlighter-rouge">execute_query()</code> belongs to the “Query Execution” concept).</p>
+
+<p>NeuG releases v0.1.3, and the code repository has new changes (new feature modules, documentation updates, etc.). We want to know: what impact will these code changes have on the knowledge graph? Do we need to add new concepts?</p>
+
+<p>The approach: parse the new code from v0.1.3 into a delta graph (new function nodes + call edges), load it temporarily via COPY TEMP, then analyze its structure with GDS:</p>
+
+<ul>
+  <li>Which new code modules are the most influential?</li>
+  <li>How many communities do the new code changes form? Does each community suggest a new concept?</li>
+</ul>
+
+<p>This is a pre-analysis — you don’t want to pollute the production knowledge base before deciding whether to apply the changes. COPY TEMP is the perfect fit.</p>
+
+<h3 id="code-graph-and-delta-data">Code Graph and Delta Data</h3>
+
+<p>The production database already has the current code graph — function nodes and call edges parsed from the v0.1.2 codebase, plus concept nodes and function → concept assignment relationships.</p>
+
+<p>The new code from v0.1.3 is parsed into delta CSV files: new function nodes (e.g., <code class="language-plaintext highlighter-rouge">project_graph</code>, <code class="language-plaintext highlighter-rouge">page_rank</code>, <code class="language-plaintext highlighter-rouge">leiden</code>, <code class="language-plaintext highlighter-rouge">bfs</code>, etc.) and their call edges. We use COPY TEMP to temporarily load the delta, then use GDS to analyze its community structure — if new functions naturally cluster into communities, that suggests the knowledge graph may need new concepts.</p>
+
+<h3 id="analysis-flow">Analysis Flow</h3>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">neug</span> <span class="kn">import</span> <span class="n">Database</span>
+<span class="kn">import</span> <span class="nn">tempfile</span><span class="p">,</span> <span class="n">os</span>
+
+<span class="c1"># 1. Create database (with persistent code graph, simulating production)
+</span><span class="n">db</span> <span class="o">=</span> <span class="n">Database</span><span class="p">(</span><span class="n">db_path</span><span class="o">=</span><span class="n">tempfile</span><span class="p">.</span><span class="n">mkdtemp</span><span class="p">(),</span> <span class="n">mode</span><span class="o">=</span><span class="s">"w"</span><span class="p">)</span>
+<span class="n">conn</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="c1"># [Persistent code graph already exists: function nodes + call edges + concept assignments]
+</span>
+<span class="c1"># 2. Load GDS extension
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"install gds"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"load gds"</span><span class="p">)</span>
+
+<span class="c1"># 3. New functions and call edges parsed from v0.1.3 code (CSV provided by code analysis tool)
+</span><span class="n">nodes_csv</span> <span class="o">=</span> <span class="n">os</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="p">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="s">"delta_funcs.csv"</span><span class="p">)</span>
+<span class="n">edges_csv</span> <span class="o">=</span> <span class="n">os</span><span class="p">.</span><span class="n">path</span><span class="p">.</span><span class="n">join</span><span class="p">(</span><span class="n">tempfile</span><span class="p">.</span><span class="n">gettempdir</span><span class="p">(),</span> <span class="s">"delta_calls.csv"</span><span class="p">)</span>
+<span class="c1"># ... write CSV files ...
+</span>
+<span class="c1"># 4. COPY TEMP: load delta code as temporary graph (no pollution to persistent data)
+#    Note: in practice, delta call edges may also connect to persistent func nodes
+#    (new code calling existing functions, or vice versa); simplified to delta_func internal calls here
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"COPY TEMP delta_func FROM '{}' (header=true, primary_key='id')"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">nodes_csv</span><span class="p">))</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"COPY TEMP delta_call FROM '{}' (header=true, from='delta_func', to='delta_func')"</span><span class="p">.</span><span class="nb">format</span><span class="p">(</span><span class="n">edges_csv</span><span class="p">))</span>
+
+<span class="c1"># 5. Project the delta code graph
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    CALL project_graph(
+        'delta_graph',
+        ['delta_func'],
+        {'[delta_func, delta_call, delta_func]': ''}
+    )
+"""</span><span class="p">)</span>
+
+<span class="c1"># 6. PageRank: which new code modules are most influential?
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    CALL page_rank('delta_graph', {max_iterations: 20})
+    RETURN node.name, rank
+    ORDER BY rank DESC
+"""</span><span class="p">)</span>
+<span class="c1"># (example results)
+# project_graph        -&gt; highest rank (called by page_rank, leiden, wcc, bfs; the delta's hub)
+# ...
+# NodeDatabase::Init   -&gt; low (called only by InitAll)
+</span>
+<span class="c1"># 7. Leiden: how many communities do the new code changes form?
+#    Here we run community detection on the delta graph; in practice, you can also run
+#    Leiden on the combined persistent + delta graph, comparing with original communities
+#    to discover newly emerged communities → suggesting new concepts
+</span><span class="n">result</span> <span class="o">=</span> <span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"""
+    CALL leiden('delta_graph', {concurrency: 1})
+    RETURN node.name, community
+    ORDER BY community
+"""</span><span class="p">)</span>
+<span class="c1"># (example results, actual community partitions may vary by algorithm parameters)
+# Group A: project_graph, page_rank, leiden, wcc, bfs, parse_subgraph_entries
+# Group B: InitAll, NodeDatabase::Init
+# -&gt; Two main groups: graph analytics functions (6 nodes) -&gt; may correspond to new concept "GDS Extension"
+#    Node.js binding functions (2 nodes) -&gt; may correspond to new concept "Node.js Binding"
+</span>
+<span class="c1"># 8. Clean up
+</span><span class="n">conn</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"CALL drop_projected_graph('delta_graph')"</span><span class="p">)</span>
+<span class="n">conn</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+<span class="c1"># -&gt; Temporary tables automatically cleaned up
+</span>
+<span class="c1"># 9. Verify: reopen, persistent code graph intact
+</span><span class="n">conn2</span> <span class="o">=</span> <span class="n">db</span><span class="p">.</span><span class="n">connect</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">conn2</span><span class="p">.</span><span class="n">execute</span><span class="p">(</span><span class="s">"MATCH (n:func) RETURN count(n)"</span><span class="p">)</span>
+
+<span class="n">conn2</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+<span class="n">db</span><span class="p">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></div>
+
+<h3 id="analysis-conclusions">Analysis Conclusions</h3>
+
+<p>PageRank reveals: <strong><code class="language-plaintext highlighter-rouge">project_graph</code> is the most influential function among the new code</strong> — it is called by <code class="language-plaintext highlighter-rouge">page_rank</code>, <code class="language-plaintext highlighter-rouge">leiden</code>, and other algorithm functions, making it the core hub of the new code.</p>
+
+<p>Leiden reveals: <strong>the new code forms multiple communities</strong> — GDS functions (<code class="language-plaintext highlighter-rouge">project_graph</code>, <code class="language-plaintext highlighter-rouge">page_rank</code>, <code class="language-plaintext highlighter-rouge">leiden</code>, etc., 6 nodes) are tightly coupled, suggesting that v0.1.3’s code changes may require adding a new “GDS Extension” concept to the knowledge graph; the Node.js binding functions (<code class="language-plaintext highlighter-rouge">InitAll</code>, <code class="language-plaintext highlighter-rouge">NodeDatabase::Init</code>, 2 nodes) are relatively independent and can be treated as a separate concept.</p>
+
+<p>This is the core idea of “discovering new concepts from the code graph”: code updates are temporarily loaded via COPY TEMP, GDS analyzes their community structure, and newly emerging communities suggest that the knowledge graph needs new concepts. Throughout the analysis, the production database data was never modified. COPY TEMP’s temporary tables are automatically cleaned up when the connection closes, and persistent data remains intact.</p>
+
+<blockquote>
+  <p>We’ll publish a separate blog post covering the full code-graph-based concept discovery scenario in detail.</p>
+</blockquote>
+
+<hr />
+
+<h2 id="also-worth-noting">Also Worth Noting</h2>
+
+<p>A few more improvements in v0.1.3:</p>
+
+<ul>
+  <li><strong>Node.js Binding</strong> (<a href="https://github.com/alibaba/neug/pull/424">#424</a>): Native C++ addon (N-API), providing <code class="language-plaintext highlighter-rouge">Database</code>, <code class="language-plaintext highlighter-rouge">Connection</code>, <code class="language-plaintext highlighter-rouge">QueryResult</code> high-level API. Supports embedded graph database + Cypher queries. <code class="language-plaintext highlighter-rouge">npm install @graphscope-neug/neug</code>.</li>
+  <li><strong>COW Snapshot Isolation</strong> (<a href="https://github.com/alibaba/neug/pull/370">#370</a>): UpdateTransaction switched to Copy-on-Write snapshot isolation for safer read-write concurrency.</li>
+  <li><strong>Unified Type System</strong> (<a href="https://github.com/alibaba/neug/pull/525">#525</a>): Compiler LogicalType and engine DataType unified, reducing type conversion overhead.</li>
+  <li><strong>Database Directory Management Refactor</strong> (<a href="https://github.com/alibaba/neug/pull/148">#148</a>): Introduced Module, Checkpoint, and CheckpointManager for improved database directory management.</li>
+  <li><strong>macOS ARM64 CI</strong> (<a href="https://github.com/alibaba/neug/pull/576">#576</a>): New dedicated macOS ARM64 testing workflow for Apple Silicon quality.</li>
+  <li><strong>Key Bug Fixes</strong>: Non-standard column names causing parquet to load 0 rows (<a href="https://github.com/alibaba/neug/pull/455">#455</a>), macOS ARM64 nightly build failures (<a href="https://github.com/alibaba/neug/pull/515">#515</a>, <a href="https://github.com/alibaba/neug/pull/517">#517</a>).</li>
+</ul>
+
+<p>Full release notes: <a href="https://github.com/alibaba/neug/releases/tag/v0.1.3">GitHub Release</a>.</p>
+
+<hr />
+
+<h2 id="try-it">Try It</h2>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>pip <span class="nb">install </span><span class="nv">neug</span><span class="o">==</span>0.1.3
+</code></pre></div></div>
+
+<p>Copy-paste the demo code above and run it. For a complete reproducible script (including CSV generation and assertions), see <a href="https://github.com/alibaba/neug/blob/main/blogs/release-v0.1.3-gds/reproduce.py">reproduce.py</a>.</p>
+
+<p>GDS extension docs: <a href="https://graphscope.io/neug/en/extensions/load_gds">load_gds</a></p>
+
+<p>GitHub: <a href="https://github.com/alibaba/neug">https://github.com/alibaba/neug</a></p>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=NeuG v0.1.3: The Era of Graph Computing Inside the Graph Database&amp;url=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
