@@ -9,6 +9,7 @@ ARG ENABLE_COORDINATOR="false"
 ARG OPTIMIZE_FOR_HOST=OFF
 ARG ENABLE_OPENTELMETRY=false
 ARG PARALLEL=8
+ARG RUST_VERSION=1.88.0
 
 RUN sudo mkdir -p /opt/flex && sudo chown -R graphscope:graphscope /opt/flex/
 USER graphscope
@@ -26,7 +27,8 @@ RUN if [ "${ENABLE_OPENTELMETRY}" = "true" ]; then \
 COPY --chown=graphscope:graphscope . /home/graphscope/GraphScope
 
 # install flex
-RUN . ${HOME}/.cargo/env  && cd ${HOME}/GraphScope/flex && \
+RUN . ${HOME}/.cargo/env && rustup toolchain install ${RUST_VERSION} && rustup default ${RUST_VERSION} && \
+    cd ${HOME}/GraphScope/flex && \
     git submodule update --init && mkdir build && cd build && cmake .. -DCMAKE_INSTALL_PREFIX=/opt/flex -DBUILD_DOC=OFF -DBUILD_TEST=OFF -DOPTIMIZE_FOR_HOST=${OPTIMIZE_FOR_HOST} -DUSE_STATIC_ARROW=ON && make -j ${PARALLEL} && make install && \
     cd ~/GraphScope/interactive_engine/ && mvn clean package -Pexperimental -DskipTests && \
     cd ~/GraphScope/interactive_engine/compiler && cp target/compiler-0.0.1-SNAPSHOT.jar /opt/flex/lib/ && \

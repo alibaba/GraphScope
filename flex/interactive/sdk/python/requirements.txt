@@ -8,4 +8,4 @@ gremlinpython >= 3.4.10
 protobuf>=4
 grpcio>=1.49
 grpcio-tools>=1.49
-mypy-protobuf>=3.4.0
+mypy-protobuf>=3.4.0,<3.7
