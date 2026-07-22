@@ -110,7 +110,7 @@ graphscope-manylinux2014-py3-nodocker:
 	sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
 	sudo yum install java-11-openjdk-devel -y && \
 	sudo yum remove java-1.8.0-openjdk-devel java-1.8.0-openjdk java-1.8.0-openjdk-headless -y && \
-	rustup toolchain install 1.87.0 && rustup default 1.87.0 && \
+	rustup toolchain install 1.88.0 && rustup default 1.88.0 && \
 	cd $(WORKING_DIR)/../.. && \
 		if [[ "${PLATFORM}" == "aarch64" ]]; then \
 			export AUDITWHEEL_PLAT=manylinux2014_${PLATFORM}; \
@@ -186,7 +186,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio" "grpcio-tools"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" wheel "auditwheel==5.2.0"; \
+			python3 -m pip install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.23.2" "pandas" wheel "auditwheel==5.2.0"; \
 		elif [[ "$$py" == "cp310-cp310" ]]; then \
 			if [[ "${PLATFORM}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -194,7 +194,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" wheel "auditwheel==5.2.0"; \
+			python3 -m pip install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.21.2" "pandas" wheel "auditwheel==5.2.0"; \
 		elif [[ "$$py" == "cp39-cp39" ]]; then \
 			if [[ "${PLATFORM}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -202,7 +202,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" wheel "auditwheel==5.2.0"; \
+			python3 -m pip install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.19.3" "pandas" wheel "auditwheel==5.2.0"; \
 		else \
 			if [[ "${PLATFORM}" == "aarch64" ]]; then \
 				python3 -m pip install ${PIP_ARGS} grpcio==1.49.1 --no-binary grpcio; \
@@ -210,7 +210,7 @@ graphscope-client-manylinux2014-py3-nodocker:
 			else \
 				python3 -m pip install ${PIP_ARGS} "grpcio>=1.49" "grpcio-tools>=1.49"; \
 			fi; \
-			python3 -m pip install ${PIP_ARGS} mypy-protobuf "numpy" "pandas" wheel "auditwheel==5.2.0"; \
+			python3 -m pip install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy" "pandas" wheel "auditwheel==5.2.0"; \
 		fi; \
 		sudo rm -rf build; \
 		sudo rm -rf dist/*.whl; \
@@ -240,20 +240,20 @@ graphscope-client-darwin-py3:
 		py=$$(python3 -V 2>&1 | awk '{print $$2}' | awk -F '.' '{print $$1$$2}') && \
 		pip3 install ${PIP_ARGS} -U pip && \
 		if [[ "$$py" == "311" ]]; then \
-			pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.23.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "310" ]]; then \
-			pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+			pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.21.2" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 		elif [[ "$$py" == "39" ]]; then \
 			if [[ "${PLATFORM}" == "arm64" ]]; then \
-				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.19.3" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		else \
 			if [[ "${PLATFORM}" == "arm64" ]]; then \
-				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.21.0" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			else \
-				pip3 install ${PIP_ARGS} mypy-protobuf "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
+				pip3 install ${PIP_ARGS} "mypy-protobuf>=3.4.0,<3.7" "numpy==1.18.5" "pandas" "grpcio>=1.49" "grpcio-tools>=1.49" delocate wheel; \
 			fi; \
 		fi; \
 		rm -rf build dist/*.whl || true && \
