@@ -5,10 +5,90 @@
     <description>graphscope blog</description>
     <link>https://graphscope.io/blog/</link>
     <atom:link href="https://graphscope.io/blog/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Thu, 02 Jul 2026 13:57:52 +0000</pubDate>
-    <lastBuildDate>Thu, 02 Jul 2026 13:57:52 +0000</lastBuildDate>
+    <pubDate>Mon, 03 Aug 2026 00:00:00 +0000</pubDate>
+    <lastBuildDate>Mon, 03 Aug 2026 00:00:00 +0000</lastBuildDate>
     <generator>Jekyll v4.4.1</generator>
     
+          <item>
+        <title>Is Your LLM Knowledge Base Getting Messier with Every Update? Use NeuG to Define Concept Boundaries and Pinpoint What Needs Updating</title>
+        <description>&lt;p&gt;&lt;img alt=&quot;banner&quot; src=&quot;/blog/assets/images/2026-08-03-code-graph-wiki/banner_en.png&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;An LLM-generated code wiki can look impressive on the first run. It turns scattered code into readable sections and produces useful explanations in very little time.&lt;/p&gt;
+&lt;p&gt;But a knowledge base is not generated only once. When we ran the same code through the process again, the LLM did not preserve its previous concept map: sections could be split or merged, and the same code could move elsewhere. For example, code that handles type conversion (&lt;code&gt;cast&lt;/code&gt;) might appear under &quot;type system&quot; in one run and &quot;built-in functions&quot; in the next.&lt;/p&gt;
+&lt;p&gt;A second problem appeared when the code itself changed. The LLM had to infer from the git diff which wiki sections needed updating. When an effect crossed file or directory boundaries, it often updated the most obvious sections and left other affected sections stale.&lt;/p&gt;
+&lt;p&gt;Each result may look reasonable on its own. Taken together, however, they stop behaving like one coherent knowledge base: concept boundaries drift, affected sections go untouched, and after a few updates it becomes hard to know what can still be trusted.&lt;/p&gt;
+&lt;p&gt;We ran into this while maintaining NeuG&#x27;s code wiki. We eventually moved two decisions out of the LLM prompt and into graph computation: derive concept boundaries from code relationships when building the wiki, and calculate which concepts are affected when the code changes. The LLM still reads and writes; NeuG uses the graph to decide which files belong together and what changed.&lt;/p&gt;
+&lt;p&gt;The rest of this post shows how that works on NeuG&#x27;s own codebase. A complete tutorial is linked at the end.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h1&gt;An LLM Can Write a Wiki, but Keeping It Coherent Is Hard&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;Build time: concept boundaries are unstable.&lt;/strong&gt; The LLM reads code and decides how to split sections on its own. But it tends to follow directory structure — and directory structure ≠ concept structure. &lt;code&gt;common/types/&lt;/code&gt;, &lt;code&gt;function/cast/&lt;/code&gt;, &lt;code&gt;function/comparison/&lt;/code&gt; all belong to &quot;type system&quot;, yet the LLM splits them into two independent sections.&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Update time: impact scope is uncertain.&lt;/strong&gt; Code changes, and the LLM reads the git diff to guess which wiki sections are affected. It often glances at a few sections and starts writing, while the ones that actually changed never get touched. What should have been updated stays stale, and the knowledge slowly rots.&lt;/p&gt;
+&lt;p&gt;Neither is primarily a writing problem. They are relationship problems: which files belong to the same concept, and which concepts are affected by a code change, cannot be decided reliably by looking at files in isolation.&lt;/p&gt;
+&lt;p&gt;We use a code graph to give those decisions a stable basis.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h1&gt;Build: Leiden Draws Boundaries, PageRank Picks Files&lt;/h1&gt;
+&lt;p&gt;First, we build NeuG&#x27;s codebase into a graph: files and functions as nodes, function call relationships as edges. At the symbol level, that gives us ~28,000 nodes and 52,501 edges.&lt;/p&gt;
+&lt;p&gt;But symbol-level is too fine-grained for concept grouping — file-level works better. So we aggregate the symbol graph into a file-level view: &quot;file contains functions, functions call each other&quot; collapses into file-to-file relationships, yielding 1,423 file nodes and 3,869 edges.&lt;/p&gt;
+&lt;p&gt;This view is only needed for computation, so we import it as a temporary graph using NeuG v0.1.3&#x27;s COPY TEMP — run the analysis, discard the temp data, no pollution to the persistent graph.&lt;/p&gt;
+&lt;p&gt;Then we do two things on the file-level graph:&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;First, Leiden community detection to define concept boundaries.&lt;/strong&gt; Tightly related files naturally cluster into the same community, independent of directory structure.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-cypher&quot;&gt;CALL leiden(&#x27;code_graph&#x27;, {concurrency: 1})
+YIELD node, community
+RETURN node.name, community
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;Take a typical community from NeuG&#x27;s codebase: &lt;strong&gt;type-and-value-system&lt;/strong&gt;. It contains 187 files spanning 6 path prefixes. The figure below compares the two approaches on 6 representative elements: the graph approach uses Leiden clustering to correctly group types, values, casts, and comparisons into one &quot;type system&quot; section; the LLM approach follows directory structure and splits them into &lt;code&gt;common-types&lt;/code&gt; and &lt;code&gt;built-in-functions&lt;/code&gt; — severing the semantic connection.&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&quot;type-and-value-system clustering comparison&quot; src=&quot;/blog/assets/images/2026-08-03-code-graph-wiki/clustering_comparison.png&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Second, PageRank to pick core files per concept group.&lt;/strong&gt; Once communities are defined, which files should the LLM read to write the wiki? It usually resorts to heuristics — like picking files with short names. The graph approach uses PageRank to rank files by global citation count and directly surfaces the most important ones:&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-cypher&quot;&gt;CALL page_rank(&#x27;code_graph&#x27;, {max_iterations: 20})
+YIELD node, rank
+WITH node, rank WHERE node.community = 37
+RETURN node.name, rank
+ORDER BY rank DESC LIMIT 5;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For the &lt;code&gt;cypher-parser&lt;/code&gt; section, PageRank&#x27;s top pick is &lt;code&gt;transformer.h&lt;/code&gt; (330 lines, declares all transform methods, referenced by many files); the LLM picks &lt;code&gt;use_database.h&lt;/code&gt; (39 lines, 1-2 references, chosen because the filename is short and it&#x27;s a &lt;code&gt;.h&lt;/code&gt;).&lt;/p&gt;
+&lt;p&gt;The PageRank version covers the Transformer class&#x27;s 80+ method dispatch architecture and operator precedence chains. The LLM-selected version gets the overview right but has to infer the core architecture, leaving readers to check the source code. The difference is not writing style but evidence: one version reads the files that support the section, while the other reads files that merely look relevant.&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&quot;PageRank vs LLM file selection&quot; src=&quot;/blog/assets/images/2026-08-03-code-graph-wiki/pagerank_vs_llm.png&quot; /&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;Third, the same grouping can be reproduced.&lt;/strong&gt; Graph computation produces the same output every run; LLM-generated wiki drifts each time:&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&quot;Reproducibility comparison&quot; src=&quot;/blog/assets/images/2026-08-03-code-graph-wiki/reproducibility.png&quot; /&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h1&gt;Update: Leiden Assigns New Concepts, Cypher Computes the Delta&lt;/h1&gt;
+&lt;p&gt;Building handles &quot;how to split the first time.&quot; But code changes daily — a knowledge base can&#x27;t be split once and forgotten.&lt;/p&gt;
+&lt;p&gt;NeuG provides an incremental &lt;strong&gt;freeze-assign Leiden algorithm&lt;/strong&gt;: existing nodes keep their concept assignments, only new content gets re-clustered. A module that was &quot;compiler&quot; before stays &quot;compiler&quot; after. No drift, fully diffable.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-cypher&quot;&gt;CALL leiden(&#x27;code_graph&#x27;, {concurrency: 1,
+  initial_community_property: &#x27;delta_comm&#x27;})
+YIELD node, community, previous_community
+RETURN node.id, community, previous_community;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;Then use Cypher to compute community-level deltas&lt;/strong&gt;: group by community, precisely measure each community&#x27;s change — stable / growth / new. Only communities that actually changed get fed to the LLM; stable ones are reused as-is.&lt;/p&gt;
+&lt;pre&gt;&lt;code class=&quot;language-cypher&quot;&gt;MATCH (n)
+WITH n.community AS community, count(*) AS total,
+     count(n.previous_community) AS old_members
+RETURN community, total - old_members AS new_members,
+  CASE WHEN old_members = 0 THEN &#x27;new&#x27;
+       WHEN old_members = total THEN &#x27;stable&#x27;
+       ELSE &#x27;growth&#x27; END AS change_type;
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;For example, analyzing a NeuG version update (47 changed files, +14,243 / -61 lines) against the wiki:&lt;/p&gt;
+&lt;p&gt;LLM approach: reads all 35 changed files, compares against 23 sections one by one. Might flag 4 for update, but two are false positives.&lt;/p&gt;
+&lt;p&gt;Graph approach: directly identifies 21 concepts (wiki sections) with zero changes, and 2 concepts with new members — only those two sections need incremental updates.&lt;/p&gt;
+&lt;p&gt;&lt;img alt=&quot;Incremental update delta comparison&quot; src=&quot;/blog/assets/images/2026-08-03-code-graph-wiki/delta_comparison.png&quot; /&gt;&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h1&gt;Keeping the Same Knowledge Base Across Many Updates&lt;/h1&gt;
+&lt;p&gt;The graph does not write the wiki. It answers two questions that need consistent answers over time: what evidence defines a concept boundary, and which sections actually need to be rewritten after the code changes.&lt;/p&gt;
+&lt;p&gt;NeuG computes the boundaries and affected areas from code relationships. The LLM then reads the relevant code and writes the explanation. The point is not only to produce a good first version, but to keep the same conceptual structure after several updates without leaving changed knowledge behind.&lt;/p&gt;
+&lt;p&gt;If you have seen concept groups drift or struggled to decide which sections to update after a code change, tell us what happened in your project.&lt;/p&gt;
+&lt;hr /&gt;
+&lt;h2&gt;About NeuG&lt;/h2&gt;
+&lt;p&gt;NeuG is an open-source graph database. v0.1.3 added the GDS graph algorithm extension (9 algorithms including Leiden, PageRank, BFS, SSSP, etc.) and COPY TEMP for ad-hoc analysis without polluting the production graph.&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;GitHub: https://github.com/alibaba/neug&lt;/li&gt;
+&lt;li&gt;GDS extension docs: https://github.com/alibaba/neug/blob/main/doc/source/extensions/load_gds.md&lt;/li&gt;
+&lt;li&gt;Companion tutorial (step-by-step reproduction of this post&#x27;s wiki build &amp;amp; update): https://github.com/alibaba/neug/blob/main/doc/source/tutorials/code-graph-wiki-pipeline.md&lt;/li&gt;
+&lt;li&gt;Stars, issues, and PRs welcome&lt;/li&gt;
+&lt;/ul&gt;</description>
+        <pubDate>Mon, 03 Aug 2026 00:00:00 +0000</pubDate>
+        <link>https://graphscope.io/blog/tech/2026/08/03/code-graph-wiki.html</link>
+        <guid isPermaLink="true">https://graphscope.io/blog/tech/2026/08/03/code-graph-wiki.html</guid>
+      </item>
       <item>
         <title>NeuG v0.1.3: The Era of Graph Computing Inside the Graph Database</title>
         <description>&lt;p&gt;&lt;img src=&quot;/blog/assets/images/2026-07-02-release-v0.1.3-gds/banner_en.png&quot; alt=&quot;banner&quot; /&gt;&lt;/p&gt;

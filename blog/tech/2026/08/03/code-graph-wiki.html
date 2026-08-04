@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+    <title>GraphScope - graphscope blog</title>
+    <meta name="description" content="GraphScope Blog" />
+
+    <meta name="HandheldFriendly" content="True" />
+    <meta name="MobileOptimized" content="320" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/screen.css" />
+    <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Merriweather:300,700,700italic,300italic|Open+Sans:700,400" />
+    <!-- Customisation  -->
+    <link rel="stylesheet" type="text/css" href="/blog/assets/css/main.css " />
+
+</head>
+<body class="home-template">
+
+    <header class="main-header post-head no-cover">
+    <nav class="main-nav  clearfix">
+        <a class="back-button icon-arrow-left" href="/blog/">Home</a>
+        <a class="subscribe-button" target="blank" href="https://github.com/alibaba/graphscope">Github</a>
+    </nav>
+</header>
+
+<main class="content" role="main">
+
+    <article class="post">
+
+        <header class="post-header">
+            <h1 class="post-title">Is Your LLM Knowledge Base Getting Messier with Every Update? Use NeuG to Define Concept Boundaries and Pinpoint What Needs Updating</h1>
+            <section class="post-meta">
+                
+                on Tech
+                
+                <time class="post-date" datetime=" 2026-08-03">03 Aug 2026</time>
+            </section>
+        </header>
+
+        <!--         <header class="post-header">
+            <a id="blog-logo" href="https://graphscope.io">
+                
+                    <span class="blog-title">GraphScope</span>
+                
+            </a>
+        </header> -->
+
+        <!-- <span class="post-meta">
+            <time datetime="2026-08-03">03 Aug 2026</time>
+            
+                on Tech
+            
+        </span> -->
+
+        <!-- <h1 class="post-title">Is Your LLM Knowledge Base Getting Messier with Every Update? Use NeuG to Define Concept Boundaries and Pinpoint What Needs Updating</h1> -->
+
+        <section class="post-content">
+            <p><img alt="banner" src="/blog/assets/images/2026-08-03-code-graph-wiki/banner_en.png" /></p>
+<p>An LLM-generated code wiki can look impressive on the first run. It turns scattered code into readable sections and produces useful explanations in very little time.</p>
+<p>But a knowledge base is not generated only once. When we ran the same code through the process again, the LLM did not preserve its previous concept map: sections could be split or merged, and the same code could move elsewhere. For example, code that handles type conversion (<code>cast</code>) might appear under "type system" in one run and "built-in functions" in the next.</p>
+<p>A second problem appeared when the code itself changed. The LLM had to infer from the git diff which wiki sections needed updating. When an effect crossed file or directory boundaries, it often updated the most obvious sections and left other affected sections stale.</p>
+<p>Each result may look reasonable on its own. Taken together, however, they stop behaving like one coherent knowledge base: concept boundaries drift, affected sections go untouched, and after a few updates it becomes hard to know what can still be trusted.</p>
+<p>We ran into this while maintaining NeuG's code wiki. We eventually moved two decisions out of the LLM prompt and into graph computation: derive concept boundaries from code relationships when building the wiki, and calculate which concepts are affected when the code changes. The LLM still reads and writes; NeuG uses the graph to decide which files belong together and what changed.</p>
+<p>The rest of this post shows how that works on NeuG's own codebase. A complete tutorial is linked at the end.</p>
+<hr />
+<h1>An LLM Can Write a Wiki, but Keeping It Coherent Is Hard</h1>
+<p><strong>Build time: concept boundaries are unstable.</strong> The LLM reads code and decides how to split sections on its own. But it tends to follow directory structure — and directory structure ≠ concept structure. <code>common/types/</code>, <code>function/cast/</code>, <code>function/comparison/</code> all belong to "type system", yet the LLM splits them into two independent sections.</p>
+<p><strong>Update time: impact scope is uncertain.</strong> Code changes, and the LLM reads the git diff to guess which wiki sections are affected. It often glances at a few sections and starts writing, while the ones that actually changed never get touched. What should have been updated stays stale, and the knowledge slowly rots.</p>
+<p>Neither is primarily a writing problem. They are relationship problems: which files belong to the same concept, and which concepts are affected by a code change, cannot be decided reliably by looking at files in isolation.</p>
+<p>We use a code graph to give those decisions a stable basis.</p>
+<hr />
+<h1>Build: Leiden Draws Boundaries, PageRank Picks Files</h1>
+<p>First, we build NeuG's codebase into a graph: files and functions as nodes, function call relationships as edges. At the symbol level, that gives us ~28,000 nodes and 52,501 edges.</p>
+<p>But symbol-level is too fine-grained for concept grouping — file-level works better. So we aggregate the symbol graph into a file-level view: "file contains functions, functions call each other" collapses into file-to-file relationships, yielding 1,423 file nodes and 3,869 edges.</p>
+<p>This view is only needed for computation, so we import it as a temporary graph using NeuG v0.1.3's COPY TEMP — run the analysis, discard the temp data, no pollution to the persistent graph.</p>
+<p>Then we do two things on the file-level graph:</p>
+<p><strong>First, Leiden community detection to define concept boundaries.</strong> Tightly related files naturally cluster into the same community, independent of directory structure.</p>
+<pre><code class="language-cypher">CALL leiden('code_graph', {concurrency: 1})
+YIELD node, community
+RETURN node.name, community
+</code></pre>
+<p>Take a typical community from NeuG's codebase: <strong>type-and-value-system</strong>. It contains 187 files spanning 6 path prefixes. The figure below compares the two approaches on 6 representative elements: the graph approach uses Leiden clustering to correctly group types, values, casts, and comparisons into one "type system" section; the LLM approach follows directory structure and splits them into <code>common-types</code> and <code>built-in-functions</code> — severing the semantic connection.</p>
+<p><img alt="type-and-value-system clustering comparison" src="/blog/assets/images/2026-08-03-code-graph-wiki/clustering_comparison.png" /></p>
+<p><strong>Second, PageRank to pick core files per concept group.</strong> Once communities are defined, which files should the LLM read to write the wiki? It usually resorts to heuristics — like picking files with short names. The graph approach uses PageRank to rank files by global citation count and directly surfaces the most important ones:</p>
+<pre><code class="language-cypher">CALL page_rank('code_graph', {max_iterations: 20})
+YIELD node, rank
+WITH node, rank WHERE node.community = 37
+RETURN node.name, rank
+ORDER BY rank DESC LIMIT 5;
+</code></pre>
+<p>For the <code>cypher-parser</code> section, PageRank's top pick is <code>transformer.h</code> (330 lines, declares all transform methods, referenced by many files); the LLM picks <code>use_database.h</code> (39 lines, 1-2 references, chosen because the filename is short and it's a <code>.h</code>).</p>
+<p>The PageRank version covers the Transformer class's 80+ method dispatch architecture and operator precedence chains. The LLM-selected version gets the overview right but has to infer the core architecture, leaving readers to check the source code. The difference is not writing style but evidence: one version reads the files that support the section, while the other reads files that merely look relevant.</p>
+<p><img alt="PageRank vs LLM file selection" src="/blog/assets/images/2026-08-03-code-graph-wiki/pagerank_vs_llm.png" /></p>
+<p><strong>Third, the same grouping can be reproduced.</strong> Graph computation produces the same output every run; LLM-generated wiki drifts each time:</p>
+<p><img alt="Reproducibility comparison" src="/blog/assets/images/2026-08-03-code-graph-wiki/reproducibility.png" /></p>
+<hr />
+<h1>Update: Leiden Assigns New Concepts, Cypher Computes the Delta</h1>
+<p>Building handles "how to split the first time." But code changes daily — a knowledge base can't be split once and forgotten.</p>
+<p>NeuG provides an incremental <strong>freeze-assign Leiden algorithm</strong>: existing nodes keep their concept assignments, only new content gets re-clustered. A module that was "compiler" before stays "compiler" after. No drift, fully diffable.</p>
+<pre><code class="language-cypher">CALL leiden('code_graph', {concurrency: 1,
+  initial_community_property: 'delta_comm'})
+YIELD node, community, previous_community
+RETURN node.id, community, previous_community;
+</code></pre>
+<p><strong>Then use Cypher to compute community-level deltas</strong>: group by community, precisely measure each community's change — stable / growth / new. Only communities that actually changed get fed to the LLM; stable ones are reused as-is.</p>
+<pre><code class="language-cypher">MATCH (n)
+WITH n.community AS community, count(*) AS total,
+     count(n.previous_community) AS old_members
+RETURN community, total - old_members AS new_members,
+  CASE WHEN old_members = 0 THEN 'new'
+       WHEN old_members = total THEN 'stable'
+       ELSE 'growth' END AS change_type;
+</code></pre>
+<p>For example, analyzing a NeuG version update (47 changed files, +14,243 / -61 lines) against the wiki:</p>
+<p>LLM approach: reads all 35 changed files, compares against 23 sections one by one. Might flag 4 for update, but two are false positives.</p>
+<p>Graph approach: directly identifies 21 concepts (wiki sections) with zero changes, and 2 concepts with new members — only those two sections need incremental updates.</p>
+<p><img alt="Incremental update delta comparison" src="/blog/assets/images/2026-08-03-code-graph-wiki/delta_comparison.png" /></p>
+<hr />
+<h1>Keeping the Same Knowledge Base Across Many Updates</h1>
+<p>The graph does not write the wiki. It answers two questions that need consistent answers over time: what evidence defines a concept boundary, and which sections actually need to be rewritten after the code changes.</p>
+<p>NeuG computes the boundaries and affected areas from code relationships. The LLM then reads the relevant code and writes the explanation. The point is not only to produce a good first version, but to keep the same conceptual structure after several updates without leaving changed knowledge behind.</p>
+<p>If you have seen concept groups drift or struggled to decide which sections to update after a code change, tell us what happened in your project.</p>
+<hr />
+<h2>About NeuG</h2>
+<p>NeuG is an open-source graph database. v0.1.3 added the GDS graph algorithm extension (9 algorithms including Leiden, PageRank, BFS, SSSP, etc.) and COPY TEMP for ad-hoc analysis without polluting the production graph.</p>
+<ul>
+<li>GitHub: https://github.com/alibaba/neug</li>
+<li>GDS extension docs: https://github.com/alibaba/neug/blob/main/doc/source/extensions/load_gds.md</li>
+<li>Companion tutorial (step-by-step reproduction of this post's wiki build &amp; update): https://github.com/alibaba/neug/blob/main/doc/source/tutorials/code-graph-wiki-pipeline.md</li>
+<li>Stars, issues, and PRs welcome</li>
+</ul>
+
+        </section>
+
+        
+
+        <!-- <footer class="post-footer"> -->
+        <!-- If we want to display author's name and bio -->
+        <!-- 
+                <figure class="author-image">
+                    <a class="img" href="/blog/" style="background-image: url(/blog/assets/images/profile.png)">
+                    <span class="hidden">GSTeam@Alibaba's Picture</span></a>
+                </figure>
+                <section class="author">
+                    Author Name
+                    <h4> GSTeam@Alibaba </h4>
+                    Author Bio
+                    <p>
+                        Here goes the author description. You might want to place some links too in here
+                    </p>
+                </section>
+             -->
+
+        <!-- Share links section -->
+        <!-- <section class="share">
+    <h4>Share this post</h4>
+    <a class="icon-twitter" href="http://twitter.com/share?text=Is Your LLM Knowledge Base Getting Messier with Every Update? Use NeuG to Define Concept Boundaries and Pinpoint What Needs Updating&amp;url=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+        onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="icon-google-plus" href="https://plus.google.com/share?url=https://graphscope.io/tech/2026/07/02/release-v0.1.3-gds.html"
+       onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+</section> -->
+
+        <!-- Disqus comments -->
+        <!--  -->
+
+        <!-- </footer> -->
+
+    </article>
+
+</main>
+    <footer class="site-footer clearfix">
+      <section class="copyright">
+        <a href="/blog">GraphScope</a> &copy; 
+              2026 &bull; Some images by <a href="https://www.freepik.com">Freepik</a>.
+      </section>
+      <section class="poweredby">Made with Jekyll using 
+        <a href="http://github.com/rosario/kasper">Kasper theme</a>
+      </section>
+    </footer>
+
+    <script type="text/javascript" src="/blog/assets/js/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/jquery.fitvids.js"></script>
+    <script type="text/javascript" src="/blog/assets/js/index.js"></script>
+
+    <!-- Google Analytics Tracking code -->
+    <script type="text/javascript">
+
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'G-5V27DVHLP0']);
+      _gaq.push(['_trackPageview']);
+
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+
+    </script>   
+
+    <!-- Baidu analytics code -->
+    <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "https://hm.baidu.com/hm.js?da649ade2298891886e31922dfc8870f";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+    </script>
+
+    <!-- MathJax code -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [ ['$', '$'], ['\\(', '\\)'] ]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script
+      type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+    </script>
+</body>
+</html>
