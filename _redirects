@@ -1,5 +1,1 @@
-# Redirect neug language paths to documentation
-/neug/en/ /neug/en/overview/introduction/ 302
-/neug/zh/ /neug/zh/overview/introduction/ 302
-/neug/en /neug/en/overview/introduction/ 302
-/neug/zh /neug/zh/overview/introduction/ 302
+# NeuG language roots are generated homepage routes.
