@@ -1,1 +1,22 @@
-# NeuG language roots are generated homepage routes.
+# NeuG has moved to https://neug.io. 301s transfer search ranking to the new domain.
+# Cloudflare Pages applies these rules even when a static asset matches the path.
+# Exact rules must stay above the splat rules (first match wins).
+
+# Page dropped in the new docs; send to its merged replacement
+/neug/en/reference/java_api/result_set_metadata https://neug.io/docs/reference/java_api/result_set 301
+/neug/zh/reference/java_api/result_set_metadata https://neug.io/zh/docs/reference/java_api/result_set 301
+
+# Homepages (en is the default locale on neug.io, no /en prefix)
+/neug https://neug.io/ 301
+/neug/ https://neug.io/ 301
+/neug/en https://neug.io/ 301
+/neug/en/ https://neug.io/ 301
+/neug/zh https://neug.io/zh/ 301
+/neug/zh/ https://neug.io/zh/ 301
+
+# Docs pages: old /neug/{en,zh}/<path> == new /[zh/]docs/<path>
+/neug/en/* https://neug.io/docs/:splat 301
+/neug/zh/* https://neug.io/zh/docs/:splat 301
+
+# Everything else under /neug (assets, 404, index.txt)
+/neug/* https://neug.io/ 301
