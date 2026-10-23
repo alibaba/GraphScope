@@ -17,10 +17,12 @@
 #
 
 import os
+import tarfile
 
 import pytest
 
 from graphscope.dataset import *
+from graphscope.dataset import io_utils
 
 
 @pytest.mark.skipif("FULL_TEST_SUITE" not in os.environ, reason="Run in nightly CI")
@@ -48,3 +50,32 @@ def test_download_dataset(graphscope_session):
     del g10
     g11 = load_u2i(graphscope_session)
     del g11
+
+
+def test_failed_archive_extraction_preserves_existing_cache(tmp_path, monkeypatch):
+    cache_dir = tmp_path / "datasets"
+    cache_dir.mkdir()
+    sentinel = cache_dir / "other-dataset.txt"
+    sentinel.write_text("keep", encoding="utf-8")
+
+    class FailingArchive:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def extractall(self, path):
+            with open(os.path.join(path, "partial.txt"), "w", encoding="utf-8") as f:
+                f.write("partial")
+            raise tarfile.TarError("synthetic extraction failure")
+
+    monkeypatch.setattr(io_utils.tarfile, "is_tarfile", lambda _: True)
+    monkeypatch.setattr(
+        io_utils.tarfile, "open", lambda *args, **kwargs: FailingArchive()
+    )
+
+    with pytest.raises(tarfile.TarError, match="synthetic extraction failure"):
+        io_utils._extract_archive("synthetic.tar", str(cache_dir), archive_format="tar")
+
+    assert sentinel.read_text(encoding="utf-8") == "keep"
