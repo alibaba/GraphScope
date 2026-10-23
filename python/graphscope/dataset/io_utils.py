@@ -111,6 +111,7 @@ def _extract_archive(fpath, path=".", archive_format="auto"):
 
     fpath = _path_to_string(fpath)
     path = _path_to_string(path)
+    path_existed = os.path.exists(path)
 
     for archive_type in archive_format:
         if archive_type == "tar":
@@ -125,7 +126,7 @@ def _extract_archive(fpath, path=".", archive_format="auto"):
                 try:
                     archive.extractall(path)
                 except (tarfile.TarError, RuntimeError, KeyboardInterrupt):
-                    if os.path.exists(path):
+                    if not path_existed and os.path.exists(path):
                         if os.path.isfile(path):
                             os.remove(path)
                         else:
