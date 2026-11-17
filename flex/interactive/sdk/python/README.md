@@ -60,7 +60,7 @@ with driver.getNeo4jSession() as session:
         # record:  <Record $f0=6>
 ```
 
-For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/python/basic_example.py).
+For a more detailed example, please refer to [Python SDK Example](https://github.com/alibaba/GraphScope/blob/main/flex/interactive/sdk/examples/python/basic_example.py).
 
 
 

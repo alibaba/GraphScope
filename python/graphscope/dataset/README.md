@@ -68,5 +68,5 @@ dataset
     |-- nodes.csv
     |-- edge.csv
 ```
-- Write the loading function load_foo in a new file named `foo.py` inside folder `python/graphscope/dataset/`.  (see [example](https://github.com/alibaba/GraphScope/blob/docs/python/graphscope/dataset/ogbn_mag.py))
+- Write the loading function load_foo in a new file named `foo.py` inside folder `python/graphscope/dataset/`.  (see [example](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/dataset/ogbn_mag.py))
 - A corresponding unit test is appreciated! See [test_download.py](https://github.com/alibaba/GraphScope/blob/main/python/graphscope/tests/unittest/test_download.py).

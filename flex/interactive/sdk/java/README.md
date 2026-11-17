@@ -90,7 +90,7 @@ public class GettingStarted {
 }
 ```
 
-For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/flex/interactive/sdk/examples/java/interactive-example/)
+For more a more detailed example, please refer to [Java SDK Example](https://github.com/alibaba/GraphScope/tree/main/flex/interactive/sdk/examples/java/interactive-example)
 
 ### Advanced building
 

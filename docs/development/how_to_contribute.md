@@ -195,7 +195,7 @@ If you have any questions or concerns about a pull request, please comment on th
 ## Continuous integration testing
 
 All pull requests that contain changes to code must be run through
-continuous integration (CI) testing at [GitHub Actions](https://github.com/alibaba/GarphScope/actions)
+continuous integration (CI) testing at [GitHub Actions](https://github.com/alibaba/GraphScope/actions)
 
 The pull request change will trigger a CI testing run. Ideally, the code change
 will pass ("be green") on all platform configurations supported by GraphScope.
